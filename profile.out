@@ -1,0 +1,537 @@
+=== SCRIPT INPUT FILE ===
+
+0 rain 10000
+0 kick 10000
+0 snare 10000
+0 strum 10000
+
+100 rain 10000
+100 kick 10000
+100 snare 10000
+100 strum 10000
+
+200 rain 10000
+200 kick 10000
+200 snare 10000
+200 strum 10000
+
+300 rain 10000
+300 kick 10000
+300 snare 10000
+300 strum 10000
+
+=== PROFILER OUTPUT ===
+
+Flat profile:
+
+Each sample counts as 0.01 seconds.
+  %   cumulative   self              self     total           
+ time   seconds   seconds    calls   s/call   s/call  name    
+ 40.60      1.40     1.40 22723991     0.00     0.00  draw_particle
+ 27.55      2.35     0.95      910     0.00     0.00  plist_safe_foreach
+  6.53      2.58     0.23 22724006     0.00     0.00  particle_tick
+  4.21      2.72     0.15 22723994     0.00     0.00  draw_diamond
+  3.77      2.85     0.13 15561894     0.00     0.00  gravity
+  2.61      2.94     0.09  7162102     0.00     0.00  friction
+  2.32      3.02     0.08        1     0.08     3.39  mainloop
+  2.18      3.10     0.08 22724004     0.00     0.00  particle_get_life
+  1.74      3.16     0.06 22724001     0.00     0.00  particle_get_lifetime
+  1.45      3.21     0.05 10742912     0.00     0.00  linear_blend
+  1.45      3.26     0.05  3580809     0.00     0.00  springbox
+  1.31      3.30     0.05 22723990     0.00     0.00  particle_is_alive
+  1.02      3.34     0.04 11981093     0.00     0.00  no_blend
+  0.87      3.37     0.03                             no_force
+  0.58      3.39     0.02        1     0.02     0.02  cmd_exit
+  0.44      3.40     0.02                             particle_get_radius
+  0.29      3.41     0.01   160000     0.00     0.00  particle_free
+  0.29      3.42     0.01   160000     0.00     0.00  plist_remove
+  0.29      3.43     0.01   160000     0.00     0.00  triangular
+  0.29      3.44     0.01                             particle_get_extra
+  0.29      3.45     0.01                             particle_set_limit
+  0.00      3.45     0.00  1439996     0.00     0.00  uniform
+  0.00      3.45     0.00  1279997     0.00     0.00  randdouble
+  0.00      3.45     0.00   480035     0.00     0.00  chmalloc
+  0.00      3.45     0.00   479999     0.00     0.00  randfloat
+  0.00      3.45     0.00   160000     0.00     0.00  free_particle_extra
+  0.00      3.45     0.00   160000     0.00     0.00  new_particle_extra
+  0.00      3.45     0.00   160000     0.00     0.00  particle_new_full
+  0.00      3.45     0.00   160000     0.00     0.00  plist_add
+  0.00      3.45     0.00   160000     0.00     0.00  plist_node_new
+  0.00      3.45     0.00   159999     0.00     0.00  randint
+  0.00      3.45     0.00    36000     0.00     0.00  flist_node_free
+  0.00      3.45     0.00      910     0.00     0.00  display
+  0.00      3.45     0.00      910     0.00     0.00  timeout
+  0.00      3.45     0.00      909     0.00     0.00  emitter_tick
+  0.00      3.45     0.00      909     0.00     0.00  flist_tick
+  0.00      3.45     0.00      182     0.00     0.00  async_read_stdin
+  0.00      3.45     0.00      182     0.00     0.00  command
+  0.00      3.45     0.00       69     0.00     0.00  startswith
+  0.00      3.45     0.00       16     0.00     0.00  emit_frame
+  0.00      3.45     0.00       16     0.00     0.00  flist_insert
+  0.00      3.45     0.00       16     0.00     0.00  flist_node_new
+  0.00      3.45     0.00       16     0.00     0.00  make_emit_frame
+  0.00      3.45     0.00       16     0.00     0.00  strtoi
+  0.00      3.45     0.00        4     0.00     0.00  make_kick_frame
+  0.00      3.45     0.00        4     0.00     0.00  make_rain_frame
+  0.00      3.45     0.00        4     0.00     0.00  make_snare_frame
+  0.00      3.45     0.00        4     0.00     0.00  make_strum_frame
+  0.00      3.45     0.00        2     0.00     0.00  async_write_stdout
+  0.00      3.45     0.00        2     0.00     0.01  docommand
+  0.00      3.45     0.00        1     0.00     0.00  argparse
+  0.00      3.45     0.00        1     0.00     0.00  async_setup_stdin
+  0.00      3.45     0.00        1     0.00     0.00  async_setup_stdout
+  0.00      3.45     0.00        1     0.00     0.00  audio_close
+  0.00      3.45     0.00        1     0.00     0.00  audio_init
+  0.00      3.45     0.00        1     0.00     0.00  audio_play
+  0.00      3.45     0.00        1     0.00     0.00  cmd_load
+  0.00      3.45     0.00        1     0.00     0.00  command_setup
+  0.00      3.45     0.00        1     0.00     0.00  emitter_load_script
+  0.00      3.45     0.00        1     0.00     0.00  emitter_setup
+  0.00      3.45     0.00        1     0.00     0.00  flist_clear
+  0.00      3.45     0.00        1     0.00     0.00  flist_new
+  0.00      3.45     0.00        1     0.00     0.00  flist_restart
+  0.00      3.45     0.00        1     0.00     0.00  plist_clear
+  0.00      3.45     0.00        1     0.00     0.00  plist_free
+  0.00      3.45     0.00        1     0.00     0.00  plist_new
+  0.00      3.45     0.00        1     0.00     0.00  try_fopen
+
+ %         the percentage of the total running time of the
+time       program used by this function.
+
+cumulative a running sum of the number of seconds accounted
+ seconds   for by this function and those listed above it.
+
+ self      the number of seconds accounted for by this
+seconds    function alone.  This is the major sort for this
+           listing.
+
+calls      the number of times this function was invoked, if
+           this function is profiled, else blank.
+ 
+ self      the average number of milliseconds spent in this
+ms/call    function per call, if this function is profiled,
+	   else blank.
+
+ total     the average number of milliseconds spent in this
+ms/call    function and its descendents per call, if this 
+	   function is profiled, else blank.
+
+name       the name of the function.  This is the minor sort
+           for this listing. The index shows the location of
+	   the function in the gprof listing. If the index is
+	   in parenthesis it shows where it would appear in
+	   the gprof listing if it were to be printed.
+
+
+		     Call graph (explanation follows)
+
+
+granularity: each sample hit covers 2 byte(s) for 0.29% of 3.45 seconds
+
+index % time    self  children    called     name
+                0.08    3.31       1/1           main [2]
+[1]     98.1    0.08    3.31       1         mainloop [1]
+                0.00    3.28     910/910         display [3]
+                0.00    0.03     910/910         timeout [16]
+-----------------------------------------------
+                                                 <spontaneous>
+[2]     98.1    0.00    3.39                 main [2]
+                0.08    3.31       1/1           mainloop [1]
+                0.00    0.00       1/1           plist_new [67]
+                0.00    0.00       1/1           command_setup [59]
+                0.00    0.00       1/1           audio_init [56]
+                0.00    0.00       1/1           emitter_setup [61]
+                0.00    0.00       1/1           argparse [52]
+-----------------------------------------------
+                0.00    3.28     910/910         mainloop [1]
+[3]     94.9    0.00    3.28     910         display [3]
+                0.95    2.33     910/910         plist_safe_foreach [4]
+-----------------------------------------------
+                0.95    2.33     910/910         display [3]
+[4]     94.9    0.95    2.33     910         plist_safe_foreach [4]
+                1.40    0.93 22723991/22723991     draw_particle [5]
+-----------------------------------------------
+                1.40    0.93 22723991/22723991     plist_safe_foreach [4]
+[5]     67.4    1.40    0.93 22723991         draw_particle [5]
+                0.23    0.27 22724006/22724006     particle_tick [6]
+                0.15    0.00 22723994/22723994     draw_diamond [7]
+                0.08    0.00 22724004/22724004     particle_get_life [10]
+                0.06    0.00 22724001/22724001     particle_get_lifetime [11]
+                0.05    0.00 10742912/10742912     linear_blend [12]
+                0.05    0.00 22723990/22723990     particle_is_alive [14]
+                0.04    0.00 11981093/11981093     no_blend [15]
+                0.01    0.01  160000/160000      plist_remove [18]
+-----------------------------------------------
+                0.23    0.27 22724006/22724006     draw_particle [5]
+[6]     14.3    0.23    0.27 22724006         particle_tick [6]
+                0.13    0.00 15561894/15561894     gravity [8]
+                0.09    0.00 7162102/7162102     friction [9]
+                0.05    0.00 3580809/3580809     springbox [13]
+-----------------------------------------------
+                0.15    0.00 22723994/22723994     draw_particle [5]
+[7]      4.2    0.15    0.00 22723994         draw_diamond [7]
+-----------------------------------------------
+                0.13    0.00 15561894/15561894     particle_tick [6]
+[8]      3.8    0.13    0.00 15561894         gravity [8]
+-----------------------------------------------
+                0.09    0.00 7162102/7162102     particle_tick [6]
+[9]      2.6    0.09    0.00 7162102         friction [9]
+-----------------------------------------------
+                0.08    0.00 22724004/22724004     draw_particle [5]
+[10]     2.2    0.08    0.00 22724004         particle_get_life [10]
+-----------------------------------------------
+                0.06    0.00 22724001/22724001     draw_particle [5]
+[11]     1.7    0.06    0.00 22724001         particle_get_lifetime [11]
+-----------------------------------------------
+                0.05    0.00 10742912/10742912     draw_particle [5]
+[12]     1.4    0.05    0.00 10742912         linear_blend [12]
+-----------------------------------------------
+                0.05    0.00 3580809/3580809     particle_tick [6]
+[13]     1.4    0.05    0.00 3580809         springbox [13]
+-----------------------------------------------
+                0.05    0.00 22723990/22723990     draw_particle [5]
+[14]     1.3    0.05    0.00 22723990         particle_is_alive [14]
+-----------------------------------------------
+                0.04    0.00 11981093/11981093     draw_particle [5]
+[15]     1.0    0.04    0.00 11981093         no_blend [15]
+-----------------------------------------------
+                0.00    0.03     910/910         mainloop [1]
+[16]     0.9    0.00    0.03     910         timeout [16]
+                0.00    0.02     182/182         command [19]
+                0.00    0.01     909/909         emitter_tick [26]
+-----------------------------------------------
+                                                 <spontaneous>
+[17]     0.9    0.03    0.00                 no_force [17]
+-----------------------------------------------
+                0.01    0.01  160000/160000      draw_particle [5]
+[18]     0.6    0.01    0.01  160000         plist_remove [18]
+                0.01    0.00  160000/160000      particle_free [23]
+-----------------------------------------------
+                0.00    0.02     182/182         timeout [16]
+[19]     0.6    0.00    0.02     182         command [19]
+                0.00    0.02       2/2           docommand [20]
+                0.00    0.00     182/182         async_read_stdin [41]
+                0.00    0.00       1/2           async_write_stdout [51]
+-----------------------------------------------
+                0.00    0.02       2/2           command [19]
+[20]     0.6    0.00    0.02       2         docommand [20]
+                0.02    0.00       1/1           cmd_exit [21]
+                0.00    0.00      13/69          startswith [42]
+                0.00    0.00       1/1           cmd_load [58]
+-----------------------------------------------
+                0.02    0.00       1/1           docommand [20]
+[21]     0.6    0.02    0.00       1         cmd_exit [21]
+-----------------------------------------------
+                                                 <spontaneous>
+[22]     0.4    0.02    0.00                 particle_get_radius [22]
+-----------------------------------------------
+                0.01    0.00  160000/160000      plist_remove [18]
+[23]     0.3    0.01    0.00  160000         particle_free [23]
+                0.00    0.00  160000/160000      free_particle_extra [34]
+-----------------------------------------------
+                0.00    0.01  160000/160000      emit_frame [27]
+[24]     0.3    0.00    0.01  160000         particle_new_full [24]
+                0.01    0.00  160000/160000      triangular [25]
+                0.00    0.00  639997/1279997     randdouble [31]
+                0.00    0.00  159999/480035      chmalloc [32]
+                0.00    0.00  159999/159999      randint [38]
+-----------------------------------------------
+                0.01    0.00  160000/160000      particle_new_full [24]
+[25]     0.3    0.01    0.00  160000         triangular [25]
+                0.00    0.00  160000/1439996     uniform [30]
+-----------------------------------------------
+                0.00    0.01     909/909         timeout [16]
+[26]     0.3    0.00    0.01     909         emitter_tick [26]
+                0.00    0.01      16/16          emit_frame [27]
+                0.00    0.00     909/909         flist_tick [40]
+-----------------------------------------------
+                0.00    0.01      16/16          emitter_tick [26]
+[27]     0.3    0.00    0.01      16         emit_frame [27]
+                0.00    0.01  160000/160000      particle_new_full [24]
+                0.00    0.00  479999/479999      randfloat [33]
+                0.00    0.00  160000/160000      new_particle_extra [35]
+                0.00    0.00  160000/160000      plist_add [36]
+-----------------------------------------------
+                                                 <spontaneous>
+[28]     0.3    0.01    0.00                 particle_get_extra [28]
+-----------------------------------------------
+                                                 <spontaneous>
+[29]     0.3    0.01    0.00                 particle_set_limit [29]
+-----------------------------------------------
+                0.00    0.00  160000/1439996     triangular [25]
+                0.00    0.00 1279996/1439996     randdouble [31]
+[30]     0.0    0.00    0.00 1439996         uniform [30]
+-----------------------------------------------
+                0.00    0.00  160000/1279997     randint [38]
+                0.00    0.00  480000/1279997     randfloat [33]
+                0.00    0.00  639997/1279997     particle_new_full [24]
+[31]     0.0    0.00    0.00 1279997         randdouble [31]
+                0.00    0.00 1279996/1439996     uniform [30]
+-----------------------------------------------
+                0.00    0.00       1/480035      flist_new [63]
+                0.00    0.00       1/480035      plist_new [67]
+                0.00    0.00       2/480035      audio_init [56]
+                0.00    0.00      16/480035      flist_node_new [44]
+                0.00    0.00      16/480035      make_emit_frame [45]
+                0.00    0.00  159999/480035      particle_new_full [24]
+                0.00    0.00  160000/480035      new_particle_extra [35]
+                0.00    0.00  160000/480035      plist_node_new [37]
+[32]     0.0    0.00    0.00  480035         chmalloc [32]
+-----------------------------------------------
+                0.00    0.00  479999/479999      emit_frame [27]
+[33]     0.0    0.00    0.00  479999         randfloat [33]
+                0.00    0.00  480000/1279997     randdouble [31]
+-----------------------------------------------
+                0.00    0.00  160000/160000      particle_free [23]
+[34]     0.0    0.00    0.00  160000         free_particle_extra [34]
+-----------------------------------------------
+                0.00    0.00  160000/160000      emit_frame [27]
+[35]     0.0    0.00    0.00  160000         new_particle_extra [35]
+                0.00    0.00  160000/480035      chmalloc [32]
+-----------------------------------------------
+                0.00    0.00  160000/160000      emit_frame [27]
+[36]     0.0    0.00    0.00  160000         plist_add [36]
+                0.00    0.00  160000/160000      plist_node_new [37]
+-----------------------------------------------
+                0.00    0.00  160000/160000      plist_add [36]
+[37]     0.0    0.00    0.00  160000         plist_node_new [37]
+                0.00    0.00  160000/480035      chmalloc [32]
+-----------------------------------------------
+                0.00    0.00  159999/159999      particle_new_full [24]
+[38]     0.0    0.00    0.00  159999         randint [38]
+                0.00    0.00  160000/1279997     randdouble [31]
+-----------------------------------------------
+                0.00    0.00   36000/36000       flist_clear [62]
+[39]     0.0    0.00    0.00   36000         flist_node_free [39]
+-----------------------------------------------
+                0.00    0.00     909/909         emitter_tick [26]
+[40]     0.0    0.00    0.00     909         flist_tick [40]
+-----------------------------------------------
+                0.00    0.00     182/182         command [19]
+[41]     0.0    0.00    0.00     182         async_read_stdin [41]
+-----------------------------------------------
+                0.00    0.00      13/69          docommand [20]
+                0.00    0.00      56/69          emitter_load_script [60]
+[42]     0.0    0.00    0.00      69         startswith [42]
+-----------------------------------------------
+                0.00    0.00      16/16          emitter_load_script [60]
+[43]     0.0    0.00    0.00      16         flist_insert [43]
+                0.00    0.00      16/16          flist_node_new [44]
+-----------------------------------------------
+                0.00    0.00      16/16          flist_insert [43]
+[44]     0.0    0.00    0.00      16         flist_node_new [44]
+                0.00    0.00      16/480035      chmalloc [32]
+-----------------------------------------------
+                0.00    0.00       4/16          make_kick_frame [47]
+                0.00    0.00       4/16          make_strum_frame [50]
+                0.00    0.00       4/16          make_snare_frame [49]
+                0.00    0.00       4/16          make_rain_frame [48]
+[45]     0.0    0.00    0.00      16         make_emit_frame [45]
+                0.00    0.00      16/480035      chmalloc [32]
+-----------------------------------------------
+                0.00    0.00      16/16          emitter_load_script [60]
+[46]     0.0    0.00    0.00      16         strtoi [46]
+-----------------------------------------------
+                0.00    0.00       4/4           emitter_load_script [60]
+[47]     0.0    0.00    0.00       4         make_kick_frame [47]
+                0.00    0.00       4/16          make_emit_frame [45]
+-----------------------------------------------
+                0.00    0.00       4/4           emitter_load_script [60]
+[48]     0.0    0.00    0.00       4         make_rain_frame [48]
+                0.00    0.00       4/16          make_emit_frame [45]
+-----------------------------------------------
+                0.00    0.00       4/4           emitter_load_script [60]
+[49]     0.0    0.00    0.00       4         make_snare_frame [49]
+                0.00    0.00       4/16          make_emit_frame [45]
+-----------------------------------------------
+                0.00    0.00       4/4           emitter_load_script [60]
+[50]     0.0    0.00    0.00       4         make_strum_frame [50]
+                0.00    0.00       4/16          make_emit_frame [45]
+-----------------------------------------------
+                0.00    0.00       1/2           command_setup [59]
+                0.00    0.00       1/2           command [19]
+[51]     0.0    0.00    0.00       2         async_write_stdout [51]
+-----------------------------------------------
+                0.00    0.00       1/1           main [2]
+[52]     0.0    0.00    0.00       1         argparse [52]
+-----------------------------------------------
+                0.00    0.00       1/1           command_setup [59]
+[53]     0.0    0.00    0.00       1         async_setup_stdin [53]
+-----------------------------------------------
+                0.00    0.00       1/1           command_setup [59]
+[54]     0.0    0.00    0.00       1         async_setup_stdout [54]
+-----------------------------------------------
+                0.00    0.00       1/1           finalize [83]
+[55]     0.0    0.00    0.00       1         audio_close [55]
+-----------------------------------------------
+                0.00    0.00       1/1           main [2]
+[56]     0.0    0.00    0.00       1         audio_init [56]
+                0.00    0.00       2/480035      chmalloc [32]
+-----------------------------------------------
+                0.00    0.00       1/1           emitter_load_script [60]
+[57]     0.0    0.00    0.00       1         audio_play [57]
+-----------------------------------------------
+                0.00    0.00       1/1           docommand [20]
+[58]     0.0    0.00    0.00       1         cmd_load [58]
+                0.00    0.00       1/1           try_fopen [68]
+                0.00    0.00       1/1           emitter_load_script [60]
+-----------------------------------------------
+                0.00    0.00       1/1           main [2]
+[59]     0.0    0.00    0.00       1         command_setup [59]
+                0.00    0.00       1/1           async_setup_stdout [54]
+                0.00    0.00       1/1           async_setup_stdin [53]
+                0.00    0.00       1/2           async_write_stdout [51]
+-----------------------------------------------
+                0.00    0.00       1/1           cmd_load [58]
+[60]     0.0    0.00    0.00       1         emitter_load_script [60]
+                0.00    0.00      56/69          startswith [42]
+                0.00    0.00      16/16          strtoi [46]
+                0.00    0.00      16/16          flist_insert [43]
+                0.00    0.00       4/4           make_kick_frame [47]
+                0.00    0.00       4/4           make_strum_frame [50]
+                0.00    0.00       4/4           make_snare_frame [49]
+                0.00    0.00       4/4           make_rain_frame [48]
+                0.00    0.00       1/1           flist_clear [62]
+                0.00    0.00       1/1           audio_play [57]
+                0.00    0.00       1/1           flist_restart [64]
+-----------------------------------------------
+                0.00    0.00       1/1           main [2]
+[61]     0.0    0.00    0.00       1         emitter_setup [61]
+                0.00    0.00       1/1           flist_new [63]
+-----------------------------------------------
+                0.00    0.00       1/1           emitter_load_script [60]
+[62]     0.0    0.00    0.00       1         flist_clear [62]
+                0.00    0.00   36000/36000       flist_node_free [39]
+-----------------------------------------------
+                0.00    0.00       1/1           emitter_setup [61]
+[63]     0.0    0.00    0.00       1         flist_new [63]
+                0.00    0.00       1/480035      chmalloc [32]
+-----------------------------------------------
+                0.00    0.00       1/1           emitter_load_script [60]
+[64]     0.0    0.00    0.00       1         flist_restart [64]
+-----------------------------------------------
+                0.00    0.00       1/1           plist_free [66]
+[65]     0.0    0.00    0.00       1         plist_clear [65]
+-----------------------------------------------
+                0.00    0.00       1/1           finalize [83]
+[66]     0.0    0.00    0.00       1         plist_free [66]
+                0.00    0.00       1/1           plist_clear [65]
+-----------------------------------------------
+                0.00    0.00       1/1           main [2]
+[67]     0.0    0.00    0.00       1         plist_new [67]
+                0.00    0.00       1/480035      chmalloc [32]
+-----------------------------------------------
+                0.00    0.00       1/1           cmd_load [58]
+[68]     0.0    0.00    0.00       1         try_fopen [68]
+-----------------------------------------------
+
+ This table describes the call tree of the program, and was sorted by
+ the total amount of time spent in each function and its children.
+
+ Each entry in this table consists of several lines.  The line with the
+ index number at the left hand margin lists the current function.
+ The lines above it list the functions that called this function,
+ and the lines below it list the functions this one called.
+ This line lists:
+     index	A unique number given to each element of the table.
+		Index numbers are sorted numerically.
+		The index number is printed next to every function name so
+		it is easier to look up where the function in the table.
+
+     % time	This is the percentage of the `total' time that was spent
+		in this function and its children.  Note that due to
+		different viewpoints, functions excluded by options, etc,
+		these numbers will NOT add up to 100%.
+
+     self	This is the total amount of time spent in this function.
+
+     children	This is the total amount of time propagated into this
+		function by its children.
+
+     called	This is the number of times the function was called.
+		If the function called itself recursively, the number
+		only includes non-recursive calls, and is followed by
+		a `+' and the number of recursive calls.
+
+     name	The name of the current function.  The index number is
+		printed after it.  If the function is a member of a
+		cycle, the cycle number is printed between the
+		function's name and the index number.
+
+
+ For the function's parents, the fields have the following meanings:
+
+     self	This is the amount of time that was propagated directly
+		from the function into this parent.
+
+     children	This is the amount of time that was propagated from
+		the function's children into this parent.
+
+     called	This is the number of times this parent called the
+		function `/' the total number of times the function
+		was called.  Recursive calls to the function are not
+		included in the number after the `/'.
+
+     name	This is the name of the parent.  The parent's index
+		number is printed after it.  If the parent is a
+		member of a cycle, the cycle number is printed between
+		the name and the index number.
+
+ If the parents of the function cannot be determined, the word
+ `<spontaneous>' is printed in the `name' field, and all the other
+ fields are blank.
+
+ For the function's children, the fields have the following meanings:
+
+     self	This is the amount of time that was propagated directly
+		from the child into the function.
+
+     children	This is the amount of time that was propagated from the
+		child's children to the function.
+
+     called	This is the number of times the function called
+		this child `/' the total number of times the child
+		was called.  Recursive calls by the child are not
+		listed in the number after the `/'.
+
+     name	This is the name of the child.  The child's index
+		number is printed after it.  If the child is a
+		member of a cycle, the cycle number is printed
+		between the name and the index number.
+
+ If there are any cycles (circles) in the call graph, there is an
+ entry for the cycle-as-a-whole.  This entry shows who called the
+ cycle (as parents) and the members of the cycle (as children.)
+ The `+' recursive calls entry shows the number of function calls that
+ were internal to the cycle, and the calls entry for each member shows,
+ for that member, how many times it was called from other members of
+ the cycle.
+
+
+
+Index by function name
+
+  [52] argparse               [63] flist_new              [14] particle_is_alive
+  [41] async_read_stdin       [39] flist_node_free        [24] particle_new_full
+  [53] async_setup_stdin      [44] flist_node_new         [29] particle_set_limit
+  [54] async_setup_stdout     [64] flist_restart           [6] particle_tick
+  [51] async_write_stdout     [40] flist_tick             [36] plist_add
+  [55] audio_close            [34] free_particle_extra    [65] plist_clear
+  [56] audio_init              [9] friction               [66] plist_free
+  [57] audio_play              [8] gravity                [67] plist_new
+  [32] chmalloc               [12] linear_blend           [37] plist_node_new
+  [21] cmd_exit                [1] mainloop               [18] plist_remove
+  [58] cmd_load               [45] make_emit_frame         [4] plist_safe_foreach
+  [19] command                [47] make_kick_frame        [31] randdouble
+  [59] command_setup          [48] make_rain_frame        [33] randfloat
+   [3] display                [49] make_snare_frame       [38] randint
+  [20] docommand              [50] make_strum_frame       [13] springbox
+   [7] draw_diamond           [35] new_particle_extra     [42] startswith
+   [5] draw_particle          [15] no_blend               [46] strtoi
+  [27] emit_frame             [17] no_force               [16] timeout
+  [60] emitter_load_script    [23] particle_free          [25] triangular
+  [61] emitter_setup          [28] particle_get_extra     [68] try_fopen
+  [26] emitter_tick           [10] particle_get_life      [30] uniform
+  [62] flist_clear            [11] particle_get_lifetime
+  [43] flist_insert           [22] particle_get_radius
+kaedenn@kaedenn-laptop:~/Programming/vis$ 
