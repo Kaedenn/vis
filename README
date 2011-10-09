@@ -1,0 +1,76 @@
+
+Hand-Crafted Particle Visualization for Music, via SDL and OpenGL
+
+== A little bit of background information ==
+
+This project is a glorified script-able particle engine intended for providing a complex visualization for songs. Because "trans-coding" audio to a MIDI format is practically impossible, all of the scheduling--that is, writing the script to emit the particles--must be done by hand. This is where a keen ear and substantial knowledge of music theory comes in, neither of which I claim to have.
+
+This leads to an interesting dichotomy: one one hand, simpler songs would be easier to schedule, but they would lead to a fairly boring visualization. On the other hand, however, complex songs require a lot of work to figure out what's going on. I hope I've hit an acceptable compromise in the song I've chosen: the Bowser theme from Super Mario World 2: Yoshi's Island. Being a theme from an old video game, the theme is not overly complex. It also has a repeat point, meaning I can drag on the visualization for as long as I please. In this specific project, I schedule two minutes and 43.69 seconds.
+
+== Compiling this thing ==
+
+This project depends on kcc (https://github.com/Kaedenn/kcc), SDL and OpenGL. To compile without kcc, just change the line defining $(CC) in the Makefile to use gcc with your favorite command-line arguments. For example,
+
+CC = gcc -Wall -Wextra -ansi -pedantic --std=c99
+
+would do the trick.
+
+== Running this thing ==
+
+This project has two methods of operation: interactively or by parsing a script. Despite their similarity, they both work in completely different ways. Commands issued interactively cause particles to emit immediately, while a script schedules the particles to be emitted after a specific delay, in hundredths of a second. The two methods share most of the same commands, with the most important command being "emit", taking twenty-two (yes, twenty-two) arguments:
+
+emit <N> <X> <Y> <uX> <uY> <R> <uR> <dS> <udS> <T> <uT> <L> <uL>
+     <CR> <CG> <CB> <uCR> <uCG> <uCB> <FO> <LI> <BL>
+
+<N>:         number of particles to emit
+<X>, <Y>:    where to emit the particles, in pixels (0-800, 0-600)
+<uX>, <uY>:  "uncertainty" in position: particles will appear between
+             <X> - <uX> and <X> + <uX>, and <Y> - <uY> and <Y> + <uY>
+<R>,  <uR>:  radius of the particles, plus-or-minus <uR>
+<dS>, <udS>: linear velocity of the particles, plus-or-minus <udS>
+<T>,  <uT>:  angle of trajectory, plus-or-minus <uT>
+<L>,  <uL>:  lifetime of the particles in 100ths of a second
+<CR>, <uCR>: "redness" of the particles
+<CG>, <uCG>: "greenness" of the particles
+<CB>, <uCB>: "blueness" of the particles
+<FO>:        ID of the force method to apply (see below)
+<LI>:        ID of the limiting method to apply (see below)
+<BL>:        ID of the alpha blending function to use (see below)
+
+The force methods are:
+0 - no force
+1 - friction: particles slow down gradually
+2 - gravity: particles accelerate downward over time
+
+The limit methods are:
+0 - no limit: particles are free to leave the display area
+1 - box: particles stop once they hit the borders of the display area
+2 - springbox: particles bounce off the borders of the display area
+
+The alpha blending functions are:
+0 - no blend: particles suddenly vanish when they die
+1 - linear blend: particles fade away linearly
+2 - quadratic blend: particles fade according to a parabola
+3 - neggamma blend: particles fade according to a bell-curve
+
+The other commands: "kick", "strum", "snare" and "rain" are unimportant; they only exist for testing and are modeled by an emit. See frame.c to see exactly how that's done. Realistically, these four commands would never appear in a real script file.
+
+Both the interactive and script methods understand the "bgc" command as well:
+
+bgc <R> <G> <B> <A>: change the background color
+
+Now, the program understands the following commands only when running interactively:
+
+load <scriptfile>: loads <scriptfile> and begins emitting immediately
+exit: quit the program
+
+The script method understands the following commands:
+
+audio <file>: load <file> to play
+seek <mm:ss.cs> seek to a specific spot in <file> and play from there
+
+== Credit where credit is due ==
+
+Thank you SNESmusic.org for the Bowser theme, retrieved at
+http://snesmusic.org/v2/profile.php?profile=set&selected=2757
+on the 8th of October 2011.
