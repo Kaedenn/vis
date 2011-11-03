@@ -3,13 +3,27 @@ Hand-Crafted Particle Visualization for Music, via SDL and OpenGL
 
 == A little bit of background information ==
 
-This project is a glorified script-able particle engine intended for providing a complex visualization for songs. Because "trans-coding" audio to a MIDI format is practically impossible, all of the scheduling--that is, writing the script to emit the particles--must be done by hand. This is where a keen ear and substantial knowledge of music theory comes in, neither of which I claim to have.
+This project is a glorified script-able particle engine intended for providing
+a complex visualization for songs. Because "trans-coding" audio to a MIDI
+format is practically impossible, all of the scheduling--that is, writing the
+script to emit the particles--must be done by hand. This is where a keen ear
+and substantial knowledge of music theory comes in, neither of which I claim to
+have.
 
-This leads to an interesting dichotomy: one one hand, simpler songs would be easier to schedule, but they would lead to a fairly boring visualization. On the other hand, however, complex songs require a lot of work to figure out what's going on. I hope I've hit an acceptable compromise in the song I've chosen: the Bowser theme from Super Mario World 2: Yoshi's Island. Being a theme from an old video game, the theme is not overly complex. It also has a repeat point, meaning I can drag on the visualization for as long as I please. In this specific project, I schedule two minutes and 43.69 seconds.
+This leads to an interesting dichotomy: one one hand, simpler songs would be
+easier to schedule, but they would lead to a fairly boring visualization. On
+the other hand, however, complex songs require a lot of work to figure out
+what's going on. I hope I've hit an acceptable compromise in the song I've
+chosen: the Bowser theme from Super Mario World 2: Yoshi's Island. Being a
+theme from an old video game, the theme is not overly complex. It also has a
+repeat point, meaning I can drag on the visualization for as long as I please.
+In this specific project, I schedule two minutes and 43.69 seconds.
 
 == Compiling this thing ==
 
-This project depends on kcc (https://github.com/Kaedenn/kcc), SDL and OpenGL. To compile without kcc, just change the line defining $(CC) in the Makefile to use gcc with your favorite command-line arguments. For example,
+This project depends on kcc (https://github.com/Kaedenn/kcc), SDL and OpenGL.
+To compile without kcc, just change the line defining $(CC) in the Makefile to
+use gcc with your favorite command-line arguments. For example,
 
 CC = gcc -Wall -Wextra -ansi -pedantic --std=c99
 
@@ -17,7 +31,13 @@ would do the trick.
 
 == Running this thing ==
 
-This project has two methods of operation: interactively or by parsing a script. Despite their similarity, they both work in completely different ways. Commands issued interactively cause particles to emit immediately, while a script schedules the particles to be emitted after a specific delay, in hundredths of a second. The two methods share most of the same commands, with the most important command being "emit", taking twenty-two (yes, twenty-two) arguments:
+This project has two methods of operation: interactively or by parsing a
+script. Despite their similarity, they both work in completely different ways.
+Commands issued interactively cause particles to emit immediately, while a
+script schedules the particles to be emitted after a specific delay, in
+hundredths of a second. The two methods share most of the same commands, with
+the most important command being "emit", taking twenty-two (yes, twenty-two)
+arguments:
 
 emit <N> <X> <Y> <uX> <uY> <R> <uR> <dS> <udS> <T> <uT> <L> <uL>
      <CR> <CG> <CB> <uCR> <uCG> <uCB> <FO> <LI> <BL>
@@ -53,13 +73,17 @@ The alpha blending functions are:
 2 - quadratic blend: particles fade according to a parabola
 3 - neggamma blend: particles fade according to a bell-curve
 
-The other commands: "kick", "strum", "snare" and "rain" are unimportant; they only exist for testing and are modeled by an emit. See frame.c to see exactly how that's done. Realistically, these four commands would never appear in a real script file.
+The other commands: "kick", "strum", "snare" and "rain" are unimportant; they
+only exist for testing and are modeled by an emit. See frame.c to see exactly
+how that's done. Realistically, these four commands would never appear in a
+real script file.
 
 Both the interactive and script methods understand the "bgc" command as well:
 
 bgc <R> <G> <B> <A>: change the background color
 
-Now, the program understands the following commands only when running interactively:
+Now, the program understands the following commands only when running
+interactively:
 
 load <scriptfile>: loads <scriptfile> and begins emitting immediately
 exit: quit the program
@@ -68,6 +92,34 @@ The script method understands the following commands:
 
 audio <file>: load <file> to play
 seek <mm:ss.cs> seek to a specific spot in <file> and play from there
+
+== Known bugs and flaws ==
+
+Seeking a track does not keep the particle emission times synchronized
+properly; the track and the particles are no longer synchronized.
+
+There is a mysterious segmentation fault after having the program run for a
+length of time. It is not known how to reproduce this segmentation fault.
+
+== Future improvements and in-progress work ==
+
+Adding a "mutation function" that modifies some attributes over time: either
+size, color, lifetime, or anything else about the particle. This allows
+particles to grow or shrink in size and change color over time.
+
+Reworking the engine to use a bucket structure: prevent the program from having
+to traverse a linked-list each frame by storing just a linked-list of
+"buckets", or an array of sequential particles. These buckets would have a
+fixed size (say 1,000 or 10,000). This would greatly speed up the program
+because dereferencing a pointer is far more expensive than traversing a
+sequence of memory, due to paging, caching and other lovely magic.
+
+Reworking the engine to use an arena allocator: prevent the program from
+allocating each and every particle separately by allocating a large array of
+particles all at once. This is necessary for the bucket structure to work and
+would lead to much fewer total allocations and freeings. According to the
+profiling, this may or may not make a difference for the execution speed of the
+program, but would allow for other more effective optimizations.
 
 == Credit where credit is due ==
 

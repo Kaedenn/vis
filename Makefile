@@ -8,16 +8,16 @@ HSRC = async.h audio.h clargs.h command.h defines.h draw.h emitter.h flist.h \
 SOURCES = $(CSRC) $(HSRC) Makefile
 EXECBIN = vis
 
-KCC = kcc -lSDL -lGL -x c99 -bb
+CC = kcc -lSDL -lGL -x c99 -bb
 
 all: clean $(SOURCES)
-	$(KCC) -O -o $(EXECBIN) $(CSRC)
+	$(CC) -O -o $(EXECBIN) $(CSRC)
 
 debug: clean $(SOURCES)
-	$(KCC) -p "-ggdb" -o $(EXECBIN) $(CSRC)
+	$(CC) -p "-ggdb" -o $(EXECBIN) $(CSRC)
 
 profile: clean $(SOURCES)
-	$(KCC) -p "-pg" -o $(EXECBIN) $(CSRC)
+	$(CC) -p "-pg" -o $(EXECBIN) $(CSRC)
 	rlwrap ./$(EXECBIN) -l script.test.2
 	gprof $(EXECBIN)
 	- rm ./gmon.out

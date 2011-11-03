@@ -9,6 +9,7 @@ struct particle;
 
 typedef void (*force_fn)(struct particle* p);
 typedef void (*limit_fn)(struct particle* p);
+typedef void (*mutate_fn)(struct particle* p);
 
 typedef struct particle {
   double x, y;
@@ -18,6 +19,7 @@ typedef struct particle {
   int life;
   force_t force;
   limit_t limit;
+  mutate_t mutator;
   void* extra;
 } *particle_t;
 

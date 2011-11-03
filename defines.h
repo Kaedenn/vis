@@ -22,6 +22,12 @@ typedef enum {
   VIS_NLIMITS
 } limit_t;
 
+/* mutation functions */
+typedef enum {
+  VIS_DEFAULT_MUTATE = 0,
+  VIS_SHRINK_LINEAR
+} mutate_t;
+
 /* alpha-channel blending functions */
 typedef enum {
   VIS_NO_BLEND = 0,
