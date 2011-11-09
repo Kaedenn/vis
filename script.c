@@ -3,8 +3,45 @@
 #include "helper.h"
 #include "script.h"
 
+#include "squirrel.h"
+#include "sqstdmath.h"
+#include "sqstdaux.h"
+#include "sqstdstring.h"
+
 #include <string.h>
 
+SQRESULT make_squirrel_vm(HSQUIRRELVM* sqvm) {
+  SQRESULT result = 0;
+  *sqvm = sq_open(1024);
+  if (*sqvm == NULL) {
+    eprintf("fatal: unable to open the Squirrel vm");
+    return 2;
+  }
+  if (!sqstd_register_mathlib(*sqvm)) {
+    eprintf("fatal: unable to register the Squirrel math library");
+    result = 1;
+  }
+  if (!sqstd_register_stringlib(*sqvm)) {
+    eprintf("fatal: unable to register the Squirrel string library");
+    result = 1;
+  }
+  return result;
+}
+
+flist_t load_script(const char* filename) {
+  SQRESULT result = 0;
+  HSQUIRRELVM sqvm;
+  flist_t fl = NULL;
+  result = make_squirrel_vm(&sqvm);
+  if (result == 1) { sq_close(sqvm); }
+  if (result != 0) { return NULL; }
+  fl = flist_new();
+  
+  sq_close(sqvm);
+  return fl;
+}
+
+#if 0
 void parse_line(flist_t fl, const char* line, unsigned lnum);
 
 flist_t load_script(const char* filename) {
@@ -121,4 +158,5 @@ void parse_line(flist_t fl, const char* line, unsigned lnum) {
     }
   }
 }
+#endif
 

@@ -8,7 +8,10 @@ HSRC = async.h audio.h clargs.h command.h defines.h draw.h emitter.h flist.h \
 SOURCES = $(CSRC) $(HSRC) Makefile
 EXECBIN = vis
 
-CC = kcc -lSDL -lGL -x c99 -bb
+PROJECTDIR = $(realpath .)
+CCINCS = -p "-Isquirrel"
+CCLIBS = -lSDL -lGL -p "-Llibsquirrel/lib" -lsquirrel -lsqstdlib
+CC = kcc -v $(CCINCS) $(CCLIBS) -x c99 -bb
 
 all: clean $(SOURCES)
 	$(CC) -O -o $(EXECBIN) $(CSRC)
