@@ -1,10 +1,10 @@
 
 CSRC = async.c audio.c clargs.c command.c driver.c emitter.c flist.c \
        forces.c frame.c helper.c limits.c particle.c particle_extra.c plist.c \
-       random.c script.c
+       random.c script.c mutator.c
 HSRC = async.h audio.h clargs.h command.h defines.h draw.h emitter.h flist.h \
        forces.h frame.h helper.h limits.h particle.h particle_extra.h plist.h \
-       random.h script.h
+       random.h script.h mutator.h
 SOURCES = $(CSRC) $(HSRC) Makefile
 EXECBIN = vis
 

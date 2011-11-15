@@ -29,7 +29,7 @@ plist_t particles = NULL;
 void finalize(void);
 void mainloop(void);
 
-void draw_particle(plist_node_t node);
+void animate_particle(plist_node_t node);
 void display(void);
 void timeout(void);
 
@@ -103,7 +103,8 @@ void mainloop(void) {
   }
 }
 
-void draw_particle(plist_node_t node) {
+void animate_particle(plist_node_t node) {
+  /* TODO: add passive forces */
   particle_t p = node->particle;
   pextra_t pe = (pextra_t)(p->extra);
   double life, lifetime;
@@ -141,7 +142,7 @@ void draw_particle(plist_node_t node) {
 
 void display(void) {
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  plist_safe_foreach(particles, draw_particle);
+  plist_safe_foreach(particles, animate_particle);
   SDL_GL_SwapBuffers();
 }
 
