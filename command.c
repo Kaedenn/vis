@@ -278,7 +278,12 @@ static void cmd_rain(const char* buffer) {
 
 static void cmd_load(const char* buffer) {
   if (strlen(buffer) > strlen("load ")) {
-    emitter_schedule(load_script(buffer + strlen("load ")));
+    flist_t flist = load_script(buffer + strlen("load "));
+    if (flist != NULL) {
+      emitter_schedule(flist);
+    } else {
+      eprintf("Failed to load script '%s'", buffer + strlen("load "));
+    }
   }
 }
 

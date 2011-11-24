@@ -11,7 +11,7 @@ EXECBIN = vis
 PROJECTDIR = $(realpath .)
 CCINCS = -p "-Isquirrel"
 CCLIBS = -lSDL -lGL -p "-Llibsquirrel/lib" -lsquirrel -lsqstdlib
-CC = kcc -v $(CCINCS) $(CCLIBS) -x c99 -bb
+CC = kcc $(CCINCS) $(CCLIBS) -x c99 -bb
 
 all: clean $(SOURCES)
 	$(CC) -O -o $(EXECBIN) $(CSRC)

@@ -1,6 +1,5 @@
 
 #include "limits.h"
-#include "defines.h"
 
 #define BOX_FUDGE(p) (0)
 

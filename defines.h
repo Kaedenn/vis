@@ -2,7 +2,20 @@
 #ifndef VIS_DEFINES_HEADER_INCLUDED_
 #define VIS_DEFINES_HEADER_INCLUDED_ 1
 
+#ifdef __GNUC__
+/* GCC-specific extensions to make things a little easier */
 #define UNUSED_PARAM(param) param __attribute__((unused))
+#define REQUEST_INLINE __attribute__((always_inline))
+#else
+#define UNUSED_PARAM(param) param
+#define REQUEST_INLINE
+#endif
+
+/* allow toggling of the always_inline directive */
+#ifdef VIS_SKIP_MANUAL_OPTIMIZATION
+#undef REQUEST_INLINE
+#define REQUEST_INLINE
+#endif
 
 /* force functions */
 typedef enum {
@@ -13,7 +26,7 @@ typedef enum {
   VIS_NFORCES
 } force_t;
 
-/* limiting functions */
+/* position-limiting functions */
 typedef enum {
   /* default limit is no limit */
   VIS_DEFAULT_LIMIT = 0,
@@ -24,8 +37,11 @@ typedef enum {
 
 /* mutation functions */
 typedef enum {
-  VIS_DEFAULT_MUTATE = 0,
-  VIS_SHRINK_LINEAR
+  VIS_MUTATE_PUSH = 0,
+  VIS_MUTATE_SLOW,
+  VIS_MUTATE_SHRINK,
+  VIS_MUTATE_GROW,
+  VIS_NMUTATES
 } mutate_t;
 
 /* alpha-channel blending functions */
@@ -39,7 +55,7 @@ typedef enum {
   VIS_NBLENDS
 } blend_t;
 
-/* physics */
+/* physics globals */
 #define VIS_FRICTION_COEFF 0.99
 #define VIS_GRAVITY_FACTOR 0.03
 

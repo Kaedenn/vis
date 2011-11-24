@@ -9,19 +9,46 @@
 #include "sqstdstring.h"
 
 #include <string.h>
+#include <stdarg.h>
+
+#define VIS_SQUIRREL_MEM_LIMIT 1024
+
+#ifdef SQUNICODE
+#define scfprintf fwprintf
+#define scfopen	_wfopen
+#define scvprintf vfwprintf
+#else
+#define scfprintf fprintf
+#define scfopen	fopen
+#define scvprintf vfprintf
+#endif
+
+void sq_printfunc(UNUSED_PARAM(HSQUIRRELVM v), const SQChar *s, ...) {
+	va_list vl;
+	va_start(vl, s);
+	scvprintf(stdout, s, vl);
+	va_end(vl);
+}
+
+void sq_errorfunc(UNUSED_PARAM(HSQUIRRELVM v), const SQChar *s, ...) {
+	va_list vl;
+	va_start(vl, s);
+	scvprintf(stderr, s, vl);
+	va_end(vl);
+}
 
 SQRESULT make_squirrel_vm(HSQUIRRELVM* sqvm) {
   SQRESULT result = 0;
-  *sqvm = sq_open(1024);
+  *sqvm = sq_open(VIS_SQUIRREL_MEM_LIMIT);
   if (*sqvm == NULL) {
     eprintf("fatal: unable to open the Squirrel vm");
     return 2;
   }
-  if (!sqstd_register_mathlib(*sqvm)) {
+  if (!SQ_SUCCEEDED(sqstd_register_mathlib(*sqvm))) {
     eprintf("fatal: unable to register the Squirrel math library");
     result = 1;
   }
-  if (!sqstd_register_stringlib(*sqvm)) {
+  if (!SQ_SUCCEEDED(sqstd_register_stringlib(*sqvm))) {
     eprintf("fatal: unable to register the Squirrel string library");
     result = 1;
   }
@@ -33,6 +60,8 @@ flist_t load_script(const char* filename) {
   HSQUIRRELVM sqvm;
   flist_t fl = NULL;
   result = make_squirrel_vm(&sqvm);
+	sq_setprintfunc(sqvm, sq_printfunc, sq_errorfunc);
+  sq_pushroottable(sqvm);
   if (result == 1) { sq_close(sqvm); }
   if (result != 0) { return NULL; }
   fl = flist_new();
