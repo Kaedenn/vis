@@ -4,6 +4,7 @@
 #include "script.h"
 
 #include "squirrel.h"
+#include "sqstdio.h"
 #include "sqstdmath.h"
 #include "sqstdaux.h"
 #include "sqstdstring.h"
@@ -55,16 +56,30 @@ SQRESULT make_squirrel_vm(HSQUIRRELVM* sqvm) {
   return result;
 }
 
+SQInteger squirrel_emit_fn(HSQUIRRELVM sqvm) {
+  eprintf("Received a call to emit()");
+  return 0;
+}
+
 flist_t load_script(const char* filename) {
   SQRESULT result = 0;
   HSQUIRRELVM sqvm;
   flist_t fl = NULL;
   result = make_squirrel_vm(&sqvm);
-	sq_setprintfunc(sqvm, sq_printfunc, sq_errorfunc);
-  sq_pushroottable(sqvm);
   if (result == 1) { sq_close(sqvm); }
   if (result != 0) { return NULL; }
+	sq_setprintfunc(sqvm, sq_printfunc, sq_errorfunc);
+  sq_pushroottable(sqvm);
   fl = flist_new();
+  
+  /* push the emit() function */
+  sq_pushroottable(sqvm);
+  sq_pushstring(sqvm, "emit", -1);
+  sq_newclosure(sqvm, squirrel_emit_fn, 0);
+  sq_newslot(sqvm, -3, SQFalse);
+  sq_pop(sqvm, 1);
+  
+  sqstd_dofile(sqvm, filename, SQFalse, SQTrue);
   
   sq_close(sqvm);
   return fl;
