@@ -1,5 +1,25 @@
 
-Hand-Crafted Particle Visualization for Music, via SDL and OpenGL
+Hand-Crafted Particle Visualization to Music, via SDL, OpenGL and libsquirrel
+
+== There's a demo! You want a demo? Sure you want a demo! ==
+
+I've recorded a play-through of the demo script file, and you can find links to
+the resulting movies here:
+
+http://kaedenn.net/vis/sample.ogv
+  This is the highest quality recording, in Theora format. It's huge; over 20MB
+  in size.
+
+http://kaedenn.net/vis/sample.mov
+  This is the second-highest quality recording. There are a lot of visual
+  artifacts (boxes, blur, etc). It's only 1.2MB though.
+
+http://kaedenn.net/vis/sample.wmv
+  This is the lowest quality recording. It looks awful, but you're able to tell
+  what's going on, at least. It's also 1.2MB. You should download this ONLY IF
+  you are unable to play QuickTime MOV files. If you're on a Mac, download the
+  MOV. If you're on Windows, try the MOV first, then try this one if the MOV
+  fails to run.
 
 == A little bit of background information ==
 
@@ -22,12 +42,14 @@ In this specific project, I schedule two minutes and 43.69 seconds.
 == Compiling this thing ==
 
 This project depends on kcc (https://github.com/Kaedenn/kcc), SDL and OpenGL.
-To compile without kcc, just change the line defining $(CC) in the Makefile to
-use gcc with your favorite command-line arguments. For example,
+To compile without kcc, change the line defining $(CC) in the Makefile to use
+gcc with your favorite command-line arguments. For example,
 
 CC = gcc -Wall -Wextra -ansi -pedantic --std=c99
 
-would do the trick.
+would /mostly/ do the trick. You need to change a few other things, too, such
+as replacing the -O option with -O2 or -O3, the -x option with --std, and
+removing the -bb options.
 
 == Running this thing ==
 
@@ -88,10 +110,71 @@ interactively:
 load <scriptfile>: loads <scriptfile> and begins emitting immediately
 exit: quit the program
 
-The script method understands the following commands:
+== Running a script ==
 
-audio <file>: load <file> to play
-seek <mm:ss.cs> seek to a specific spot in <file> and play from there
+This program was always intended to be invoked with a script as an argument. I
+use the scripting language known as "squirrel" (http://www.squirrel-lang.org).
+See "script.nut" in the project root directory for an example of this language.
+To run the program with that script file, you would use the following command:
+
+$ ./vis -l script.nut
+
+The -l option loads and executes the argument.
+
+== Making a script ==
+
+The visualization program exports several functions and constants:
+
+variable __flist_instance__:
+  This is a pointer to the internal frame list. The script is responsible for
+  keeping track of it. Yes, I know this is potentially a problem, but I don't
+  see a strong reason to believe this could be used as a security threat. At
+  least, not yet.
+
+function emit(flist, when, <other arguments>):
+  flist: must be __flist_instance__
+  when: the time to emit, in 100ths of a second
+  <other arguments>: exactly as they were for the above "emit" command
+
+function audio(flist, filename):
+  flist: must be __flist_instance__
+  filename: path to an .mp3 file to play
+
+function bgcolor(flist, red, green, blue):
+  flist: mist be __flist_instance__
+  red, green, blue: values between 0 and 1 for the new background color
+
+function mutate(flist, mutate_type, mutate_arg):
+  flist: must be __flist_instance__
+  mutate_type: performs an action affecting all particles on screen,
+    immediately. see below for the mutation constants
+  mutate_arg: depends on the mutate type as to what this does
+
+constants:
+  FPS_LIMIT: maximum frames-per-second of the visualization
+  WIDTH: width of the window in pixels
+  HEIGHT: height of the window in pixels
+  
+  == force constants ==
+  DEFAULT_FORCE: force value 0
+  FRICTION: force value 1
+  GRAVITY: force value 2
+  NFORCES: not a force, but has the value 3
+  
+  == limit constants ==
+  DEFAULT_LIMIT: limit value 0
+  BOX: limit value 1
+  SPRINGBOX: limit value 2
+  NLIMITS: not a limiter, but has the value 3
+  
+  == mutate constants ==
+  MUTATE_PUSH: mutate value 0: multiplies particles' velocity by the argument
+    given
+  MUTATE_SLOW: mutate value 1: multiplies particles' velocity by the argument
+    given
+  MUTATE_SHRINK: mutate value 2: divides particles' radii by the argument given
+  MUTATE_GROW: mutate value 3: multiply particles' radii by the argument given
+  NMUTATES: not a mutation, but has the value 4
 
 == Known bugs and flaws ==
 
@@ -102,10 +185,6 @@ There is a mysterious segmentation fault after having the program run for a
 length of time. It is not known how to reproduce this segmentation fault.
 
 == Future improvements and in-progress work ==
-
-Adding a "mutation function" that modifies some attributes over time: either
-size, color, lifetime, or anything else about the particle. This allows
-particles to grow or shrink in size and change color over time.
 
 Reworking the engine to use a bucket structure: prevent the program from having
 to traverse a linked-list each frame by storing just a linked-list of
