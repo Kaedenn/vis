@@ -11,6 +11,7 @@
 
 #include <math.h>
 
+/*
 frame_t make_kick_frame(int n) {
   return make_emit_frame(n,
     VIS_WIDTH / 2, VIS_HEIGHT / 2, 0.0, 0.0,
@@ -46,11 +47,13 @@ frame_t make_rain_frame(int n) {
     0.0f, 0.2f, 0.7f, 0.0f, 0.1f, 0.3f,
     VIS_GRAVITY, VIS_DEFAULT_LIMIT, VIS_NO_BLEND);
 }
+*/
 
+/* n x y ux uy rad urad ds uds theta utheta life ulife r g b ur ug ub force limit blender */
 frame_t make_emit_frame(int n,
     double x, double y, double ux, double uy,
-    double rad, double urad, int life, int ulife,
-    double ds, double uds, double theta, double utheta,
+    double rad, double urad, double ds, double uds,
+    double theta, double utheta, int life, int ulife,
     float r, float g, float b, float ur, float ub, float ug,
     force_t force, limit_t limit, blend_t blend) /* sorry */ {
   frame_t frame = chmalloc(sizeof(struct emit_frame));

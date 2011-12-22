@@ -26,15 +26,17 @@ typedef struct emit_frame {
   blend_t blender;   /* blending function */
 } *frame_t;
 
+/*
 frame_t make_kick_frame(int n);
 frame_t make_strum_frame(int n);
 frame_t make_snare_frame(int n);
 frame_t make_rain_frame(int n);
+*/
 frame_t make_emit_frame(int n,
     double x, double y, double ux, double uy,
-    double rad, double urad, int life, int ulife,
-    double ds, double uds, double theta, double utheta,
-    float r, float g, float b, float ur, float ug, float ub,
+    double rad, double urad, double ds, double uds,
+    double theta, double utheta, int life, int ulife,
+    float r, float g, float b, float ur, float ub, float ug,
     force_t force, limit_t limit, blend_t blend); /* sorry */
 
 void free_frame(frame_t frame);
