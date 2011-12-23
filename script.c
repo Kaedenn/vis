@@ -14,16 +14,6 @@
 
 #define VIS_SQUIRREL_MEM_LIMIT 1024
 
-#ifdef SQUNICODE
-#define scfprintf fwprintf
-#define scfopen	_wfopen
-#define scvprintf vfwprintf
-#else
-#define scfprintf fprintf
-#define scfopen	fopen
-#define scvprintf vfprintf
-#endif
-
 typedef SQInteger (*closure_t)(HSQUIRRELVM);
 
 SQInteger print_args(HSQUIRRELVM v);
@@ -31,33 +21,28 @@ SQInteger print_args(HSQUIRRELVM v);
 void sq_printfunc(UNUSED_PARAM(HSQUIRRELVM v), const SQChar *s, ...) {
 	va_list vl;
 	va_start(vl, s);
-	scvprintf(stdout, s, vl);
+	vfprintf(stdout, s, vl);
 	va_end(vl);
 }
 
 void sq_errorfunc(UNUSED_PARAM(HSQUIRRELVM v), const SQChar *s, ...) {
 	va_list vl;
 	va_start(vl, s);
-	scvprintf(stderr, s, vl);
+	vfprintf(stderr, s, vl);
 	va_end(vl);
 }
 
 int make_squirrel_vm(HSQUIRRELVM* sqvm) {
-  int result = 0;
   *sqvm = sq_open(VIS_SQUIRREL_MEM_LIMIT);
   if (*sqvm == NULL) {
     eprintf("fatal: unable to open the Squirrel vm");
     return 2;
   }
-  if (!SQ_SUCCEEDED(sqstd_register_mathlib(*sqvm))) {
-    eprintf("fatal: unable to register the Squirrel math library");
-    result = 1;
-  }
-  if (!SQ_SUCCEEDED(sqstd_register_stringlib(*sqvm))) {
-    eprintf("fatal: unable to register the Squirrel string library");
-    result = 1;
-  }
-  return result;
+  sq_pushroottable(*sqvm);
+  sqstd_register_mathlib(*sqvm);
+  sqstd_register_stringlib(*sqvm);
+  DBPRINTF("registered the mathlib and stringlib", "");
+  return 0;
 }
 
 void squirrel_add_global(HSQUIRRELVM sqvm, const char* varname, void* value) {
@@ -97,40 +82,40 @@ flist_t load_script(const char* filename) {
   if (result == 1) { sq_close(sqvm); }
   if (result != 0) { return NULL; }
 	sq_setprintfunc(sqvm, sq_printfunc, sq_errorfunc);
-  sq_pushroottable(sqvm);
+	sqstd_seterrorhandlers(sqvm);
   fl = flist_new();
   
   /* grant access to the flist */
   squirrel_add_global(sqvm, "__flist_instance__", fl);
-#define NEW_GLOBAL(handle) squirrel_add_constant(sqvm, #handle, VIS_##handle)
+#define NEW_CONST(handle) squirrel_add_constant(sqvm, #handle, VIS_##handle)
   /* grant access to all of the enums and constants */
-  NEW_GLOBAL(FPS_LIMIT);
-  NEW_GLOBAL(WIDTH);
-  NEW_GLOBAL(HEIGHT);
+  NEW_CONST(FPS_LIMIT);
+  NEW_CONST(WIDTH);
+  NEW_CONST(HEIGHT);
   /* blenders */
-  NEW_GLOBAL(NO_BLEND);
-  NEW_GLOBAL(DEFAULT_BLEND);
-  NEW_GLOBAL(BLEND_LINEAR);
-  NEW_GLOBAL(BLEND_QUADRATIC);
-  NEW_GLOBAL(BLEND_NEGGAMMA);
-  NEW_GLOBAL(NBLENDS);
+  NEW_CONST(NO_BLEND);
+  NEW_CONST(DEFAULT_BLEND);
+  NEW_CONST(BLEND_LINEAR);
+  NEW_CONST(BLEND_QUADRATIC);
+  NEW_CONST(BLEND_NEGGAMMA);
+  NEW_CONST(NBLENDS);
   /* forces */
-  NEW_GLOBAL(DEFAULT_FORCE);
-  NEW_GLOBAL(FRICTION);
-  NEW_GLOBAL(GRAVITY);
-  NEW_GLOBAL(NFORCES);
+  NEW_CONST(DEFAULT_FORCE);
+  NEW_CONST(FRICTION);
+  NEW_CONST(GRAVITY);
+  NEW_CONST(NFORCES);
   /* limits */
-  NEW_GLOBAL(DEFAULT_LIMIT);
-  NEW_GLOBAL(BOX);
-  NEW_GLOBAL(SPRINGBOX);
-  NEW_GLOBAL(NLIMITS);
+  NEW_CONST(DEFAULT_LIMIT);
+  NEW_CONST(BOX);
+  NEW_CONST(SPRINGBOX);
+  NEW_CONST(NLIMITS);
   /* mutators */
-  NEW_GLOBAL(MUTATE_PUSH);
-  NEW_GLOBAL(MUTATE_SLOW);
-  NEW_GLOBAL(MUTATE_SHRINK);
-  NEW_GLOBAL(MUTATE_GROW);
-  NEW_GLOBAL(NMUTATES);
-#undef NEW_GLOBAL
+  NEW_CONST(MUTATE_PUSH);
+  NEW_CONST(MUTATE_SLOW);
+  NEW_CONST(MUTATE_SHRINK);
+  NEW_CONST(MUTATE_GROW);
+  NEW_CONST(NMUTATES);
+#undef NEW_CONST
   /* push the following functions */
   squirrel_add_closure(sqvm, "emit", squirrel_emit_fn);
   squirrel_add_closure(sqvm, "audio", squirrel_audio_fn);
@@ -138,6 +123,9 @@ flist_t load_script(const char* filename) {
   squirrel_add_closure(sqvm, "mutate", squirrel_mutate_fn);
   
   sqstd_dofile(sqvm, filename, SQFalse, SQTrue);
+  
+  audio_play();
+  flist_restart(fl);
   
   sq_close(sqvm);
   return fl;
@@ -155,19 +143,19 @@ SQInteger squirrel_emit_fn(HSQUIRRELVM sqvm) {
   SQFloat color[6] = {0, 0, 0, 0, 0, 0};
   SQInteger force, limit, blender;
   SQInteger nargs = sq_gettop(sqvm);
-  DBPRINTF("** Received a call to emit(nargs = %d) **", nargs);
   
   /* sqvm flist when n x y ... */
-  /* n x y ux uy rad urad ds uds theta utheta life ulife r g b ur ug ub force limit blender */
+  /* n x y ux uy rad urad ds uds theta utheta life ulife r g b ur ug ub
+      force limit blender */
   /* start at stack position 2 */
   i = 2;
   sq_getuserpointer(sqvm, i++, (void**)&fl);
   sq_getinteger(sqvm, i++, &when);
   sq_getinteger(sqvm, i++, &nparticles);
-  sq_getfloat(sqvm, i++, &where[0]);
-  sq_getfloat(sqvm, i++, &where[1]);
-  sq_getfloat(sqvm, i++, &where[2]);
-  sq_getfloat(sqvm, i++, &where[3]);
+  sq_getfloat(sqvm, i++, where);
+  sq_getfloat(sqvm, i++, where + 1);
+  sq_getfloat(sqvm, i++, where + 2);
+  sq_getfloat(sqvm, i++, where + 3);
   sq_getfloat(sqvm, i++, size);
   sq_getfloat(sqvm, i++, size + 1);
   sq_getfloat(sqvm, i++, velocity);
@@ -186,36 +174,49 @@ SQInteger squirrel_emit_fn(HSQUIRRELVM sqvm) {
   sq_getinteger(sqvm, i++, &limit);
   sq_getinteger(sqvm, i++, &blender);
   
-  DBPRINTF("%d particles at (%g,%g)\xc2\xb1(%g,%g)", nparticles, where[0], where[1], where[2], where[3]);
-  DBPRINTF("size %g\xc2\xb1%g, velocity |%g,%g>\xc2\xb1|%g,%g>", size[0], size[1], velocity[0], velocity[2], velocity[1], velocity[3]);
-  DBPRINTF("life %d\xc2\xb1%d, color (%g, %g, %g)\xc2\xb1(%g, %g, %g)", life[0], life[1], color[0], color[1], color[2], color[3], color[4], color[5]);
+  DBPRINTF("** Received a call to emit(nargs = %d) **", nargs);
+  DBPRINTF("%d particles at (%g,%g)\xc2\xb1(%g,%g)", nparticles,
+           where[0], where[1], where[2], where[3]);
+  DBPRINTF("size %g\xc2\xb1%g, velocity |%g,%g>\xc2\xb1|%g,%g>",
+           size[0], size[1],
+           velocity[0], velocity[2], velocity[1], velocity[3]);
+  DBPRINTF("life %d\xc2\xb1%d, color (%g, %g, %g)\xc2\xb1(%g, %g, %g)",
+           life[0], life[1],
+           color[0], color[1], color[2], color[3], color[4], color[5]);
   
-  frame = make_emit_frame(nparticles, where[0], where[1], where[2], where[3],
+  frame = make_emit_frame((int)nparticles,
+    where[0], where[1], where[2], where[3],
     size[0], size[1], velocity[0], velocity[1], velocity[2], velocity[3],
-    life[0], life[1],
+    (int)life[0], (int)life[1],
     color[0], color[1], color[2], color[3], color[4], color[5],
-    force, limit, blender);
+    (force_t)force, (limit_t)limit, (blend_t)blender);
   
-  flist_insert_emit(fl, when, frame);
+  flist_insert_emit(fl, (fnum_t)when, frame);
   
   return 0;
 }
 
 SQInteger squirrel_audio_fn(HSQUIRRELVM sqvm) {
+  const SQChar* filename = NULL;
   SQInteger nargs = sq_gettop(sqvm);
-  DBPRINTF("Received a call to audio(nargs = %d): %p", nargs, sqvm);
+  if (nargs == 2) {
+    sq_getstring(sqvm, 2, &filename);
+  }
+  if (filename != NULL) {
+    audio_open(filename);
+  }
   return 0;
 }
 
 SQInteger squirrel_bgcolor_fn(HSQUIRRELVM sqvm) {
   SQInteger nargs = sq_gettop(sqvm);
-  DBPRINTF("Received a call to bgcolor(nargs = %d): %p", nargs, sqvm);
+  DBPRINTF("Received a call to bgcolor(nargs = %d)", nargs);
   return 0;
 }
 
 SQInteger squirrel_mutate_fn(HSQUIRRELVM sqvm) {
   SQInteger nargs = sq_gettop(sqvm);
-  DBPRINTF("Received a call to mutate(nargs = %d): %p", nargs, sqvm);
+  DBPRINTF("Received a call to mutate(nargs = %d)", nargs);
   return 0;
 }
 
@@ -387,6 +388,18 @@ SQInteger print_args(HSQUIRRELVM v)
         break;
       case OT_WEAKREF:
         printf("weak reference\n");
+        break;
+      case OT_BOOL:
+        printf("boolean\n");
+        break;
+      case OT_THREAD:
+        printf("thread\n");
+        break;
+      case OT_FUNCPROTO:
+        printf("function prototype\n");
+        break;
+      case OT_OUTER:
+        printf("outer\n");
         break;
       default:
         return sq_throwerror(v, "invalid param"); //throws an exception
