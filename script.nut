@@ -1,8 +1,8 @@
 
 
-local RED = [1, 0.2, 0.2, 0.3, 0.1, 0.1];
+local RED =   [1.0, 0.2, 0.2, 0.3, 0.1, 0.1];
 local GREEN = [0.2, 1.0, 0.2, 0.1, 0.3, 0.1];
-local BLUE = [0.2, 0.2, 1.0, 0.1, 0.1, 0.3];
+local BLUE =  [0.2, 0.2, 1.0, 0.1, 0.1, 0.3];
 
 function println(what) {
   print(what);
@@ -19,7 +19,7 @@ Bowser.Tracks <- [
   [[1.13, 1.51],
    [1.50, 1.87],
    [1.86, 2.24],
-   [2.23, 3.51],
+    [2.23, 3.51],
    [3.34, 3.75],
    [3.58, 4.00],
    [4.13, 4.55],
@@ -29,7 +29,7 @@ Bowser.Tracks <- [
    [7.02, 7.39],
    [7.38, 7.76],
    [7.75, 8.13],
-   [8.12, 9.39],
+    [8.12, 9.39],
    [9.22, 9.64],
    [9.47, 9.88],
    [9.71, 10.37],
@@ -38,7 +38,7 @@ Bowser.Tracks <- [
    [13.33, 13.71],
    [13.70, 14.07],
    [14.06, 14.44],
-   [14.43, 15.71],
+    [14.43, 15.71],
    [15.54, 15.95],
    [15.78, 16.20],
    [16.33, 16.75],
@@ -66,7 +66,7 @@ function schedule_bowser() {
       local start = times[0];
       local stop = times[1];
       println("Emitting from " + start + " to " + stop);
-      local when = floor(start * (FPS_LIMIT-1)); /* schedule based on the fps */
+      local when = floor(start * FPS_LIMIT); /* schedule based on the fps */
       local nparticles = 100;
       local where = [WIDTH/2, HEIGHT/2, 0, 0];
       local radius = [1, 0.2];
@@ -76,7 +76,8 @@ function schedule_bowser() {
       local force = FRICTION;
       local limit = SPRINGBOX;
       local blender = BLEND_LINEAR;
-      schedule_emit(when, nparticles, where radius, speed, angle, life, BLUE, force, limit, blender);
+      schedule_emit(when, nparticles, where, radius, speed, angle, life, BLUE,
+                    force, limit, blender);
     }
   }
 }
@@ -92,7 +93,9 @@ function schedule_test() {
   local blender = BLEND_LINEAR;
   local times = [113, 123, 133];
   foreach (t in times) {
-    schedule_emit(t-75, 8000, where, radius, speed, [PI/2, 0], life, GREEN, force, limit, blender);
+    local when = floor(t * FPS_LIMIT);
+    schedule_emit(when, 8000, where, radius, speed, [PI/2, 0], life, GREEN,
+                  force, limit, blender);
   }
 }
 

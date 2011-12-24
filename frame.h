@@ -6,6 +6,7 @@
 #include "draw.h"
 #include "forces.h"
 #include "limits.h"
+#include "mutator.h"
 
 typedef struct emit_frame {
   int n;              /* number of particles to emit */

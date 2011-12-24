@@ -13,8 +13,10 @@
 /* constants for frame types */
 #define VIS_FTYPE_EMIT 0
 #define VIS_FTYPE_CMD 1
+#define VIS_FTYPE_BGCOLOR 2
+#define VIS_FTYPE_MUTATE 3
 
-/* constants for the frame array */
+/* constants for the frame array's length */
 /* use -DVIS_FRAMES=N to override */
 #ifndef VIS_NFRAMES
 # define VIS_FRAMES_NMINS 10
@@ -22,20 +24,16 @@
 # define VIS_NFRAMES ((VIS_FRAMES_NMINS*60+VIS_FRAMES_NSECS)*VIS_FPS_LIMIT)
 #endif
 
-/* constants for Guns N' Roses: Sweet Child O' Mine */
-#define VIS_SCOM_NMINS 5
-#define VIS_SCOM_NSECS 55
-#define VIS_SCOM_TIME (VIS_SCOM_NMINS*60+VIS_SCOM_NSECS)
-#define VIS_SCOM_NFRAMES (VIS_SCOM_TIME*VIS_FPS_LIMIT)
-
 typedef unsigned int fnum_t;
 typedef unsigned int frame_type_t;
 
 typedef struct flist_node {
   frame_type_t type;
   union {
-    frame_t frame;
-    const char* cmd;
+    frame_t frame; /* emit frame */
+    const char* cmd; /* command frame */
+    float color[3]; /* bgcolor frame */
+    mutate_method_t method; /* mutate frame */
   } data;
   struct flist_node* next;
 } *flist_node_t;
@@ -49,6 +47,8 @@ flist_t flist_new(void);
 void flist_free(flist_t fl);
 void flist_insert_emit(flist_t fl, fnum_t where, frame_t what);
 void flist_insert_cmd(flist_t fl, fnum_t where, const char* what);
+void flist_insert_bgcolor(flist_t fl, fnum_t where, float color[3]);
+void flist_insert_mutate(flist_t fl, fnum_t where, mutate_method_t method);
 void flist_clear(flist_t fl);
 void flist_restart(flist_t fl);
 

@@ -31,7 +31,7 @@ void emitter_schedule(flist_t frames) {
 
 void emitter_tick(void) {
   flist_node_t fn = flist_tick(fl);
-  while (fn != NULL) {
+  if (fn != NULL) {
     switch (fn->type) {
       case VIS_FTYPE_EMIT:
         emit_frame(fn->data.frame);
@@ -39,10 +39,14 @@ void emitter_tick(void) {
       case VIS_FTYPE_CMD:
         docommand(fn->data.cmd);
         break;
+      case VIS_FTYPE_BGCOLOR:
+        set_background_color(fn->data.color[0], fn->data.color[1],
+                             fn->data.color[2], 1);
+        break;
+      case VIS_FTYPE_MUTATE:
       default:
         break;
     }
-    fn = fn->next;
   }
 }
 

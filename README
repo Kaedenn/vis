@@ -138,7 +138,7 @@ function emit(flist, when, <other arguments>):
 
 function audio(flist, filename):
   flist: must be __flist_instance__
-  filename: path to an .mp3 file to play
+  filename: a string containing the path to a .wav file to play
 
 function bgcolor(flist, red, green, blue):
   flist: mist be __flist_instance__
@@ -180,6 +180,9 @@ constants:
 
 Seeking a track does not keep the particle emission times synchronized
 properly; the track and the particles are no longer synchronized.
+
+The program fails to keep up to the FPS limit, leading to the particles to lag
+behind the track.
 
 There is a mysterious segmentation fault after having the program run for a
 length of time. It is not known how to reproduce this segmentation fault.

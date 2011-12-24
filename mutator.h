@@ -5,6 +5,11 @@
 #include "defines.h"
 #include "particle.h"
 
+typedef struct {
+  mutate_fn func;
+  double factor;
+} mutate_method_t;
+
 /* multiply a particle's velocity by a factor */
 void mutate_push(struct particle* p, double factor);
 
