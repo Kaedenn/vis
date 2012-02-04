@@ -42,16 +42,16 @@ void flist_free(flist_t fl) {
   free(fl);
 }
 
-void flist_insert_emit(flist_t fl, fnum_t where, frame_t what) {
+void flist_insert_emit(flist_t fl, fnum_t when, frame_t what) {
   flist_node_t fn = NULL;
-  if (where >= VIS_NFRAMES) return;
+  if (when >= VIS_NFRAMES) return;
   fn = flist_node_new();
   fn->type = VIS_FTYPE_EMIT;
   fn->data.frame = what;
-  if (fl->frames[where] == NULL) {
-    fl->frames[where] = fn;
+  if (fl->frames[when] == NULL) {
+    fl->frames[when] = fn;
   } else {
-    flist_node_t curr = fl->frames[where];
+    flist_node_t curr = fl->frames[when];
     while (curr->next != NULL) {
       curr = curr->next;
     }
@@ -59,16 +59,16 @@ void flist_insert_emit(flist_t fl, fnum_t where, frame_t what) {
   }
 }
 
-void flist_insert_cmd(flist_t fl, fnum_t where, const char* what) {
+void flist_insert_cmd(flist_t fl, fnum_t when, const char* what) {
   flist_node_t fn = NULL;
-  if (where >= VIS_NFRAMES) return;
+  if (when >= VIS_NFRAMES) return;
   fn = flist_node_new();
   fn->type = VIS_FTYPE_CMD;
   fn->data.cmd = dupstr(what);
-  if (fl->frames[where] == NULL) {
-    fl->frames[where] = fn;
+  if (fl->frames[when] == NULL) {
+    fl->frames[when] = fn;
   } else {
-    flist_node_t curr = fl->frames[where];
+    flist_node_t curr = fl->frames[when];
     while (curr->next != NULL) {
       curr = curr->next;
     }
@@ -76,18 +76,18 @@ void flist_insert_cmd(flist_t fl, fnum_t where, const char* what) {
   }
 }
 
-void flist_insert_bgcolor(flist_t fl, fnum_t where, float color[3]) {
+void flist_insert_bgcolor(flist_t fl, fnum_t when, float color[3]) {
   flist_node_t fn = NULL;
-  if (where >= VIS_NFRAMES) return;
+  if (when >= VIS_NFRAMES) return;
   fn = flist_node_new();
   fn->type = VIS_FTYPE_BGCOLOR;
   fn->data.color[0] = color[0];
   fn->data.color[1] = color[1];
   fn->data.color[2] = color[2];
-  if (fl->frames[where] == NULL) {
-    fl->frames[where] = fn;
+  if (fl->frames[when] == NULL) {
+    fl->frames[when] = fn;
   } else {
-    flist_node_t curr = fl->frames[where];
+    flist_node_t curr = fl->frames[when];
     while (curr->next != NULL) {
       curr = curr->next;
     }
@@ -95,16 +95,16 @@ void flist_insert_bgcolor(flist_t fl, fnum_t where, float color[3]) {
   }
 }
 
-void flist_insert_mutate(flist_t fl, fnum_t where, mutate_method_t method) {
+void flist_insert_mutate(flist_t fl, fnum_t when, mutate_method_t method) {
   flist_node_t fn = NULL;
-  if (where >= VIS_NFRAMES) return;
+  if (when >= VIS_NFRAMES) return;
   fn = flist_node_new();
   fn->type = VIS_FTYPE_MUTATE;
   fn->data.method = method;
-  if (fl->frames[where] == NULL) {
-    fl->frames[where] = fn;
+  if (fl->frames[when] == NULL) {
+    fl->frames[when] = fn;
   } else {
-    flist_node_t curr = fl->frames[where];
+    flist_node_t curr = fl->frames[when];
     while (curr->next != NULL) {
       curr = curr->next;
     }

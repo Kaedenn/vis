@@ -61,9 +61,9 @@ int main(int argc, char* argv[]) {
   glOrtho(0, VIS_WIDTH, VIS_HEIGHT, 0, -1, 1);
   glMatrixMode(GL_MODELVIEW);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	glEnable(GL_BLEND);
-	glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
-	glEnable(GL_TEXTURE_2D);
+  glEnable(GL_BLEND);
+  glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
+  glEnable(GL_TEXTURE_2D);
   glLoadIdentity();
   
   argparse(argc, argv);
@@ -76,18 +76,18 @@ int main(int argc, char* argv[]) {
     emitter_schedule(load_script(args.scriptfile));
   }
   
-	mainloop();
+  mainloop();
   
   return 0;
 }
 
 void mainloop(void) {
   SDL_Event e;
-  Uint32 curtime = 0;
   Uint32 lasttime = SDL_GetTicks();
   while (TRUE) {
-    curtime = SDL_GetTicks();
     while (SDL_PollEvent(&e)) {
+      // insane optimization trick: if it's time to emit, do it now
+      if (SDL_GetTicks() - lasttime >= 1000/VIS_FPS_LIMIT) goto L_ANIMATE;
       switch (e.type) {
         case SDL_QUIT: {
           return;
@@ -95,10 +95,11 @@ void mainloop(void) {
         default: { } break;
       }
     }
-    if (curtime - lasttime > 1000/VIS_FPS_LIMIT) {
+    if (SDL_GetTicks() - lasttime >= 1000/VIS_FPS_LIMIT) {
+L_ANIMATE:
+      lasttime = SDL_GetTicks();
       display();
       timeout();
-      lasttime = curtime;
     }
   }
 }

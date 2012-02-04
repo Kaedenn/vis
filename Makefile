@@ -21,7 +21,7 @@ debug: clean $(SOURCES)
 
 profile: clean $(SOURCES)
 	$(CC) -p "-pg" -o $(EXECBIN) $(CSRC)
-	rlwrap ./$(EXECBIN) -l script.test.2
+	rlwrap ./$(EXECBIN) -l script.nut
 	gprof $(EXECBIN)
 	- rm ./gmon.out
 

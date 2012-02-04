@@ -44,6 +44,7 @@ void emitter_tick(void) {
                              fn->data.color[2], 1);
         break;
       case VIS_FTYPE_MUTATE:
+        /* TODO: MUTATE */
       default:
         break;
     }

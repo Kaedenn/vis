@@ -19,17 +19,17 @@ typedef SQInteger (*closure_t)(HSQUIRRELVM);
 SQInteger print_args(HSQUIRRELVM v);
 
 void sq_printfunc(UNUSED_PARAM(HSQUIRRELVM v), const SQChar *s, ...) {
-	va_list vl;
-	va_start(vl, s);
-	vfprintf(stdout, s, vl);
-	va_end(vl);
+  va_list vl;
+  va_start(vl, s);
+  vfprintf(stdout, s, vl);
+  va_end(vl);
 }
 
 void sq_errorfunc(UNUSED_PARAM(HSQUIRRELVM v), const SQChar *s, ...) {
-	va_list vl;
-	va_start(vl, s);
-	vfprintf(stderr, s, vl);
-	va_end(vl);
+  va_list vl;
+  va_start(vl, s);
+  vfprintf(stderr, s, vl);
+  va_end(vl);
 }
 
 int make_squirrel_vm(HSQUIRRELVM* sqvm) {
@@ -81,8 +81,8 @@ flist_t load_script(const char* filename) {
   result = make_squirrel_vm(&sqvm);
   if (result == 1) { sq_close(sqvm); }
   if (result != 0) { return NULL; }
-	sq_setprintfunc(sqvm, sq_printfunc, sq_errorfunc);
-	sqstd_seterrorhandlers(sqvm);
+  sq_setprintfunc(sqvm, sq_printfunc, sq_errorfunc);
+  sqstd_seterrorhandlers(sqvm);
   fl = flist_new();
   
   /* grant access to the flist */
@@ -229,17 +229,15 @@ SQInteger squirrel_bgcolor_fn(HSQUIRRELVM sqvm) {
 SQInteger squirrel_mutate_fn(HSQUIRRELVM sqvm) {
   SQInteger nargs = sq_gettop(sqvm);
   DBPRINTF("Received a call to mutate(nargs = %d)", nargs);
+  /* TODO: MUTATE */
   return 0;
 }
 
-SQInteger print_args(HSQUIRRELVM v)
-{
+SQInteger print_args(HSQUIRRELVM v) {
   SQInteger nargs = sq_gettop(v); //number of arguments
-  for(SQInteger n=1;n<=nargs;n++)
-  {
+  for(SQInteger n=1;n<=nargs;n++) {
     printf("arg %d is ", (int)n);
-    switch(sq_gettype(v, n))
-    {
+    switch(sq_gettype(v, n)) {
       case OT_NULL:
         printf("null\n");
         break;

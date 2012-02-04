@@ -45,10 +45,10 @@ typedef struct flist {
 
 flist_t flist_new(void);
 void flist_free(flist_t fl);
-void flist_insert_emit(flist_t fl, fnum_t where, frame_t what);
-void flist_insert_cmd(flist_t fl, fnum_t where, const char* what);
-void flist_insert_bgcolor(flist_t fl, fnum_t where, float color[3]);
-void flist_insert_mutate(flist_t fl, fnum_t where, mutate_method_t method);
+void flist_insert_emit(flist_t fl, fnum_t when, frame_t what);
+void flist_insert_cmd(flist_t fl, fnum_t when, const char* what);
+void flist_insert_bgcolor(flist_t fl, fnum_t when, float color[3]);
+void flist_insert_mutate(flist_t fl, fnum_t when, mutate_method_t method);
 void flist_clear(flist_t fl);
 void flist_restart(flist_t fl);
 
