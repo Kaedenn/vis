@@ -64,7 +64,7 @@ typedef enum {
 #define VIS_HEIGHT 600
 
 /* frame rate */
-#define VIS_FPS_LIMIT 30
+#define VIS_FPS_LIMIT 50
 #define VIS_FPDS_LIMIT (VIS_FPS_LIMIT / 10)
 #define VIS_FPCS_LIMIT (VIS_FPS_LIMIT / 100.0)
 

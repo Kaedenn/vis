@@ -20,11 +20,13 @@
 #include "helper.h"
 #include "particle_extra.h"
 #include "plist.h"
+#include "scheduler.h"
 #include "script.h"
 
 #define VIS_CMD_DELAY_NSTEPS 5
 
 plist_t particles = NULL;
+sched_ctx ctx = NULL;
 
 void finalize(void);
 void mainloop(void);
@@ -33,8 +35,14 @@ void animate_particle(plist_node_t node);
 void display(void);
 void timeout(void);
 
+void tick(UNUSED_PARAM(void* arg)) {
+  display();
+  timeout();
+}
+
 int main(int argc, char* argv[]) {
   SDL_Surface* screen = NULL;
+  ctx = malloc(sizeof(struct sched_ctx_));
   srand((unsigned)time(NULL));
   if (SDL_Init(SDL_INIT_EVERYTHING) < 0) {
     eprintf("unable to initialize: %s", SDL_GetError());
@@ -76,6 +84,9 @@ int main(int argc, char* argv[]) {
     emitter_schedule(load_script(args.scriptfile));
   }
   
+  scheduler_reset(ctx);
+  schedule_every(ctx, VIS_FPS_LIMIT, tick, NULL);
+  
   mainloop();
   
   return 0;
@@ -86,8 +97,9 @@ void mainloop(void) {
   Uint32 lasttime = SDL_GetTicks();
   while (TRUE) {
     while (SDL_PollEvent(&e)) {
-      // insane optimization trick: if it's time to emit, do it now
+      /* insane optimization trick: if it's time to emit, do it now */
       if (SDL_GetTicks() - lasttime >= 1000/VIS_FPS_LIMIT) goto L_ANIMATE;
+      /*scheduler_tick(ctx);*/
       switch (e.type) {
         case SDL_QUIT: {
           return;
@@ -95,6 +107,7 @@ void mainloop(void) {
         default: { } break;
       }
     }
+/*    scheduler_tick(ctx);*/
     if (SDL_GetTicks() - lasttime >= 1000/VIS_FPS_LIMIT) {
 L_ANIMATE:
       lasttime = SDL_GetTicks();

@@ -15,11 +15,15 @@ void* chmalloc(size_t nbytes);
 void eprintf(const char* fmt, ...);
 void dbprintf(const char* fmt, ...);
 
+#define DBPRINTF(fmt, ...)
+
+#ifndef DBPRINTF
 #define DBPRINTF(fmt, ...) \
   do { \
     fprintf(stderr, "%s:%d: ", __FILE__, __LINE__); \
     dbprintf(fmt, __VA_ARGS__); \
   } while (0)
+#endif
 
 #define ZEROINIT(structp) memset(structp, '\0', sizeof(*structp))
 
