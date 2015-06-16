@@ -8,11 +8,11 @@ typedef unsigned long msec_t;
 typedef void(*sched_cb)(void*);
 
 typedef struct sched_ctx_ {
-  msec_t base;
-  long tick;
-  msec_t when;
-  sched_cb func;
-  void* arg;
+    msec_t base;
+    long tick;
+    msec_t when;
+    sched_cb func;
+    void* arg;
 } *sched_ctx;
 
 void scheduler_reset(sched_ctx ctx);

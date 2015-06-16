@@ -5,15 +5,15 @@
 #include "particle.h"
 
 typedef struct plist_node {
-  struct plist_node* prev;
-  struct plist_node* next;
-  particle_t particle;
+    struct plist_node* prev;
+    struct plist_node* next;
+    particle_t particle;
 } *plist_node_t;
 
 typedef struct plist {
-  plist_node_t head;
-  plist_node_t tail;
-  size_t size;
+    plist_node_t head;
+    plist_node_t tail;
+    size_t size;
 } *plist_t;
 
 typedef void (*item_fn)(plist_node_t node);

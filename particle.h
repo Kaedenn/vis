@@ -12,14 +12,14 @@ typedef void (*limit_fn)(struct particle* p);
 typedef void (*mutate_fn)(struct particle* p, double arg);
 
 typedef struct particle {
-  double x, y;
-  double dx, dy;
-  double radius;
-  int lifetime;
-  int life;
-  force_t force;
-  limit_t limit;
-  void* extra;
+    double x, y;
+    double dx, dy;
+    double radius;
+    int lifetime;
+    int life;
+    force_t force;
+    limit_t limit;
+    void* extra;
 } *particle_t;
 
 /* constructors */

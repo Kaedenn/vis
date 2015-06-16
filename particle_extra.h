@@ -7,8 +7,8 @@
 #include <stdlib.h>
 
 typedef struct particle_extra {
-  float r, g, b;
-  blend_t blender;
+    float r, g, b;
+    blend_t blender;
 } *pextra_t;
 
 pextra_t new_particle_extra(float red, float green, float blue,

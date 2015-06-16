@@ -15,7 +15,7 @@ void box(particle_t particle);
 void springbox(particle_t particle);
 
 static const limit_fn LIMIT_MAP[] = {
-  no_limit, box, springbox
+    no_limit, box, springbox
 };
 
 #endif

@@ -19,7 +19,7 @@ void friction(particle_t particle);
 void gravity(particle_t particle);
 
 static const force_fn FORCE_MAP[] = {
-  no_force, friction, gravity
+    no_force, friction, gravity
 };
 
 

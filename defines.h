@@ -19,40 +19,40 @@
 
 /* force functions */
 typedef enum {
-  /* default force is no force */
-  VIS_DEFAULT_FORCE = 0,
-  VIS_FRICTION,
-  VIS_GRAVITY,
-  VIS_NFORCES
+    /* default force is no force */
+    VIS_DEFAULT_FORCE = 0,
+    VIS_FRICTION,
+    VIS_GRAVITY,
+    VIS_NFORCES
 } force_t;
 
 /* position-limiting functions */
 typedef enum {
-  /* default limit is no limit */
-  VIS_DEFAULT_LIMIT = 0,
-  VIS_BOX,
-  VIS_SPRINGBOX,
-  VIS_NLIMITS
+    /* default limit is no limit */
+    VIS_DEFAULT_LIMIT = 0,
+    VIS_BOX,
+    VIS_SPRINGBOX,
+    VIS_NLIMITS
 } limit_t;
 
 /* mutation functions */
 typedef enum {
-  VIS_MUTATE_PUSH = 0,
-  VIS_MUTATE_SLOW,
-  VIS_MUTATE_SHRINK,
-  VIS_MUTATE_GROW,
-  VIS_NMUTATES
+    VIS_MUTATE_PUSH = 0,
+    VIS_MUTATE_SLOW,
+    VIS_MUTATE_SHRINK,
+    VIS_MUTATE_GROW,
+    VIS_NMUTATES
 } mutate_t;
 
 /* alpha-channel blending functions */
 typedef enum {
-  VIS_NO_BLEND = 0,
-  /* default blend is linear */
-  VIS_DEFAULT_BLEND = 1,
-  VIS_BLEND_LINEAR = 1,
-  VIS_BLEND_QUADRATIC,
-  VIS_BLEND_NEGGAMMA,
-  VIS_NBLENDS
+    VIS_NO_BLEND = 0,
+    /* default blend is linear */
+    VIS_DEFAULT_BLEND = 1,
+    VIS_BLEND_LINEAR = 1,
+    VIS_BLEND_QUADRATIC,
+    VIS_BLEND_NEGGAMMA,
+    VIS_NBLENDS
 } blend_t;
 
 /* physics globals */
