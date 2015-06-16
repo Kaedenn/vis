@@ -9,7 +9,7 @@ typedef void(*sched_cb)(void*);
 
 typedef struct sched_ctx_ {
     msec_t base;
-    long tick;
+    unsigned long tick;
     msec_t when;
     sched_cb func;
     void* arg;
