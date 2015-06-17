@@ -20,13 +20,11 @@
 #include "helper.h"
 #include "particle_extra.h"
 #include "plist.h"
-#include "scheduler.h"
 #include "script.h"
 
 #define VIS_CMD_DELAY_NSTEPS 5
 
 plist_t particles = NULL;
-sched_ctx ctx = NULL;
 
 void finalize(void);
 void mainloop(void);
@@ -42,7 +40,6 @@ void tick(UNUSED_PARAM(void* arg)) {
 
 int main(int argc, char* argv[]) {
     SDL_Surface* screen = NULL;
-    ctx = malloc(sizeof(struct sched_ctx_));
     srand((unsigned)time(NULL));
     if (SDL_Init(SDL_INIT_EVERYTHING) < 0) {
         eprintf("unable to initialize: %s", SDL_GetError());
@@ -83,9 +80,6 @@ int main(int argc, char* argv[]) {
     if (args.scriptfile) {
         emitter_schedule(load_script(args.scriptfile));
     }
-    
-    scheduler_reset(ctx);
-    schedule_every(ctx, VIS_FPS_LIMIT, tick, NULL);
     
     mainloop();
 
@@ -157,6 +151,7 @@ plist_action_t animate_particle(particle_t p, size_t idx, void* userdefined) {
         default: { } break;
     }
     
+    /* FIXME: use vertex buffers over this */
     glBegin(GL_POLYGON);
     glColor4d(pe->r, pe->g, pe->b, alpha);
     draw_diamond(p->x, p->y, p->radius);
@@ -172,6 +167,7 @@ plist_action_t animate_particle(particle_t p, size_t idx, void* userdefined) {
 void display(void) {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     plist_foreach(particles, animate_particle, NULL);
+    /* FIXME: update to use dirty rectangles */
     SDL_GL_SwapBuffers();
 }
 

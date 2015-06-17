@@ -70,8 +70,6 @@ frame_t make_emit_frame(int n,
     frame->uds = uds;
     frame->theta = theta;
     frame->utheta = utheta;
-    DBPRINTF("make_emit_frame frame->ds = %g, frame->uds = %g, frame->theta = %g, frame->utheta = %g", frame->ds, frame->uds, frame->theta, frame->utheta);
-    DBPRINTF("make_emit_frame arg->ds = %g, arg->uds = %g, arg->theta = %g, arg->utheta = %g", ds, uds, theta, utheta);
     frame->r = r;
     frame->b = b;
     frame->g = g;

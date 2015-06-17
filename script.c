@@ -14,6 +14,7 @@
 
 int viscmd_debug_fn(lua_State* L);
 
+int viscmd_command_fn(lua_State* L);
 int viscmd_emit_fn(lua_State* L);
 int viscmd_audio_fn(lua_State* L);
 int viscmd_bgcolor_fn(lua_State* L);
@@ -23,6 +24,7 @@ int luaopen_Vis(lua_State* L) {
     DBPRINTF("Loading lualibVis %p", L);
     static const struct luaL_Reg vis_lib[] = {
         {"debug", viscmd_debug_fn},
+        {"command", viscmd_command_fn},
         {"emit", viscmd_emit_fn},
         {"audio", viscmd_audio_fn},
         {"bgcolor", viscmd_bgcolor_fn},
@@ -105,7 +107,20 @@ int viscmd_debug_fn(lua_State* L) {
     fl = *(flist_t *)luaL_checkudata(L, 1, "flist_t*");
     DBPRINTF("arg[%d] = %p", 1, fl);
     for (i = 1; i <= nargs; ++i) {
+        DBPRINTF("arg[%d] = ?", i);
     }
+    return 0;
+}
+
+int viscmd_command_fn(lua_State* L) {
+    flist_t fl = NULL;
+    fnum_t when = 0;
+    const char* cmd = NULL;
+    fl = *(flist_t *)luaL_checkudata(L, 1, "flist_t*");
+    when = (fnum_t)luaL_checkint(L, 2);
+    cmd = luaL_checkstring(L, 3);
+    DBPRINTF("command(%p, %d, \"%s\")", fl, when, cmd);
+    flist_insert_cmd(fl, when, cmd);
     return 0;
 }
 
