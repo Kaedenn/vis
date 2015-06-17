@@ -12,6 +12,7 @@
 #include "particle.h"
 #include "particle_extra.h"
 #include "script.h"
+#include "audio.h"
 
 #include "random.h"
 

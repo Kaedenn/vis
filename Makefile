@@ -16,9 +16,9 @@ CFLAGS = -fdiagnostics-show-option -std=c99 \
 		 -Wswitch-default -Wswitch-enum -Wundef -Wconversion -pedantic
 LDFLAGS = -lSDL -lGL -lm -lstdc++
 
-CFLAGS_FAST = -O3 -fexpensive-optimizations -DVIS_SKIP_MANUAL_OPTIMIZATION
-CFLAGS_DEBUG = -O0 -ggdb -DDEBUG
-CFLAGS_PROF = -pg
+CFLAGS_FAST = -O3 -fexpensive-optimizations
+CFLAGS_DEBUG = -O0 -ggdb -DDEBUG -DVIS_SKIP_MANUAL_OPTIMIZATION
+CFLAGS_PROF = -pg -DVIS_SKIP_MANUAL_OPTIMIZATION
 
 CFLAGS_LUA = -I/usr/include/lua5.2
 LDFLAGS_LUA = -llua5.2
