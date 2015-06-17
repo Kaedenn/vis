@@ -20,10 +20,7 @@ CFLAGS_FAST = -O3 -fexpensive-optimizations -DVIS_SKIP_MANUAL_OPTIMIZATION
 CFLAGS_DEBUG = -O0 -ggdb -DDEBUG
 CFLAGS_PROF = -pg
 
-CFLAGS_SQ = -Isquirrel
-LDFLAGS_SQ = -Llibsquirrel/lib -lsquirrel -lsqstdlib
-
-CFLAGS_LUA = -I/usr/include/lua5.2 -DVIS_USE_LUA
+CFLAGS_LUA = -I/usr/include/lua5.2
 LDFLAGS_LUA = -llua5.2
 
 CFLAGS := $(CFLAGS) $(CFLAGS_LUA)
