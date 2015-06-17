@@ -31,7 +31,7 @@ sched_ctx ctx = NULL;
 void finalize(void);
 void mainloop(void);
 
-void animate_particle(plist_node_t node);
+plist_action_t animate_particle(particle_t p, size_t idx, void* userdefined);
 void display(void);
 void timeout(void);
 
@@ -56,7 +56,7 @@ int main(int argc, char* argv[]) {
         exit(1);
     }
     
-    particles = plist_new();
+    particles = plist_new(VIS_PLIST_INITIAL_SIZE);
     
     emitter_setup(particles);
     audio_init();
@@ -88,6 +88,10 @@ int main(int argc, char* argv[]) {
     schedule_every(ctx, VIS_FPS_LIMIT, tick, NULL);
     
     mainloop();
+
+    if (args.interactive) {
+        command_teardown();
+    }
     
     return 0;
 }
@@ -95,21 +99,29 @@ int main(int argc, char* argv[]) {
 void mainloop(void) {
     SDL_Event e;
     Uint32 lasttime = SDL_GetTicks();
+    Uint32 ticktime;
     while (TRUE) {
+        ticktime = SDL_GetTicks() - lasttime;
         while (SDL_PollEvent(&e)) {
-            /* insane optimization trick: if it's time to emit, do it now */
-            if (SDL_GetTicks() - lasttime >= 1000/VIS_FPS_LIMIT) goto L_ANIMATE;
-            /*scheduler_tick(ctx);*/
             switch (e.type) {
+                case SDL_KEYDOWN: {
+                    if (e.key.keysym.sym == SDLK_ESCAPE) {
+                        return;
+                    }
+                    SDL_keysym* sym = &e.key.keysym;
+                    DBPRINTF("Key scan=%x sym=%x mod=%x", (int)sym->scancode,
+                             (int)sym->sym, (int)sym->mod);
+                } break;
                 case SDL_QUIT: {
                     return;
                 } break;
                 default: { } break;
             }
+            ticktime = SDL_GetTicks() - lasttime;
         }
-/*        scheduler_tick(ctx);*/
-        if (SDL_GetTicks() - lasttime >= 1000/VIS_FPS_LIMIT) {
-L_ANIMATE:
+        if (ticktime < 1000/VIS_FPS_LIMIT) {
+            SDL_Delay(1000/VIS_FPS_LIMIT - ticktime);
+        } else if (SDL_GetTicks() - lasttime >= 1000/VIS_FPS_LIMIT) {
             lasttime = SDL_GetTicks();
             display();
             timeout();
@@ -117,9 +129,11 @@ L_ANIMATE:
     }
 }
 
-void animate_particle(plist_node_t node) {
+plist_action_t animate_particle(particle_t p, size_t idx, void* userdefined) {
+    UNUSED_VARIABLE(idx);
+    UNUSED_VARIABLE(userdefined);
+
     /* TODO: add passive forces */
-    particle_t p = node->particle;
     pextra_t pe = (pextra_t)(p->extra);
     double life, lifetime;
     double alpha = 1;
@@ -150,13 +164,14 @@ void animate_particle(plist_node_t node) {
     
     particle_tick(p);
     if (!particle_is_alive(p)) {
-        plist_remove(particles, node);
+        return ACTION_REMOVE;
     }
+    return ACTION_NEXT;
 }
 
 void display(void) {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    plist_safe_foreach(particles, animate_particle);
+    plist_foreach(particles, animate_particle, NULL);
     SDL_GL_SwapBuffers();
 }
 

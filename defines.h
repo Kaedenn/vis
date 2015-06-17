@@ -6,9 +6,11 @@
 /* GCC-specific extensions to make things a little easier */
 #define UNUSED_PARAM(param) param __attribute__((unused))
 #define REQUEST_INLINE __attribute__((always_inline))
+#define UNUSED_VARIABLE(var) (void)var
 #else
 #define UNUSED_PARAM(param) param
 #define REQUEST_INLINE
+#define UNUSED_VARIABLE(var) (void)var
 #endif
 
 /* allow toggling of the always_inline directive */
@@ -64,7 +66,7 @@ typedef enum {
 #define VIS_HEIGHT 600
 
 /* frame rate */
-#define VIS_FPS_LIMIT 50
+#define VIS_FPS_LIMIT 30
 #define VIS_FPDS_LIMIT (VIS_FPS_LIMIT / 10)
 #define VIS_FPCS_LIMIT (VIS_FPS_LIMIT / 100.0)
 
@@ -84,12 +86,15 @@ typedef enum {
 /* used for commands */
 #define VIS_BUFFER_LEN 4096
 
+/* initial capacity for particles */
+#define VIS_PLIST_INITIAL_SIZE (1024*1024)
+
 /* convenience */
 #ifndef BOOL
 #define BOOL int
 #endif
 
-#if !defined(TRUE) || !defined(FALSE)
+#if !defined(TRUE) && !defined(FALSE)
 #define TRUE 1
 #define FALSE 0
 #endif

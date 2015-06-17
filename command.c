@@ -56,6 +56,10 @@ void command_setup(plist_t plist) {
     async_write_stdout(">>> ");
 }
 
+void command_teardown(void) {
+    async_write_stdout("\n");
+}
+
 /*
 
 nice strums:
@@ -78,8 +82,9 @@ void command(void) {
 
 void docommand(const char* buffer) {
     int i = 0;
-    if (strchr(buffer, '\n')) {
-        *strchr(buffer, '\n') = '\0';
+    char* c;
+    if ((c = strchr(buffer, '\n')) != NULL) {
+        *c = '\0';
     }
     while (i < NCOMMANDS) {
         if (startswith(buffer, commands[i].cmd)) {

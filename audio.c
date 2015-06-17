@@ -47,7 +47,7 @@ void audio_init(void) {
     atexit(SDL_CloseAudio);
 }
 
-void audio_open(const char* file) {
+BOOL audio_open(const char* file) {
     SDL_AudioSpec wave;
     Uint8 *data;
     Uint32 dlen;
@@ -59,7 +59,7 @@ void audio_open(const char* file) {
     /* Load the sound file and convert it to 16-bit stereo at 22kHz */
     if (SDL_LoadWAV(file, &wave, &data, &dlen) == NULL) {
         eprintf("Couldn't load %s: %s\n", file, SDL_GetError());
-        return;
+        return FALSE;
     }
     
     DBPRINTF("WAV '%s' loaded: length %d", file, dlen);
@@ -80,6 +80,7 @@ void audio_open(const char* file) {
     audio->sample->dlen = (Uint32)cvt.len_cvt;
     audio->sample->dpos = 0;
     SDL_UnlockAudio();
+    return TRUE;
 }
 
 void audio_close(void) {

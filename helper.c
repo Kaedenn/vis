@@ -27,21 +27,21 @@ void eprintf(const char* fmt, ...) {
     va_list args;
     va_start(args, fmt);
     vfprintf(stderr, fmt, args);
-    fprintf(stderr, "\n");
     va_end(args);
+    fprintf(stderr, "\n");
 }
 
 void dbprintf(const char* fmt, ...) {
     va_list args;
-    va_start(args, fmt);
     fprintf(stdout, "debug: ");
+    va_start(args, fmt);
     vfprintf(stdout, fmt, args);
-    fprintf(stdout, "\n");
     va_end(args);
+    fprintf(stdout, "\n");
 }
 
 BOOL startswith(const char* s1, const char* s2) {
-    return strncmp(s1, s2, strlen(s2)) == 0;
+    return s1 && s2 && strncmp(s1, s2, strlen(s2)) == 0;
 }
 
 int strtoi(const char* buff) {

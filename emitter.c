@@ -61,6 +61,7 @@ void emit_frame(frame_t frame) {
         g = randfloat(frame->g - frame->ug, frame->g + frame->ug);
         b = randfloat(frame->b - frame->ub, frame->b + frame->ub);
         pe = new_particle_extra(r, g, b, frame->blender);
+        DBPRINTF("frame ds=%g+-%g theta=%g+-%g", frame->ds, frame->uds, frame->theta, frame->utheta);
         p = particle_new_full(frame->x, frame->y, frame->ux, frame->uy,
                               frame->rad, frame->urad, frame->ds, frame->uds,
                               frame->theta, frame->utheta,

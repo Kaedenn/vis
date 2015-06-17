@@ -37,14 +37,15 @@ particle_t particle_new_full(double x, double y,
                              void* extra) {
     particle_t p = chmalloc(sizeof(struct particle));
     
-    theta = randdouble(theta-utheta, theta+utheta);
+    double t = randdouble(theta-utheta, theta+utheta);
     ds = triangular(ds-uds, ds+uds);
     
     p->x = randdouble(x-ux, x+ux);
     p->y = randdouble(y-uy, y+uy);
     p->radius = (int)randdouble(r-ur, r+ur);
-    p->dx = ds*cos(theta);
-    p->dy = ds*sin(theta);
+    p->dx = ds*cos(t);
+    p->dy = ds*sin(t);
+    DBPRINTF("p->dx = %7.5g; p->dy = %7.5g, ds = %-6.5g, theta = %g (%g to %g)", p->dx, p->dy, ds, t, theta, utheta);
     
     p->force = force;
     p->limit = limit;

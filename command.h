@@ -5,6 +5,7 @@
 #include "plist.h"
 
 void command_setup(plist_t plist);
+void command_teardown(void);
 
 /* handle commands via STDIN */
 void command(void);

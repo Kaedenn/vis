@@ -10,21 +10,24 @@ EXECBIN = vis
 
 PROJECTDIR = $(realpath .)
 
-CXXFLAGS = -fdiagnostics-show-option -fexpensive-optimizations -O3 \
-		   -DVIS_SKIP_MANUAL_OPTIMIZATION -std=c99 -Isquirrel \
-		   -Wno-unused-variable -Wall -Wextra -Wfloat-equal -Wwrite-strings \
-		   -Wshadow -Wpointer-arith -Wcast-qual -Wredundant-decls -Wtrigraphs \
-		   -Wswitch-default -Wswitch-enum -Wundef -Wconversion -pedantic
-LDFLAGS = -Llibsquirrel/lib -lSDL -lGL -lsquirrel -lsqstdlib -lm -lstdc++
+CFLAGS = -fdiagnostics-show-option -std=c99 -Isquirrel -I/usr/include/lua5.2 \
+		 -Wno-unused-variable -Wall -Wextra -Wfloat-equal -Wwrite-strings \
+		 -Wshadow -Wpointer-arith -Wcast-qual -Wredundant-decls -Wtrigraphs \
+		 -Wswitch-default -Wswitch-enum -Wundef -Wconversion -pedantic \
+		 -DVIS_USE_LUA=1
+LDFLAGS = -Llibsquirrel/lib -lSDL -lGL -lsquirrel -lsqstdlib -lm -lstdc++ -llua5.2
 
 all: $(SOURCES)
-	$(CC) -o $(EXECBIN) $(SRCS) $(CXXFLAGS) $(LDFLAGS)
+	$(CC) -o $(EXECBIN) $(SRCS) $(CFLAGS) $(LDFLAGS)
+
+fast: $(SOURCES)
+	$(CC) -O3 -fexpensive-optimizations -DVIS_SKIP_MANUAL_OPTIMIZATION -o $(EXECBIN) $(SRCS) $(CFLAGS) $(LDFLAGS)
 
 debug: $(SOURCES)
-	$(CC) -ggdb -o $(EXECBIN) $(SRCS) $(CXXFLAGS) $(LDFLAGS)
+	$(CC) -ggdb -DDEBUG=1 -o $(EXECBIN) $(SRCS) $(CFLAGS) $(LDFLAGS)
 
 profile: $(SOURCES)
-	$(CC) -pg -o $(EXECBIN) $(SRCS) $(CXXFLAGS) $(LDFLAGS)
+	$(CC) -pg -o $(EXECBIN) $(SRCS) $(CFLAGS) $(LDFLAGS)
 	rlwrap ./$(EXECBIN) -l script.nut
 	gprof $(EXECBIN)
 	- rm ./gmon.out
