@@ -173,6 +173,7 @@ int viscmd_audio_fn(lua_State* L) {
     if (!audio_open(luaL_checkstring(L, 1))) {
         lua_pushnil(L);
     } else {
+        audio_play();
         lua_pushboolean(L, TRUE);
     }
     return 1;
