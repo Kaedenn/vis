@@ -5,10 +5,6 @@
 #include "defines.h"
 #include "particle.h"
 
-/* physics */
-#define VIS_FRICTION_COEFF 0.99
-#define VIS_GRAVITY_FACTOR 0.03
-
 /* default */
 void no_force(particle_t particle);
 

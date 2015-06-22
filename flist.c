@@ -6,8 +6,6 @@ static flist_node_t flist_node_new(void) {
     flist_node_t fn = chmalloc(sizeof(struct flist_node));
     if (!fn) return NULL;
     fn->type = VIS_FTYPE_EMIT;
-    fn->data.frame = NULL;
-    fn->next = NULL;
     return fn;
 }
 
@@ -18,6 +16,11 @@ static void flist_node_free(flist_node_t fn) {
             free_frame(fn->data.frame);
         } else if (fn->type == VIS_FTYPE_CMD) {
             free(fn->data.frame);
+        } else if (fn->type == VIS_FTYPE_BGCOLOR) {
+        } else if (fn->type == VIS_FTYPE_MUTATE) {
+            free(fn->data.method);
+        } else if (fn->type == VIS_FTYPE_SCRIPTCB) {
+            free(fn->data.scriptcb);
         }
         free(fn);
     }
@@ -44,13 +47,7 @@ void flist_free(flist_t fl) {
     free(fl);
 }
 
-void flist_insert_emit(flist_t fl, fnum_t when, frame_t what) {
-    flist_node_t fn = NULL;
-    if (!fl) return;
-    if (when >= VIS_NFRAMES) return;
-    fn = flist_node_new();
-    fn->type = VIS_FTYPE_EMIT;
-    fn->data.frame = what;
+void flist_insert(flist_t fl, fnum_t when, flist_node_t fn) {
     if (fl->frames[when] == NULL) {
         fl->frames[when] = fn;
     } else {
@@ -62,6 +59,16 @@ void flist_insert_emit(flist_t fl, fnum_t when, frame_t what) {
     }
 }
 
+void flist_insert_emit(flist_t fl, fnum_t when, frame_t what) {
+    flist_node_t fn = NULL;
+    if (!fl) return;
+    if (when >= VIS_NFRAMES) return;
+    fn = flist_node_new();
+    fn->type = VIS_FTYPE_EMIT;
+    fn->data.frame = what;
+    flist_insert(fl, when, fn);
+}
+
 void flist_insert_cmd(flist_t fl, fnum_t when, const char* what) {
     flist_node_t fn = NULL;
     if (!fl) return;
@@ -69,15 +76,7 @@ void flist_insert_cmd(flist_t fl, fnum_t when, const char* what) {
     fn = flist_node_new();
     fn->type = VIS_FTYPE_CMD;
     fn->data.cmd = dupstr(what);
-    if (fl->frames[when] == NULL) {
-        fl->frames[when] = fn;
-    } else {
-        flist_node_t curr = fl->frames[when];
-        while (curr->next != NULL) {
-            curr = curr->next;
-        }
-        curr->next = fn;
-    }
+    flist_insert(fl, when, fn);
 }
 
 void flist_insert_bgcolor(flist_t fl, fnum_t when, float color[3]) {
@@ -89,15 +88,7 @@ void flist_insert_bgcolor(flist_t fl, fnum_t when, float color[3]) {
     fn->data.color[0] = color[0];
     fn->data.color[1] = color[1];
     fn->data.color[2] = color[2];
-    if (fl->frames[when] == NULL) {
-        fl->frames[when] = fn;
-    } else {
-        flist_node_t curr = fl->frames[when];
-        while (curr->next != NULL) {
-            curr = curr->next;
-        }
-        curr->next = fn;
-    }
+    flist_insert(fl, when, fn);
 }
 
 void flist_insert_mutate(flist_t fl, fnum_t when, mutate_method_t method) {
@@ -107,15 +98,27 @@ void flist_insert_mutate(flist_t fl, fnum_t when, mutate_method_t method) {
     fn = flist_node_new();
     fn->type = VIS_FTYPE_MUTATE;
     fn->data.method = method;
-    if (fl->frames[when] == NULL) {
-        fl->frames[when] = fn;
-    } else {
-        flist_node_t curr = fl->frames[when];
-        while (curr->next != NULL) {
-            curr = curr->next;
-        }
-        curr->next = fn;
-    }
+    flist_insert(fl, when, fn);
+}
+
+void flist_insert_scriptcb(flist_t fl, fnum_t when, script_cb_t func) {
+    flist_node_t fn = NULL;
+    if (!fl) return;
+    if (when >= VIS_NFRAMES) return;
+    fn = flist_node_new();
+    fn->type = VIS_FTYPE_SCRIPTCB;
+    fn->data.scriptcb = func;
+    flist_insert(fl, when, fn);
+    DBPRINTF("insert scriptcb %p in %p at %d", func, fl, when);
+}
+
+void flist_insert_seekframe(flist_t fl, fnum_t when, fnum_t where) {
+    flist_node_t fn = NULL;
+    if (!fl || when >= VIS_NFRAMES) return;
+    fn = flist_node_new();
+    fn->type = VIS_FTYPE_FRAMESEEK;
+    fn->data.frameseek = where;
+    flist_insert(fl, when, fn);
 }
 
 void flist_clear(flist_t fl) {
@@ -133,8 +136,17 @@ void flist_restart(flist_t fl) {
     fl->curr_frame = 0;
 }
 
+void flist_goto_frame(flist_t fl, fnum_t fn) {
+    if (!fl) return;
+    fl->curr_frame = fn;
+}
+
 flist_node_t flist_tick(flist_t fl) {
-    if (!fl || fl->curr_frame == VIS_NFRAMES) return NULL;
+    if (!fl || fl->curr_frame >= VIS_NFRAMES) return NULL;
     return fl->frames[fl->curr_frame++];
+}
+
+flist_node_t flist_node_next(flist_node_t n) {
+    return n ? n->next : NULL;
 }
 

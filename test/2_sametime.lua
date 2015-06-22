@@ -3,7 +3,6 @@ VisUtil = require("visutil")
 math = require("math")
 
 t = VisUtil.make_emit_table()
-t.radius = 1
 t.ds = 2
 t.uds = 1
 t.life = 100

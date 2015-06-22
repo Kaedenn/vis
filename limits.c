@@ -1,8 +1,6 @@
 
 #include "limits.h"
 
-#define BOX_FUDGE(p) (0)
-
 void no_limit(UNUSED_PARAM(particle_t particle)) {
     /* nothing */
 }

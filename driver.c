@@ -22,24 +22,19 @@
 #include "plist.h"
 #include "script.h"
 
-#define VIS_CMD_DELAY_NSTEPS 5
-
 plist_t particles = NULL;
 
 void finalize(void);
-void mainloop(void);
+void mainloop(drawer_t drawer);
 
 plist_action_t animate_particle(particle_t p, size_t idx, void* userdefined);
-void display(void);
+void display(drawer_t drawer);
 void timeout(void);
-
-void tick(UNUSED_PARAM(void* arg)) {
-    display();
-    timeout();
-}
 
 int main(int argc, char* argv[]) {
     SDL_Surface* screen = NULL;
+    drawer_t drawer = NULL;
+    script_t s = NULL;
     srand((unsigned)time(NULL));
     if (SDL_Init(SDL_INIT_EVERYTHING) < 0) {
         eprintf("unable to initialize: %s", SDL_GetError());
@@ -47,13 +42,16 @@ int main(int argc, char* argv[]) {
     }
     atexit(finalize);
     screen = SDL_SetVideoMode(VIS_WIDTH, VIS_HEIGHT, 32,
-                              SDL_HWSURFACE | SDL_GL_DOUBLEBUFFER | SDL_OPENGL);
+                              SDL_HWSURFACE | SDL_ASYNCBLIT |
+                              SDL_OPENGLBLIT |
+                              SDL_GL_DOUBLEBUFFER | SDL_OPENGL);
     if (screen == NULL) {
         eprintf("unable to create screen: %s", SDL_GetError());
         exit(1);
     }
     
     particles = plist_new(VIS_PLIST_INITIAL_SIZE);
+    drawer = drawer_new();
     
     emitter_setup(particles);
     audio_init();
@@ -78,19 +76,21 @@ int main(int argc, char* argv[]) {
     }
     
     if (args.scriptfile) {
-        emitter_schedule(load_script(args.scriptfile));
+        s = script_new();
+        emitter_schedule(script_run(s, args.scriptfile));
     }
     
-    mainloop();
+    mainloop(drawer);
 
     if (args.interactive) {
         command_teardown();
+        script_destroy(s);
     }
     
     return 0;
 }
 
-void mainloop(void) {
+void mainloop(drawer_t drawer) {
     SDL_Event e;
     Uint32 lasttime = SDL_GetTicks();
     Uint32 ticktime;
@@ -117,7 +117,7 @@ void mainloop(void) {
             SDL_Delay(1000/VIS_FPS_LIMIT - ticktime);
         } else if (SDL_GetTicks() - lasttime >= 1000/VIS_FPS_LIMIT) {
             lasttime = SDL_GetTicks();
-            display();
+            display(drawer);
             timeout();
         }
     }
@@ -125,7 +125,7 @@ void mainloop(void) {
 
 plist_action_t animate_particle(particle_t p, size_t idx, void* userdefined) {
     UNUSED_VARIABLE(idx);
-    UNUSED_VARIABLE(userdefined);
+    drawer_t drawer = (drawer_t)userdefined;
 
     /* TODO: add passive forces */
     pextra_t pe = (pextra_t)(p->extra);
@@ -151,11 +151,14 @@ plist_action_t animate_particle(particle_t p, size_t idx, void* userdefined) {
         default: { } break;
     }
     
-    /* FIXME: use vertex buffers over this */
+    drawer_add_particle(drawer, p);
+#ifndef notyet
+    /* Remove when drawer_draw_to_screen is complete */
     glBegin(GL_POLYGON);
     glColor4d(pe->r, pe->g, pe->b, alpha);
     draw_diamond(p->x, p->y, p->radius);
     glEnd();
+#endif
     
     particle_tick(p);
     if (!particle_is_alive(p)) {
@@ -164,11 +167,13 @@ plist_action_t animate_particle(particle_t p, size_t idx, void* userdefined) {
     return ACTION_NEXT;
 }
 
-void display(void) {
+void display(drawer_t drawer) {
+#ifndef notyet
+    /* Remove when drawer_draw_to_screen is complete */
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    plist_foreach(particles, animate_particle, NULL);
-    /* FIXME: update to use dirty rectangles */
-    SDL_GL_SwapBuffers();
+#endif
+    plist_foreach(particles, animate_particle, drawer);
+    drawer_draw_to_screen(drawer);
 }
 
 void timeout(void) {

@@ -25,6 +25,7 @@ void dbprintf(const char* fmt, ...);
 #define DBPRINTF(fmt, ...)
 #endif
 
+/* chmalloc does this too now */
 #define ZEROINIT(structp) memset(structp, '\0', sizeof(*structp))
 
 /* short-circuiting strcmp */
@@ -38,6 +39,9 @@ char* dupstr(const char* str);
 
 /* and neither is strchrnul */
 char* strnulchr(char* str, int n);
+
+/* like strdup, but replace \n with \\n, etc */
+char* escape_string(const char* str);
 
 #endif
 

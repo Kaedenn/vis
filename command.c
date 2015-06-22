@@ -288,12 +288,14 @@ static void cmd_rain(const char* buffer) {
 
 static void cmd_load(const char* buffer) {
     if (strlen(buffer) > strlen("load ")) {
-        flist_t flist = load_script(buffer + strlen("load "));
+        script_t s = script_new();
+        flist_t flist = script_run(s, buffer + strlen("load "));
         if (flist != NULL) {
             emitter_schedule(flist);
         } else {
             eprintf("Failed to load script '%s'", buffer + strlen("load "));
         }
+        script_destroy(s);
     }
 }
 
@@ -306,6 +308,7 @@ static void cmd_audio(const char* buffer) {
 }
 
 static void cmd_exit(UNUSED_PARAM(const char* buffer)) {
+    command_teardown();
     exit(0);
 }
 

@@ -20,6 +20,7 @@ FILE* try_fopen(const char* path, const char* mode) {
 void* chmalloc(size_t nbytes) {
     void* p = malloc(nbytes);
     assert(p != NULL);
+    memset(p, 0, nbytes);
     return p;
 }
 
@@ -61,5 +62,61 @@ char* strnulchr(char* str, int n) {
     } else {
         return result;
     }
+}
+
+static size_t escape_count_copy(char* dest, const char* src) {
+    size_t len = 1; /* for trailing \0 */
+    size_t i, j;
+    for (i = 0, j = 0; src[i] != '\0'; ++i) {
+        if (src[i] >= ' ' && src[i] <= '~') {
+            if (dest) dest[j++] = src[i];
+            ++len;
+        } else {
+            if (dest) dest[j++] = '\\';
+            switch (src[i]) {
+                case '\r':
+                    if (dest) dest[j++] = 'r';
+                    len += 2;
+                    break;
+                case '\n':
+                    if (dest) dest[j++] = 'n';
+                    len += 2;
+                    break;
+                case '\v':
+                    if (dest) dest[j++] = 'v';
+                    len += 2;
+                    break;
+                case '\f':
+                    if (dest) dest[j++] = 'f';
+                    len += 2;
+                    break;
+                case '\t':
+                    if (dest) dest[j++] = 't';
+                    len += 2;
+                    break;
+            default:
+                    dest[j++] = 'x';
+                    dest[j++] = (char)((src[i] / 10) % 10 + '0');
+                    dest[j++] = (char)(src[i] % 10 + '0');
+                    len += 4; /* \xNN */
+                    break;
+            }
+        }
+    }
+    if (dest) {
+        dest[len-1] = '\0';
+    }
+    return len;
+}
+
+char* escape_string(const char* str) {
+    size_t len = 1; /* for trailing \0 */
+    char* result = NULL;
+    size_t i, j;
+    char c;
+    len = escape_count_copy(NULL, str);
+    result = chmalloc(len);
+    assert(len == escape_count_copy(result, str));
+    return result;
 }
 

@@ -29,9 +29,16 @@ void emitter_schedule(flist_t frames) {
     fl = frames;
 }
 
+static plist_action_t do_mutate_fn(particle_t p, UNUSED_PARAM(size_t idx),
+                                   void* mutate) {
+    mutate_method_t method = mutate;
+    method->func(p, method->factor);
+    return ACTION_NEXT;
+}
+
 void emitter_tick(void) {
     flist_node_t fn = flist_tick(fl);
-    if (fn != NULL) {
+    while (fn != NULL) {
         switch (fn->type) {
             case VIS_FTYPE_EMIT:
                 emit_frame(fn->data.frame);
@@ -44,10 +51,17 @@ void emitter_tick(void) {
                                      fn->data.color[2], 1);
                 break;
             case VIS_FTYPE_MUTATE:
-                /* TODO: MUTATE */
+                plist_foreach(particles, do_mutate_fn, fn->data.method);
+                break;
+            case VIS_FTYPE_SCRIPTCB:
+                call_script(fn->data.scriptcb->owner, fn->data.scriptcb, NULL);
+                break;
+            case VIS_FTYPE_FRAMESEEK:
+                flist_goto_frame(fl, fn->data.frameseek);
             default:
                 break;
         }
+        fn = flist_node_next(fn);
     }
 }
 

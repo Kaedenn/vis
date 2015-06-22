@@ -40,6 +40,8 @@ typedef enum {
 /* mutation functions */
 typedef enum {
     VIS_MUTATE_PUSH = 0,
+    VIS_MUTATE_PUSH_DX,
+    VIS_MUTATE_PUSH_DY,
     VIS_MUTATE_SLOW,
     VIS_MUTATE_SHRINK,
     VIS_MUTATE_GROW,
@@ -61,20 +63,47 @@ typedef enum {
 #define VIS_FRICTION_COEFF 0.99
 #define VIS_GRAVITY_FACTOR 0.03
 
+/* constants for frame types */
+#define VIS_FTYPE_EMIT 0
+#define VIS_FTYPE_CMD 1
+#define VIS_FTYPE_BGCOLOR 2
+#define VIS_FTYPE_MUTATE 3
+#define VIS_FTYPE_SCRIPTCB 4
+#define VIS_FTYPE_FRAMESEEK 5
+
+/* constants for the frame array's length */
+/* use -DVIS_FRAMES=N to override */
+#ifndef VIS_NFRAMES
+# define VIS_FRAMES_NMINS 10
+# define VIS_FRAMES_NSECS 0
+# define VIS_NFRAMES ((VIS_FRAMES_NMINS*60+VIS_FRAMES_NSECS)*VIS_FPS_LIMIT)
+#endif
+
 /* window size */
 #define VIS_WIDTH 800
 #define VIS_HEIGHT 600
 
+/* interactive mode: poll async once per 5 frames */
+#define VIS_CMD_DELAY_NSTEPS 5
+
+/* size of fuzzy edges around particle p */
+#define BOX_FUDGE(p) (0)
+
+/* physics */
+#define VIS_FRICTION_COEFF 0.99
+#define VIS_GRAVITY_FACTOR 0.03
+
 /* frame rate */
 #define VIS_FPS_LIMIT 30
-#define VIS_FPDS_LIMIT (VIS_FPS_LIMIT / 10)
+#define VIS_FPDS_LIMIT (VIS_FPS_LIMIT / 10.0)
 #define VIS_FPCS_LIMIT (VIS_FPS_LIMIT / 100.0)
+#define VIS_FPMS_LIMIT (VIS_FPS_LIMIT / 1000.0)
 
 /* timing constants */
 #define VIS_10MS (10)
 #define VIS_MSEC_PER_FRAME (1000 / VIS_FPS_LIMIT)
 
-/* error in frame rate: delay 1ms every 3 frames */
+/* error in frame rate: delay 1ms every 3 frames (FIXME: not 30fps) */
 #define VIS_FPMS_ERROR_MS 1
 #define VIS_FPMS_ERROR_FRAMES 3
 
@@ -89,6 +118,9 @@ typedef enum {
 /* initial capacity for particles */
 #define VIS_PLIST_INITIAL_SIZE (1024*1024)
 
+/* (drawing) number of vertices needed per particle */
+#define VIS_VTX_PER_PARTICLE 2
+
 /* convenience */
 #ifndef BOOL
 #define BOOL int
@@ -97,6 +129,10 @@ typedef enum {
 #if !defined(TRUE) && !defined(FALSE)
 #define TRUE 1
 #define FALSE 0
+#endif
+
+#ifndef M_PI
+#define M_PI 3.141592653579
 #endif
 
 #endif

@@ -3,19 +3,19 @@ VisUtil = {}
 function VisUtil.make_emit_table()
     return {
         count = 0, when = 0,
-        x = 0, y = 0, ux = 0, uy = 0,
-        radius = 0, uradius = 0,
+        x = Vis.WIDTH / 2, y = Vis.HEIGHT / 2, ux = 0, uy = 0,
+        radius = 1, uradius = 0,
         ds = 0, uds = 0, theta = 0, utheta = 0,
         life = 0, ulife = 0,
-        r = 0, g = 0, b = 0, ur = 0, ug = 0, ub = 0,
+        r = 1, g = 1, b = 1, ur = 0, ug = 0, ub = 0,
         force = Vis.DEFAULT_FORCE, limit = Vis.DEFAULT_LIMIT,
         blender = Vis.BLEND_LINEAR
     }
 end
 
 function VisUtil.center_emit_table(t, x, y, ux, uy)
-    t.x = x
-    t.y = y
+    t.x = x or Vis.WIDTH / 2
+    t.y = y or Vis.HEIGHT / 2
     t.ux = ux or 0
     t.uy = uy or 0
 end

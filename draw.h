@@ -3,14 +3,81 @@
 #define VIS_DRAW_HEADER_INCLUDED_ 1
 
 #include "defines.h"
-#include <GL/gl.h>
+#include "particle.h"
 #include <math.h>
 
-#ifndef M_PI
-#define M_PI 3.141592653579
+#define NO_SDL_GLEXT
+#ifndef GL_GLEXT_PROTOTYPES
+#define GL_GLEXT_PROTOTYPES
 #endif
 
+#undef GL_VERSION_1_2
+#undef GL_VERSION_1_3
+#undef GL_VERSION_1_4
+#undef GL_VERSION_1_5
+#undef GL_VERSION_2_0
+#undef GL_VERSION_2_1
+#undef GL_VERSION_3_0
+#undef GL_VERSION_3_1
+#undef GL_VERSION_3_2
+#undef GL_VERSION_3_3
+#undef GL_VERSION_4_0
+#undef GL_VERSION_4_1
+#undef GL_VERSION_4_2
+#undef GL_VERSION_4_3
+#undef GL_VERSION_4_4
+
+#include <GL/gl.h>
+#include <GL/glext.h>
+
+/** Notes:
+ *
+ * glDrawElements with GL_TRIANGLES to draw a quad {v1, v2, v3, v4}:
+ *      {v1, v2, v3,  v1, v3, v4}
+
+//usage
+glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
+glEnableVertexAttribArray(0);
+glEnableVertexAttribArray(1);
+glVertexAttribPointer(
+   0,                  // attribute 0. No particular reason for 0, but must match the layout in the shader.
+   2,                  // size
+   GL_FLOAT,           // type
+   GL_FALSE,           // normalized?
+   sizeof(vertex),                  // stride
+   (void*)0            // array buffer offset
+);
+
+glVertexAttribPointer(
+   1,                  // attribute 1. No particular reason for 1, but must match the layout in the shader.
+   3,                  // size
+   GL_FLOAT,           // type
+   GL_FALSE,           // normalized?
+   sizeof(vertex),                  // stride
+   (void*)sizeof(vec2)            // array buffer offset
+);
+
+// Draw the triangle !
+glDrawArrays(GL_TRIANGLES, 0, 24); // Starting from vertex 0; 24 vertices total
+
+ */
+
 typedef double(*blend_fn)(double, double);
+
+typedef struct drawer* drawer_t;
+typedef struct vertex {
+    float x, y;
+    float r, g, b;
+} *vertex_t;
+
+drawer_t drawer_new(void);
+void drawer_free(drawer_t drawer);
+
+int drawer_bgcolor(drawer_t drawer, GLfloat r, GLfloat g, GLfloat b);
+int drawer_add_particle(drawer_t drawer, particle_t particle);
+int drawer_draw_to_screen(drawer_t drawer);
+
+void vis_coords_to_screen(float x, float y, float* nx, float* ny);
 
 static inline void set_background_color(float r, float g, float b, float a) {
     glClearColor(r, g, b, a);

@@ -1,5 +1,5 @@
 
-SRCS = async.c audio.c clargs.c command.c driver.c emitter.c flist.c \
+SRCS = async.c audio.c clargs.c command.c draw.c driver.c emitter.c flist.c \
        forces.c frame.c helper.c limits.c particle.c particle_extra.c plist.c \
        random.c script.c mutator.c
 HSRC = async.h audio.h clargs.h command.h defines.h draw.h emitter.h flist.h \
@@ -14,7 +14,7 @@ CFLAGS = -fdiagnostics-show-option -std=c99 \
 		 -Wno-unused-variable -Wall -Wextra -Wfloat-equal -Wwrite-strings \
 		 -Wshadow -Wpointer-arith -Wcast-qual -Wredundant-decls -Wtrigraphs \
 		 -Wswitch-default -Wswitch-enum -Wundef -Wconversion -pedantic
-LDFLAGS = -lSDL -lGL -lm -lstdc++
+LDFLAGS = -lSDL -lGL -lm
 
 CFLAGS_FAST = -O3 -fexpensive-optimizations
 CFLAGS_DEBUG = -O0 -ggdb -DDEBUG -DVIS_SKIP_MANUAL_OPTIMIZATION

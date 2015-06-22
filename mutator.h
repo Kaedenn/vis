@@ -5,13 +5,19 @@
 #include "defines.h"
 #include "particle.h"
 
-typedef struct {
+typedef struct mutate_method {
     mutate_fn func;
     double factor;
-} mutate_method_t;
+} *mutate_method_t;
 
 /* multiply a particle's velocity by a factor */
 void mutate_push(struct particle* p, double factor);
+
+/* multiply a particle's velocity by a factor */
+void mutate_push_dx(struct particle* p, double factor);
+
+/* multiply a particle's velocity by a factor */
+void mutate_push_dy(struct particle* p, double factor);
 
 /* multiply a particle's velocity by a percent */
 void mutate_slow(struct particle* p, double percent);
@@ -23,7 +29,12 @@ void mutate_shrink(struct particle* p, double factor);
 void mutate_grow(struct particle* p, double factor);
 
 static const mutate_fn MUTATE_MAP[] = {
-    mutate_push, mutate_slow, mutate_shrink, mutate_grow
+    mutate_push,
+    mutate_push_dx,
+    mutate_push_dy,
+    mutate_slow,
+    mutate_shrink,
+    mutate_grow
 };
 
 #endif
