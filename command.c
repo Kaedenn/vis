@@ -3,7 +3,7 @@
 
 #include "async.h"
 #include "defines.h"
-#include "draw.h"
+#include "drawer.h"
 #include "emitter.h"
 #include "forces.h"
 #include "frame.h"
@@ -174,8 +174,8 @@ static void cmd_kick(const char* buffer) {
             ds = randdouble(0.1, 3.0);
             theta = randdouble(0.0, 2*M_PI);
             particle_push(p, ds*cos(theta), ds*sin(theta));
-            particle_set_force(p, VIS_FRICTION);
-            particle_set_limit(p, VIS_SPRINGBOX);
+            particle_set_force(p, VIS_FORCE_FRICTION);
+            particle_set_limit(p, VIS_LIMIT_SPRINGBOX);
             plist_add(particles, p);
             ++i;
         }
@@ -207,8 +207,8 @@ static void cmd_snare(const char* buffer) {
             ds = randdouble(0.1, 2.0);
             theta = randdouble(0.0, 2*M_PI);
             particle_push(p, ds*cos(theta), ds*sin(theta));
-            particle_set_force(p, VIS_GRAVITY);
-            particle_set_limit(p, VIS_SPRINGBOX);
+            particle_set_force(p, VIS_FORCE_GRAVITY);
+            particle_set_limit(p, VIS_LIMIT_SPRINGBOX);
             plist_add(particles, p);
             ++i;
         }
@@ -241,8 +241,8 @@ static void cmd_strum(const char* buffer) {
             ds = randdouble(0.1, 3.0);
             theta = randdouble(0.0, 2*M_PI);
             particle_push(p, ds*cos(theta), ds*sin(theta));
-            particle_set_force(p, VIS_FRICTION);
-            particle_set_limit(p, VIS_SPRINGBOX);
+            particle_set_force(p, VIS_FORCE_FRICTION);
+            particle_set_limit(p, VIS_LIMIT_SPRINGBOX);
             plist_add(particles, p);
             ++i;
         }
@@ -271,12 +271,12 @@ static void cmd_rain(const char* buffer) {
             r = 0.0f;
             g = randfloat(0.1f, 0.3f);
             b = randfloat(0.4f, 1.0f);
-            pe = new_particle_extra(r, g, b, VIS_NO_BLEND);
+            pe = new_particle_extra(r, g, b, VIS_BLEND_NONE);
             p = particle_new(x, y, radius, life, pe);
             ds = randdouble(0.0, 1.0);
             theta = M_PI * 3 / 2;
             particle_push(p, ds*cos(theta), ds*sin(theta));
-            particle_set_force(p, VIS_GRAVITY);
+            particle_set_force(p, VIS_FORCE_GRAVITY);
             particle_set_limit(p, VIS_DEFAULT_LIMIT);
             plist_add(particles, p);
             ++i;

@@ -1,9 +1,10 @@
 
 #include "flist.h"
 #include "helper.h"
+#include "script.h"
 
 static flist_node_t flist_node_new(void) {
-    flist_node_t fn = chmalloc(sizeof(struct flist_node));
+    flist_node_t fn = DBMALLOC(sizeof(struct flist_node));
     if (!fn) return NULL;
     fn->type = VIS_FTYPE_EMIT;
     return fn;
@@ -15,20 +16,20 @@ static void flist_node_free(flist_node_t fn) {
         if (fn->type == VIS_FTYPE_EMIT) {
             free_frame(fn->data.frame);
         } else if (fn->type == VIS_FTYPE_CMD) {
-            free(fn->data.frame);
+            DBFREE(fn->data.frame);
         } else if (fn->type == VIS_FTYPE_BGCOLOR) {
         } else if (fn->type == VIS_FTYPE_MUTATE) {
-            free(fn->data.method);
+            DBFREE(fn->data.method);
         } else if (fn->type == VIS_FTYPE_SCRIPTCB) {
-            free(fn->data.scriptcb);
+            script_callback_free(fn->data.scriptcb);
         }
-        free(fn);
+        DBFREE(fn);
     }
 }
 
 flist_t flist_new(void) {
     int i = 0;
-    flist_t fl = chmalloc(sizeof(struct flist));
+    flist_t fl = DBMALLOC(sizeof(struct flist));
     if (!fl) return NULL;
     while (i < VIS_NFRAMES) {
         fl->frames[i] = NULL;
@@ -44,7 +45,7 @@ void flist_free(flist_t fl) {
         flist_node_free(fl->frames[i]);
         ++i;
     }
-    free(fl);
+    DBFREE(fl);
 }
 
 void flist_insert(flist_t fl, fnum_t when, flist_node_t fn) {
@@ -59,7 +60,7 @@ void flist_insert(flist_t fl, fnum_t when, flist_node_t fn) {
     }
 }
 
-void flist_insert_emit(flist_t fl, fnum_t when, frame_t what) {
+void flist_insert_emit(flist_t fl, fnum_t when, emit_t what) {
     flist_node_t fn = NULL;
     if (!fl) return;
     if (when >= VIS_NFRAMES) return;

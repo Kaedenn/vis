@@ -24,25 +24,24 @@ function emit_random(start)
     t.uds = random(-5, 5) / 5.0
     t.theta = rand3f(0, math.pi)
     t.utheta = rand3f(0, math.pi) / 10.0
-    t.life = random(50, 200)
+    t.life = 50
     t.ulife = random(0, 20)
     VisUtil.color_emit_table(t, rand01(), rand01(), rand01(),
                                 rand01(), rand01(), rand01())
     forces = {Vis.DEFAULT_FORCE, Vis.FORCE_FRICTION, Vis.FORCE_GRAVITY}
     t.force = forces[random(1,3)]
     t.limit = Vis.LIMIT_SPRINGBOX
-    t.blender = Vis.BLEND_QUADRATIC
     VisUtil.emit_table(t)
 end
 
 i=0
-while i < 40 do
+while i < 10 do
     emit_random(i*2)
     i = i + 1
 end
 i = 50
 while i < 200 do
-    Vis.callback(Vis.flist, i, Vis.script, 'print("FPS: "..Vis.fps(Vis.script))')
+    Vis.callback(Vis.flist, i, Vis.script, 'print(Vis.fps(Vis.script))')
     i = i + 50
 end
-Vis.command(Vis.flist, 200, "exit")
+Vis.command(Vis.flist, 100, "exit")

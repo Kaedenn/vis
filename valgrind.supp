@@ -1,0 +1,128 @@
+{
+   sdl-pump-events
+   Memcheck:Cond
+   obj:/usr/lib/x86_64-linux-gnu/libSDL-1.2.so.0.11.4
+   obj:/usr/lib/x86_64-linux-gnu/libSDL-1.2.so.0.11.4
+   obj:/usr/lib/x86_64-linux-gnu/libSDL-1.2.so.0.11.4
+   fun:SDL_PumpEvents
+   fun:SDL_PollEvent
+   fun:mainloop
+   fun:main
+}
+{
+   sdl-video-init
+   Memcheck:Leak
+   match-leak-kinds: all
+   ...
+   fun:SDL_Init
+   ...
+}
+{
+   pa-mainloop-iterate
+   Memcheck:Leak
+   match-leak-kinds: all
+   ...
+   fun:pa_mainloop_iterate
+}
+{
+   libx11-so
+   Memcheck:Leak
+   match-leak-kinds: all
+   ...
+   obj:/usr/lib/x86_64-linux-gnu/libX11.so.6.3.0
+}
+{
+   libxcursor-so
+   Memcheck:Leak
+   match-leak-kinds: all
+   ...
+   obj:/usr/lib/x86_64-linux-gnu/libXcursor.so.1.0.2
+}
+{
+   libsdl-so
+   Memcheck:Leak
+   match-leak-kinds: all
+   ...
+   obj:/usr/lib/x86_64-linux-gnu/libSDL-1.2.so.0.11.4
+}
+{
+   libpulse-so
+   Memcheck:Leak
+   match-leak-kinds: all
+   ...
+   obj:/usr/lib/x86_64-linux-gnu/libpulse.so.0.16.2
+}
+{
+   sdl-set-video-mode
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   fun:strdup
+   obj:/usr/lib/x86_64-linux-gnu/libX11.so.6.3.0
+   fun:_XimEncodeICATTRIBUTE
+   fun:_XimProtoCreateIC
+   fun:XCreateIC
+   obj:/usr/lib/x86_64-linux-gnu/libSDL-1.2.so.0.11.4
+   obj:/usr/lib/x86_64-linux-gnu/libSDL-1.2.so.0.11.4
+   obj:/usr/lib/x86_64-linux-gnu/libSDL-1.2.so.0.11.4
+   fun:SDL_SetVideoMode
+   fun:main
+}
+{
+   sdl-video-init
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:realloc
+   obj:/usr/lib/x86_64-linux-gnu/libX11.so.6.3.0
+   obj:/usr/lib/x86_64-linux-gnu/libX11.so.6.3.0
+   obj:/usr/lib/x86_64-linux-gnu/libX11.so.6.3.0
+   fun:_XlcCreateLC
+   fun:_XlcDefaultLoader
+   fun:_XOpenLC
+   fun:_XlcCurrentLC
+   fun:XSetLocaleModifiers
+   obj:/usr/lib/x86_64-linux-gnu/libSDL-1.2.so.0.11.4
+   obj:/usr/lib/x86_64-linux-gnu/libSDL-1.2.so.0.11.4
+   fun:SDL_VideoInit
+}
+{
+   x-get-default
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:realloc
+   obj:/usr/lib/x86_64-linux-gnu/libX11.so.6.3.0
+   obj:/usr/lib/x86_64-linux-gnu/libX11.so.6.3.0
+   obj:/usr/lib/x86_64-linux-gnu/libX11.so.6.3.0
+   fun:_XlcCreateLC
+   fun:_XlcDefaultLoader
+   fun:_XOpenLC
+   fun:_XrmInitParseInfo
+   obj:/usr/lib/x86_64-linux-gnu/libX11.so.6.3.0
+   fun:XrmGetStringDatabase
+   obj:/usr/lib/x86_64-linux-gnu/libX11.so.6.3.0
+   fun:XGetDefault
+}
+{
+   x-get-visual-info
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   fun:XGetVisualInfo
+   obj:/usr/lib/nvidia-331-updates/libGL.so.331.113
+}
+{
+   libgl-calloc
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:calloc
+   obj:/usr/lib/nvidia-331-updates/libGL.so.331.113
+}
+{
+   sdl-create-rgb-surface
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   fun:SDL_CreateRGBSurface
+   fun:SDL_SetVideoMode
+   fun:main
+}

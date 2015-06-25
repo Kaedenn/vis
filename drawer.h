@@ -76,6 +76,14 @@ void drawer_free(drawer_t drawer);
 int drawer_bgcolor(drawer_t drawer, GLfloat r, GLfloat g, GLfloat b);
 int drawer_add_particle(drawer_t drawer, particle_t particle);
 int drawer_draw_to_screen(drawer_t drawer);
+void drawer_ensure_fps(drawer_t drawer);
+float drawer_get_fps(drawer_t drawer);
+
+void drawer_begin_trace(drawer_t drawer);
+void drawer_set_emit(drawer_t, emit_t emit);
+emit_t drawer_get_emit(drawer_t);
+void drawer_trace(drawer_t drawer, float x, float y);
+void drawer_end_trace(drawer_t drawer);
 
 void vis_coords_to_screen(float x, float y, float* nx, float* ny);
 

@@ -22,7 +22,7 @@ function do_emit_table(start)
     t.ulife = random(0, 20)
     VisUtil.color_emit_table(t, rand01(), rand01(), rand01(),
                                 rand01(), rand01(), rand01())
-    t.limit = Vis.SPRINGBOX
+    t.limit = Vis.LIMIT_SPRINGBOX
     VisUtil.emit_table(t)
 end
 

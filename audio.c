@@ -38,13 +38,20 @@ void audio_init(void) {
         exit(1);
     }
     
-    audio = chmalloc(sizeof(struct audio));
+    audio = DBMALLOC(sizeof(struct audio));
     audio->file = NULL;
-    audio->sample = chmalloc(sizeof(struct sample));
+    audio->sample = DBMALLOC(sizeof(struct sample));
     audio->sample->data = NULL;
     audio->sample->dpos = 0;
     audio->sample->dlen = 0;
-    atexit(SDL_CloseAudio);
+}
+
+void audio_free(UNUSED_PARAM(void* arg)) {
+    if (audio) {
+        DBFREE(audio->sample);
+        DBFREE(audio);
+    }
+    SDL_CloseAudio();
 }
 
 BOOL audio_open(const char* file) {
@@ -73,7 +80,7 @@ BOOL audio_open(const char* file) {
     SDL_FreeWAV(data);
     
     if (audio->sample->data) {
-        free(audio->sample->data);
+        DBFREE(audio->sample->data);
     }
     SDL_LockAudio();
     audio->sample->data = cvt.buf;
@@ -84,8 +91,8 @@ BOOL audio_open(const char* file) {
 }
 
 void audio_close(void) {
-    free(audio->file);
-    free(audio);
+    DBFREE(audio->file);
+    DBFREE(audio);
     audio = NULL;
 }
 

@@ -1,9 +1,21 @@
 
-#include "draw.h"
+#include "drawer.h"
 #include "helper.h"
 #include "particle.h"
 #include "particle_extra.h"
+#include "emitter.h"
 #include <SDL/SDL.h>
+
+static const size_t FPS_COUNTER_LEN = 20;
+
+struct fps {
+    Uint32 framecount;
+    Uint32 start;
+    Uint32 framecount_brief;
+    Uint32 start_brief;
+    Uint32 framestart;
+    double last_fps;
+};
 
 struct drawer {
     GLuint vbo;
@@ -12,6 +24,9 @@ struct drawer {
     size_t vtx_curr;
     size_t vtx_count;
     float bgcolor[3];
+    struct fps fps;
+    BOOL tracing;
+    emit_t emit_desc;
 };
 
 enum shader_t {
@@ -29,14 +44,14 @@ static GLuint load_shader(const char* path, enum shader_t shader_type) {
 */
 
 drawer_t drawer_new(void) {
-    drawer_t drawer = chmalloc(sizeof(struct drawer));
+    drawer_t drawer = DBMALLOC(sizeof(struct drawer));
     drawer->vbo = 0;
     drawer->program_id = 0;
     glGenBuffers(1, &drawer->vbo);
     glBindBuffer(GL_ARRAY_BUFFER, drawer->vbo);
     drawer->vtx_curr = 0;
     drawer->vtx_count = VIS_PLIST_INITIAL_SIZE * VIS_VTX_PER_PARTICLE;
-    drawer->vtx_array = chmalloc(drawer->vtx_count * sizeof(struct vertex));
+    drawer->vtx_array = DBMALLOC(drawer->vtx_count * sizeof(struct vertex));
     glBufferData(GL_ARRAY_BUFFER,
                  (GLsizeiptr)(drawer->vtx_count * sizeof(struct vertex)),
                  drawer->vtx_array, GL_STATIC_DRAW);
@@ -48,13 +63,21 @@ drawer_t drawer_new(void) {
                           (void*)(sizeof(float)*2));
     drawer_bgcolor(drawer, 0, 0, 0);
     /* FIXME: load shaders, compile program */
+    drawer->fps.start = SDL_GetTicks();
+    drawer->fps.framestart = drawer->fps.start;
     return drawer;
 }
 
 void drawer_free(drawer_t drawer) {
-    free(drawer->vtx_array);
+    Uint32 runtime = SDL_GetTicks() - drawer->fps.start;
+    double runtime_sec = (double)runtime / 1000.0;
+    DBPRINTF("%d frames in %d ticks", drawer->fps.framecount, runtime);
+    DBPRINTF("deduced fps: %g", (double)drawer->fps.framecount / runtime_sec);
+    DBPRINTF("frame error: %g", runtime_sec * VIS_FPS_LIMIT - drawer->fps.framecount);
+    DBFREE(drawer->vtx_array);
     /* FIXME: free vbo, program_id */
-    free(drawer);
+    DBFREE(drawer->emit_desc);
+    DBFREE(drawer);
 }
 
 int drawer_bgcolor(drawer_t drawer, GLfloat r, GLfloat g, GLfloat b) {
@@ -90,6 +113,15 @@ int drawer_draw_to_screen(drawer_t drawer) {
 #endif
     SDL_GL_SwapBuffers();
     drawer->vtx_curr = 0;
+    
+    drawer->fps.framecount += 1;
+    drawer->fps.framecount_brief += 1;
+    if (drawer->fps.framecount_brief == FPS_COUNTER_LEN) {
+        Uint32 delta = SDL_GetTicks() - drawer->fps.start_brief;
+        drawer->fps.last_fps = drawer->fps.framecount_brief * 1000.0 / delta;
+        drawer->fps.framecount_brief = 0;
+        drawer->fps.start_brief = SDL_GetTicks();
+    }
     return 0;
 }
 
@@ -99,3 +131,42 @@ void vis_coords_to_screen(float x, float y, float* nx, float* ny) {
     *nx = 2 * x / VIS_WIDTH - 1;
     *ny = 2 * y / VIS_HEIGHT - 1;
 }
+
+void drawer_ensure_fps(drawer_t drawer) {
+    Uint32 elapsed_msec = SDL_GetTicks() - drawer->fps.start;
+    double elapsed_sec = (double)elapsed_msec / 1000.0;
+    double frametime = 0; /* FIXME */
+    /*DBPRINTF("Brief fps: %g", drawer->fps.last_fps);*/
+}
+
+float drawer_get_fps(drawer_t drawer) {
+    return (float)drawer->fps.framecount / ((float)SDL_GetTicks() - (float)drawer->fps.start) * 1000.0f;
+}
+
+void drawer_begin_trace(drawer_t drawer) {
+    drawer->tracing = TRUE;
+}
+
+void drawer_set_emit(drawer_t drawer, emit_t emit) {
+    drawer->emit_desc = emit;
+}
+
+emit_t drawer_get_emit(drawer_t drawer) {
+    return drawer->emit_desc;
+}
+
+void drawer_trace(drawer_t drawer, float x, float y) {
+    if (!drawer->tracing || !drawer->emit_desc) return;
+    if (x < 0.0f || y < 0.0f || x > VIS_WIDTH*1.0f || y > VIS_HEIGHT*1.0f) {
+        return;
+    }
+
+    drawer->emit_desc->x = (double)x;
+    drawer->emit_desc->y = (double)y;
+    emit_frame(drawer->emit_desc);
+}
+
+void drawer_end_trace(drawer_t drawer) {
+    drawer->tracing = FALSE;
+}
+

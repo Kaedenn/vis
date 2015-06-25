@@ -24,6 +24,17 @@ void* chmalloc(size_t nbytes) {
     return p;
 }
 
+void* dbmalloc(size_t nbytes, const char* label) {
+    void* ptr = chmalloc(nbytes);
+    DBPRINTF("Allocated %d bytes for %s: %p", nbytes, label, ptr);
+    return ptr;
+}
+
+void dbfree(void* ptr, const char* label) {
+    DBPRINTF("Freeing %p for %s", ptr, label);
+    free(ptr);
+}
+
 void eprintf(const char* fmt, ...) {
     va_list args;
     va_start(args, fmt);

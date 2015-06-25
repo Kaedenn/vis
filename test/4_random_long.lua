@@ -36,13 +36,13 @@ function emit_random(start)
 end
 
 i=0
-while i < 40 do
+while i < 200 do
     emit_random(i*2)
     i = i + 1
 end
 i = 50
-while i < 200 do
+while i < 600 do
     Vis.callback(Vis.flist, i, Vis.script, 'print("FPS: "..Vis.fps(Vis.script))')
     i = i + 50
 end
-Vis.command(Vis.flist, 200, "exit")
+Vis.command(Vis.flist, 600, "exit")

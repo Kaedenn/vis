@@ -11,13 +11,10 @@
     In the current setup, that's ~35kB for one array.
 */
 
-typedef unsigned int fnum_t;
-typedef unsigned int frame_type_t;
-
 typedef struct flist_node {
     frame_type_t type; /* defines.h: VIS_FTYPE_* */
     union {
-        frame_t frame; /* emit frame */
+        emit_t frame; /* emit frame */
         const char* cmd; /* command frame */
         float color[3]; /* bgcolor frame */
         mutate_method_t method; /* mutate frame */
@@ -35,7 +32,7 @@ typedef struct flist {
 flist_t flist_new(void);
 void flist_free(flist_t fl);
 void flist_insert(flist_t fl, fnum_t when, flist_node_t fn);
-void flist_insert_emit(flist_t fl, fnum_t when, frame_t what);
+void flist_insert_emit(flist_t fl, fnum_t when, emit_t what);
 void flist_insert_cmd(flist_t fl, fnum_t when, const char* what);
 void flist_insert_bgcolor(flist_t fl, fnum_t when, float color[3]);
 void flist_insert_mutate(flist_t fl, fnum_t when, mutate_method_t method);

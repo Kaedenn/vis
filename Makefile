@@ -1,15 +1,14 @@
 
-SRCS = async.c audio.c clargs.c command.c draw.c driver.c emitter.c flist.c \
+SRCS = async.c audio.c clargs.c command.c drawer.c driver.c emitter.c flist.c \
        forces.c frame.c helper.c limits.c particle.c particle_extra.c plist.c \
-       random.c script.c mutator.c
-HSRC = async.h audio.h clargs.h command.h defines.h draw.h emitter.h flist.h \
+       random.c script.c mutator.c types.c
+HSRC = async.h audio.h clargs.h command.h defines.h drawer.h emitter.h flist.h \
        forces.h frame.h helper.h limits.h particle.h particle_extra.h plist.h \
-       random.h script.h mutator.h
+       random.h script.h mutator.h types.h
 SOURCES = $(CSRC) $(HSRC) Makefile
 EXECBIN = vis
 
 PROJECTDIR = $(realpath .)
-
 CFLAGS = -fdiagnostics-show-option -std=c99 \
 		 -Wno-unused-variable -Wall -Wextra -Wfloat-equal -Wwrite-strings \
 		 -Wshadow -Wpointer-arith -Wcast-qual -Wredundant-decls -Wtrigraphs \
@@ -23,8 +22,11 @@ CFLAGS_PROF = -pg -DVIS_SKIP_MANUAL_OPTIMIZATION
 CFLAGS_LUA = -I/usr/include/lua5.2
 LDFLAGS_LUA = -llua5.2
 
-CFLAGS := $(CFLAGS) $(CFLAGS_LUA)
-LDFLAGS := $(LDFLAGS) $(LDFLAGS_LUA)
+EXEC_ARGS ?= 
+VALGRIND = valgrind --suppressions=./valgrind.supp --num-callers=32
+
+CFLAGS := $(CFLAGS) $(CFLAGS_LUA) $(EXTRA_CFLAGS)
+LDFLAGS := $(LDFLAGS) $(LDFLAGS_LUA) $(EXTRA_LDFLAGS)
 
 all: $(SOURCES)
 	$(CC) -o $(EXECBIN) $(SRCS) $(CFLAGS) $(LDFLAGS)
@@ -38,17 +40,20 @@ debug: $(SOURCES)
 profile: $(SOURCES)
 	$(CC) $(CFLAGS_PROF) -o $(EXECBIN) $(SRCS) $(CFLAGS) $(LDFLAGS)
 	rlwrap ./$(EXECBIN) -l test/test.lua
-	gprof $(EXECBIN)
+	gprof $(EXECBIN) $(EXEC_ARGS)
 	- rm ./gmon.out
 
 execute: $(EXECBIN)
-	rlwrap ./$(EXECBIN)
+	rlwrap ./$(EXECBIN) $(EXEC_ARGS)
 
 valgrind: debug $(EXECBIN)
-	valgrind ./$(EXECBIN)
+	$(VALGRIND) ./$(EXECBIN) $(EXEC_ARGS)
 
 leakcheck: debug $(EXECBIN)
-	valgrind --leak-check=full --show-reachable=yes ./$(EXECBIN)
+	$(VALGRIND) --leak-check=full ./$(EXECBIN) $(EXEC_ARGS)
+
+leakcheck-reachable: debug $(EXECBIN)
+	$(VALGRIND) --leak-check=full --show-reachable=yes --show-leak-kinds=all ./$(EXECBIN) $(EXEC_ARGS)
 
 clean:
 	- rm $(EXECBIN)

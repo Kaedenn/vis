@@ -10,12 +10,23 @@ FILE* try_fopen(const char* path, const char* mode);
 
 /* malloc+assert */
 void* chmalloc(size_t nbytes);
+void* dbmalloc(size_t nbytes, const char* label);
+void dbfree(void* ptr, const char* label);
 
 /* helper printfs for errors or debugging */
 void eprintf(const char* fmt, ...);
 void dbprintf(const char* fmt, ...);
 
 #ifdef DEBUG
+
+#ifdef DEBUG_MALLOC
+#define DBMALLOC(size) dbmalloc((size), (#size))
+#define DBFREE(ptr) dbfree((ptr), (#ptr))
+#else
+#define DBMALLOC(size) chmalloc((size))
+#define DBFREE(ptr) free((ptr))
+#endif
+
 #define DBPRINTF(fmt, ...) \
     do { \
         fprintf(stderr, "%s:%d: ", __FILE__, __LINE__); \

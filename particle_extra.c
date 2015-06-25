@@ -4,7 +4,7 @@
 
 pextra_t new_particle_extra(float red, float green, float blue,
                             blend_t blender) {
-    pextra_t extra = chmalloc(sizeof(struct particle_extra));
+    pextra_t extra = DBMALLOC(sizeof(struct particle_extra));
     extra->r = red;
     extra->g = green;
     extra->b = blue;
@@ -13,6 +13,6 @@ pextra_t new_particle_extra(float red, float green, float blue,
 }
 
 void free_particle_extra(pextra_t extra) {
-    free(extra);
+    DBFREE(extra);
 }
 

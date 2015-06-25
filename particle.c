@@ -13,7 +13,7 @@
 #include <math.h>
 
 particle_t particle_new(double x, double y, double r, int life, void* extra) {
-    particle_t p = chmalloc(sizeof(struct particle));
+    particle_t p = DBMALLOC(sizeof(struct particle));
     p->x = x;
     p->y = y;
     p->dx = 0.0;
@@ -35,7 +35,7 @@ particle_t particle_new_full(double x, double y,
                              int life, int ulife,
                              force_t force, limit_t limit,
                              void* extra) {
-    particle_t p = chmalloc(sizeof(struct particle));
+    particle_t p = DBMALLOC(sizeof(struct particle));
     
     double t = randdouble(theta-utheta, theta+utheta);
     ds = randdouble(ds-uds, ds+uds);
@@ -59,7 +59,7 @@ particle_t particle_new_full(double x, double y,
 
 void particle_free(particle_t p) {
     free_particle_extra(p->extra);
-    free(p);
+    DBFREE(p);
 }
 
 void particle_push(particle_t p, double dx, double dy) {
@@ -79,10 +79,10 @@ void particle_tick(particle_t p) {
     p->x += p->dx;
     p->y += p->dy;
     /*switch (p->force) {
-        case VIS_FRICTION:
+        case VIS_FORCE_FRICTION:
             friction(p);
             break;
-        case VIS_GRAVITY:
+        case VIS_FORCE_GRAVITY:
             gravity(p);
             break;
         case VIS_DEFAULT_FORCE:
@@ -91,10 +91,10 @@ void particle_tick(particle_t p) {
             break;
     }
     switch (p->limit) {
-        case VIS_BOX:
+        case VIS_LIMIT_BOX:
             box(p);
             break;
-        case VIS_SPRINGBOX:
+        case VIS_LIMIT_SPRINGBOX:
             springbox(p);
             break;
         case VIS_DEFAULT_LIMIT:

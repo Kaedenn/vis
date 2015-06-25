@@ -3,7 +3,7 @@
 #define VIS_PARTICLE_EXTRA_HEADER_INCLUDED_ 1
 
 #include "defines.h"
-#include "draw.h"
+#include "drawer.h"
 #include <stdlib.h>
 
 typedef struct particle_extra {

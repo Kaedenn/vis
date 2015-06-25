@@ -9,7 +9,7 @@
 
 #include "forces.h"
 #include "limits.h"
-#include "draw.h"
+#include "drawer.h"
 
 #include "random.h"
 
@@ -20,12 +20,16 @@ static flist_t fl = NULL;
 
 void emitter_setup(plist_t plist) {
     particles = plist;
-    fl = flist_new();
+}
+
+void emitter_free(UNUSED_PARAM(void* arg)) {
 }
 
 void emitter_schedule(flist_t frames) {
-    flist_clear(fl);
-    flist_free(fl);
+    if (fl) {
+        flist_clear(fl);
+        flist_free(fl);
+    }
     fl = frames;
 }
 
@@ -65,7 +69,7 @@ void emitter_tick(void) {
     }
 }
 
-void emit_frame(frame_t frame) {
+void emit_frame(emit_t frame) {
     int i;
     for (i = 0; i < frame->n; ++i) {
         particle_t p = NULL;
