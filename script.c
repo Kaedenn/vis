@@ -28,16 +28,15 @@ int viscmd_fps_fn(lua_State* L);
 int viscmd_settrace_fn(lua_State* L);
 
 static emit_t lua_args_to_emit_t(lua_State* L, int arg, fnum_t* when);
+static void stack_dump(lua_State* L);
 
 struct script {
     lua_State* L;
-    script_cb_t callback;
     flist_t fl;
     drawer_t drawer;
 };
 
 int luaopen_Vis(lua_State* L) {
-    DBPRINTF("Loading lualibVis %p", L);
     static const struct luaL_Reg vis_lib[] = {
         {"debug", viscmd_debug_fn},
         {"command", viscmd_command_fn},
@@ -96,7 +95,7 @@ int luaopen_Vis(lua_State* L) {
     return 1;
 }
 
-script_t script_new(void) {
+script_t script_new(script_cfg_t cfg) {
     script_t s = DBMALLOC(sizeof(struct script));
     s->fl = flist_new();
     s->L = luaL_newstate();
@@ -104,6 +103,7 @@ script_t script_new(void) {
     luaL_requiref(s->L, "Vis", luaopen_Vis, 0);
 
     (void)luaL_dostring(s->L, "Vis = require(\"Vis\")");
+    stack_dump(s->L);
 
     flist_t* flbox = lua_newuserdata(s->L, sizeof(void*));
     luaL_newmetatable(s->L, "flist_t*");
@@ -111,18 +111,20 @@ script_t script_new(void) {
     luaL_setmetatable(s->L, "flist_t*");
     *flbox = s->fl;
     lua_setfield(s->L, -2, "flist");
-    script_t* sbox = lua_newuserdata(s->L, sizeof(void*));
-    luaL_newmetatable(s->L, "script_t*");
-    lua_pop(s->L, 1);
-    luaL_setmetatable(s->L, "script_t*");
-    *sbox = s;
-    lua_setfield(s->L, -2, "script");
-    lua_pop(s->L, 1);
+    if ((cfg & SCRIPT_NO_CB) == 0) {
+        script_t* sbox = lua_newuserdata(s->L, sizeof(void*));
+        luaL_newmetatable(s->L, "script_t*");
+        lua_pop(s->L, 1);
+        luaL_setmetatable(s->L, "script_t*");
+        *sbox = s;
+        lua_setfield(s->L, -2, "script");
+        lua_pop(s->L, 1);
+    }
 
     return s;
 }
 
-void script_destroy(script_t s) {
+void script_free(script_t s) {
     if (!s) return;
     lua_close(s->L);
     DBFREE(s);
@@ -354,3 +356,9 @@ static emit_t lua_args_to_emit_t(lua_State* L, int arg, fnum_t* when) {
     emit->blender = luaL_optint(L, arg++, 0);
     return emit;
 }
+
+static void stack_dump(lua_State* L) {
+    int nelems = lua_gettop(L);
+    DBPRINTF("Lua stack: %d item%s", nelems, nelems==1?"":"s");
+}
+

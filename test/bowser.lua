@@ -2,25 +2,46 @@ Vis = require("Vis")
 VisUtil = require("visutil")
 math = require("math")
 
+TRACK_1 = 1
+TRACK_2 = 2
+TRACK_3 = 3
+TRACK_4 = 4
+TRACK_5 = 5
+TRACK_6 = 6
+TRACK_7 = 7
+TRACK_8 = 8
+TrackTimes = {0, 0, 0, 0, 0, 0, 0, 0}
+
+function trackstep(track, length)
+    TrackTimes[track] = TrackTimes[track] + length
+end
+
 Vis.audio("media/Bowser.wav")
+
+function asserteq(a, b)
+    if a ~= b then
+        print(a.." is not equal to "..b)
+        assert(a == b)
+    end
+end
 
 function emit_spiral(steps)
     local MAXLIFE = 100
     local MAXLIFE_ADJ = 10
 
-    t = VisUtil.make_emit_table()
-    center_emit_table(t)
-    t.ds = 2
-    t.uds = 1.75
-    t.life = MAXLIFE
-    t.ulife = MAXLIFE_ADJ
-    VisUtil.color_emit_table(t, 0, 100, 200, 0, 10, 50)
+    et = VisUtil.make_emit_table()
+    center_emit_table(et)
+    et.ds = 2
+    et.uds = 1.75
+    et.life = MAXLIFE
+    et.ulife = MAXLIFE_ADJ
+    VisUtil.color_emit_table(et, 0, 100, 200, 0, 10, 50)
     for i = 0, steps do
-        t.count = 1000
-        t.when = i
-        t.theta = 2*math.pi * i / steps
-        t.utheta = 2*math.pi / steps
-        VisUtil.emit_table(t)
+        et.count = 1000
+        et.when = i
+        et.theta = 2*math.pi * i / steps
+        et.utheta = 2*math.pi / steps
+        VisUtil.emit_table(et)
     end
     return steps + MAXLIFE + MAXLIFE_ADJ
 end
@@ -29,17 +50,53 @@ function emit_circle(start, x, y, r, g, b, ur, ug, ub)
     local MAXLIFE = 10
     local MAXLIFE_ADJ = 0
 
-    t = VisUtil.make_emit_table()
-    VisUtil.center_emit_table(t, x or Vis.WIDTH/3, y or Vis.HEIGHT*2/3)
-    t.ds = 1
-    t.life = 10
-    VisUtil.color_emit_table(t, r or 0, g or 100, b or 200,
+    et = VisUtil.make_emit_table()
+    VisUtil.center_emit_table(et, x or Vis.WIDTH/3, y or Vis.HEIGHT*2/3)
+    et.ds = 1
+    et.life = 10
+    VisUtil.color_emit_table(et, r or 0, g or 100, b or 200,
                                 ur or 0, ug or 50, ub or 0);
-    t.count = 100
-    t.when = start
-    t.theta = math.pi
-    t.utheta = math.pi
-    VisUtil.emit_table(t)
+    et.count = 100
+    et.when = start
+    et.theta = math.pi
+    et.utheta = math.pi
+    VisUtil.emit_table(et)
+end
+
+function emit_line_v(start, x, r, g, b, ur, ug, ub)
+    local MAXLIFE = 10
+    local MAXLIFE_ADJ = 0
+
+    et = VisUtil.make_emit_table()
+    VisUtil.center_emit_table(et, x, 0, 0, Vis.HEIGHT)
+    et.ds = 1
+    et.life = 10
+    VisUtil.color_emit_table(et, r or 0, g or 100, b or 200,
+                                ur or 0, ug or 50, ub or 0)
+    et.count = 200
+    et.when = start
+    et.theta = math.pi/2
+    VisUtil.emit_table(et)
+    et.theta = math.pi*3/2
+    VisUtil.emit_table(et)
+end
+
+function emit_line_h(start, y, r, g, b, ur, ug, ub)
+    local MAXLIFE = 10
+    local MAXLIFE_ADJ = 0
+
+    et = VisUtil.make_emit_table()
+    VisUtil.center_emit_table(et, 0, y, Vis.WIDTH, 0)
+    et.ds = 1
+    et.life = 10
+    VisUtil.color_emit_table(et, r or 0, g or 100, b or 200,
+                                ur or 0, ug or 50, ub or 0)
+    et.count = 200
+    et.when = start
+    et.theta = 0
+    VisUtil.emit_table(et)
+    et.theta = math.pi
+    VisUtil.emit_table(et)
 end
 
 W_1_2 = Vis.WIDTH / 2 -- 400
@@ -60,37 +117,88 @@ H_1_6 = Vis.HEIGHT / 6 -- 100
 H_5_6 = H_1_6 * 5      -- 500
 H_1_8 = Vis.HEIGHT / 8 -- 75
 
--- 200, 500 = Vis.WIDTH / 4, Vis.HEIGHT * 5 / 6
-emit_circle(37, W_1_4, H_5_6)
-emit_circle(46, W_3_4, H_5_6)
-emit_circle(55, W_1_2, H_3_4)
-j = 64
-while j < 100 do
+-- INTRO: PART ONE: MAIN TRACK
+t = 37
+emit_circle(t, W_1_4, H_5_6); t = t + 9
+emit_circle(t, W_3_4, H_5_6); t = t + 9
+emit_circle(t, W_1_2, H_3_4); t = t + 9
+j = t
+t = t + 36
+while j < t do
     emit_circle(j, W_1_2, H_5_6)
     j = j + 1
 end
-emit_circle(104, W_1_2, H_2_3)
-emit_circle(112, W_1_2, H_3_4)
+t = t + 4
 
-emit_circle(126, W_1_2, H_2_3)
-emit_circle(134, W_1_2, H_3_4)
+emit_circle(t, W_1_2, H_2_3); t = t + 8
+emit_circle(t, W_1_2, H_3_4); t = t + 14
 
-emit_circle(148, W_1_2, H_2_3)
-emit_circle(156, W_1_2, H_3_4)
+emit_circle(t, W_1_2, H_2_3); t = t + 8
+emit_circle(t, W_1_2, H_3_4); t = t + 14
 
-Vis.seek(math.floor(215.0 / Vis.FPS_LIMIT) * 100)
-Vis.seekframe(Vis.flist, 0, 215)
+emit_circle(t, W_1_2, H_2_3); t = t + 8
+emit_circle(t, W_1_2, H_3_4); t = t + 44 + 15
 
-emit_circle(215, W_1_4, H_5_6)
-emit_circle(226, W_3_4, H_5_6)
-emit_circle(237, W_1_2, H_3_4)
-j = 245
-while j < 276 do
+-- INTRO: PART TWO: MAIN TRACK
+emit_circle(t, W_1_4, H_5_6); t = t + 11
+emit_circle(t, W_3_4, H_5_6); t = t + 11
+emit_circle(t, W_1_2, H_3_4); t = t + 8
+j = t
+t = t + 31
+while j < t do
     emit_circle(j, W_1_2, H_5_6)
     j = j + 1
 end
-emit_circle(284, W_1_4, H_5_6)
-emit_circle(293, W_3_4, H_5_6)
+t = t + 8
+emit_circle(t, W_1_4, H_5_6); t = t + 7
+emit_circle(t, W_3_4, H_5_6); t = t + 5
 
---now = emit_spiral(100)
-Vis.command(Vis.flist, 400, "exit")
+j = t
+t = t + 10
+while j < t do
+    emit_line_v(j, W_1_2)
+    j = j + 1
+end
+t = t + 16
+
+j = t
+t = t + 10
+while j < t do
+    emit_line_v(j, W_1_2)
+    j = j + 1
+end
+t = t + 16
+
+j = t
+t = t + 10
+while j < t do
+    emit_line_v(j, W_1_2)
+    j = j + 1
+end
+t = t + 42
+
+VisUtil.seek_to(t)
+
+-- INTRO: PART THREE: MAIN TRACK
+emit_circle(t, W_1_4, H_5_6); t = t + 10
+emit_circle(t, W_3_4, H_5_6); t = t + 10
+emit_circle(t, W_1_2, H_3_4); t = t + 10
+j = t
+t = t + 36
+while j < t do
+    emit_circle(j, W_1_2, H_5_6)
+    j = j + 1
+end
+t = t + 4
+
+emit_circle(t, W_1_2, H_2_3); t = t + 9
+emit_circle(t, W_1_2, H_3_4); t = t + 12
+
+emit_circle(t, W_1_2, H_2_3); t = t + 9
+emit_circle(t, W_1_2, H_3_4); t = t + 12
+
+emit_circle(t, W_1_2, H_2_3); t = t + 9
+emit_circle(t, W_1_2, H_3_4); t = t + 9
+
+-- MAIN SONG: MIX ONE
+Vis.command(Vis.flist, t + 12, "exit")

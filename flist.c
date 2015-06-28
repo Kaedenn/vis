@@ -14,7 +14,7 @@ static void flist_node_free(flist_node_t fn) {
     if (fn != NULL) {
         flist_node_free(fn->next);
         if (fn->type == VIS_FTYPE_EMIT) {
-            free_frame(fn->data.frame);
+            emit_free(fn->data.frame);
         } else if (fn->type == VIS_FTYPE_CMD) {
             DBFREE(fn->data.frame);
         } else if (fn->type == VIS_FTYPE_BGCOLOR) {

@@ -3,7 +3,7 @@
 
 #include "clargs.h"
 #include "forces.h"
-#include "limits.h"
+#include "plimits.h"
 #include "helper.h"
 #include "particle_extra.h"
 

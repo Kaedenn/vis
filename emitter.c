@@ -8,7 +8,7 @@
 #include "particle_extra.h"
 
 #include "forces.h"
-#include "limits.h"
+#include "plimits.h"
 #include "drawer.h"
 
 #include "random.h"

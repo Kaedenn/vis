@@ -58,25 +58,4 @@ typedef enum {
     VIS_MAX_FTYPE
 } ftype_t;
 
-typedef struct emit_frame {
-    int n;              /* number of particles to emit */
-    double x, y;        /* where to emit from */
-    double ux, uy;      /* uncertainty in x and y */
-    double rad;         /* radius */
-    double urad;        /* uncertainty in rad */
-    int life;           /* particle lifetime */
-    int ulife;          /* uncertainty in life (haha) */
-    double ds;          /* initial velocity */
-    double uds;         /* uncertainty in ds */
-    double theta;       /* initial angle */
-    double utheta;      /* uncertainty in theta */
-    float r, g, b;      /* color */
-    float ur, ug, ub;   /* uncertainty in r, g and b */
-    force_t force;      /* force function */
-    limit_t limit;      /* limit function */
-    blend_t blender;   /* blending function */
-} *emit_t;
-
-void dbprintf_emit_t(emit_t e);
-
 #endif

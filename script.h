@@ -14,8 +14,12 @@ typedef struct script_cb {
 
 typedef struct script* script_t;
 
-script_t script_new(void);
-void script_destroy(script_t s);
+typedef unsigned int script_cfg_t;
+static const script_cfg_t SCRIPT_ALLOW_ALL = 0; /* allow all features */
+static const script_cfg_t SCRIPT_NO_CB = 1; /* disable callbacks */
+
+script_t script_new(script_cfg_t cfg);
+void script_free(script_t s);
 void script_callback_free(script_cb_t cb);
 struct flist* script_run(script_t script, const char* filename);
 void call_script(script_t state, script_cb_t func, void* args);

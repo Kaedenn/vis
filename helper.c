@@ -45,11 +45,15 @@ void eprintf(const char* fmt, ...) {
 
 void dbprintf(const char* fmt, ...) {
     va_list args;
+#ifdef DEBUG
     fprintf(stdout, "debug: ");
     va_start(args, fmt);
     vfprintf(stdout, fmt, args);
     va_end(args);
     fprintf(stdout, "\n");
+#else
+    (void)fmt;
+#endif
 }
 
 BOOL startswith(const char* s1, const char* s2) {

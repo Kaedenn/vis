@@ -1,14 +1,11 @@
 
 SRCS = async.c audio.c clargs.c command.c drawer.c driver.c emitter.c flist.c \
-       forces.c frame.c helper.c limits.c particle.c particle_extra.c plist.c \
-       random.c script.c mutator.c types.c
-HSRC = async.h audio.h clargs.h command.h defines.h drawer.h emitter.h flist.h \
-       forces.h frame.h helper.h limits.h particle.h particle_extra.h plist.h \
-       random.h script.h mutator.h types.h
-SOURCES = $(CSRC) $(HSRC) Makefile
+       forces.c helper.c plimits.c particle.c particle_extra.c plist.c \
+       random.c script.c mutator.c emit.c
+SOURCES = $(CSRC) Makefile
 EXECBIN = vis
 
-PROJECTDIR = $(realpath .)
+DIR = $(realpath .)
 CFLAGS = -fdiagnostics-show-option -std=c99 \
 		 -Wno-unused-variable -Wall -Wextra -Wfloat-equal -Wwrite-strings \
 		 -Wshadow -Wpointer-arith -Wcast-qual -Wredundant-decls -Wtrigraphs \
@@ -16,44 +13,45 @@ CFLAGS = -fdiagnostics-show-option -std=c99 \
 LDFLAGS = -lSDL -lGL -lm
 
 CFLAGS_FAST = -O3 -fexpensive-optimizations
-CFLAGS_DEBUG = -O0 -ggdb -DDEBUG -DVIS_SKIP_MANUAL_OPTIMIZATION
-CFLAGS_PROF = -pg -DVIS_SKIP_MANUAL_OPTIMIZATION
+CFLAGS_DEBUG = -O0 -ggdb -DDEBUG
+CFLAGS_PROF = -pg
 
 CFLAGS_LUA = -I/usr/include/lua5.2
 LDFLAGS_LUA = -llua5.2
 
 EXEC_ARGS ?= 
-VALGRIND = valgrind --suppressions=./valgrind.supp --num-callers=32
+VALGRIND = valgrind --suppressions=$(DIR)/valgrind.supp --num-callers=32
 
 CFLAGS := $(CFLAGS) $(CFLAGS_LUA) $(EXTRA_CFLAGS)
 LDFLAGS := $(LDFLAGS) $(LDFLAGS_LUA) $(EXTRA_LDFLAGS)
 
+.PHONY: all fast debug profile execute valgrind leakcheck leakcheck-reachable \
+	clean distclean
+
 all: $(SOURCES)
-	$(CC) -o $(EXECBIN) $(SRCS) $(CFLAGS) $(LDFLAGS)
+	$(CC) -o $(DIR)/$(EXECBIN) $(SRCS) $(CFLAGS) $(LDFLAGS)
 
 fast: $(SOURCES)
-	$(CC) $(CFLAGS_FAST) -o $(EXECBIN) $(SRCS) $(CFLAGS) $(LDFLAGS)
+	$(CC) $(CFLAGS_FAST) -o $(DIR)/$(EXECBIN) $(SRCS) $(CFLAGS) $(LDFLAGS)
 
 debug: $(SOURCES)
-	$(CC) $(CFLAGS_DEBUG) -o $(EXECBIN) $(SRCS) $(CFLAGS) $(LDFLAGS)
+	$(CC) $(CFLAGS_DEBUG) -o $(DIR)/$(EXECBIN) $(SRCS) $(CFLAGS) $(LDFLAGS)
 
 profile: $(SOURCES)
-	$(CC) $(CFLAGS_PROF) -o $(EXECBIN) $(SRCS) $(CFLAGS) $(LDFLAGS)
-	rlwrap ./$(EXECBIN) -l test/test.lua
-	gprof $(EXECBIN) $(EXEC_ARGS)
-	- rm ./gmon.out
-
-execute: $(EXECBIN)
-	rlwrap ./$(EXECBIN) $(EXEC_ARGS)
+	$(CC) $(CFLAGS_PROF) -o $(DIR)/$(EXECBIN) $(SRCS) $(CFLAGS) $(LDFLAGS)
+	rlwrap $(DIR)/$(EXECBIN) -l $(DIR)/test/test.lua
+	gprof $(DIR)/$(EXECBIN) $(EXEC_ARGS)
+	- rm $(DIR)/gmon.out
 
 valgrind: debug $(EXECBIN)
-	$(VALGRIND) ./$(EXECBIN) $(EXEC_ARGS)
+	$(VALGRIND) $(DIR)/$(EXECBIN) $(EXEC_ARGS)
 
 leakcheck: debug $(EXECBIN)
-	$(VALGRIND) --leak-check=full ./$(EXECBIN) $(EXEC_ARGS)
+	$(VALGRIND) --leak-check=full $(DIR)/$(EXECBIN) $(EXEC_ARGS)
 
 leakcheck-reachable: debug $(EXECBIN)
-	$(VALGRIND) --leak-check=full --show-reachable=yes --show-leak-kinds=all ./$(EXECBIN) $(EXEC_ARGS)
+	$(VALGRIND) --leak-check=full --show-reachable=yes --show-leak-kinds=all \
+		$(DIR)/$(EXECBIN) $(EXEC_ARGS)
 
 clean:
 	- rm $(EXECBIN)

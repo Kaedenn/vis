@@ -2,7 +2,8 @@
 #ifndef VIS_FLIST_HEADER_INCLUDED_
 #define VIS_FLIST_HEADER_INCLUDED_ 1
 
-#include "frame.h"
+#include "emit.h"
+#include "mutator.h"
 #include "script.h"
 
 /* Frame List: an array of linked lists!

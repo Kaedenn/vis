@@ -1,3 +1,4 @@
+Vis = require('Vis')
 
 VisUtil = {}
 function VisUtil.make_emit_table()
@@ -31,6 +32,11 @@ end
 
 function VisUtil.emit_table(t)
     Vis.emit(Vis.flist, t.count, t.when, t.x, t.y, t.ux, t.uy, t.radius, t.uradius, t.ds, t.uds, t.theta, t.utheta, t.life, t.ulife, t.r, t.g, t.b, t.ur, t.ug, t.ub, t.force, t.limit, t.blender)
+end
+
+function VisUtil.seek_to(frame)
+    Vis.seek(math.floor(frame / Vis.FPS_LIMIT * 100))
+    Vis.seekframe(Vis.flist, 0, frame)
 end
 
 return VisUtil

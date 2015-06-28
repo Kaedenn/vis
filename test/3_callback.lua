@@ -1,7 +1,5 @@
 Vis = require("Vis")
 
-assert(Vis.script)
-
 Vis.callback(Vis.flist, 20, Vis.script, 'cb()')
 Vis.callback(Vis.flist, 0, Vis.script, 'print("Two at a time!\n")')
 

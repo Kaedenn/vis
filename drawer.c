@@ -11,13 +11,12 @@ static const size_t FPS_COUNTER_LEN = 20;
 struct fps {
     Uint32 framecount;
     Uint32 start;
-    Uint32 framecount_brief;
-    Uint32 start_brief;
     Uint32 framestart;
     double last_fps;
 };
 
 struct drawer {
+    SDL_Surface* screen;
     GLuint vbo;
     GLuint program_id;
     vertex_t vtx_array;
@@ -45,6 +44,30 @@ static GLuint load_shader(const char* path, enum shader_t shader_type) {
 
 drawer_t drawer_new(void) {
     drawer_t drawer = DBMALLOC(sizeof(struct drawer));
+    /* initialize SDL */
+    if (SDL_Init(SDL_INIT_EVERYTHING) < 0) {
+        return NULL;
+    }
+    drawer->screen = SDL_SetVideoMode(VIS_WIDTH, VIS_HEIGHT, 32,
+            SDL_HWSURFACE | SDL_ASYNCBLIT | SDL_OPENGLBLIT |
+            SDL_GL_DOUBLEBUFFER | SDL_OPENGL);
+    if (drawer->screen == NULL) {
+        return NULL;
+    }
+    /* initialize OpenGL basics */
+    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+    glClearDepth(1.0f);
+    glViewport(0, 0, VIS_WIDTH, VIS_HEIGHT);
+    glMatrixMode(GL_PROJECTION); /* init projection matrix */
+    glLoadIdentity();
+    glOrtho(0, VIS_WIDTH, VIS_HEIGHT, 0, -1, 1);
+    glMatrixMode(GL_MODELVIEW); /* init model view matrix */
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glEnable(GL_BLEND);
+    glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
+    glEnable(GL_TEXTURE_2D);
+    glLoadIdentity();
+    /* initialize OpenGL shader engine */
     drawer->vbo = 0;
     drawer->program_id = 0;
     glGenBuffers(1, &drawer->vbo);
@@ -62,7 +85,9 @@ drawer_t drawer_new(void) {
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(struct vertex),
                           (void*)(sizeof(float)*2));
     drawer_bgcolor(drawer, 0, 0, 0);
-    /* FIXME: load shaders, compile program */
+    /* TODO: load shaders, compile program */
+
+    /* initialize fps analysis */
     drawer->fps.start = SDL_GetTicks();
     drawer->fps.framestart = drawer->fps.start;
     return drawer;
@@ -78,6 +103,7 @@ void drawer_free(drawer_t drawer) {
     /* FIXME: free vbo, program_id */
     DBFREE(drawer->emit_desc);
     DBFREE(drawer);
+    SDL_Quit();
 }
 
 int drawer_bgcolor(drawer_t drawer, GLfloat r, GLfloat g, GLfloat b) {
@@ -106,41 +132,35 @@ int drawer_add_particle(drawer_t drawer, particle_t particle) {
 }
 
 int drawer_draw_to_screen(drawer_t drawer) {
+    Uint32 frameend, framedelay;
 #ifdef notyet
     /* Not until shaders are working */
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glDrawArrays(GL_TRIANGLES, 0, (GLint)drawer->vtx_curr);
-#endif
+#else
     SDL_GL_SwapBuffers();
     drawer->vtx_curr = 0;
+#endif
     
-    drawer->fps.framecount += 1;
-    drawer->fps.framecount_brief += 1;
-    if (drawer->fps.framecount_brief == FPS_COUNTER_LEN) {
-        Uint32 delta = SDL_GetTicks() - drawer->fps.start_brief;
-        drawer->fps.last_fps = drawer->fps.framecount_brief * 1000.0 / delta;
-        drawer->fps.framecount_brief = 0;
-        drawer->fps.start_brief = SDL_GetTicks();
+    frameend = SDL_GetTicks();
+    framedelay = frameend - drawer->fps.framestart;
+    if (framedelay < VIS_MSEC_PER_FRAME) {
+        float fps = drawer_get_fps(drawer);
+        Uint32 correction = (fps > VIS_FPS_LIMIT ? 1 : 0);
+        SDL_Delay((Uint32)round(VIS_MSEC_PER_FRAME - framedelay + correction));
     }
+    drawer->fps.framecount += 1;
+    drawer->fps.framestart = SDL_GetTicks();
     return 0;
 }
 
 void vis_coords_to_screen(float x, float y, float* nx, float* ny) {
-    // (0, VIS_WIDTH) -> (-1, 1)
-    // (0, VIS_HEIGHT) -> (-1, 1)
     *nx = 2 * x / VIS_WIDTH - 1;
     *ny = 2 * y / VIS_HEIGHT - 1;
 }
 
-void drawer_ensure_fps(drawer_t drawer) {
-    Uint32 elapsed_msec = SDL_GetTicks() - drawer->fps.start;
-    double elapsed_sec = (double)elapsed_msec / 1000.0;
-    double frametime = 0; /* FIXME */
-    /*DBPRINTF("Brief fps: %g", drawer->fps.last_fps);*/
-}
-
 float drawer_get_fps(drawer_t drawer) {
-    return (float)drawer->fps.framecount / ((float)SDL_GetTicks() - (float)drawer->fps.start) * 1000.0f;
+    return (float)drawer->fps.framecount / (float)(SDL_GetTicks() - drawer->fps.start) * 1000.0f;
 }
 
 void drawer_begin_trace(drawer_t drawer) {

@@ -3,32 +3,19 @@
 #define VIS_DRAW_HEADER_INCLUDED_ 1
 
 #include "defines.h"
+#include "emit.h"
 #include "particle.h"
 #include <math.h>
 
-#define NO_SDL_GLEXT
+/* Remove when drawer_draw_to_screen is complete */
+#define DRAWER_DRAW_TO_SCREEN_IS_INCOMPLETE
+
+/* Pull in GLext functions */
 #ifndef GL_GLEXT_PROTOTYPES
 #define GL_GLEXT_PROTOTYPES
 #endif
 
-#undef GL_VERSION_1_2
-#undef GL_VERSION_1_3
-#undef GL_VERSION_1_4
-#undef GL_VERSION_1_5
-#undef GL_VERSION_2_0
-#undef GL_VERSION_2_1
-#undef GL_VERSION_3_0
-#undef GL_VERSION_3_1
-#undef GL_VERSION_3_2
-#undef GL_VERSION_3_3
-#undef GL_VERSION_4_0
-#undef GL_VERSION_4_1
-#undef GL_VERSION_4_2
-#undef GL_VERSION_4_3
-#undef GL_VERSION_4_4
-
-#include <GL/gl.h>
-#include <GL/glext.h>
+#include <SDL/SDL_opengl.h>
 
 /** Notes:
  *
@@ -76,7 +63,6 @@ void drawer_free(drawer_t drawer);
 int drawer_bgcolor(drawer_t drawer, GLfloat r, GLfloat g, GLfloat b);
 int drawer_add_particle(drawer_t drawer, particle_t particle);
 int drawer_draw_to_screen(drawer_t drawer);
-void drawer_ensure_fps(drawer_t drawer);
 float drawer_get_fps(drawer_t drawer);
 
 void drawer_begin_trace(drawer_t drawer);

@@ -1,5 +1,5 @@
 
-#include "limits.h"
+#include "plimits.h"
 
 void no_limit(UNUSED_PARAM(particle_t particle)) {
     /* nothing */

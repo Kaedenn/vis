@@ -17,9 +17,7 @@ void dbfree(void* ptr, const char* label);
 void eprintf(const char* fmt, ...);
 void dbprintf(const char* fmt, ...);
 
-#ifdef DEBUG
-
-#ifdef DEBUG_MALLOC
+#if defined(DEBUG_MALLOC) && defined(DEBUG)
 #define DBMALLOC(size) dbmalloc((size), (#size))
 #define DBFREE(ptr) dbfree((ptr), (#ptr))
 #else
@@ -27,17 +25,17 @@ void dbprintf(const char* fmt, ...);
 #define DBFREE(ptr) free((ptr))
 #endif
 
+#ifdef DEBUG
 #define DBPRINTF(fmt, ...) \
     do { \
         fprintf(stderr, "%s:%d: ", __FILE__, __LINE__); \
         dbprintf(fmt, __VA_ARGS__); \
     } while (0)
 #else
-#define DBPRINTF(fmt, ...)
+#define DBPRINTF(fmt, ...) dbprintf(fmt, __VA_ARGS__)
 #endif
 
-/* chmalloc does this too now */
-#define ZEROINIT(structp) memset(structp, '\0', sizeof(*structp))
+#define ZEROINIT(p) memset(p, '\0', sizeof(*p))
 
 /* short-circuiting strcmp */
 BOOL startswith(const char* s1, const char* s2);

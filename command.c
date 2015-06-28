@@ -6,9 +6,8 @@
 #include "drawer.h"
 #include "emitter.h"
 #include "forces.h"
-#include "frame.h"
 #include "helper.h"
-#include "limits.h"
+#include "plimits.h"
 #include "particle.h"
 #include "particle_extra.h"
 #include "script.h"
@@ -31,6 +30,7 @@ static void cmd_snare(const char* buffer);
 static void cmd_strum(const char* buffer);
 static void cmd_rain(const char* buffer);
 static void cmd_load(const char* buffer);
+static void cmd_lua(const char* buffer);
 static void cmd_audio(const char* buffer);
 static void cmd_exit(const char* buffer);
 static void cmd_bgc(const char* buffer);
@@ -47,6 +47,7 @@ static struct cmd_map {
     {"strum", cmd_strum, "takes one arg: number of particles"},
     {"rain", cmd_rain, "takes one arg: number of particles"},
     {"load", cmd_load, "takes one arg: scriptfile.lua path"},
+    {"lua", cmd_lua, "runs the lua script given"},
     {"audio", cmd_audio, "takes one arg: filename.wav path"},
     {"exit", cmd_exit, "exits simulation immediately"},
     {"bgc", cmd_bgc, "takes three args: red, green, blue"},
@@ -288,14 +289,22 @@ static void cmd_rain(const char* buffer) {
 
 static void cmd_load(const char* buffer) {
     if (strlen(buffer) > strlen("load ")) {
-        script_t s = script_new();
+        script_t s = script_new(SCRIPT_NO_CB);
         flist_t flist = script_run(s, buffer + strlen("load "));
         if (flist != NULL) {
             emitter_schedule(flist);
         } else {
             eprintf("Failed to load script '%s'", buffer + strlen("load "));
         }
-        script_destroy(s);
+        script_free(s);
+    }
+}
+
+static void cmd_lua(const char* buffer) {
+    if (strlen(buffer) > strlen("lua ")) {
+        /* TODO */
+    } else {
+        eprintf("bad command arguments");
     }
 }
 

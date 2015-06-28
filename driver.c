@@ -1,4 +1,6 @@
 
+#define _BSD_SOURCE /* for setenv */
+
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -7,8 +9,7 @@
 
 #include <SDL/SDL.h>
 #include <SDL/SDL_audio.h>
-#include <GL/gl.h>
-#include <GL/glu.h>
+#include <SDL/SDL_opengl.h>
 
 #include "async.h"
 #include "audio.h"
@@ -16,6 +17,7 @@
 #include "command.h"
 #include "defines.h"
 #include "drawer.h"
+#include "emit.h"
 #include "emitter.h"
 #include "helper.h"
 #include "particle_extra.h"
@@ -23,6 +25,10 @@
 #include "script.h"
 
 plist_t particles = NULL;
+
+#ifndef GC_MIN_SIZE
+#define GC_MIN_SIZE 10
+#endif
 
 typedef void (*gc_func_t)(void* cls);
 
@@ -36,6 +42,9 @@ static size_t gcidx = 0;
 static size_t ngcitems = 0;
 
 static inline void gc_add(gc_func_t fn, void* cls) {
+    if (gcidx == ngcitems) {
+        gcitems = realloc(gcitems, 2*ngcitems);
+    }
     gcitems[gcidx].func = fn;
     gcitems[gcidx].cls = cls;
     ++gcidx;
@@ -54,77 +63,61 @@ int main(int argc, char* argv[]) {
     drawer_t drawer = NULL;
     script_t s = NULL;
     srand((unsigned)time(NULL));
-    if (SDL_Init(SDL_INIT_EVERYTHING) < 0) {
-        eprintf("unable to initialize: %s", SDL_GetError());
-        exit(1);
-    }
-    atexit(finalize);
-    screen = SDL_SetVideoMode(VIS_WIDTH, VIS_HEIGHT, 32,
-                              SDL_HWSURFACE | SDL_ASYNCBLIT |
-                              SDL_OPENGLBLIT |
-                              SDL_GL_DOUBLEBUFFER | SDL_OPENGL);
-    if (screen == NULL) {
-        eprintf("unable to create screen: %s", SDL_GetError());
-        exit(1);
-    }
 
-    ngcitems = 10;
+#ifdef DEBUG
+    setenv("SDL_DEBUG", "1", 1);
+#endif
+
+    ngcitems = GC_MIN_SIZE;
     gcitems = DBMALLOC(ngcitems * sizeof(struct gcitem));
     atexit(gc);
     
-    particles = plist_new(VIS_PLIST_INITIAL_SIZE);
     drawer = drawer_new();
+    if (!drawer) {
+        const char* sdlerr = SDL_GetError();
+        const char* oserr = strerror(errno);
+        const char* sdldesc = sdlerr ? "SDL Error: " : "";
+        const char* osdesc = oserr? "OS Error: " : "";
+        eprintf("unable to initialize drawer: %s%s, %s%s",
+                sdldesc, sdlerr, osdesc, oserr);
+        exit(1);
+    } else {
+        gc_add((gc_func_t)drawer_free, drawer);
+    }
 
-    gc_add((gc_func_t)drawer_free, drawer);
+    particles = plist_new(VIS_PLIST_INITIAL_SIZE);
     gc_add((gc_func_t)plist_free, particles);
     
     emitter_setup(particles);
     gc_add((gc_func_t)emitter_free, NULL);
-    audio_init();
-
-    gc_add((gc_func_t)audio_free, NULL);
     
-    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-    glClearDepth(1.0f);
-    glViewport(0, 0, VIS_WIDTH, VIS_HEIGHT);
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    glOrtho(0, VIS_WIDTH, VIS_HEIGHT, 0, -1, 1);
-    glMatrixMode(GL_MODELVIEW);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glEnable(GL_BLEND);
-    glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
-    glEnable(GL_TEXTURE_2D);
-    glLoadIdentity();
+    audio_init();
+    gc_add((gc_func_t)audio_free, NULL);
     
     argparse(argc, argv);
     
+    emit_t emit = emit_new();
+    emit->n = 100;
+    emit->rad = 1;
+    emit_set_life(emit, 100, 200);
+    emit_set_ds(emit, 0.2, 0.2);
+    emit_set_angle(emit, 0, 2*M_PI);
+    emit_set_color(emit, 0, 0, 0, 0.2f, 1, 1);
+    emit->limit = VIS_LIMIT_SPRINGBOX;
+    emit->blender = VIS_BLEND_QUADRATIC;
+    drawer_set_emit(drawer, emit);
+
     if (args.interactive) {
-        emit_t emit = DBMALLOC(sizeof(struct emit_frame));
-        emit->n = 100;
-        emit->rad = 1;
-        emit->life = 100;
-        emit->ulife = 20;
-        emit->ds = 0.2;
-        emit->uds = 0.2;
-        emit->theta = 0;
-        emit->utheta = 2*M_PI;
-        emit->ur = 0.2f;
-        emit->ug = 1;
-        emit->ub = 1;
-        emit->limit = VIS_LIMIT_SPRINGBOX;
-        emit->blender = VIS_BLEND_QUADRATIC;
-        drawer_set_emit(drawer, emit);
         command_setup(particles);
     }
     
     if (args.scriptfile) {
         flist_t flist = NULL;
-        s = script_new();
+        s = script_new(SCRIPT_ALLOW_ALL);
         script_set_drawer(s, drawer);
         flist = script_run(s, args.scriptfile);
         emitter_schedule(flist);
-        gc_add((gc_func_t)script_destroy, s);
+        gc_add((gc_func_t)script_free, s);
         gc_add((gc_func_t)flist_free, flist);
     }
     
@@ -150,7 +143,6 @@ void gc(void) {
 void mainloop(drawer_t drawer) {
     SDL_Event e;
     memset(&e, 0, sizeof(SDL_Event));
-    Uint32 lasttime = SDL_GetTicks();
     while (TRUE) {
         while (SDL_PollEvent(&e)) {
             switch (e.type) {
@@ -178,17 +170,6 @@ void mainloop(drawer_t drawer) {
                 default: { } break;
             }
         }
-        drawer_ensure_fps(drawer);
-        /*
-        DBPRINTF("now: %d, last: %d, delta: %d, mspf: %g",
-                 SDL_GetTicks(), lasttime, (SDL_GetTicks() - lasttime),
-                 (double)VIS_MSEC_PER_FRAME);
-        */
-        if (SDL_GetTicks() - lasttime < VIS_MSEC_PER_FRAME) {
-            Uint32 correction = (drawer_get_fps(drawer) > 30.0) ? 1 : 0;
-            SDL_Delay((Uint32)VIS_MSEC_PER_FRAME - (SDL_GetTicks() - lasttime) + correction);
-        }
-        lasttime = SDL_GetTicks();
         display(drawer);
         timeout();
     }
@@ -222,7 +203,7 @@ plist_action_t animate_particle(particle_t p, size_t idx, void* userdefined) {
     }
     
     drawer_add_particle(drawer, p);
-#ifndef notyet
+#ifdef DRAWER_DRAW_TO_SCREEN_IS_INCOMPLETE
     /* Remove when drawer_draw_to_screen is complete */
     glBegin(GL_POLYGON);
     glColor4d(pe->r, pe->g, pe->b, alpha);
@@ -238,7 +219,7 @@ plist_action_t animate_particle(particle_t p, size_t idx, void* userdefined) {
 }
 
 void display(drawer_t drawer) {
-#ifndef notyet
+#ifdef DRAWER_DRAW_TO_SCREEN_IS_INCOMPLETE
     /* Remove when drawer_draw_to_screen is complete */
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 #endif
@@ -255,9 +236,5 @@ void timeout(void) {
         }
     }
     emitter_tick();
-}
-
-void finalize(void) {
-    SDL_Quit();
 }
 
