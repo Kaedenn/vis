@@ -28,13 +28,17 @@ void mutate_shrink(struct particle* p, double factor);
 /* grow the particle's size by a factor */
 void mutate_grow(struct particle* p, double factor);
 
+/* darken a particle's age */
+void mutate_age(struct particle* p, double factor);
+
 static const mutate_fn MUTATE_MAP[] = {
     mutate_push,
     mutate_push_dx,
     mutate_push_dy,
     mutate_slow,
     mutate_shrink,
-    mutate_grow
+    mutate_grow,
+    mutate_age
 };
 
 #endif

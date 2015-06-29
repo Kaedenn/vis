@@ -99,6 +99,7 @@ int luaopen_Vis(lua_State* L) {
     NEW_CONST(MUTATE_GROW);
     NEW_CONST(MUTATE_PUSH_DX);
     NEW_CONST(MUTATE_PUSH_DY);
+    NEW_CONST(MUTATE_AGE);
     NEW_CONST(NMUTATES);
 #undef NEW_CONST
 
