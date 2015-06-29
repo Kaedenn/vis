@@ -2,6 +2,8 @@ Vis = require("Vis")
 VisUtil = require("visutil")
 math = require("math")
 
+assert(Vis.MUTATE_AGE)
+
 TRACK_1 = 1
 TRACK_2 = 2
 TRACK_3 = 3
@@ -13,6 +15,11 @@ TRACK_8 = 8
 TrackTimes = {0, 0, 0, 0, 0, 0, 0, 0}
 
 SECOND = 1000
+
+--[[ For debugging
+Vis.command(Vis.flist, t, "exit")
+VisUtil.seek_to(t)
+--]]
 
 function trackstep(track, length)
     TrackTimes[track] = TrackTimes[track] + length
@@ -135,13 +142,15 @@ t = t + 133
 emit_circle(t, W_1_2, H_2_3); t = t + 266
 emit_circle(t, W_1_2, H_3_4); t = t + 466
 
-emit_circle(t, W_1_2, H_2_3); t = t + 266
-emit_circle(t, W_1_2, H_3_4); t = t + 466
+emit_circle(t, W_1_2, H_2_3)
+--Vis.mutate(Vis.flist, t, Vis.MUTATE_OPACITY, 0.9)
+t = t + 266
+emit_circle(t, W_1_2, H_3_4)
+--Vis.mutate(Vis.flist, t, Vis.MUTATE_OPACITY, 0.4)
+t = t + 466
 
 emit_circle(t, W_1_2, H_2_3); t = t + 266
 emit_circle(t, W_1_2, H_3_4); t = t + 1466 + 500
-
-VisUtil.seek_to(t)
 
 -- INTRO: PART TWO: MAIN TRACK
 emit_circle(t, W_1_4, H_5_6); t = t + 366
@@ -169,6 +178,7 @@ j = t
 t = t + 333
 while j < t do
     emit_line_v(j, W_1_2)
+    --Vis.mutate(Vis.flist, j, Vis.MUTATE_OPACITY, 0.9)
     j = j + 33
 end
 t = t + 400
@@ -177,13 +187,10 @@ j = t
 t = t + 333
 while j < t do
     emit_line_v(j, W_1_2)
+    --Vis.mutate(Vis.flist, j, Vis.MUTATE_AGE, 0.4)
     j = j + 33
 end
 t = t + 400
-
-Vis.command(Vis.flist, t, "exit")
-
---VisUtil.seek_to(t)
 
 -- INTRO: PART THREE: MAIN TRACK
 emit_circle(t, W_1_4, H_5_6); t = t + 10
