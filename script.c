@@ -1,12 +1,15 @@
 
+#define _BSD_SOURCE /* for setenv */
+
 #include "audio.h"
 #include "helper.h"
 #include "flist.h"
 #include "script.h"
 #include "mutator.h"
 
-#include <string.h>
 #include <stdarg.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include <lua.h>
 #include <lauxlib.h>
@@ -105,21 +108,35 @@ script_t script_new(script_cfg_t cfg) {
     (void)luaL_dostring(s->L, "Vis = require(\"Vis\")");
     stack_dump(s->L);
 
-    flist_t* flbox = lua_newuserdata(s->L, sizeof(void*));
+    flist_t* flbox = lua_newuserdata(s->L, sizeof(flist_t));
     luaL_newmetatable(s->L, "flist_t*");
     lua_pop(s->L, 1);
     luaL_setmetatable(s->L, "flist_t*");
     *flbox = s->fl;
     lua_setfield(s->L, -2, "flist");
     if ((cfg & SCRIPT_NO_CB) == 0) {
-        script_t* sbox = lua_newuserdata(s->L, sizeof(void*));
+        script_t* sbox = lua_newuserdata(s->L, sizeof(script_t));
         luaL_newmetatable(s->L, "script_t*");
         lua_pop(s->L, 1);
         luaL_setmetatable(s->L, "script_t*");
         *sbox = s;
         lua_setfield(s->L, -2, "script");
-        lua_pop(s->L, 1);
     }
+
+#ifdef notyet
+    struct emit* box = lua_newuserdata(s->L, sizeof(struct emit));
+    luaL_newmetatable(s->L, "emit*");
+    lua_newtable(s->L);
+    /* pushcfunction, setfield, repeat */
+    lua_setfield(s->L, -2, "__index");
+    luaL_setmetatable(s->L, "emit*");
+#endif
+
+    lua_pop(s->L, 1);
+
+    /* adjust lua search path, include ./lua and ./test */
+    (void)luaL_dostring(s->L, "package = require('package');"
+                              "package.path = ';; ;./?.lua;./lua/?.lua;./test/?.lua'");
 
     return s;
 }
@@ -328,7 +345,8 @@ int viscmd_settrace_fn(lua_State* L) {
 }
 
 static emit_t lua_args_to_emit_t(lua_State* L, int arg, fnum_t* when) {
-    emit_t emit = DBMALLOC(sizeof(struct emit_frame));
+    emit_t emit = DBMALLOC(sizeof(struct emit));
+    stack_dump(L);
     emit->n = luaL_checkint(L, arg++);
     if (when != NULL) {
         *when = (fnum_t)luaL_checkint(L, arg++);
@@ -359,6 +377,43 @@ static emit_t lua_args_to_emit_t(lua_State* L, int arg, fnum_t* when) {
 
 static void stack_dump(lua_State* L) {
     int nelems = lua_gettop(L);
+    int elem;
     DBPRINTF("Lua stack: %d item%s", nelems, nelems==1?"":"s");
+    for (elem = 1; elem < nelems + 1; ++elem) {
+        int type = lua_type(L, elem);
+        const char* tname = luaL_typename(L, elem);
+        switch (type) {
+            case LUA_TNIL:
+                DBPRINTF("L[%d] = [%s]nil", elem, tname);
+                break;
+            case LUA_TNUMBER:
+                DBPRINTF("L[%d] = [%s]%g", elem, tname, luaL_checknumber(L, elem));
+                break;
+            case LUA_TBOOLEAN:
+                DBPRINTF("L[%d] = [%s]%s", elem, tname, luaL_checkint(L, elem) ? "true" : "false");
+                break;
+            case LUA_TSTRING:
+                DBPRINTF("L[%d] = [%s]%s", elem, tname, luaL_checkstring(L, elem));
+                break;
+            case LUA_TTABLE:
+                DBPRINTF("L[%d] = [%s]%s", elem, tname, "<table>");
+                break;
+            case LUA_TFUNCTION:
+                DBPRINTF("L[%d] = [%s]%s", elem, tname, "<function>");
+                break;
+            case LUA_TUSERDATA:
+                DBPRINTF("L[%d] = [%s]%s", elem, tname, "<userdata>");
+                break;
+            case LUA_TTHREAD:
+                DBPRINTF("L[%d] = [%s]%s", elem, tname, "<thread>");
+                break;
+            case LUA_TLIGHTUSERDATA:
+                DBPRINTF("L[%d] = [%s]%s", elem, tname, "<lightuserdata>");
+                break;
+            default:
+                DBPRINTF("L[%d] = [%s]<unknown>", elem, tname);
+                break;
+        }
+    }
 }
 

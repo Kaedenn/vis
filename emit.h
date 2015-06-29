@@ -13,13 +13,13 @@
  * all values with an uncertainty.
  *
  * The functions below are provided for convenience; their use is not
- * required. Direct access to struct emit_frame members is encouraged.
+ * required. Direct access to struct emit members is encouraged.
  *
  * Setting force, limit, or blender fields to improper values may cause
  * abnormal program termination.
  */
 
-typedef struct emit_frame {
+typedef struct emit {
     int n;              /* number of particles to emit */
     double x, y;        /* where to emit from */
     double ux, uy;      /* uncertainty in x and y */

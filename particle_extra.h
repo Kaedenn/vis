@@ -4,7 +4,6 @@
 
 #include "defines.h"
 #include "drawer.h"
-#include <stdlib.h>
 
 typedef struct particle_extra {
     float r, g, b;

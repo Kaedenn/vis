@@ -9,8 +9,6 @@
 #include "forces.h"
 #include "plimits.h"
 
-#include <stdio.h>
-
 void emitter_setup(plist_t particles);
 void emitter_free(void* arg);
 

@@ -1,3 +1,6 @@
+assert(require('Vis'))
+assert(require('visutil'))
+
 Vis = require("Vis")
 VisUtil = require("visutil")
 

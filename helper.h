@@ -52,5 +52,8 @@ char* strnulchr(char* str, int n);
 /* like strdup, but replace \n with \\n, etc */
 char* escape_string(const char* str);
 
+/* like strcat, but allocates the result */
+char* concat_strings(const char* s1, const char* s2);
+
 #endif
 

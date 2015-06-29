@@ -4,8 +4,6 @@
 
 #include "helper.h"
 
-#include <stdlib.h>
-
 void audio_init(void);
 
 BOOL audio_open(const char* file);

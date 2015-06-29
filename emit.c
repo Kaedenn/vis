@@ -36,7 +36,7 @@ emit_t make_emit_frame(int n,
     return emit;
 }
 
-emit_t emit_new(void) { return DBMALLOC(sizeof(struct emit_frame)); }
+emit_t emit_new(void) { return DBMALLOC(sizeof(struct emit)); }
 void emit_free(emit_t emit) { DBFREE(emit); }
 
 void emit_set_n(emit_t e, int n) { e->n = n; }
