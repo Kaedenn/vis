@@ -8,6 +8,7 @@ pextra_t new_particle_extra(float red, float green, float blue,
     extra->r = red;
     extra->g = green;
     extra->b = blue;
+    extra->a = 1.0f;
     extra->blender = blender;
     return extra;
 }

@@ -100,6 +100,7 @@ int luaopen_Vis(lua_State* L) {
     NEW_CONST(MUTATE_PUSH_DX);
     NEW_CONST(MUTATE_PUSH_DY);
     NEW_CONST(MUTATE_AGE);
+    NEW_CONST(MUTATE_OPACITY);
     NEW_CONST(NMUTATES);
 #undef NEW_CONST
 
@@ -377,7 +378,6 @@ int viscmd_ms2f_fn(lua_State* L) {
 
 static emit_t lua_args_to_emit_t(lua_State* L, int arg, fnum_t* when) {
     emit_t emit = DBMALLOC(sizeof(struct emit));
-    stack_dump(L);
     emit->n = luaL_checkint(L, arg++);
     if (when != NULL) {
         *when = (fnum_t)VIS_MSEC_TO_FRAMES(luaL_checkint(L, arg++));

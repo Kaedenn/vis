@@ -31,6 +31,9 @@ void mutate_grow(struct particle* p, double factor);
 /* darken a particle's age */
 void mutate_age(struct particle* p, double factor);
 
+/* set a particle's opacity */
+void mutate_opacity(struct particle* p, double factor);
+
 static const mutate_fn MUTATE_MAP[] = {
     mutate_push,
     mutate_push_dx,
@@ -38,7 +41,8 @@ static const mutate_fn MUTATE_MAP[] = {
     mutate_slow,
     mutate_shrink,
     mutate_grow,
-    mutate_age
+    mutate_age,
+    mutate_opacity,
 };
 
 #endif
