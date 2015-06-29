@@ -12,6 +12,8 @@ TRACK_7 = 7
 TRACK_8 = 8
 TrackTimes = {0, 0, 0, 0, 0, 0, 0, 0}
 
+SECOND = 1000
+
 function trackstep(track, length)
     TrackTimes[track] = TrackTimes[track] + length
 end
@@ -26,8 +28,8 @@ function asserteq(a, b)
 end
 
 function emit_spiral(steps)
-    local MAXLIFE = 100
-    local MAXLIFE_ADJ = 10
+    local MAXLIFE = 10/3*SECOND
+    local MAXLIFE_ADJ = 1/3*SECOND
 
     et = VisUtil.make_emit_table()
     center_emit_table(et)
@@ -47,13 +49,13 @@ function emit_spiral(steps)
 end
 
 function emit_circle(start, x, y, r, g, b, ur, ug, ub)
-    local MAXLIFE = 10
+    local MAXLIFE = SECOND/3
     local MAXLIFE_ADJ = 0
 
     et = VisUtil.make_emit_table()
     VisUtil.center_emit_table(et, x or Vis.WIDTH/3, y or Vis.HEIGHT*2/3)
     et.ds = 1
-    et.life = 10
+    et.life = MAXLIFE
     VisUtil.color_emit_table(et, r or 0, g or 100, b or 200,
                                 ur or 0, ug or 50, ub or 0);
     et.count = 100
@@ -64,13 +66,13 @@ function emit_circle(start, x, y, r, g, b, ur, ug, ub)
 end
 
 function emit_line_v(start, x, r, g, b, ur, ug, ub)
-    local MAXLIFE = 10
+    local MAXLIFE = SECOND/3
     local MAXLIFE_ADJ = 0
 
     et = VisUtil.make_emit_table()
     VisUtil.center_emit_table(et, x, 0, 0, Vis.HEIGHT)
     et.ds = 1
-    et.life = 10
+    et.life = MAXLIFE
     VisUtil.color_emit_table(et, r or 0, g or 100, b or 200,
                                 ur or 0, ug or 50, ub or 0)
     et.count = 200
@@ -82,13 +84,13 @@ function emit_line_v(start, x, r, g, b, ur, ug, ub)
 end
 
 function emit_line_h(start, y, r, g, b, ur, ug, ub)
-    local MAXLIFE = 10
+    local MAXLIFE = SECOND/3
     local MAXLIFE_ADJ = 0
 
     et = VisUtil.make_emit_table()
     VisUtil.center_emit_table(et, 0, y, Vis.WIDTH, 0)
     et.ds = 1
-    et.life = 10
+    et.life = MAXLIFE
     VisUtil.color_emit_table(et, r or 0, g or 100, b or 200,
                                 ur or 0, ug or 50, ub or 0)
     et.count = 200
@@ -118,66 +120,70 @@ H_5_6 = H_1_6 * 5      -- 500
 H_1_8 = Vis.HEIGHT / 8 -- 75
 
 -- INTRO: PART ONE: MAIN TRACK
-t = 37
-emit_circle(t, W_1_4, H_5_6); t = t + 9
-emit_circle(t, W_3_4, H_5_6); t = t + 9
-emit_circle(t, W_1_2, H_3_4); t = t + 9
+t = 1233
+emit_circle(t, W_1_4, H_5_6); t = t + 300
+emit_circle(t, W_3_4, H_5_6); t = t + 300
+emit_circle(t, W_1_2, H_3_4); t = t + 300
 j = t
-t = t + 36
+t = t + 1200
 while j < t do
     emit_circle(j, W_1_2, H_5_6)
-    j = j + 1
+    j = j + 33
 end
-t = t + 4
+t = t + 133
 
-emit_circle(t, W_1_2, H_2_3); t = t + 8
-emit_circle(t, W_1_2, H_3_4); t = t + 14
+emit_circle(t, W_1_2, H_2_3); t = t + 266
+emit_circle(t, W_1_2, H_3_4); t = t + 466
 
-emit_circle(t, W_1_2, H_2_3); t = t + 8
-emit_circle(t, W_1_2, H_3_4); t = t + 14
+emit_circle(t, W_1_2, H_2_3); t = t + 266
+emit_circle(t, W_1_2, H_3_4); t = t + 466
 
-emit_circle(t, W_1_2, H_2_3); t = t + 8
-emit_circle(t, W_1_2, H_3_4); t = t + 44 + 15
-
--- INTRO: PART TWO: MAIN TRACK
-emit_circle(t, W_1_4, H_5_6); t = t + 11
-emit_circle(t, W_3_4, H_5_6); t = t + 11
-emit_circle(t, W_1_2, H_3_4); t = t + 8
-j = t
-t = t + 31
-while j < t do
-    emit_circle(j, W_1_2, H_5_6)
-    j = j + 1
-end
-t = t + 8
-emit_circle(t, W_1_4, H_5_6); t = t + 7
-emit_circle(t, W_3_4, H_5_6); t = t + 5
-
-j = t
-t = t + 10
-while j < t do
-    emit_line_v(j, W_1_2)
-    j = j + 1
-end
-t = t + 16
-
-j = t
-t = t + 10
-while j < t do
-    emit_line_v(j, W_1_2)
-    j = j + 1
-end
-t = t + 16
-
-j = t
-t = t + 10
-while j < t do
-    emit_line_v(j, W_1_2)
-    j = j + 1
-end
-t = t + 42
+emit_circle(t, W_1_2, H_2_3); t = t + 266
+emit_circle(t, W_1_2, H_3_4); t = t + 1466 + 500
 
 VisUtil.seek_to(t)
+
+-- INTRO: PART TWO: MAIN TRACK
+emit_circle(t, W_1_4, H_5_6); t = t + 366
+emit_circle(t, W_3_4, H_5_6); t = t + 366
+emit_circle(t, W_1_2, H_3_4); t = t + 266
+j = t
+t = t + 1033
+while j < t do
+    emit_circle(j, W_1_2, H_5_6)
+    j = j + 33
+end
+t = t + 266
+emit_circle(t, W_1_4, H_5_6); t = t + 233
+emit_circle(t, W_3_4, H_5_6); t = t + 166
+
+j = t
+t = t + 333
+while j < t do
+    emit_line_v(j, W_1_2)
+    j = j + 33
+end
+t = t + 400
+
+j = t
+t = t + 333
+while j < t do
+    emit_line_v(j, W_1_2)
+    j = j + 33
+end
+t = t + 400
+
+j = t
+t = t + 333
+while j < t do
+    emit_line_v(j, W_1_2)
+    j = j + 33
+end
+t = t + 400
+
+Vis.command(Vis.flist, t, "exit")
+
+--VisUtil.seek_to(t)
 
 -- INTRO: PART THREE: MAIN TRACK
 emit_circle(t, W_1_4, H_5_6); t = t + 10

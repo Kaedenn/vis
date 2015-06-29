@@ -34,9 +34,9 @@ function VisUtil.emit_table(t)
     Vis.emit(Vis.flist, t.count, t.when, t.x, t.y, t.ux, t.uy, t.radius, t.uradius, t.ds, t.uds, t.theta, t.utheta, t.life, t.ulife, t.r, t.g, t.b, t.ur, t.ug, t.ub, t.force, t.limit, t.blender)
 end
 
-function VisUtil.seek_to(frame)
-    Vis.seek(math.floor(frame / Vis.FPS_LIMIT * 100))
-    Vis.seekframe(Vis.flist, 0, frame)
+function VisUtil.seek_to(t)
+    Vis.seek(t / 10)
+    Vis.seekms(Vis.flist, 0, t)
 end
 
 return VisUtil
