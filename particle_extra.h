@@ -6,7 +6,7 @@
 #include "drawer.h"
 
 typedef struct particle_extra {
-    float r, g, b;
+    float r, g, b, a;
     blend_t blender;
 } *pextra_t;
 

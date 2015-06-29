@@ -181,22 +181,22 @@ plist_action_t animate_particle(particle_t p, size_t idx, void* userdefined) {
 
     pextra_t pe = (pextra_t)(p->extra);
     double life, lifetime;
-    double alpha = 1;
+    double alpha = pe->a;
     life = particle_get_life(p);
     lifetime = particle_get_lifetime(p);
     switch (pe->blender) {
         /* default blend is linear */
         case VIS_BLEND_LINEAR: {
-            alpha = linear_blend(life, lifetime);
+            alpha *= linear_blend(life, lifetime);
         } break;
         case VIS_BLEND_QUADRATIC: {
-            alpha = quadratic_blend(life, lifetime);
+            alpha *= quadratic_blend(life, lifetime);
         } break;
         case VIS_BLEND_NEGGAMMA: {
-            alpha = neggamma_blend(life, lifetime);
+            alpha *= neggamma_blend(life, lifetime);
         } break;
         case VIS_BLEND_NONE: {
-            alpha = no_blend(life, lifetime);
+            alpha *= no_blend(life, lifetime);
         } break;
         case VIS_NBLENDS:
         default: { } break;
@@ -212,10 +212,7 @@ plist_action_t animate_particle(particle_t p, size_t idx, void* userdefined) {
 #endif
     
     particle_tick(p);
-    if (!particle_is_alive(p)) {
-        return ACTION_REMOVE;
-    }
-    return ACTION_NEXT;
+    return particle_is_alive(p) ? ACTION_NEXT : ACTION_REMOVE;
 }
 
 void display(drawer_t drawer) {

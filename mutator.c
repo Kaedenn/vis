@@ -1,5 +1,6 @@
 
 #include "mutator.h"
+#include "particle_extra.h"
 
 void mutate_push(struct particle* p, double factor) {
     p->dx = p->dx * factor;
@@ -30,3 +31,8 @@ void mutate_grow(struct particle* p, double factor) {
 void mutate_age(struct particle* p, double factor) {
     p->life = (int)(p->lifetime * factor);
 }
+
+void mutate_opacity(struct particle* p, double factor) {
+    ((pextra_t)p->extra)->a = (float)factor;
+}
+
