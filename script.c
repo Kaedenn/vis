@@ -23,12 +23,16 @@ int viscmd_audio_fn(lua_State* L);
 int viscmd_play_fn(lua_State* L);
 int viscmd_pause_fn(lua_State* L);
 int viscmd_seek_fn(lua_State* L);
+int viscmd_seekms_fn(lua_State* L);
 int viscmd_seekframe_fn(lua_State* L);
 int viscmd_bgcolor_fn(lua_State* L);
 int viscmd_mutate_fn(lua_State* L);
 int viscmd_callback_fn(lua_State* L);
 int viscmd_fps_fn(lua_State* L);
 int viscmd_settrace_fn(lua_State* L);
+
+int viscmd_f2ms_fn(lua_State* L);
+int viscmd_ms2f_fn(lua_State* L);
 
 static emit_t lua_args_to_emit_t(lua_State* L, int arg, fnum_t* when);
 static void stack_dump(lua_State* L);
@@ -48,12 +52,15 @@ int luaopen_Vis(lua_State* L) {
         {"play", viscmd_play_fn},
         {"pause", viscmd_pause_fn},
         {"seek", viscmd_seek_fn},
+        {"seekms", viscmd_seekms_fn},
         {"seekframe", viscmd_seekframe_fn},
         {"bgcolor", viscmd_bgcolor_fn},
         {"mutate", viscmd_mutate_fn},
         {"callback", viscmd_callback_fn},
         {"fps", viscmd_fps_fn},
         {"settrace", viscmd_settrace_fn},
+        {"frames2msec", viscmd_f2ms_fn},
+        {"msec2frames", viscmd_ms2f_fn},
         {NULL, NULL}
     };
 
@@ -193,7 +200,7 @@ int viscmd_command_fn(lua_State* L) {
     fnum_t when = 0;
     const char* cmd = NULL;
     fl = *(flist_t *)luaL_checkudata(L, 1, "flist_t*");
-    when = (fnum_t)luaL_checkint(L, 2);
+    when = (fnum_t)VIS_MSEC_TO_FRAMES(luaL_checkint(L, 2));
     cmd = luaL_checkstring(L, 3);
     DBPRINTF("command(%p, %d, \"%s\")", fl, when, cmd);
     flist_insert_cmd(fl, when, cmd);
@@ -254,14 +261,25 @@ int viscmd_seek_fn(lua_State* L) {
     return 0;
 }
 
+/* Vis.seekms(Vis.flist, when, whereto) */
+int viscmd_seekms_fn(lua_State* L) {
+    flist_t fl;
+    fnum_t where, whereto;
+    fl = *(flist_t*)luaL_checkudata(L, 1, "flist_t*");
+    where = (fnum_t)VIS_MSEC_TO_FRAMES(luaL_checkunsigned(L, 2));
+    whereto = (fnum_t)VIS_MSEC_TO_FRAMES(luaL_checkunsigned(L, 3));
+    flist_insert_seekframe(fl, where, whereto);
+    return 0;
+}
+
 /* Vis.seekframe(Vis.flist, when, whereto) */
 int viscmd_seekframe_fn(lua_State* L) {
     flist_t fl = NULL;
     fnum_t where = 0;
     fnum_t whereto = 0;
     fl = *(flist_t*)luaL_checkudata(L, 1, "flist_t*");
-    where = luaL_checkunsigned(L, 2);
-    whereto = luaL_checkunsigned(L, 3);
+    where = (fnum_t)luaL_checkunsigned(L, 2);
+    whereto = (fnum_t)luaL_checkunsigned(L, 3);
     flist_insert_seekframe(fl, where, whereto);
     return 0;
 }
@@ -287,7 +305,7 @@ int viscmd_mutate_fn(lua_State* L) {
     double factor = 0;
     mutate_method_t method = DBMALLOC(sizeof(struct mutate_method));
     fl = *(flist_t*)luaL_checkudata(L, 1, "flist_t*");
-    when = (fnum_t)luaL_checkint(L, 2);
+    when = (fnum_t)VIS_MSEC_TO_FRAMES(luaL_checkint(L, 2));
     fnid = (mutate_t)luaL_checkint(L, 3);
     factor = (double)luaL_checknumber(L, 4);
     if (fnid < (mutate_t)0) fnid = (mutate_t)0;
@@ -305,7 +323,7 @@ int viscmd_callback_fn(lua_State* L) {
     script_cb_t scb = NULL;
     script_t s = NULL;
     fl = *(flist_t*)luaL_checkudata(L, 1, "flist_t*");
-    when = (fnum_t)luaL_checkint(L, 2);
+    when = (fnum_t)VIS_MSEC_TO_FRAMES(luaL_checkint(L, 2));
     s = *(script_t*)luaL_checkudata(L, 3, "script_t*");
     scb = DBMALLOC(sizeof(struct script_cb));
     scb->owner = s;
@@ -344,12 +362,24 @@ int viscmd_settrace_fn(lua_State* L) {
     return 0;
 }
 
+int viscmd_f2ms_fn(lua_State* L) {
+    double f = luaL_checknumber(L, 1);
+    lua_pushinteger(L, VIS_FRAMES_TO_MSEC(f));
+    return 1;
+}
+
+int viscmd_ms2f_fn(lua_State* L) {
+    double ms = luaL_checknumber(L, 1);
+    lua_pushinteger(L, VIS_MSEC_TO_FRAMES(ms));
+    return 1;
+}
+
 static emit_t lua_args_to_emit_t(lua_State* L, int arg, fnum_t* when) {
     emit_t emit = DBMALLOC(sizeof(struct emit));
     stack_dump(L);
     emit->n = luaL_checkint(L, arg++);
     if (when != NULL) {
-        *when = (fnum_t)luaL_checkint(L, arg++);
+        *when = (fnum_t)VIS_MSEC_TO_FRAMES(luaL_checkint(L, arg++));
     }
     emit->x = luaL_checknumber(L, arg++);
     emit->y = luaL_checknumber(L, arg++);
@@ -361,8 +391,8 @@ static emit_t lua_args_to_emit_t(lua_State* L, int arg, fnum_t* when) {
     emit->uds = luaL_optnumber(L, arg++, 0);
     emit->theta = luaL_optnumber(L, arg++, 0);
     emit->utheta = luaL_optnumber(L, arg++, 0);
-    emit->life = luaL_optint(L, arg++, 100);
-    emit->ulife = luaL_optint(L, arg++, 0);
+    emit->life = VIS_MSEC_TO_FRAMES(luaL_optint(L, arg++, 100));
+    emit->ulife = VIS_MSEC_TO_FRAMES(luaL_optint(L, arg++, 0));
     emit->r = (float)luaL_optnumber(L, arg++, 1.0);
     emit->g = (float)luaL_optnumber(L, arg++, 1.0);
     emit->b = (float)luaL_optnumber(L, arg++, 1.0);

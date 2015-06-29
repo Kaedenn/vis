@@ -18,8 +18,8 @@ function do_emit_table(start)
     t.ds = 2
     t.uds = 1
     t.utheta = math.pi
-    t.life = 200
-    t.ulife = random(0, 20)
+    t.life = Vis.frames2msec(200)
+    t.ulife = Vis.frames2msec(random(0, 20))
     VisUtil.color_emit_table(t, rand01(), rand01(), rand01(),
                                 rand01(), rand01(), rand01())
     t.limit = Vis.LIMIT_SPRINGBOX
@@ -27,10 +27,10 @@ function do_emit_table(start)
 end
 
 do_emit_table(0)
-Vis.mutate(Vis.flist, 50, Vis.MUTATE_SLOW, 0.1)
-Vis.mutate(Vis.flist, 75, Vis.MUTATE_PUSH, 15.0)
-do_emit_table(100)
-Vis.mutate(Vis.flist, 125, Vis.MUTATE_PUSH_DX, 2)
-Vis.mutate(Vis.flist, 150, Vis.MUTATE_PUSH_DY, 2)
+Vis.mutate(Vis.flist, Vis.frames2msec(50), Vis.MUTATE_SLOW, 0.1)
+Vis.mutate(Vis.flist, Vis.frames2msec(75), Vis.MUTATE_PUSH, 15.0)
+do_emit_table(Vis.frames2msec(100))
+Vis.mutate(Vis.flist, Vis.frames2msec(125), Vis.MUTATE_PUSH_DX, 2)
+Vis.mutate(Vis.flist, Vis.frames2msec(150), Vis.MUTATE_PUSH_DY, 2)
 
-Vis.command(Vis.flist, 200, "exit")
+Vis.command(Vis.flist, Vis.frames2msec(200), "exit")

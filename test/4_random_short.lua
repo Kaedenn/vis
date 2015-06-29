@@ -24,8 +24,8 @@ function emit_random(start)
     t.uds = random(-5, 5) / 5.0
     t.theta = rand3f(0, math.pi)
     t.utheta = rand3f(0, math.pi) / 10.0
-    t.life = 50
-    t.ulife = random(0, 20)
+    t.life = Vis.frames2msec(50)
+    t.ulife = Vis.frames2msec(random(0, 20))
     VisUtil.color_emit_table(t, rand01(), rand01(), rand01(),
                                 rand01(), rand01(), rand01())
     forces = {Vis.DEFAULT_FORCE, Vis.FORCE_FRICTION, Vis.FORCE_GRAVITY}
@@ -36,12 +36,13 @@ end
 
 i=0
 while i < 10 do
-    emit_random(i*2)
+    emit_random(Vis.frames2msec(i*2))
     i = i + 1
 end
 i = 50
 while i < 200 do
-    Vis.callback(Vis.flist, i, Vis.script, 'print(Vis.fps(Vis.script))')
+    Vis.callback(Vis.flist, Vis.frames2msec(i), Vis.script,
+                 'print("FPS: "..Vis.fps(Vis.script))')
     i = i + 50
 end
-Vis.command(Vis.flist, 100, "exit")
+Vis.command(Vis.flist, Vis.frames2msec(100), "exit")
