@@ -27,3 +27,6 @@ void mutate_grow(struct particle* p, double factor) {
     p->radius = p->radius * factor;
 }
 
+void mutate_age(struct particle* p, double factor) {
+    p->life = (int)(p->lifetime * factor);
+}

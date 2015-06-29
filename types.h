@@ -31,6 +31,8 @@ typedef enum {
     VIS_MUTATE_SLOW,
     VIS_MUTATE_SHRINK,
     VIS_MUTATE_GROW,
+    VIS_MUTATE_DARKEN,
+    VIS_MUTATE_AGE,
     VIS_NMUTATES
 } mutate_t;
 
