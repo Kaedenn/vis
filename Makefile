@@ -1,7 +1,7 @@
 
 SRCS = async.c audio.c clargs.c command.c drawer.c driver.c emitter.c flist.c \
        forces.c helper.c plimits.c particle.c particle_extra.c plist.c \
-       random.c script.c mutator.c emit.c
+       random.c script.c mutator.c emit.c kstring.c
 SOURCES = $(CSRC) Makefile
 EXECBIN = vis
 

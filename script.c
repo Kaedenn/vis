@@ -6,6 +6,7 @@
 #include "flist.h"
 #include "script.h"
 #include "mutator.h"
+#include "kstring.h"
 
 #include <stdarg.h>
 #include <stdlib.h>
@@ -157,6 +158,7 @@ void script_free(script_t s) {
 }
 
 flist_t script_run(script_t s, const char* filename) {
+    /* s->fl already bound to script in script_new */
     DBPRINTF("Running %s to build %p", filename, s->fl);
     if (luaL_dofile(s->L, filename) != LUA_OK) {
         eprintf("Error: %s", lua_tostring(s->L, -1));
@@ -183,16 +185,37 @@ void script_callback_free(script_cb_t cb) {
 /* Vis.debug(Vis.flist, ...) */
 int viscmd_debug_fn(lua_State* L) {
     int nargs = 0, i = 0;
-    flist_t fl = NULL;
+    kstr s;
     nargs = lua_gettop(L);
-    DBPRINTF("Debug: L=%p", L);
-    DBPRINTF("nargs=%d", nargs);
-    fl = *(flist_t *)luaL_checkudata(L, 1, "flist_t*");
-    DBPRINTF("arg[%d] = (flist_t)%p", 1, fl);
+    s = kstring_newfromvf("%d", nargs);
     for (i = 1; i <= nargs; ++i) {
-        int type = lua_type(L, i);
-        DBPRINTF("arg[%d] = %s (%d)", i, lua_typename(L, type), type);
+        switch (lua_type(L, i)) {
+            case LUA_TNIL:
+                kstring_appendvf(s, ", %s", "nil");
+                break;
+            case LUA_TNUMBER:
+                kstring_appendvf(s, ", %g", luaL_checknumber(L, i));
+                break;
+            case LUA_TBOOLEAN:
+                kstring_appendvf(s, ", %s", luaL_checkint(L, i) ? "true" : "false");
+                break;
+            case LUA_TSTRING: {
+                char* esc = escape_string(luaL_checkstring(L, i));
+                kstring_appendvf(s, ", \"%s\"", esc);
+                DBFREE(esc);
+            } break;
+            case LUA_TTABLE:
+            case LUA_TFUNCTION:
+            case LUA_TUSERDATA:
+            case LUA_TTHREAD:
+            case LUA_TLIGHTUSERDATA:
+            default:
+                kstring_appendvf(s, ", <%s>", lua_typename(L, i));
+                break;
+         }
     }
+    DBPRINTF("Vis.debug(%s)", kstring_content(s));
+    kstring_free(s);
     return 0;
 }
 
@@ -234,9 +257,12 @@ int viscmd_emit_fn(lua_State* L) {
 /* Vis.audio(path),
  * @param path must resolve to a .WAV file */
 int viscmd_audio_fn(lua_State* L) {
-    if (!audio_open(luaL_checkstring(L, 1))) {
+    const char* file = luaL_checkstring(L, 1);
+    if (!audio_open(file)) {
+        DBPRINTF("Vis.audio(%s) failed", file);
         lua_pushnil(L);
     } else {
+        DBPRINTF("Vis.audio(%s) loaded, playing", file);
         audio_play();
         lua_pushboolean(L, TRUE);
     }
@@ -245,12 +271,14 @@ int viscmd_audio_fn(lua_State* L) {
 
 /* Vis.play() */
 int viscmd_play_fn(UNUSED_PARAM(lua_State* L)) {
+    DBPRINTF("%s", "Vis.play()");
     audio_play();
     return 0;
 }
 
 /* Vis.pause() */
 int viscmd_pause_fn(UNUSED_PARAM(lua_State* L)) {
+    DBPRINTF("%s", "Vis.pause()");
     audio_pause();
     return 0;
 }
@@ -259,6 +287,7 @@ int viscmd_pause_fn(UNUSED_PARAM(lua_State* L)) {
  * @param offset is in milliseconds */
 int viscmd_seek_fn(lua_State* L) {
     unsigned offset = luaL_checkunsigned(L, 1);
+    DBPRINTF("Vis.seek(%d)", (int)offset);
     audio_seek(offset);
     return 0;
 }
@@ -270,6 +299,7 @@ int viscmd_seekms_fn(lua_State* L) {
     fl = *(flist_t*)luaL_checkudata(L, 1, "flist_t*");
     where = (fnum_t)VIS_MSEC_TO_FRAMES(luaL_checkunsigned(L, 2));
     whereto = (fnum_t)VIS_MSEC_TO_FRAMES(luaL_checkunsigned(L, 3));
+    DBPRINTF("Vis.seekms(%p, (frames)%d, (frames)%d)", fl, where, whereto);
     flist_insert_seekframe(fl, where, whereto);
     return 0;
 }
@@ -282,6 +312,7 @@ int viscmd_seekframe_fn(lua_State* L) {
     fl = *(flist_t*)luaL_checkudata(L, 1, "flist_t*");
     where = (fnum_t)luaL_checkunsigned(L, 2);
     whereto = (fnum_t)luaL_checkunsigned(L, 3);
+    DBPRINTF("Vis.seekframe(%p, %d, %d)", fl, where, whereto);
     flist_insert_seekframe(fl, where, whereto);
     return 0;
 }
@@ -294,6 +325,7 @@ int viscmd_bgcolor_fn(lua_State* L) {
     g = (float)luaL_optnumber(L, 2, 0);
     b = (float)luaL_optnumber(L, 3, 0);
     set_background_color(r, g, b, 1);
+    DBPRINTF("Vis.bgcolor(%g, %g, %g)", (double)r, (double)g, (double)b);
     return 0;
 }
 
@@ -314,6 +346,7 @@ int viscmd_mutate_fn(lua_State* L) {
     if (fnid >= VIS_NMUTATES) fnid = (mutate_t)0;
     method->func = MUTATE_MAP[fnid];
     method->factor = factor;
+    DBPRINTF("Vis.mutate(%p, %d, {%d, %g})", fl, when, fnid, factor);
     flist_insert_mutate(fl, when, method);
     return 0;
 }
@@ -331,6 +364,7 @@ int viscmd_callback_fn(lua_State* L) {
     scb->owner = s;
     scb->fn_name = dupstr("<lua>");
     scb->fn_code = escape_string(luaL_checkstring(L, 4));
+    DBPRINTF("Vis.callback(%p, %d, %p, %s)", fl, when, s, scb->fn_code);
     flist_insert_scriptcb(fl, when, scb);
     return 0;
 }
