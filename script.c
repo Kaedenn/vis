@@ -44,7 +44,7 @@ struct script {
     drawer_t drawer;
 };
 
-int luaopen_Vis(lua_State* L) {
+int initialize_vis_lib(lua_State* L) {
     static const struct luaL_Reg vis_lib[] = {
         {"debug", viscmd_debug_fn},
         {"command", viscmd_command_fn},
@@ -110,12 +110,19 @@ int luaopen_Vis(lua_State* L) {
 
 script_t script_new(script_cfg_t cfg) {
     script_t s = DBMALLOC(sizeof(struct script));
+    kstr script = kstring_new(1024);
     s->fl = flist_new();
     s->L = luaL_newstate();
     luaL_openlibs(s->L);
-    luaL_requiref(s->L, "Vis", luaopen_Vis, 0);
+    luaL_requiref(s->L, "Vis", initialize_vis_lib, 0);
 
-    (void)luaL_dostring(s->L, "Vis = require(\"Vis\")");
+    kstring_append(script, "Vis = require(\"Vis\")\n");
+    /* adjust lua search path, include ./lua and ./test */
+    kstring_append(script, "package = require('package')\n");
+    kstring_append(script, "package.path = "
+                           "'; ;./?.lua;./lua/?.lua;./test/?.lua'");
+    (void)luaL_dostring(s->L, kstring_content(script));
+    kstring_free(script);
     stack_dump(s->L);
 
     flist_t* flbox = lua_newuserdata(s->L, sizeof(flist_t));
@@ -143,10 +150,6 @@ script_t script_new(script_cfg_t cfg) {
 #endif
 
     lua_pop(s->L, 1);
-
-    /* adjust lua search path, include ./lua and ./test */
-    (void)luaL_dostring(s->L, "package = require('package');"
-                              "package.path = ';; ;./?.lua;./lua/?.lua;./test/?.lua'");
 
     return s;
 }
@@ -184,11 +187,9 @@ void script_callback_free(script_cb_t cb) {
 
 /* Vis.debug(Vis.flist, ...) */
 int viscmd_debug_fn(lua_State* L) {
-    int nargs = 0, i = 0;
-    kstr s;
-    nargs = lua_gettop(L);
-    s = kstring_newfromvf("%d", nargs);
-    for (i = 1; i <= nargs; ++i) {
+    int nargs = lua_gettop(L);
+    kstr s = kstring_newfromvf("%s", nargs);
+    for (int i = 1; i <= nargs; ++i) {
         switch (lua_type(L, i)) {
             case LUA_TNIL:
                 kstring_appendvf(s, ", %s", "nil");
@@ -197,14 +198,15 @@ int viscmd_debug_fn(lua_State* L) {
                 kstring_appendvf(s, ", %g", luaL_checknumber(L, i));
                 break;
             case LUA_TBOOLEAN:
-                kstring_appendvf(s, ", %s", luaL_checkint(L, i) ? "true" : "false");
+                kstring_appendvf(s, ", %s",
+                                 luaL_checkint(L, i) ? "true" : "false");
                 break;
             case LUA_TSTRING: {
                 char* esc = escape_string(luaL_checkstring(L, i));
                 kstring_appendvf(s, ", \"%s\"", esc);
                 DBFREE(esc);
             } break;
-            case LUA_TTABLE:
+            case LUA_TTABLE: /* TODO: dump a table */
             case LUA_TFUNCTION:
             case LUA_TUSERDATA:
             case LUA_TTHREAD:
@@ -221,12 +223,9 @@ int viscmd_debug_fn(lua_State* L) {
 
 /* Vis.command(Vis.flist, when, "command") */
 int viscmd_command_fn(lua_State* L) {
-    flist_t fl = NULL;
-    fnum_t when = 0;
-    const char* cmd = NULL;
-    fl = *(flist_t *)luaL_checkudata(L, 1, "flist_t*");
-    when = (fnum_t)VIS_MSEC_TO_FRAMES(luaL_checkint(L, 2));
-    cmd = luaL_checkstring(L, 3);
+    flist_t fl = *(flist_t *)luaL_checkudata(L, 1, "flist_t*");
+    fnum_t when = (fnum_t)VIS_MSEC_TO_FRAMES(luaL_checkint(L, 2));
+    const char* cmd = luaL_checkstring(L, 3);
     DBPRINTF("command(%p, %d, \"%s\")", fl, when, cmd);
     flist_insert_cmd(fl, when, cmd);
     return 0;
@@ -244,12 +243,10 @@ int viscmd_command_fn(lua_State* L) {
  * @param limit defaults to no limit fn
  * @param blender defaults to linear blend (fade to black) */
 int viscmd_emit_fn(lua_State* L) {
-    flist_t fl = NULL;
-    emit_t frame;
     int arg = 1;
     fnum_t when;
-    fl = *(flist_t*)luaL_checkudata(L, arg++, "flist_t*");
-    frame = lua_args_to_emit_t(L, arg, &when);
+    flist_t fl = *(flist_t*)luaL_checkudata(L, arg++, "flist_t*");
+    emit_t frame = lua_args_to_emit_t(L, arg, &when);
     flist_insert_emit(fl, when, frame);
     return 0;
 }
@@ -294,11 +291,9 @@ int viscmd_seek_fn(lua_State* L) {
 
 /* Vis.seekms(Vis.flist, when, whereto) */
 int viscmd_seekms_fn(lua_State* L) {
-    flist_t fl;
-    fnum_t where, whereto;
-    fl = *(flist_t*)luaL_checkudata(L, 1, "flist_t*");
-    where = (fnum_t)VIS_MSEC_TO_FRAMES(luaL_checkunsigned(L, 2));
-    whereto = (fnum_t)VIS_MSEC_TO_FRAMES(luaL_checkunsigned(L, 3));
+    flist_t fl = *(flist_t*)luaL_checkudata(L, 1, "flist_t*");
+    fnum_t where = (fnum_t)VIS_MSEC_TO_FRAMES(luaL_checkunsigned(L, 2));
+    fnum_t whereto = (fnum_t)VIS_MSEC_TO_FRAMES(luaL_checkunsigned(L, 3));
     DBPRINTF("Vis.seekms(%p, (frames)%d, (frames)%d)", fl, where, whereto);
     flist_insert_seekframe(fl, where, whereto);
     return 0;
@@ -306,12 +301,9 @@ int viscmd_seekms_fn(lua_State* L) {
 
 /* Vis.seekframe(Vis.flist, when, whereto) */
 int viscmd_seekframe_fn(lua_State* L) {
-    flist_t fl = NULL;
-    fnum_t where = 0;
-    fnum_t whereto = 0;
-    fl = *(flist_t*)luaL_checkudata(L, 1, "flist_t*");
-    where = (fnum_t)luaL_checkunsigned(L, 2);
-    whereto = (fnum_t)luaL_checkunsigned(L, 3);
+    flist_t fl = *(flist_t*)luaL_checkudata(L, 1, "flist_t*");
+    fnum_t where = (fnum_t)luaL_checkunsigned(L, 2);
+    fnum_t whereto = (fnum_t)luaL_checkunsigned(L, 3);
     DBPRINTF("Vis.seekframe(%p, %d, %d)", fl, where, whereto);
     flist_insert_seekframe(fl, where, whereto);
     return 0;
@@ -320,10 +312,9 @@ int viscmd_seekframe_fn(lua_State* L) {
 /* Vis.bgcolor(r, g, b),
  * 0 <= @param rgb <= 1 */
 int viscmd_bgcolor_fn(lua_State* L) {
-    float r, g, b;
-    r = (float)luaL_optnumber(L, 1, 0);
-    g = (float)luaL_optnumber(L, 2, 0);
-    b = (float)luaL_optnumber(L, 3, 0);
+    float r = (float)luaL_optnumber(L, 1, 0);
+    float g = (float)luaL_optnumber(L, 2, 0);
+    float b = (float)luaL_optnumber(L, 3, 0);
     set_background_color(r, g, b, 1);
     DBPRINTF("Vis.bgcolor(%g, %g, %g)", (double)r, (double)g, (double)b);
     return 0;
@@ -332,16 +323,11 @@ int viscmd_bgcolor_fn(lua_State* L) {
 /* Vis.mutate(Vis.flist, when, func, factor),
  * @param func is a valid Vis.MUTATE_* */
 int viscmd_mutate_fn(lua_State* L) {
-    int nargs = lua_gettop(L);
-    flist_t fl = NULL;
-    fnum_t when = NULL;
-    mutate_t fnid = VIS_MUTATE_PUSH;
-    double factor = 0;
     mutate_method_t method = DBMALLOC(sizeof(struct mutate_method));
-    fl = *(flist_t*)luaL_checkudata(L, 1, "flist_t*");
-    when = (fnum_t)VIS_MSEC_TO_FRAMES(luaL_checkint(L, 2));
-    fnid = (mutate_t)luaL_checkint(L, 3);
-    factor = (double)luaL_checknumber(L, 4);
+    flist_t fl = *(flist_t*)luaL_checkudata(L, 1, "flist_t*");
+    fnum_t when = (fnum_t)VIS_MSEC_TO_FRAMES(luaL_checkint(L, 2));
+    mutate_t fnid = (mutate_t)luaL_checkint(L, 3);
+    double factor = (double)luaL_checknumber(L, 4);
     if (fnid < (mutate_t)0) fnid = (mutate_t)0;
     if (fnid >= VIS_NMUTATES) fnid = (mutate_t)0;
     method->func = MUTATE_MAP[fnid];
@@ -359,6 +345,10 @@ int viscmd_callback_fn(lua_State* L) {
     script_t s = NULL;
     fl = *(flist_t*)luaL_checkudata(L, 1, "flist_t*");
     when = (fnum_t)VIS_MSEC_TO_FRAMES(luaL_checkint(L, 2));
+    if (lua_isnil(L, 3)) {
+        return luaL_error(L, "received nil instead of script; "
+                             "function may be disabled");
+    }
     s = *(script_t*)luaL_checkudata(L, 3, "script_t*");
     scb = DBMALLOC(sizeof(struct script_cb));
     scb->owner = s;
@@ -371,8 +361,14 @@ int viscmd_callback_fn(lua_State* L) {
 
 /* fps = Vis.fps(Vis.script) */
 int viscmd_fps_fn(lua_State* L) {
+    int arg = 1;
     script_t s = NULL;
-    s = *(script_t*)luaL_checkudata(L, 1, "script_t*");
+    if (lua_isnil(L, arg)) {
+        return luaL_error(L, "received nil instead of script; "
+                             "function may be disabled");
+    } else {
+        s = *(script_t*)luaL_checkudata(L, arg++, "script_t*");
+    }
     if (s->drawer == NULL) {
         return luaL_error(L, "drawer is NULL; function is disabled");
     } else {
@@ -387,9 +383,13 @@ int viscmd_fps_fn(lua_State* L) {
  *      @param when is omitted */
 int viscmd_settrace_fn(lua_State* L) {
     int arg = 1;
-    script_t s = NULL;
-    emit_t emit = NULL;
-    s = *(script_t*)luaL_checkudata(L, arg++, "script_t*");
+    script_t s;
+    if (lua_isnil(L, arg)) {
+        return luaL_error(L, "received nil instead of script; "
+                             "function may be disabled");
+    } else {
+        s = *(script_t*)luaL_checkudata(L, arg++, "script_t*");
+    }
     if (s->drawer == NULL) {
         return luaL_error(L, "drawer is NULL; function is disabled");
     } else {
@@ -452,13 +452,16 @@ static void stack_dump(lua_State* L) {
                 DBPRINTF("L[%d] = [%s]nil", elem, tname);
                 break;
             case LUA_TNUMBER:
-                DBPRINTF("L[%d] = [%s]%g", elem, tname, luaL_checknumber(L, elem));
+                DBPRINTF("L[%d] = [%s]%g", elem, tname,
+                         luaL_checknumber(L, elem));
                 break;
             case LUA_TBOOLEAN:
-                DBPRINTF("L[%d] = [%s]%s", elem, tname, luaL_checkint(L, elem) ? "true" : "false");
+                DBPRINTF("L[%d] = [%s]%s", elem, tname,
+                         luaL_checkint(L, elem) ? "true" : "false");
                 break;
             case LUA_TSTRING:
-                DBPRINTF("L[%d] = [%s]%s", elem, tname, luaL_checkstring(L, elem));
+                DBPRINTF("L[%d] = [%s]%s", elem, tname,
+                         luaL_checkstring(L, elem));
                 break;
             case LUA_TTABLE:
                 DBPRINTF("L[%d] = [%s]%s", elem, tname, "<table>");
