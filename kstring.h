@@ -15,10 +15,15 @@ kstr kstring_newfromvf(const char* fmt, ...);
 
 void kstring_free(kstr s);
 
+void kstring_strip(kstr s);
+void kstring_stripl(kstr s);
+void kstring_stripr(kstr s);
+
 void kstring_append(kstr s, const char* news);
 void kstring_assimilate(kstr s1, kstr s2); /* frees s2 */
 
-#define kstring_appendvf(s, f, ...) (kstring_assimilate(s, (kstring_newfromvf(f, __VA_ARGS__))))
+#define kstring_appendvf(s, f, ...) \
+    (kstring_assimilate(s, (kstring_newfromvf(f, __VA_ARGS__))))
 
 void kstring_realloc(kstr s, size_t newcapacity);
 

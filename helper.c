@@ -65,7 +65,7 @@ int strtoi(const char* buff) {
 }
 
 char* dupstr(const char* str) {
-    char* newstr = chmalloc(strlen(str) + 1);
+    char* newstr = DBMALLOC(strlen(str) + 1);
     strcpy(newstr, str);
     return newstr;
 }
@@ -125,12 +125,10 @@ static size_t escape_count_copy(char* dest, const char* src) {
 }
 
 char* escape_string(const char* str) {
-    size_t len = 1; /* for trailing \0 */
+    size_t len;
     char* result = NULL;
-    size_t i, j;
-    char c;
     len = escape_count_copy(NULL, str);
-    result = chmalloc(len);
+    result = DBMALLOC(len);
     assert(len == escape_count_copy(result, str));
     return result;
 }
