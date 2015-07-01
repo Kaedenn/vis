@@ -107,6 +107,10 @@ int main(int argc, char* argv[]) {
     emit->blender = VIS_BLEND_QUADRATIC;
     drawer_set_emit(drawer, emit);
 
+    if (args.dumpfile) {
+        drawer_set_dumpfile_template(drawer, args.dumpfile);
+    }
+
     if (args.interactive) {
         command_setup(particles);
     }

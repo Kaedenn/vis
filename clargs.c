@@ -12,7 +12,7 @@ struct clargs args;
 
 const char* usage_string = "Usage: %s [-d] [-l scriptfile] [-i]\n";
 const char* help_string =
-"  -d        debug mode\n"
+"  -d <FILE> dump frames to <FILE>_000.png\n"
 "  -l <FILE> run lua script <FILE>\n"
 "  -i        disable interactive mode\n"
 "  -h        this message\n";
@@ -21,16 +21,16 @@ void argparse(int argc, char** argv) {
     int opt;
     args.execname = argv[0];
     args.scriptfile = NULL;
-    args.debug = FALSE;
+    args.dumpfile = NULL;
     args.interactive = TRUE;
     if (argc > 1) {
-        while ((opt = getopt(argc, argv, "dl:ih"))) {
+        while ((opt = getopt(argc, argv, "d:l:ih")) != -1) {
             switch (opt) {
                 case 'd':
-                    args.debug = TRUE;
+                    args.dumpfile = optarg;
                     break;
                 case 'l':
-                    args.scriptfile = dupstr(argv[optind]);
+                    args.scriptfile = dupstr(optarg);
                     break;
                 case 'i':
                     args.interactive = FALSE;
@@ -41,7 +41,7 @@ void argparse(int argc, char** argv) {
                     exit(0);
                 case '?':
                 default:
-                    eprintf("Invalid argument %s", argv[optind]);
+                    eprintf("Invalid argument %s", argv[optind-1]);
                     eprintf("Usage: %s [-d] [-l scriptfile] [-i]", argv[0]);
                     exit(1);
             }

@@ -1,7 +1,7 @@
 
 SRCS = async.c audio.c clargs.c command.c drawer.c driver.c emitter.c flist.c \
        forces.c helper.c plimits.c particle.c particle_extra.c plist.c \
-       random.c script.c mutator.c emit.c kstring.c
+       random.c script.c mutator.c emit.c kstring.c SDL_SavePNG/savepng.c
 SOURCES = $(CSRC) Makefile
 EXECBIN = vis
 
@@ -16,14 +16,14 @@ CFLAGS_FAST = -O3 -fexpensive-optimizations
 CFLAGS_DEBUG = -O0 -ggdb -DDEBUG
 CFLAGS_PROF = -pg
 
-CFLAGS_LUA = -I/usr/include/lua5.2
-LDFLAGS_LUA = -llua5.2
+CFLAGS_LIBS = -I/usr/include/lua5.2 -I/usr/include/SDL
+LDFLAGS_LIBS = -llua5.2 -lpng
 
 EXEC_ARGS ?= 
 VALGRIND = valgrind --suppressions=$(DIR)/valgrind.supp --num-callers=32
 
-CFLAGS := $(CFLAGS) $(CFLAGS_LUA) $(EXTRA_CFLAGS)
-LDFLAGS := $(LDFLAGS) $(LDFLAGS_LUA) $(EXTRA_LDFLAGS)
+CFLAGS := $(CFLAGS) $(CFLAGS_LIBS) $(EXTRA_CFLAGS)
+LDFLAGS := $(LDFLAGS) $(LDFLAGS_LIBS) $(EXTRA_LDFLAGS)
 
 .PHONY: all fast debug profile execute valgrind leakcheck leakcheck-reachable \
 	clean distclean

@@ -1,9 +1,11 @@
 
 #include "drawer.h"
 #include "helper.h"
+#include "kstring.h"
 #include "particle.h"
 #include "particle_extra.h"
 #include "emitter.h"
+#include "SDL_SavePNG/savepng.h"
 #include <SDL/SDL.h>
 
 static const size_t FPS_COUNTER_LEN = 20;
@@ -26,6 +28,7 @@ struct drawer {
     struct fps fps;
     BOOL tracing;
     emit_t emit_desc;
+    char* dump_file_fmt;
 };
 
 enum shader_t {
@@ -101,6 +104,9 @@ void drawer_free(drawer_t drawer) {
     DBPRINTF("frame error: %g", runtime_sec * VIS_FPS_LIMIT - drawer->fps.framecount);
     DBFREE(drawer->vtx_array);
     /* FIXME: free vbo, program_id */
+    if (drawer->dump_file_fmt) {
+        DBFREE(drawer->dump_file_fmt);
+    }
     DBFREE(drawer->emit_desc);
     DBFREE(drawer);
     SDL_Quit();
@@ -149,6 +155,14 @@ int drawer_draw_to_screen(drawer_t drawer) {
         Uint32 correction = (fps > VIS_FPS_LIMIT ? 1 : 0);
         SDL_Delay((Uint32)round(VIS_MSEC_PER_FRAME - framedelay + correction));
     }
+    if (drawer->dump_file_fmt) {
+        kstr s = kstring_newfromvf("%s_%03d.png", drawer->dump_file_fmt,
+                                   drawer->fps.framecount);
+        SDL_Surface* tmp = SDL_PNGFormatAlpha(drawer->screen);
+        SDL_SavePNG(tmp, kstring_content(s));
+        SDL_FreeSurface(tmp);
+        kstring_free(s);
+    }
     drawer->fps.framecount += 1;
     drawer->fps.framestart = SDL_GetTicks();
     return 0;
@@ -161,6 +175,10 @@ void vis_coords_to_screen(float x, float y, float* nx, float* ny) {
 
 float drawer_get_fps(drawer_t drawer) {
     return (float)drawer->fps.framecount / (float)(SDL_GetTicks() - drawer->fps.start) * 1000.0f;
+}
+
+void drawer_set_dumpfile_template(drawer_t drawer, const char* path) {
+    drawer->dump_file_fmt = dupstr(path);
 }
 
 void drawer_begin_trace(drawer_t drawer) {
