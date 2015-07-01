@@ -61,10 +61,6 @@
 #define VIS_10MS (10)
 #define VIS_MSEC_PER_FRAME (1000.0 / VIS_FPS_LIMIT)
 
-/* error in frame rate: delay 1ms every 3 frames (FIXME: not 30fps) */
-#define VIS_FPMS_ERROR_MS 1
-#define VIS_FPMS_ERROR_FRAMES 3
-
 /* audio constants */
 #define VIS_AUDIO_FREQ 22050
 #define VIS_AUDIO_SAMPLES 512

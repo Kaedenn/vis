@@ -103,6 +103,9 @@ int initialize_vis_lib(lua_State* L) {
     NEW_CONST(MUTATE_AGE);
     NEW_CONST(MUTATE_OPACITY);
     NEW_CONST(NMUTATES);
+    /* other constants */
+    NEW_CONST(FORCE_FRICTION_COEFF);
+    NEW_CONST(FORCE_GRAVITY_FACTOR);
 #undef NEW_CONST
 
     return 1;

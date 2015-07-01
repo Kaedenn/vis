@@ -39,4 +39,8 @@ function VisUtil.seek_to(t)
     Vis.seekms(Vis.flist, 0, t)
 end
 
+function VisUtil.set_trace_table(t)
+    Vis.settrace(Vis.script, t.count, t.x, t.y, t.ux, t.uy, t.rad, t.urad, t.ds, t.uds, t.theta, t.utheta, t.life, t.ulife, t.r, t.g, t.b, t.ur, t.ug, t.ub, t.force, t.limit, t.blender)
+end
+
 return VisUtil
