@@ -3,8 +3,8 @@
 #include "helper.h"
 
 #include <assert.h>
-#include <SDL/SDL.h>
-#include <SDL/SDL_audio.h>
+#include <SDL.h>
+#include <SDL_audio.h>
 
 static void mix(void*, Uint8* stream, int length);
 

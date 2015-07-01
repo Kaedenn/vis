@@ -304,3 +304,6 @@ values directly.
 Thank you SNESmusic.org for the Bowser theme, retrieved at
 http://snesmusic.org/v2/profile.php?profile=set&selected=2757
 on the 8th of October 2011.
+
+Thank you to driedfruit on GitHub for the SDL_SavePNG library, obtained via
+https://github.com/driedfruit/SDL_SavePNG on the 1st of July 2015.

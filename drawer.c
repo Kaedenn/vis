@@ -5,8 +5,7 @@
 #include "particle.h"
 #include "particle_extra.h"
 #include "emitter.h"
-#include "SDL_SavePNG/savepng.h"
-#include <SDL/SDL.h>
+#include <SDL.h>
 
 static const size_t FPS_COUNTER_LEN = 20;
 
@@ -158,9 +157,11 @@ int drawer_draw_to_screen(drawer_t drawer) {
     if (drawer->dump_file_fmt) {
         kstr s = kstring_newfromvf("%s_%03d.png", drawer->dump_file_fmt,
                                    drawer->fps.framecount);
+        /*
         SDL_Surface* tmp = SDL_PNGFormatAlpha(drawer->screen);
         SDL_SavePNG(tmp, kstring_content(s));
         SDL_FreeSurface(tmp);
+        */
         kstring_free(s);
     }
     drawer->fps.framecount += 1;

@@ -7,9 +7,9 @@
 #include <string.h>
 #include <time.h>
 
-#include <SDL/SDL.h>
-#include <SDL/SDL_audio.h>
-#include <SDL/SDL_opengl.h>
+#include <SDL.h>
+#include <SDL_audio.h>
+#include <SDL_opengl.h>
 
 #include "async.h"
 #include "audio.h"
