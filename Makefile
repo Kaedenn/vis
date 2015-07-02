@@ -17,7 +17,7 @@ CFLAGS_DEBUG = -O0 -ggdb -DDEBUG
 CFLAGS_PROF = -pg
 
 CFLAGS_LIBS = -I/usr/include/lua5.2 -I/usr/include/SDL2
-LDFLAGS_LIBS = -llua5.2 -lSDL2
+LDFLAGS_LIBS = -llua5.2 -lSDL2 -lSDL2_image
 
 EXEC_ARGS ?= 
 VALGRIND = valgrind --suppressions=$(DIR)/valgrind.supp --num-callers=32

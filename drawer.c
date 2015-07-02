@@ -8,6 +8,8 @@
 #include "particle_extra.h"
 #include <errno.h>
 
+#include <SDL_image.h>
+
 static double calculate_blend(particle_t particle);
 
 static const size_t FPS_COUNTER_LEN = 20;
@@ -44,8 +46,7 @@ drawer_t drawer_new(void) {
         return NULL;
     }
     drawer->window = SDL_CreateWindow("Vis",
-                                      SDL_WINDOWPOS_UNDEFINED,
-                                      SDL_WINDOWPOS_UNDEFINED,
+                                      VIS_WINDOW_X, VIS_WINDOW_Y,
                                       VIS_WIDTH, VIS_HEIGHT, 0);
     if (drawer->window == NULL) {
         eprintf("error in SDL_CreateWindow: %s", SDL_GetError());
@@ -53,6 +54,11 @@ drawer_t drawer_new(void) {
     }
     drawer->renderer = SDL_CreateRenderer(drawer->window, -1,
                                           SDL_RENDERER_PRESENTVSYNC);
+    /* initialize SDL_image */
+    if (IMG_Init(IMG_INIT_PNG) == 0) {
+        eprintf("error in IMG_Init: %s", SDL_GetError());
+        return NULL;
+    }
     /* initialize the vertex storage */
     drawer->rect_curr = 0;
     drawer->rect_count = VIS_PLIST_INITIAL_SIZE * VIS_VTX_PER_PARTICLE;
@@ -108,6 +114,12 @@ int drawer_add_particle(drawer_t drawer, particle_t particle) {
 }
 
 int drawer_draw_to_screen(drawer_t drawer) {
+    kstr s = NULL;
+    if (drawer->dump_file_fmt) {
+        s = kstring_newfromvf("%s_%03d.png", drawer->dump_file_fmt,
+                              drawer->fps.framecount);
+    }
+
     SDL_SetRenderDrawColor(drawer->renderer,
                            (Uint8)(drawer->bgcolor[0]*0xFF),
                            (Uint8)(drawer->bgcolor[1]*0xFF),
@@ -125,6 +137,10 @@ int drawer_draw_to_screen(drawer_t drawer) {
     }
     SDL_RenderPresent(drawer->renderer);
     drawer->rect_curr = 0;
+
+    if (drawer->dump_file_fmt) {
+        kstring_free(s);
+    }
     
     Uint32 frameend = SDL_GetTicks();
     Uint32 framedelay = frameend - drawer->fps.framestart;
@@ -132,16 +148,6 @@ int drawer_draw_to_screen(drawer_t drawer) {
         float fps = drawer_get_fps(drawer);
         Uint32 correction = (fps > VIS_FPS_LIMIT ? 1 : 0);
         SDL_Delay((Uint32)round(VIS_MSEC_PER_FRAME - framedelay + correction));
-    }
-    if (drawer->dump_file_fmt) {
-        kstr s = kstring_newfromvf("%s_%03d.png", drawer->dump_file_fmt,
-                                   drawer->fps.framecount);
-        /*
-        SDL_Surface* tmp = SDL_PNGFormatAlpha(drawer->screen);
-        SDL_SavePNG(tmp, kstring_content(s));
-        SDL_FreeSurface(tmp);
-        */
-        kstring_free(s);
     }
     drawer->fps.framecount += 1;
     drawer->fps.framestart = SDL_GetTicks();
@@ -158,7 +164,11 @@ float drawer_get_fps(drawer_t drawer) {
 }
 
 void drawer_set_dumpfile_template(drawer_t drawer, const char* path) {
-    drawer->dump_file_fmt = dupstr(path);
+    SDL_RendererInfo ri;
+    SDL_GetRendererInfo(drawer->renderer, &ri);
+    if (ri.flags & SDL_RENDERER_TARGETTEXTURE) {
+        drawer->dump_file_fmt = dupstr(path);
+    }
 }
 
 void drawer_set_trace_verbose(drawer_t drawer, BOOL verbose) {

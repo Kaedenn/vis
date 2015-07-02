@@ -38,6 +38,14 @@
 # define VIS_NFRAMES ((VIS_FRAMES_NMINS*60+VIS_FRAMES_NSECS)*VIS_FPS_LIMIT)
 #endif
 
+/* window pos */
+#ifndef VIS_WINDOW_X
+#define VIS_WINDOW_X SDL_WINDOWPOS_UNDEFINED
+#endif
+#ifndef VIS_WINDOW_Y
+#define VIS_WINDOW_Y SDL_WINDOWPOS_UNDEFINED
+#endif
+
 /* window size */
 #define VIS_WIDTH 800
 #define VIS_HEIGHT 600

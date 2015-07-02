@@ -1,6 +1,7 @@
 Vis = require("Vis")
 VisUtil = require("visutil")
 math = require("math")
+os = require("os")
 
 TRACK_1 = 1
 TRACK_2 = 2
@@ -14,6 +15,7 @@ TRACKS = 8
 TrackTimes = {0, 0, 0, 0, 0, 0, 0, 0}
 
 SECOND = 1000
+ONE_FRAME_MS = Vis.frames2msec(1)
 
 --[[ For debugging
 Vis.command(Vis.flist, t, "exit")
@@ -122,4 +124,16 @@ H_1_8 = Vis.HEIGHT / 8 -- 75
 dofile("lua/bowser_track1.lua")
 dofile("lua/bowser_track3.lua")
 
-Vis.command(Vis.flist, TrackTimes[TRACK_1], "exit")
+--[[
+-- Offsets of various notable things:
+--     1223: Track 1, Intro, part 1
+--     7108: Track 1, Intro, part 2
+--    13422: Track 1, Intro, part 3
+--    18087: Start of main song
+--]]
+skip_to = os.getenv('VIS_BOWSER_SKIP_TO')
+if skip_to ~= nil then
+    VisUtil.seek_to(tonumber(skip_to))
+end
+
+Vis.command(Vis.flist, TrackTimes[TRACK_1] + 1000, "exit")
