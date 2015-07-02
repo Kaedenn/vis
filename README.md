@@ -132,8 +132,8 @@ position of the schedule to ```frame_number``` after ```when``` milliseconds
 have passed. See ```Vis.frames2msec``` and ```Vis.msec2frames``` to convert
 between frames and milliseconds.
 
-```function Vis.bgcolor(r, g, b)```: Sets the background color to the values
-given. Each value is between 0 and 1.
+```function Vis.bgcolor(Vis.script, r, g, b)```: Sets the background color to the
+values given. Each value is between 0 and 1.
 
 ```function Vis.mutate(Vis.flist, when, func, coefficient)```: Schedules the
 mutation given by ```func``` (see constants ```Vis.MUTATE_*```) with coefficient
