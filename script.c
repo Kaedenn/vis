@@ -8,6 +8,7 @@
 #include "mutator.h"
 #include "kstring.h"
 
+#include <errno.h>
 #include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
@@ -16,24 +17,23 @@
 #include <lauxlib.h>
 #include <lualib.h>
 
-int viscmd_debug_fn(lua_State* L);
+static int viscmd_debug_fn(lua_State* L);
+static int viscmd_command_fn(lua_State* L);
+static int viscmd_emit_fn(lua_State* L);
+static int viscmd_audio_fn(lua_State* L);
+static int viscmd_play_fn(lua_State* L);
+static int viscmd_pause_fn(lua_State* L);
+static int viscmd_seek_fn(lua_State* L);
+static int viscmd_seekms_fn(lua_State* L);
+static int viscmd_seekframe_fn(lua_State* L);
+static int viscmd_bgcolor_fn(lua_State* L);
+static int viscmd_mutate_fn(lua_State* L);
+static int viscmd_callback_fn(lua_State* L);
+static int viscmd_fps_fn(lua_State* L);
+static int viscmd_settrace_fn(lua_State* L);
 
-int viscmd_command_fn(lua_State* L);
-int viscmd_emit_fn(lua_State* L);
-int viscmd_audio_fn(lua_State* L);
-int viscmd_play_fn(lua_State* L);
-int viscmd_pause_fn(lua_State* L);
-int viscmd_seek_fn(lua_State* L);
-int viscmd_seekms_fn(lua_State* L);
-int viscmd_seekframe_fn(lua_State* L);
-int viscmd_bgcolor_fn(lua_State* L);
-int viscmd_mutate_fn(lua_State* L);
-int viscmd_callback_fn(lua_State* L);
-int viscmd_fps_fn(lua_State* L);
-int viscmd_settrace_fn(lua_State* L);
-
-int viscmd_f2ms_fn(lua_State* L);
-int viscmd_ms2f_fn(lua_State* L);
+static int viscmd_f2ms_fn(lua_State* L);
+static int viscmd_ms2f_fn(lua_State* L);
 
 static emit_t lua_args_to_emit_t(lua_State* L, int arg, fnum_t* when);
 static void stack_dump(lua_State* L);
@@ -170,19 +170,20 @@ int initialize_vis_lib(lua_State* L) {
 
 script_t script_new(script_cfg_t cfg) {
     script_t s = DBMALLOC(sizeof(struct script));
-    kstr script = kstring_new(1024);
     s->fl = flist_new();
     s->L = luaL_newstate();
     luaL_openlibs(s->L);
     luaL_requiref(s->L, "Vis", initialize_vis_lib, 0);
 
-    kstring_append(script, "Vis = require(\"Vis\")\n");
+    if (file_exists(LUA_STARTUP_FILE)) {
+        DBPRINTF("Executing startup file: %s", LUA_STARTUP_FILE);
+        (void)luaL_dofile(s->L, LUA_STARTUP_FILE);
+    }
     /* adjust lua search path, include ./lua and ./test */
-    kstring_append(script, "package = require('package')\n");
-    kstring_append(script, "package.path = "
-                           "'; ;./?.lua;./lua/?.lua;./test/?.lua'");
-    (void)luaL_dostring(s->L, kstring_content(script));
-    kstring_free(script);
+    (void)luaL_dostring(s->L,
+        "Vis = require(\"Vis\")\n"
+        "package = require('package')\n"
+        "package.path = '; ;./?.lua;./lua/?.lua;./test/?.lua'");
     stack_dump(s->L);
 
     flist_t* flbox = lua_newuserdata(s->L, sizeof(flist_t));

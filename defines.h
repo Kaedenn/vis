@@ -21,6 +21,11 @@
 #define REQUEST_INLINE
 #endif
 
+/* lua startup file */
+#ifndef LUA_STARTUP_FILE
+#define LUA_STARTUP_FILE "lua/startup.lua"
+#endif
+
 /* physics globals */
 #define VIS_FORCE_FRICTION_COEFF 0.99
 #define VIS_FORCE_GRAVITY_FACTOR 0.03

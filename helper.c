@@ -56,6 +56,21 @@ void dbprintf(const char* fmt, ...) {
 #endif
 }
 
+BOOL file_exists(const char* path) {
+    int olderrno = errno;
+    BOOL exists;
+    errno = 0;
+    FILE* fp = fopen(path, "r+");
+    if (fp) {
+        exists = TRUE;
+        fclose(fp);
+    } else if (errno != ENOENT) {
+        exists = TRUE;
+    }
+    errno = olderrno;
+    return exists;
+}
+
 BOOL startswith(const char* s1, const char* s2) {
     return s1 && s2 && strncmp(s1, s2, strlen(s2)) == 0;
 }
