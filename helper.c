@@ -46,11 +46,11 @@ void eprintf(const char* fmt, ...) {
 void dbprintf(const char* fmt, ...) {
     va_list args;
 #ifdef DEBUG
-    fprintf(stdout, "debug: ");
+    fprintf(stderr, "debug: ");
     va_start(args, fmt);
-    vfprintf(stdout, fmt, args);
+    vfprintf(stderr, fmt, args);
     va_end(args);
-    fprintf(stdout, "\n");
+    fprintf(stderr, "\n");
 #else
     (void)fmt;
 #endif

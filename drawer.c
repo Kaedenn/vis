@@ -209,7 +209,7 @@ void drawer_trace(drawer_t drawer, float x, float y) {
     drawer->emit_desc->y = (double)y;
     emit_frame(drawer->emit_desc);
     if (drawer->verbose_trace) {
-        char* line = emit_to_lua(drawer->emit_desc, drawer->fps.framecount);
+        char* line = genlua_emit(drawer->emit_desc, drawer->fps.framecount);
         printf("%s\n", line);
         DBFREE(line);
     }
