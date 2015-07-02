@@ -1,10 +1,10 @@
 
 #include "drawer.h"
+#include "emitter.h"
 #include "helper.h"
 #include "kstring.h"
 #include "particle.h"
 #include "particle_extra.h"
-#include "emitter.h"
 #include <SDL.h>
 
 static const size_t FPS_COUNTER_LEN = 20;
@@ -27,6 +27,7 @@ struct drawer {
     struct fps fps;
     BOOL tracing;
     emit_t emit_desc;
+    BOOL verbose_trace;
     char* dump_file_fmt;
 };
 
@@ -182,16 +183,20 @@ void drawer_set_dumpfile_template(drawer_t drawer, const char* path) {
     drawer->dump_file_fmt = dupstr(path);
 }
 
-void drawer_begin_trace(drawer_t drawer) {
-    drawer->tracing = TRUE;
+void drawer_set_trace_verbose(drawer_t drawer, BOOL verbose) {
+    drawer->verbose_trace = verbose;
 }
 
-void drawer_set_emit(drawer_t drawer, emit_t emit) {
+void drawer_set_trace(drawer_t drawer, emit_t emit) {
     drawer->emit_desc = emit;
 }
 
-emit_t drawer_get_emit(drawer_t drawer) {
+emit_t drawer_get_trace(drawer_t drawer) {
     return drawer->emit_desc;
+}
+
+void drawer_begin_trace(drawer_t drawer) {
+    drawer->tracing = TRUE;
 }
 
 void drawer_trace(drawer_t drawer, float x, float y) {
@@ -203,6 +208,11 @@ void drawer_trace(drawer_t drawer, float x, float y) {
     drawer->emit_desc->x = (double)x;
     drawer->emit_desc->y = (double)y;
     emit_frame(drawer->emit_desc);
+    if (drawer->verbose_trace) {
+        char* line = emit_to_lua(drawer->emit_desc, drawer->fps.framecount);
+        printf("%s\n", line);
+        DBFREE(line);
+    }
 }
 
 void drawer_end_trace(drawer_t drawer) {

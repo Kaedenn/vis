@@ -19,6 +19,7 @@
 #include "drawer.h"
 #include "emit.h"
 #include "emitter.h"
+#include "gc.h"
 #include "helper.h"
 #include "particle_extra.h"
 #include "plist.h"
@@ -26,31 +27,6 @@
 
 plist_t particles = NULL;
 
-#ifndef GC_MIN_SIZE
-#define GC_MIN_SIZE 10
-#endif
-
-typedef void (*gc_func_t)(void* cls);
-
-struct gcitem {
-    gc_func_t func;
-    void* cls;
-};
-
-static struct gcitem* gcitems = NULL;
-static size_t gcidx = 0;
-static size_t ngcitems = 0;
-
-static inline void gc_add(gc_func_t fn, void* cls) {
-    if (gcidx == ngcitems) {
-        gcitems = realloc(gcitems, 2*ngcitems);
-    }
-    gcitems[gcidx].func = fn;
-    gcitems[gcidx].cls = cls;
-    ++gcidx;
-}
-
-void gc(void);
 void finalize(void);
 void mainloop(drawer_t drawer);
 
@@ -68,9 +44,7 @@ int main(int argc, char* argv[]) {
     setenv("SDL_DEBUG", "1", 1);
 #endif
 
-    ngcitems = GC_MIN_SIZE;
-    gcitems = DBMALLOC(ngcitems * sizeof(struct gcitem));
-    atexit(gc);
+    gc_init();
     
     drawer = drawer_new();
     if (!drawer) {
@@ -105,7 +79,11 @@ int main(int argc, char* argv[]) {
     emit_set_color(emit, 0, 0, 0, 0.2f, 1, 1);
     emit->limit = VIS_LIMIT_SPRINGBOX;
     emit->blender = VIS_BLEND_QUADRATIC;
-    drawer_set_emit(drawer, emit);
+    drawer_set_trace(drawer, emit);
+
+    if (args.dumptrace) {
+        drawer_set_trace_verbose(drawer, TRUE);
+    }
 
     if (args.dumpfile) {
         drawer_set_dumpfile_template(drawer, args.dumpfile);
@@ -134,16 +112,6 @@ int main(int argc, char* argv[]) {
     return 0;
 }
 
-void gc(void) {
-    size_t i;
-    for (i = 0; i < ngcitems; ++i) {
-        if (gcitems[i].func) {
-            (gcitems[i].func)(gcitems[i].cls);
-        }
-    }
-    DBFREE(gcitems);
-}
-
 void mainloop(drawer_t drawer) {
     SDL_Event e;
     memset(&e, 0, sizeof(SDL_Event));
@@ -152,13 +120,11 @@ void mainloop(drawer_t drawer) {
             switch (e.type) {
                 case SDL_MOUSEBUTTONDOWN:
                     drawer_begin_trace(drawer);
+                case SDL_MOUSEMOTION:
                     drawer_trace(drawer, (float)e.button.x, (float)e.button.y);
                     break;
                 case SDL_MOUSEBUTTONUP:
                     drawer_end_trace(drawer);
-                    break;
-                case SDL_MOUSEMOTION:
-                    drawer_trace(drawer, (float)e.motion.x, (float)e.motion.y);
                     break;
                 case SDL_KEYDOWN: {
                     if (e.key.keysym.sym == SDLK_ESCAPE) {

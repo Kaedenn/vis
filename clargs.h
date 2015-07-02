@@ -8,6 +8,7 @@ extern struct clargs {
     const char* execname;
     const char* scriptfile;
     const char* dumpfile;
+    BOOL dumptrace;
     BOOL interactive;
 } args;
 

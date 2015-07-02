@@ -67,9 +67,10 @@ float drawer_get_fps(drawer_t drawer);
 
 void drawer_set_dumpfile_template(drawer_t drawer, const char* path);
 
+void drawer_set_trace_verbose(drawer_t drawer, BOOL verbose);
+void drawer_set_trace(drawer_t drawer, emit_t emit);
+emit_t drawer_get_trace(drawer_t drawer);
 void drawer_begin_trace(drawer_t drawer);
-void drawer_set_emit(drawer_t, emit_t emit);
-emit_t drawer_get_emit(drawer_t);
 void drawer_trace(drawer_t drawer, float x, float y);
 void drawer_end_trace(drawer_t drawer);
 

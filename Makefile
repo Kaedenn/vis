@@ -1,7 +1,7 @@
 
-SRCS = async.c audio.c clargs.c command.c drawer.c driver.c emitter.c flist.c \
-       forces.c helper.c plimits.c particle.c particle_extra.c plist.c \
-       random.c script.c mutator.c emit.c kstring.c
+SRCS = async.c audio.c clargs.c command.c drawer.c driver.c emit.c emitter.c \
+       flist.c forces.c gc.c helper.c kstring.c mutator.c particle.c \
+       particle_extra.c plimits.c plist.c random.c script.c
 SOURCES = $(CSRC) Makefile
 EXECBIN = vis
 
@@ -17,7 +17,7 @@ CFLAGS_DEBUG = -O0 -ggdb -DDEBUG
 CFLAGS_PROF = -pg
 
 CFLAGS_LIBS = -I/usr/include/lua5.2 -I/usr/include/SDL
-LDFLAGS_LIBS = -llua5.2 -lpng
+LDFLAGS_LIBS = -llua5.2
 
 EXEC_ARGS ?= 
 VALGRIND = valgrind --suppressions=$(DIR)/valgrind.supp --num-callers=32
@@ -39,8 +39,8 @@ debug: $(SOURCES)
 
 profile: $(SOURCES)
 	$(CC) $(CFLAGS_PROF) -o $(DIR)/$(EXECBIN) $(SRCS) $(CFLAGS) $(LDFLAGS)
-	rlwrap $(DIR)/$(EXECBIN) -l $(DIR)/test/test.lua
-	gprof $(DIR)/$(EXECBIN) $(EXEC_ARGS)
+	$(DIR)/$(EXECBIN) -i -l $(DIR)/test/4_random_long.lua
+	gprof $(DIR)/$(EXECBIN)
 	- rm $(DIR)/gmon.out
 
 valgrind: debug $(EXECBIN)

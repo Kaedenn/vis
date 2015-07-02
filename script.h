@@ -18,6 +18,7 @@ typedef unsigned int script_cfg_t;
 static const script_cfg_t SCRIPT_ALLOW_ALL = 0; /* allow all features */
 static const script_cfg_t SCRIPT_NO_CB = 1; /* disable callbacks */
 
+char* emit_to_lua(emit_t emit, fnum_t when);
 script_t script_new(script_cfg_t cfg);
 void script_free(script_t s);
 void script_callback_free(script_cb_t cb);

@@ -44,6 +44,28 @@ struct script {
     drawer_t drawer;
 };
 
+char* emit_to_lua(emit_t emit, fnum_t when) {
+    char* result;
+    kstr s = kstring_newfrom("Vis.emit(");
+    kstring_append(s, "Vis.flist, ");
+    kstring_appendvf(s, "%d, Vis.frames2msec(%d), ", emit->n, when);
+    kstring_appendvf(s, "%g, %g, %g, %g, ", emit->x, emit->y, emit->ux,
+                     emit->uy);
+    kstring_appendvf(s, "%g, %g, ", emit->rad, emit->urad);
+    kstring_appendvf(s, "%g, %g, ", emit->ds, emit->uds);
+    kstring_appendvf(s, "%g, %g, ", emit->theta, emit->utheta);
+    kstring_appendvf(s, "%d, %d, ", emit->life, emit->ulife);
+    kstring_appendvf(s, "%g, %g, %g, ", (double)emit->r, (double)emit->g,
+                     (double)emit->b);
+    kstring_appendvf(s, "%g, %g, %g, ", (double)emit->ur, (double)emit->ug,
+                     (double)emit->ub);
+    kstring_appendvf(s, "%d, %d, %d)", emit->force, emit->limit, emit->blender);
+
+    result = dupstr(kstring_content(s));
+    kstring_free(s);
+    return result;
+}
+
 int initialize_vis_lib(lua_State* L) {
     static const struct luaL_Reg vis_lib[] = {
         {"debug", viscmd_debug_fn},
@@ -396,7 +418,7 @@ int viscmd_settrace_fn(lua_State* L) {
     if (s->drawer == NULL) {
         return luaL_error(L, "drawer is NULL; function is disabled");
     } else {
-        drawer_set_emit(s->drawer, lua_args_to_emit_t(L, arg, NULL));
+        drawer_set_trace(s->drawer, lua_args_to_emit_t(L, arg, NULL));
     }
     return 0;
 }
