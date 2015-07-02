@@ -14,6 +14,14 @@ function VisUtil.make_emit_table()
     }
 end
 
+function VisUtil.copy_table(t)
+    local t2 = {}
+    for k,v in pairs(t) do
+        t2[k] = v
+    end
+    return t2
+end
+
 function VisUtil.center_emit_table(t, x, y, ux, uy)
     t.x = x or Vis.WIDTH / 2
     t.y = y or Vis.HEIGHT / 2
@@ -30,6 +38,10 @@ function VisUtil.color_emit_table(t, r, g, b, ur, ug, ub)
     t.ub = ub>1 and ub/255.0 or (ub or 0)
 end
 
+function VisUtil.color_emit_table_v(t, rgb)
+    VisUtil.color_emit_table(t, rgb[1], rgb[2], rgb[3], rgb[4], rgb[5], rgb[6])
+end
+
 function VisUtil.emit_table(t)
     Vis.emit(Vis.flist, t.count, t.when, t.x, t.y, t.ux, t.uy, t.radius, t.uradius, t.ds, t.uds, t.theta, t.utheta, t.life, t.ulife, t.r, t.g, t.b, t.ur, t.ug, t.ub, t.force, t.limit, t.blender)
 end
@@ -41,6 +53,46 @@ end
 
 function VisUtil.set_trace_table(t)
     Vis.settrace(Vis.script, t.count, t.x, t.y, t.ux, t.uy, t.rad, t.urad, t.ds, t.uds, t.theta, t.utheta, t.life, t.ulife, t.r, t.g, t.b, t.ur, t.ug, t.ub, t.force, t.limit, t.blender)
+end
+
+function VisUtil.dumpobject(o, i)
+    if type(o) ~= "table" then
+        if type(o) == "string" then
+            return '"'..tostring(o)..'"'
+        else
+            return tostring(o)
+        end
+    else
+        local function indent(n)
+            local s = ""
+            for i=1,n do
+                s = s.." "
+            end
+            return s
+        end
+        if next(o) == nil then
+            return "{}"
+        end
+        i = i or 0
+        local s = "{"
+        local f = true
+        for k,v in pairs(o) do
+            if f then
+                f = false
+            else
+                s = s..","
+            end
+            s = s.."\n"..indent(i+2)
+            if type(k) == "string" then
+                s = s .. "\""..tostring(k).."\""
+            else
+                s = s.."["..VisUtil.dumpobject(k).."]"
+            end
+            s = s.." = "..VisUtil.dumpobject(v, i+2)
+        end
+        s = s.."\n"..indent(i).."}"
+        return s
+    end
 end
 
 return VisUtil

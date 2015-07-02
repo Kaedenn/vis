@@ -25,7 +25,6 @@ function now(track)
 end
 
 function adv(track, length)
-    Vis.debug("adv(TRACK_"..track..", "..length.."): "..TrackTimes[track])
     TrackTimes[track] = TrackTimes[track] + length
 end
 
@@ -76,8 +75,10 @@ function emit_line_v(start, x, r, g, b, ur, ug, ub)
     et.count = 200
     et.when = start
     et.theta = math.pi/2
+    et.utheta = 0.1
     VisUtil.emit_table(et)
     et.theta = math.pi*3/2
+    et.utheta = 0.1
     VisUtil.emit_table(et)
 end
 
