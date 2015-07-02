@@ -14,7 +14,7 @@ const char* usage_string = "Usage: %s [-d path] [-l path] [-t] [-i] [-h]\n";
 const char* help_string =
 "  -d <FILE> dump frames to <FILE>_000.png\n"
 "  -l <FILE> run lua script <FILE>\n"
-"  -t        output the results of tracing to stdout\n"
+"  -t        output the results of tracing to stdout, implies -i\n"
 "  -i        disable interactive mode\n"
 "  -h        this message\n";
 
@@ -36,7 +36,7 @@ void argparse(int argc, char** argv) {
                     break;
                 case 't':
                     args.dumptrace = TRUE;
-                    break;
+                    /* fall through */
                 case 'i':
                     args.interactive = FALSE;
                     break;

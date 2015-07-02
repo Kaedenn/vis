@@ -174,7 +174,9 @@ script_t script_new(script_cfg_t cfg) {
     s->L = luaL_newstate();
     luaL_openlibs(s->L);
     luaL_requiref(s->L, "Vis", initialize_vis_lib, 0);
+    lua_pop(s->L, 1);
 
+    /* adjust lua search path, include ./lua and ./test */
     (void)luaL_dostring(s->L,
         "Vis = require(\"Vis\")\n"
         "package = require('package')\n"
@@ -184,8 +186,9 @@ script_t script_new(script_cfg_t cfg) {
         DBPRINTF("Executing startup file: %s", LUA_STARTUP_FILE);
         (void)luaL_dofile(s->L, LUA_STARTUP_FILE);
     }
-    /* adjust lua search path, include ./lua and ./test */
 
+    lua_getglobal(s->L, "Vis");
+    
     flist_t* flbox = lua_newuserdata(s->L, sizeof(flist_t));
     luaL_newmetatable(s->L, "flist_t*");
     lua_pop(s->L, 1);
@@ -210,7 +213,7 @@ script_t script_new(script_cfg_t cfg) {
     luaL_setmetatable(s->L, "emit*");
 #endif
 
-    lua_pop(s->L, 1);
+    lua_pop(s->L, 1); /* getglobal("Vis") */
 
     return s;
 }
@@ -401,18 +404,14 @@ int viscmd_mutate_fn(lua_State* L) {
 
 /* Vis.callback(Vis.flist, when, Vis.script, "code") */
 int viscmd_callback_fn(lua_State* L) {
-    flist_t fl = NULL;
-    fnum_t when = 0;
-    script_cb_t scb = NULL;
-    script_t s = NULL;
-    fl = *(flist_t*)luaL_checkudata(L, 1, "flist_t*");
-    when = (fnum_t)VIS_MSEC_TO_FRAMES(luaL_checkint(L, 2));
+    flist_t fl = *(flist_t*)luaL_checkudata(L, 1, "flist_t*");
+    fnum_t when = (fnum_t)VIS_MSEC_TO_FRAMES(luaL_checkint(L, 2));
     if (lua_isnil(L, 3)) {
         return luaL_error(L, "received nil instead of script; "
                              "function may be disabled");
     }
-    s = *(script_t*)luaL_checkudata(L, 3, "script_t*");
-    scb = DBMALLOC(sizeof(struct script_cb));
+    script_t s = *(script_t*)luaL_checkudata(L, 3, "script_t*");
+    script_cb_t scb = DBMALLOC(sizeof(struct script_cb));
     scb->owner = s;
     scb->fn_name = dupstr("<lua>");
     scb->fn_code = escape_string(luaL_checkstring(L, 4));
