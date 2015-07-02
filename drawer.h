@@ -15,6 +15,7 @@
 #define GL_GLEXT_PROTOTYPES
 #endif
 
+#include <SDL.h>
 #include <SDL_opengl.h>
 
 /** Notes:
@@ -54,13 +55,14 @@ typedef double(*blend_fn)(double, double);
 typedef struct drawer* drawer_t;
 typedef struct vertex {
     float x, y;
-    float r, g, b;
+    float r, g, b, a;
 } *vertex_t;
 
 drawer_t drawer_new(void);
 void drawer_free(drawer_t drawer);
 
-int drawer_bgcolor(drawer_t drawer, GLfloat r, GLfloat g, GLfloat b);
+void drawer_predraw(drawer_t drawer);
+void drawer_bgcolor(drawer_t drawer, GLfloat r, GLfloat g, GLfloat b);
 int drawer_add_particle(drawer_t drawer, particle_t particle);
 int drawer_draw_to_screen(drawer_t drawer);
 float drawer_get_fps(drawer_t drawer);

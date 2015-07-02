@@ -61,3 +61,7 @@ while j < now(TRACK_3) do
     j = j + 33
 end
 adv(TRACK_3, 33)
+
+-- We're only doing the intro for now
+do return end
+

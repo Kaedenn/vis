@@ -252,7 +252,10 @@ void script_callback_free(script_cb_t cb) {
 /* Vis.debug(Vis.flist, ...) */
 int viscmd_debug_fn(lua_State* L) {
     int nargs = lua_gettop(L);
-    kstr s = kstring_newfromvf("%s", nargs);
+    lua_Debug ar;
+    lua_getstack(L, 1, &ar);
+    lua_getinfo(L, "nSl", &ar);
+    kstr s = kstring_newfromvf("%d", nargs);
     for (int i = 1; i <= nargs; ++i) {
         switch (lua_type(L, i)) {
             case LUA_TNIL:
@@ -280,7 +283,8 @@ int viscmd_debug_fn(lua_State* L) {
                 break;
          }
     }
-    DBPRINTF("Vis.debug(%s)", kstring_content(s));
+    DBPRINTF("(function %s)[%d]: Vis.debug(%s)", ar.name, ar.currentline,
+             kstring_content(s));
     kstring_free(s);
     return 0;
 }
@@ -459,12 +463,14 @@ int viscmd_settrace_fn(lua_State* L) {
     return 0;
 }
 
+/* Vis.frames2msec(frame) */
 int viscmd_f2ms_fn(lua_State* L) {
     double f = luaL_checknumber(L, 1);
     lua_pushinteger(L, VIS_FRAMES_TO_MSEC(f));
     return 1;
 }
 
+/* Vis.msec2frames(msec) */
 int viscmd_ms2f_fn(lua_State* L) {
     double ms = luaL_checknumber(L, 1);
     lua_pushinteger(L, VIS_MSEC_TO_FRAMES(ms));

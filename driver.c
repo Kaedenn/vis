@@ -1,6 +1,4 @@
 
-#define _BSD_SOURCE /* for setenv */
-
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -8,8 +6,6 @@
 #include <time.h>
 
 #include <SDL.h>
-#include <SDL_audio.h>
-#include <SDL_opengl.h>
 
 #include "async.h"
 #include "audio.h"
@@ -35,25 +31,14 @@ void display(drawer_t drawer);
 void timeout(void);
 
 int main(int argc, char* argv[]) {
-    SDL_Surface* screen = NULL;
     drawer_t drawer = NULL;
     script_t s = NULL;
     srand((unsigned)time(NULL));
-
-#ifdef DEBUG
-    setenv("SDL_DEBUG", "1", 1);
-#endif
 
     gc_init();
     
     drawer = drawer_new();
     if (!drawer) {
-        const char* sdlerr = SDL_GetError();
-        const char* oserr = strerror(errno);
-        const char* sdldesc = sdlerr ? "SDL Error: " : "";
-        const char* osdesc = oserr? "OS Error: " : "";
-        eprintf("unable to initialize drawer: %s%s, %s%s",
-                sdldesc, sdlerr, osdesc, oserr);
         exit(1);
     } else {
         gc_add((gc_func_t)drawer_free, drawer);
@@ -148,48 +133,13 @@ void mainloop(drawer_t drawer) {
 plist_action_t animate_particle(particle_t p, size_t idx, void* userdefined) {
     UNUSED_VARIABLE(idx);
     drawer_t drawer = (drawer_t)userdefined;
-
-    pextra_t pe = (pextra_t)(p->extra);
-    double life, lifetime;
-    double alpha = pe->a;
-    life = particle_get_life(p);
-    lifetime = particle_get_lifetime(p);
-    switch (pe->blender) {
-        /* default blend is linear */
-        case VIS_BLEND_LINEAR: {
-            alpha *= linear_blend(life, lifetime);
-        } break;
-        case VIS_BLEND_QUADRATIC: {
-            alpha *= quadratic_blend(life, lifetime);
-        } break;
-        case VIS_BLEND_NEGGAMMA: {
-            alpha *= neggamma_blend(life, lifetime);
-        } break;
-        case VIS_BLEND_NONE: {
-            alpha *= no_blend(life, lifetime);
-        } break;
-        case VIS_NBLENDS:
-        default: { } break;
-    }
-    
     drawer_add_particle(drawer, p);
-#ifdef DRAWER_DRAW_TO_SCREEN_IS_INCOMPLETE
-    /* Remove when drawer_draw_to_screen is complete */
-    glBegin(GL_POLYGON);
-    glColor4d(pe->r, pe->g, pe->b, alpha);
-    draw_diamond(p->x, p->y, p->radius);
-    glEnd();
-#endif
-    
     particle_tick(p);
     return particle_is_alive(p) ? ACTION_NEXT : ACTION_REMOVE;
 }
 
 void display(drawer_t drawer) {
-#ifdef DRAWER_DRAW_TO_SCREEN_IS_INCOMPLETE
-    /* Remove when drawer_draw_to_screen is complete */
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-#endif
+    drawer_predraw(drawer);
     plist_foreach(particles, animate_particle, drawer);
     drawer_draw_to_screen(drawer);
 }

@@ -25,7 +25,12 @@ function now(track)
 end
 
 function adv(track, length)
+    Vis.debug("adv(TRACK_"..track..", "..length.."): "..TrackTimes[track])
     TrackTimes[track] = TrackTimes[track] + length
+end
+
+function settime(track, offset)
+    TrackTimes[track] = offset
 end
 
 Vis.audio("media/Bowser.wav")
@@ -116,10 +121,4 @@ H_1_8 = Vis.HEIGHT / 8 -- 75
 dofile("lua/bowser_track1.lua")
 dofile("lua/bowser_track3.lua")
 
-endtime = 0
-for track = 1, TRACKS do
-    if TrackTimes[track] > endtime then
-        endtime = TrackTimes[track]
-    end
-end
-Vis.command(Vis.flist, endtime, "exit")
+Vis.command(Vis.flist, TrackTimes[TRACK_1], "exit")

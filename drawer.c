@@ -1,11 +1,16 @@
 
+#define _BSD_SOURCE /* for setenv */
+
 #include "drawer.h"
 #include "emitter.h"
 #include "helper.h"
 #include "kstring.h"
 #include "particle.h"
 #include "particle_extra.h"
+#include <errno.h>
 #include <SDL.h>
+
+static double calculate_blend(particle_t particle);
 
 static const size_t FPS_COUNTER_LEN = 20;
 
@@ -47,14 +52,29 @@ static GLuint load_shader(const char* path, enum shader_t shader_type) {
 
 drawer_t drawer_new(void) {
     drawer_t drawer = DBMALLOC(sizeof(struct drawer));
+#ifdef DEBUG
+    setenv("SDL_DEBUG", "1", 1);
+#endif
     /* initialize SDL */
     if (SDL_Init(SDL_INIT_EVERYTHING) < 0) {
+        int errorno = errno;
+        const char* oserr = strerror(errno);
+        eprintf("error in drawer_new SDL_Init: %s", SDL_GetError());
+        if (errorno) {
+            eprintf("error in drawer_new SDL_Init: %d, %s", errorno, oserr);
+        }
         return NULL;
     }
     drawer->screen = SDL_SetVideoMode(VIS_WIDTH, VIS_HEIGHT, 32,
             SDL_HWSURFACE | SDL_ASYNCBLIT | SDL_OPENGLBLIT |
             SDL_GL_DOUBLEBUFFER | SDL_OPENGL);
     if (drawer->screen == NULL) {
+        int errorno = errno;
+        const char* oserr = strerror(errno);
+        eprintf("error in drawer_new SDL_Init: %s", SDL_GetError());
+        if (errorno) {
+            eprintf("error in drawer_new SDL_Init: %d, %s", errorno, oserr);
+        }
         return NULL;
     }
     /* initialize OpenGL basics */
@@ -112,11 +132,16 @@ void drawer_free(drawer_t drawer) {
     SDL_Quit();
 }
 
-int drawer_bgcolor(drawer_t drawer, GLfloat r, GLfloat g, GLfloat b) {
+void drawer_predraw(UNUSED_PARAM(drawer_t drawer)) {
+#ifdef DRAWER_DRAW_TO_SCREEN_IS_INCOMPLETE
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+#endif
+}
+
+void drawer_bgcolor(drawer_t drawer, GLfloat r, GLfloat g, GLfloat b) {
     drawer->bgcolor[0] = r;
     drawer->bgcolor[1] = g;
     drawer->bgcolor[2] = b;
-    return 0;
 }
 
 int drawer_add_particle(drawer_t drawer, particle_t particle) {
@@ -128,7 +153,14 @@ int drawer_add_particle(drawer_t drawer, particle_t particle) {
         vtx->r = pe->r;
         vtx->g = pe->g;
         vtx->b = pe->b;
+        vtx->a = (float)calculate_blend(particle);
         drawer->vtx_curr += 1;
+#ifdef DRAWER_DRAW_TO_SCREEN_IS_INCOMPLETE
+        glBegin(GL_POLYGON);
+        glColor4d(vtx->r, vtx->g, vtx->b, vtx->a);
+        draw_diamond(particle->x, particle->y, particle->radius);
+        glEnd();
+#endif
         return 0;
     } else {
         eprintf("can't add more than %d particles, did you call "
@@ -138,18 +170,18 @@ int drawer_add_particle(drawer_t drawer, particle_t particle) {
 }
 
 int drawer_draw_to_screen(drawer_t drawer) {
-    Uint32 frameend, framedelay;
-#ifdef notyet
+#ifdef DRAWER_DRAW_TO_SCREEN_IS_INCOMPLETE
+    /* Remove when drawer_draw_to_screen is complete */
+    SDL_GL_SwapBuffers();
+    drawer->vtx_curr = 0;
+#else
     /* Not until shaders are working */
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glDrawArrays(GL_TRIANGLES, 0, (GLint)drawer->vtx_curr);
-#else
-    SDL_GL_SwapBuffers();
-    drawer->vtx_curr = 0;
 #endif
     
-    frameend = SDL_GetTicks();
-    framedelay = frameend - drawer->fps.framestart;
+    Uint32 frameend = SDL_GetTicks();
+    Uint32 framedelay = frameend - drawer->fps.framestart;
     if (framedelay < VIS_MSEC_PER_FRAME) {
         float fps = drawer_get_fps(drawer);
         Uint32 correction = (fps > VIS_FPS_LIMIT ? 1 : 0);
@@ -217,5 +249,30 @@ void drawer_trace(drawer_t drawer, float x, float y) {
 
 void drawer_end_trace(drawer_t drawer) {
     drawer->tracing = FALSE;
+}
+
+double calculate_blend(particle_t particle) {
+    pextra_t pe = (pextra_t)particle->extra;
+    double alpha = pe->a;
+    double life = particle_get_life(particle);
+    double lifetime = particle_get_lifetime(particle);
+    switch (pe->blender) {
+        /* default blend is linear */
+        case VIS_BLEND_LINEAR: {
+            alpha *= linear_blend(life, lifetime);
+        } break;
+        case VIS_BLEND_QUADRATIC: {
+            alpha *= quadratic_blend(life, lifetime);
+        } break;
+        case VIS_BLEND_NEGGAMMA: {
+            alpha *= neggamma_blend(life, lifetime);
+        } break;
+        case VIS_BLEND_NONE: {
+            alpha *= no_blend(life, lifetime);
+        } break;
+        case VIS_NBLENDS:
+        default: { } break;
+    }
+    return alpha;
 }
 
