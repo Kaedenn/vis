@@ -175,16 +175,16 @@ script_t script_new(script_cfg_t cfg) {
     luaL_openlibs(s->L);
     luaL_requiref(s->L, "Vis", initialize_vis_lib, 0);
 
-    if (file_exists(LUA_STARTUP_FILE)) {
-        DBPRINTF("Executing startup file: %s", LUA_STARTUP_FILE);
-        (void)luaL_dofile(s->L, LUA_STARTUP_FILE);
-    }
-    /* adjust lua search path, include ./lua and ./test */
     (void)luaL_dostring(s->L,
         "Vis = require(\"Vis\")\n"
         "package = require('package')\n"
         "package.path = '; ;./?.lua;./lua/?.lua;./test/?.lua'");
     stack_dump(s->L);
+    if (file_exists(LUA_STARTUP_FILE)) {
+        DBPRINTF("Executing startup file: %s", LUA_STARTUP_FILE);
+        (void)luaL_dofile(s->L, LUA_STARTUP_FILE);
+    }
+    /* adjust lua search path, include ./lua and ./test */
 
     flist_t* flbox = lua_newuserdata(s->L, sizeof(flist_t));
     luaL_newmetatable(s->L, "flist_t*");
