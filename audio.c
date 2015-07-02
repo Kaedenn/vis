@@ -94,6 +94,7 @@ void audio_close(void) {
     DBFREE(audio->file);
     DBFREE(audio);
     audio = NULL;
+    SDL_AudioQuit();
 }
 
 void audio_play(void) {

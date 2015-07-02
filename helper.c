@@ -58,7 +58,7 @@ void dbprintf(const char* fmt, ...) {
 
 BOOL file_exists(const char* path) {
     int olderrno = errno;
-    BOOL exists;
+    BOOL exists = FALSE;
     errno = 0;
     FILE* fp = fopen(path, "r+");
     if (fp) {

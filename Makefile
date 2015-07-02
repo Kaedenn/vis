@@ -10,7 +10,7 @@ CFLAGS = -fdiagnostics-show-option -std=c99 \
 		 -Wno-unused-variable -Wall -Wextra -Wfloat-equal -Wwrite-strings \
 		 -Wshadow -Wpointer-arith -Wcast-qual -Wredundant-decls -Wtrigraphs \
 		 -Wswitch-enum -Wundef -Wconversion -pedantic
-LDFLAGS = -lGL -lm
+LDFLAGS = -lm
 
 CFLAGS_FAST = -O3 -fexpensive-optimizations
 CFLAGS_DEBUG = -O0 -ggdb -DDEBUG

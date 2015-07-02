@@ -5,10 +5,8 @@
 #include "emitter.h"
 #include "helper.h"
 #include "kstring.h"
-#include "particle.h"
 #include "particle_extra.h"
 #include <errno.h>
-#include <SDL.h>
 
 static double calculate_blend(particle_t particle);
 
@@ -74,7 +72,6 @@ void drawer_free(drawer_t drawer) {
     DBPRINTF("deduced fps: %g", (double)drawer->fps.framecount / runtime_sec);
     DBPRINTF("frame error: %g", runtime_sec * VIS_FPS_LIMIT - drawer->fps.framecount);
     DBFREE(drawer->rect_array);
-    /* FIXME: free vbo, program_id */
     if (drawer->dump_file_fmt) {
         DBFREE(drawer->dump_file_fmt);
     }
@@ -83,7 +80,7 @@ void drawer_free(drawer_t drawer) {
     SDL_Quit();
 }
 
-void drawer_bgcolor(drawer_t drawer, GLfloat r, GLfloat g, GLfloat b) {
+void drawer_bgcolor(drawer_t drawer, float r, float g, float b) {
     drawer->bgcolor[0] = r;
     drawer->bgcolor[1] = g;
     drawer->bgcolor[2] = b;
@@ -124,7 +121,7 @@ int drawer_draw_to_screen(drawer_t drawer) {
                                drawer->rect_array[i].c.g,
                                drawer->rect_array[i].c.b,
                                drawer->rect_array[i].c.a);
-        SDL_RenderDrawRect(drawer->renderer, &drawer->rect_array[i].r);
+        SDL_RenderFillRect(drawer->renderer, &drawer->rect_array[i].r);
     }
     SDL_RenderPresent(drawer->renderer);
     drawer->rect_curr = 0;

@@ -1,15 +1,4 @@
 {
-   sdl-pump-events
-   Memcheck:Cond
-   obj:/usr/lib/x86_64-linux-gnu/libSDL-1.2.so.0.11.4
-   obj:/usr/lib/x86_64-linux-gnu/libSDL-1.2.so.0.11.4
-   obj:/usr/lib/x86_64-linux-gnu/libSDL-1.2.so.0.11.4
-   fun:SDL_PumpEvents
-   fun:SDL_PollEvent
-   fun:mainloop
-   fun:main
-}
-{
    sdl-video-init
    Memcheck:Leak
    match-leak-kinds: all
@@ -43,7 +32,7 @@
    Memcheck:Leak
    match-leak-kinds: all
    ...
-   obj:/usr/lib/x86_64-linux-gnu/libSDL-1.2.so.0.11.4
+   obj:/usr/lib/x86_64-linux-gnu/libSDL2-2.0.so.0.2.0
 }
 {
    libpulse-so
@@ -51,6 +40,14 @@
    match-leak-kinds: all
    ...
    obj:/usr/lib/x86_64-linux-gnu/libpulse.so.0.16.2
+}
+{
+  libgl-so
+  Memcheck:Leak
+  match-leak-kinds: all
+  ...
+  obj:/usr/lib/nvidia-331-updates/libGL.so.331.113
+  ...
 }
 {
    sdl-set-video-mode
@@ -62,9 +59,9 @@
    fun:_XimEncodeICATTRIBUTE
    fun:_XimProtoCreateIC
    fun:XCreateIC
-   obj:/usr/lib/x86_64-linux-gnu/libSDL-1.2.so.0.11.4
-   obj:/usr/lib/x86_64-linux-gnu/libSDL-1.2.so.0.11.4
-   obj:/usr/lib/x86_64-linux-gnu/libSDL-1.2.so.0.11.4
+   obj:/usr/lib/x86_64-linux-gnu/libSDL2-2.0.so.0.2.0
+   obj:/usr/lib/x86_64-linux-gnu/libSDL2-2.0.so.0.2.0
+   obj:/usr/lib/x86_64-linux-gnu/libSDL2-2.0.so.0.2.0
    fun:SDL_SetVideoMode
    fun:main
 }
@@ -81,8 +78,8 @@
    fun:_XOpenLC
    fun:_XlcCurrentLC
    fun:XSetLocaleModifiers
-   obj:/usr/lib/x86_64-linux-gnu/libSDL-1.2.so.0.11.4
-   obj:/usr/lib/x86_64-linux-gnu/libSDL-1.2.so.0.11.4
+   obj:/usr/lib/x86_64-linux-gnu/libSDL2-2.0.so.0.2.0
+   obj:/usr/lib/x86_64-linux-gnu/libSDL2-2.0.so.0.2.0
    fun:SDL_VideoInit
 }
 {

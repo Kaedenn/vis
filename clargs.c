@@ -32,7 +32,7 @@ void argparse(int argc, char** argv) {
                     args.dumpfile = optarg;
                     break;
                 case 'l':
-                    args.scriptfile = dupstr(optarg);
+                    args.scriptfile = optarg;
                     break;
                 case 't':
                     args.dumptrace = TRUE;

@@ -7,11 +7,7 @@
 #include "particle.h"
 #include <math.h>
 
-/* Remove when drawer_draw_to_screen is complete */
-#define DRAWER_DRAW_TO_SCREEN_IS_INCOMPLETE
-
 #include <SDL.h>
-#include <SDL_opengl.h>
 
 typedef double(*blend_fn)(double, double);
 
@@ -24,7 +20,7 @@ struct crect {
 drawer_t drawer_new(void);
 void drawer_free(drawer_t drawer);
 
-void drawer_bgcolor(drawer_t drawer, GLfloat r, GLfloat g, GLfloat b);
+void drawer_bgcolor(drawer_t drawer, float r, float g, float b);
 int drawer_add_particle(drawer_t drawer, particle_t particle);
 int drawer_draw_to_screen(drawer_t drawer);
 float drawer_get_fps(drawer_t drawer);
