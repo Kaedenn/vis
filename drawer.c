@@ -22,12 +22,11 @@ struct fps {
 };
 
 struct drawer {
-    SDL_Surface* screen;
-    GLuint vbo;
-    GLuint program_id;
-    vertex_t vtx_array;
-    size_t vtx_curr;
-    size_t vtx_count;
+    SDL_Window* window;
+    SDL_Renderer* renderer;
+    struct crect* rect_array;
+    size_t rect_curr;
+    size_t rect_count;
     float bgcolor[3];
     struct fps fps;
     BOOL tracing;
@@ -36,20 +35,6 @@ struct drawer {
     char* dump_file_fmt;
 };
 
-enum shader_t {
-    SHADER_VERTEX,
-    SHADER_FRAGMENT
-};
-
-/*
-static GLuint load_shader(const char* path, enum shader_t shader_type) {
-    UNUSED_VARIABLE(path);
-    UNUSED_VARIABLE(shader_type);
-    // http://www.opengl-tutorial.org/beginners-tutorials/tutorial-2-the-first-triangle/#Shaders
-    return 0;
-}
-*/
-
 drawer_t drawer_new(void) {
     drawer_t drawer = DBMALLOC(sizeof(struct drawer));
 #ifdef DEBUG
@@ -57,59 +42,25 @@ drawer_t drawer_new(void) {
 #endif
     /* initialize SDL */
     if (SDL_Init(SDL_INIT_EVERYTHING) < 0) {
-        int errorno = errno;
-        const char* oserr = strerror(errno);
         eprintf("error in drawer_new SDL_Init: %s", SDL_GetError());
-        if (errorno) {
-            eprintf("error in drawer_new SDL_Init: %d, %s", errorno, oserr);
-        }
         return NULL;
     }
-    drawer->screen = SDL_SetVideoMode(VIS_WIDTH, VIS_HEIGHT, 32,
-            SDL_HWSURFACE | SDL_ASYNCBLIT | SDL_OPENGLBLIT |
-            SDL_GL_DOUBLEBUFFER | SDL_OPENGL);
-    if (drawer->screen == NULL) {
-        int errorno = errno;
-        const char* oserr = strerror(errno);
-        eprintf("error in drawer_new SDL_Init: %s", SDL_GetError());
-        if (errorno) {
-            eprintf("error in drawer_new SDL_Init: %d, %s", errorno, oserr);
-        }
+    drawer->window = SDL_CreateWindow("Vis",
+                                      SDL_WINDOWPOS_UNDEFINED,
+                                      SDL_WINDOWPOS_UNDEFINED,
+                                      VIS_WIDTH, VIS_HEIGHT, 0);
+    if (drawer->window == NULL) {
+        eprintf("error in SDL_CreateWindow: %s", SDL_GetError());
         return NULL;
     }
-    /* initialize OpenGL basics */
-    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-    glClearDepth(1.0f);
-    glViewport(0, 0, VIS_WIDTH, VIS_HEIGHT);
-    glMatrixMode(GL_PROJECTION); /* init projection matrix */
-    glLoadIdentity();
-    glOrtho(0, VIS_WIDTH, VIS_HEIGHT, 0, -1, 1);
-    glMatrixMode(GL_MODELVIEW); /* init model view matrix */
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glEnable(GL_BLEND);
-    glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
-    glEnable(GL_TEXTURE_2D);
-    glLoadIdentity();
-    /* initialize OpenGL shader engine */
-    drawer->vbo = 0;
-    drawer->program_id = 0;
-    glGenBuffers(1, &drawer->vbo);
-    glBindBuffer(GL_ARRAY_BUFFER, drawer->vbo);
-    drawer->vtx_curr = 0;
-    drawer->vtx_count = VIS_PLIST_INITIAL_SIZE * VIS_VTX_PER_PARTICLE;
-    drawer->vtx_array = DBMALLOC(drawer->vtx_count * sizeof(struct vertex));
-    glBufferData(GL_ARRAY_BUFFER,
-                 (GLsizeiptr)(drawer->vtx_count * sizeof(struct vertex)),
-                 drawer->vtx_array, GL_STATIC_DRAW);
-    glEnableVertexAttribArray(0);
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(struct vertex),
-                          (void*)0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(struct vertex),
-                          (void*)(sizeof(float)*2));
+    drawer->renderer = SDL_CreateRenderer(drawer->window, -1,
+                                          SDL_RENDERER_PRESENTVSYNC);
+    /* initialize the vertex storage */
+    drawer->rect_curr = 0;
+    drawer->rect_count = VIS_PLIST_INITIAL_SIZE * VIS_VTX_PER_PARTICLE;
+    drawer->rect_array = DBMALLOC(drawer->rect_count * sizeof(struct crect));
+    /* initialize default values */
     drawer_bgcolor(drawer, 0, 0, 0);
-    /* TODO: load shaders, compile program */
-
     /* initialize fps analysis */
     drawer->fps.start = SDL_GetTicks();
     drawer->fps.framestart = drawer->fps.start;
@@ -122,7 +73,7 @@ void drawer_free(drawer_t drawer) {
     DBPRINTF("%d frames in %d ticks", drawer->fps.framecount, runtime);
     DBPRINTF("deduced fps: %g", (double)drawer->fps.framecount / runtime_sec);
     DBPRINTF("frame error: %g", runtime_sec * VIS_FPS_LIMIT - drawer->fps.framecount);
-    DBFREE(drawer->vtx_array);
+    DBFREE(drawer->rect_array);
     /* FIXME: free vbo, program_id */
     if (drawer->dump_file_fmt) {
         DBFREE(drawer->dump_file_fmt);
@@ -130,12 +81,6 @@ void drawer_free(drawer_t drawer) {
     DBFREE(drawer->emit_desc);
     DBFREE(drawer);
     SDL_Quit();
-}
-
-void drawer_predraw(UNUSED_PARAM(drawer_t drawer)) {
-#ifdef DRAWER_DRAW_TO_SCREEN_IS_INCOMPLETE
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-#endif
 }
 
 void drawer_bgcolor(drawer_t drawer, GLfloat r, GLfloat g, GLfloat b) {
@@ -146,39 +91,43 @@ void drawer_bgcolor(drawer_t drawer, GLfloat r, GLfloat g, GLfloat b) {
 
 int drawer_add_particle(drawer_t drawer, particle_t particle) {
     pextra_t pe = (pextra_t)particle->extra;
-    if (drawer->vtx_curr < drawer->vtx_count) {
-        vertex_t vtx = &drawer->vtx_array[drawer->vtx_curr];
-        vis_coords_to_screen((float)particle->x, (float)particle->y,
-                             &vtx->x, &vtx->y);
-        vtx->r = pe->r;
-        vtx->g = pe->g;
-        vtx->b = pe->b;
-        vtx->a = (float)calculate_blend(particle);
-        drawer->vtx_curr += 1;
-#ifdef DRAWER_DRAW_TO_SCREEN_IS_INCOMPLETE
-        glBegin(GL_POLYGON);
-        glColor4d(vtx->r, vtx->g, vtx->b, vtx->a);
-        draw_diamond(particle->x, particle->y, particle->radius);
-        glEnd();
-#endif
+    if (drawer->rect_curr < drawer->rect_count) {
+        struct crect* r = &drawer->rect_array[drawer->rect_curr];
+        r->r.x = (int)particle->x - (int)particle->radius;
+        r->r.y = (int)particle->y - (int)particle->radius;
+        r->r.w = 2 * (int)particle->radius;
+        r->r.h = 2 * (int)particle->radius;
+        r->c.r = (Uint8)(pe->r*0xFF);
+        r->c.g = (Uint8)(pe->g*0xFF);
+        r->c.b = (Uint8)(pe->b*0xFF);
+        r->c.a = (Uint8)(calculate_blend(particle)*0xFF);
+        drawer->rect_curr += 1;
         return 0;
     } else {
         eprintf("can't add more than %d particles, did you call "
-                "drawer_draw_to_screen?", drawer->vtx_count);
+                "drawer_draw_to_screen?", drawer->rect_count);
         return 1;
     }
 }
 
 int drawer_draw_to_screen(drawer_t drawer) {
-#ifdef DRAWER_DRAW_TO_SCREEN_IS_INCOMPLETE
-    /* Remove when drawer_draw_to_screen is complete */
-    SDL_GL_SwapBuffers();
-    drawer->vtx_curr = 0;
-#else
-    /* Not until shaders are working */
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glDrawArrays(GL_TRIANGLES, 0, (GLint)drawer->vtx_curr);
-#endif
+    SDL_SetRenderDrawColor(drawer->renderer,
+                           (Uint8)(drawer->bgcolor[0]*0xFF),
+                           (Uint8)(drawer->bgcolor[1]*0xFF),
+                           (Uint8)(drawer->bgcolor[2]*0xFF),
+                           0xFF);
+    SDL_RenderClear(drawer->renderer);
+    SDL_SetRenderDrawBlendMode(drawer->renderer, SDL_BLENDMODE_BLEND);
+    for (size_t i = 0; i < drawer->rect_curr; ++i) {
+        SDL_SetRenderDrawColor(drawer->renderer,
+                               drawer->rect_array[i].c.r,
+                               drawer->rect_array[i].c.g,
+                               drawer->rect_array[i].c.b,
+                               drawer->rect_array[i].c.a);
+        SDL_RenderDrawRect(drawer->renderer, &drawer->rect_array[i].r);
+    }
+    SDL_RenderPresent(drawer->renderer);
+    drawer->rect_curr = 0;
     
     Uint32 frameend = SDL_GetTicks();
     Uint32 framedelay = frameend - drawer->fps.framestart;

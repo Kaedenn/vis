@@ -115,9 +115,11 @@ void mainloop(drawer_t drawer) {
                     if (e.key.keysym.sym == SDLK_ESCAPE) {
                         return;
                     }
+#if 0
                     SDL_keysym* sym = &e.key.keysym;
                     DBPRINTF("Key scan=%x sym=%x mod=%x", (int)sym->scancode,
                              (int)sym->sym, (int)sym->mod);
+#endif
                 } break;
                 case SDL_QUIT: {
                     return;
@@ -139,7 +141,6 @@ plist_action_t animate_particle(particle_t p, size_t idx, void* userdefined) {
 }
 
 void display(drawer_t drawer) {
-    drawer_predraw(drawer);
     plist_foreach(particles, animate_particle, drawer);
     drawer_draw_to_screen(drawer);
 }

@@ -51,8 +51,7 @@ void emitter_tick(void) {
                 docommand(fn->data.cmd);
                 break;
             case VIS_FTYPE_BGCOLOR:
-                set_background_color(fn->data.color[0], fn->data.color[1],
-                                     fn->data.color[2], 1);
+                eprintf("No longer implemented, %s", "sorry!");
                 break;
             case VIS_FTYPE_MUTATE:
                 plist_foreach(particles, do_mutate_fn, fn->data.method);

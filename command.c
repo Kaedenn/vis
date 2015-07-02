@@ -325,7 +325,7 @@ static void cmd_bgc(const char* buffer) {
     static const int nargs = 4;
     float r, g, b, a;
     if (sscanf(buffer, "bgc %f %f %f %f", &r, &g, &b, &a) == nargs) {
-        set_background_color(r, g, b, a);
+        eprintf("No longer implemented, %s", "sorry!");
     }
 }
 

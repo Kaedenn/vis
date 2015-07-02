@@ -115,6 +115,7 @@ void audio_seek(unsigned where) {
 }
 
 void mix(UNUSED_PARAM(void* unused), Uint8* stream, int length) {
+    SDL_memset(stream, 0, (size_t)length);
     Uint32 amount;
     sample_t sample = audio->sample;
     amount = sample->dlen - sample->dpos;

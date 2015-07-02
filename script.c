@@ -378,14 +378,23 @@ int viscmd_seekframe_fn(lua_State* L) {
     return 0;
 }
 
-/* Vis.bgcolor(r, g, b),
+/* Vis.bgcolor(Vis.script, r, g, b),
  * 0 <= @param rgb <= 1 */
 int viscmd_bgcolor_fn(lua_State* L) {
-    float r = (float)luaL_optnumber(L, 1, 0);
-    float g = (float)luaL_optnumber(L, 2, 0);
-    float b = (float)luaL_optnumber(L, 3, 0);
-    set_background_color(r, g, b, 1);
-    DBPRINTF("Vis.bgcolor(%g, %g, %g)", (double)r, (double)g, (double)b);
+    if (lua_isnil(L, 1)) {
+        return luaL_error(L, "received nil instead of script; "
+                             "function may be disabled");
+    }
+    script_t s = *(script_t*)luaL_checkudata(L, 1, "script_t*");
+    if (s->drawer == NULL) {
+        return luaL_error(L, "drawer is NULL; function is disabled");
+    }
+    float r = (float)luaL_optnumber(L, 2, 0);
+    float g = (float)luaL_optnumber(L, 3, 0);
+    float b = (float)luaL_optnumber(L, 4, 0);
+    drawer_bgcolor(s->drawer, r, g, b);
+    DBPRINTF("Vis.bgcolor(%p, %g, %g, %g)", s->drawer, (double)r, (double)g,
+             (double)b);
     return 0;
 }
 
