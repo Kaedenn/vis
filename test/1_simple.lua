@@ -4,7 +4,9 @@ assert(require('visutil'))
 Vis = require("Vis")
 VisUtil = require("visutil")
 
-Vis.debug("Launching 1_simple.lua", 1, 2)
+function foo() end
+
+Vis.debug("Launching 1_simple.lua", foo)
 
 t = VisUtil.make_emit_table()
 VisUtil.center_emit_table(t, 400, 300)
