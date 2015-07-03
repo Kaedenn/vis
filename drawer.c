@@ -83,6 +83,7 @@ void drawer_free(drawer_t drawer) {
     }
     DBFREE(drawer->emit_desc);
     DBFREE(drawer);
+    IMG_Quit();
     SDL_Quit();
 }
 
