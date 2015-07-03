@@ -116,9 +116,28 @@ int drawer_add_particle(drawer_t drawer, particle_t particle) {
 
 int drawer_draw_to_screen(drawer_t drawer) {
     kstr s = NULL;
+    SDL_Surface* dumpsurf = NULL;
     if (drawer->dump_file_fmt) {
-        s = kstring_newfromvf("%s_%03d.png", drawer->dump_file_fmt,
+        s = kstring_newfromvf("%s_%04d.bmp", drawer->dump_file_fmt,
                               drawer->fps.framecount);
+        Uint32 mask[4] = {
+#if SDL_BYTEORDER == SDL_BIG_ENDIAN
+            0xFF000000, 0x00FF0000, 0x0000FF00, 0x000000FF
+#else
+            0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000
+#endif
+        };
+        dumpsurf = SDL_CreateRGBSurface(0, VIS_WIDTH, VIS_HEIGHT, 32,
+                                        mask[0], mask[1], mask[2], mask[3]);
+        if (dumpsurf == NULL) {
+            eprintf("Error creating surface for frame dump: %s",
+                    SDL_GetError());
+        } else {
+            SDL_SetSurfaceBlendMode(dumpsurf, SDL_BLENDMODE_NONE);
+            SDL_FillRect(dumpsurf, NULL, SDL_MapRGBA(dumpsurf->format,
+                                                    0, 0, 0, 0xFF));
+            SDL_SetSurfaceBlendMode(dumpsurf, SDL_BLENDMODE_BLEND);
+        }
     }
 
     SDL_SetRenderDrawColor(drawer->renderer,
@@ -135,11 +154,23 @@ int drawer_draw_to_screen(drawer_t drawer) {
                                drawer->rect_array[i].c.b,
                                drawer->rect_array[i].c.a);
         SDL_RenderFillRect(drawer->renderer, &drawer->rect_array[i].r);
+        if (dumpsurf != NULL) {
+            SDL_FillRect(dumpsurf, &drawer->rect_array[i].r,
+                         SDL_MapRGBA(dumpsurf->format,
+                                     drawer->rect_array[i].c.r,
+                                     drawer->rect_array[i].c.g,
+                                     drawer->rect_array[i].c.b,
+                                     drawer->rect_array[i].c.a));
+        }
     }
     SDL_RenderPresent(drawer->renderer);
     drawer->rect_curr = 0;
 
     if (drawer->dump_file_fmt) {
+        if (dumpsurf != NULL) {
+            SDL_SaveBMP(dumpsurf, kstring_content(s));
+            SDL_FreeSurface(dumpsurf);
+        }
         kstring_free(s);
     }
     
