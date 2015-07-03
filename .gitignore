@@ -27,7 +27,6 @@
 *.out
 *.app
 vis
-media/analysis
 media/programs
 media/raw
 media/copyrighted
