@@ -35,7 +35,16 @@ T1.SCHEDULE_TRACK1 = {
     17220,          -- Circle (much quieter)
     17469,          -- Circle (much quieter)
     -- MAIN TRACK: PART ONE
-    18087
+    18087, 18191,
+    18208, 18313,
+    18334, 18439,
+    18459, 18687,
+    18709, 18815,
+    18835, 18941,
+    18957, 19066,
+    19084, 19190,
+    -- MAIN TRACK: PART TWO
+    19172, 39133
 }
 
 T1.ScheduleIndex = 0;

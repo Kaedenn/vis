@@ -121,8 +121,8 @@ H_5_6 = H_1_6 * 5      -- 500
 H_1_8 = Vis.HEIGHT / 8 -- 75
 
 -- Only tracks 1, 2, 3, 4, and 8 have anything in them during the intro
-dofile("lua/bowser_track1.lua")
-dofile("lua/bowser_track3.lua")
+dofile("lua/bowser/track1.lua")
+dofile("lua/bowser/track3.lua")
 
 --[[
 -- Offsets of various notable things:
