@@ -1,5 +1,5 @@
 
-#define _GNU_SOURCE
+#define _GNU_SOURCE /* for getopt */
 #include <unistd.h>
 
 #include "clargs.h"
@@ -15,7 +15,7 @@ const char* help_string =
 "  -d <FILE> dump frames to <FILE>_000.png\n"
 "  -l <FILE> run lua script <FILE>\n"
 "  -t        output the results of tracing to stdout, implies -i\n"
-"  -i        disable interactive mode\n"
+"  -i        disable interactive mode (commands on stdin)\n"
 "  -h        this message\n";
 
 void argparse(int argc, char** argv) {
@@ -25,31 +25,29 @@ void argparse(int argc, char** argv) {
     args.dumpfile = NULL;
     args.dumptrace = FALSE;
     args.interactive = TRUE;
-    if (argc > 1) {
-        while ((opt = getopt(argc, argv, "d:l:tih")) != -1) {
-            switch (opt) {
-                case 'd':
-                    args.dumpfile = optarg;
-                    break;
-                case 'l':
-                    args.scriptfile = optarg;
-                    break;
-                case 't':
-                    args.dumptrace = TRUE;
-                    /* fall through */
-                case 'i':
-                    args.interactive = FALSE;
-                    break;
-                case 'h':
-                    printf(usage_string, argv[0]);
-                    printf("%s", help_string);
-                    exit(0);
-                case '?':
-                default:
-                    eprintf("Invalid argument %s", argv[optind-1]);
-                    eprintf("Usage: %s [-d] [-l scriptfile] [-i]", argv[0]);
-                    exit(1);
-            }
+    while ((opt = getopt(argc, argv, "d:l:tih")) != -1) {
+        switch (opt) {
+            case 'd':
+                args.dumpfile = optarg;
+                break;
+            case 'l':
+                args.scriptfile = optarg;
+                break;
+            case 't':
+                args.dumptrace = TRUE;
+                /* fall through */
+            case 'i':
+                args.interactive = FALSE;
+                break;
+            case 'h':
+                printf(usage_string, argv[0]);
+                printf("%s", help_string);
+                exit(0);
+            case '?':
+            default:
+                eprintf("Invalid argument %s", argv[optind-1]);
+                eprintf(usage_string, argv[0]);
+                exit(1);
         }
     }
 }

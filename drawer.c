@@ -11,9 +11,15 @@
 #include <SDL_image.h>
 
 static double calculate_blend(particle_t particle);
+static int render_to_file(SDL_Renderer* renderer, const char* path);
 
-static const size_t FPS_COUNTER_LEN = 20;
+/* combine a rect and a color */
+struct crect {
+    SDL_Rect r;
+    SDL_Color c;
+};
 
+/* used, obviously, for fps tracking and limiting */
 struct fps {
     Uint32 framecount;
     Uint32 start;
@@ -41,7 +47,10 @@ drawer_t drawer_new(void) {
     setenv("SDL_DEBUG", "1", 1);
 #endif
     /* initialize SDL */
-    if (SDL_Init(SDL_INIT_EVERYTHING) < 0) {
+    if (SDL_Init(SDL_INIT_TIMER |
+                 SDL_INIT_AUDIO |
+                 SDL_INIT_VIDEO |
+                 SDL_INIT_EVENTS) < 0) {
         eprintf("error in drawer_new SDL_Init: %s", SDL_GetError());
         return NULL;
     }
@@ -116,10 +125,23 @@ int drawer_add_particle(drawer_t drawer, particle_t particle) {
 
 int drawer_draw_to_screen(drawer_t drawer) {
     kstr s = NULL;
+    SDL_Texture* dump_tex;
+    SDL_Renderer* renderer = drawer->renderer;
     if (drawer->dump_file_fmt) {
-        s = kstring_newfromvf("%s_%03d.png", drawer->dump_file_fmt,
+        s = kstring_newfromvf("%s_%04d.png", drawer->dump_file_fmt,
                               drawer->fps.framecount);
+        dump_tex = SDL_CreateTexture(drawer->renderer,
+                                     SDL_PIXELFORMAT_RGBA8888,
+                                     SDL_TEXTUREACCESS_TARGET,
+                                     VIS_WIDTH, VIS_HEIGHT);
+        if (dump_tex == NULL) {
+            eprintf("Error creating dumping texture: %s",
+                    SDL_GetError());
+        } else {
+            SDL_SetRenderTarget(drawer->renderer, dump_tex);
+        }
     }
+    SDL_SetRenderDrawBlendMode(drawer->renderer, SDL_BLENDMODE_BLEND);
 
     SDL_SetRenderDrawColor(drawer->renderer,
                            (Uint8)(drawer->bgcolor[0]*0xFF),
@@ -127,7 +149,6 @@ int drawer_draw_to_screen(drawer_t drawer) {
                            (Uint8)(drawer->bgcolor[2]*0xFF),
                            0xFF);
     SDL_RenderClear(drawer->renderer);
-    SDL_SetRenderDrawBlendMode(drawer->renderer, SDL_BLENDMODE_BLEND);
     for (size_t i = 0; i < drawer->rect_curr; ++i) {
         SDL_SetRenderDrawColor(drawer->renderer,
                                drawer->rect_array[i].c.r,
@@ -140,24 +161,23 @@ int drawer_draw_to_screen(drawer_t drawer) {
     drawer->rect_curr = 0;
 
     if (drawer->dump_file_fmt) {
+        render_to_file(drawer->renderer, kstring_content(s));
+        if (dump_tex != NULL) {
+            SDL_DestroyTexture(dump_tex);
+        }
         kstring_free(s);
-    }
-    
-    Uint32 frameend = SDL_GetTicks();
-    Uint32 framedelay = frameend - drawer->fps.framestart;
-    if (framedelay < VIS_MSEC_PER_FRAME) {
-        float fps = drawer_get_fps(drawer);
-        Uint32 correction = (fps > VIS_FPS_LIMIT ? 1 : 0);
-        SDL_Delay((Uint32)round(VIS_MSEC_PER_FRAME - framedelay + correction));
+    } else {
+        Uint32 frameend = SDL_GetTicks();
+        Uint32 framedelay = frameend - drawer->fps.framestart;
+        if (framedelay < VIS_MSEC_PER_FRAME) {
+            float fps = drawer_get_fps(drawer);
+            Uint32 correction = (fps > VIS_FPS_LIMIT ? 1 : 0);
+            SDL_Delay((Uint32)round(VIS_MSEC_PER_FRAME - framedelay + correction));
+        }
     }
     drawer->fps.framecount += 1;
     drawer->fps.framestart = SDL_GetTicks();
     return 0;
-}
-
-void vis_coords_to_screen(float x, float y, float* nx, float* ny) {
-    *nx = 2 * x / VIS_WIDTH - 1;
-    *ny = 2 * y / VIS_HEIGHT - 1;
 }
 
 float drawer_get_fps(drawer_t drawer) {
@@ -233,3 +253,29 @@ double calculate_blend(particle_t particle) {
     return alpha;
 }
 
+static int render_to_file(SDL_Renderer* renderer, const char* path) {
+    void* pixels = DBMALLOC(4 * VIS_WIDTH * VIS_HEIGHT);
+    int pitch = 4 * VIS_WIDTH;
+    if (SDL_RenderReadPixels(renderer, NULL, SDL_PIXELFORMAT_RGBA8888, pixels,
+                             pitch)) {
+        DBFREE(pixels);
+        eprintf("Failed to read pixels: %s", SDL_GetError());
+        return 0;
+    }
+
+    SDL_Surface* surf = SDL_CreateRGBSurfaceFrom(pixels, VIS_WIDTH, VIS_HEIGHT,
+                                                 32, pitch,
+                                                 0xFF000000, 0x00FF0000,
+                                                 0x0000FF00, 0x000000FF);
+    if (surf == NULL) {
+        DBFREE(pixels);
+        eprintf("Failed to alloc surface: %s", SDL_GetError());
+        return 0;
+    }
+
+    IMG_SavePNG(surf, path);
+
+    SDL_FreeSurface(surf);
+    DBFREE(pixels);
+    return 1;
+}
