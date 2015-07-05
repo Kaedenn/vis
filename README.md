@@ -3,23 +3,8 @@
 
 ### There's a demo! You want a demo? Sure you want a demo!
 
-I've recorded a play-through of the demo script file, and you can find links to
-the resulting movies here:
-
-http://kaedenn.net/vis/sample.ogv
-  This is the highest quality recording, in Theora format. It's huge; over 20MB
-  in size.
-
-http://kaedenn.net/vis/sample.mov
-  This is the second-highest quality recording. There are a lot of visual
-  artifacts (boxes, blur, etc). It's only 1.2MB though.
-
-http://kaedenn.net/vis/sample.wmv
-  This is the lowest quality recording. It looks awful, but you're able to tell
-  what's going on, at least. It's also 1.2MB. You should download this ONLY IF
-  you are unable to play QuickTime MOV files. If you're on a Mac, download the
-  MOV. If you're on Windows, try the MOV first, then try this one if the MOV
-  fails to run.
+Take a look in the output directory for a file named "bowser.avi". This file
+will, over time, become the final product for this project.
 
 ## A little bit of background information
 
