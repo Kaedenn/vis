@@ -76,5 +76,6 @@ function T1.emit_circle(start, x, y, ds)
 end
 
 dofile("lua/bowser/t1intro.lua")
+dofile("lua/bowser/t1main1.lua")
 
 end

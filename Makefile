@@ -19,14 +19,23 @@ CFLAGS_PROF = -pg
 CFLAGS_LIBS = -I/usr/include/lua5.2 -I/usr/include/SDL2
 LDFLAGS_LIBS = -llua5.2 -lSDL2 -lSDL2_image
 
-EXEC_ARGS ?= 
-VALGRIND = valgrind --suppressions=$(DIR)/valgrind.supp --num-callers=32
-
 CFLAGS := $(CFLAGS) $(CFLAGS_LIBS) $(EXTRA_CFLAGS)
 LDFLAGS := $(LDFLAGS) $(LDFLAGS_LIBS) $(EXTRA_LDFLAGS)
 
+EXEC_ARGS ?= 
+VALGRIND = valgrind --suppressions=$(DIR)/valgrind.supp --num-callers=32
+
+FLIP = $(DIR)/scripts/flip.sh
+ENCODE = $(DIR)/scripts/encode.sh
+FP_SCRIPT = lua/bowser.lua
+FP_BASE1 = output/bowser1
+FP_BASE2 = output/bowser
+FP_AUDIO = media/Bowser.wav
+FP_AVI = output/bowser.avi
+
 .PHONY: all fast debug profile execute valgrind leakcheck leakcheck-reachable \
-	clean distclean
+	clean distclean finalproduct fp-prep fp-makeframes fp-flip fp-encode \
+	fp-cleanup
 
 all: $(SOURCES)
 	$(CC) -o $(DIR)/$(EXECBIN) $(SRCS) $(CFLAGS) $(LDFLAGS)
@@ -57,3 +66,23 @@ clean:
 	- rm $(EXECBIN)
 
 distclean: clean
+
+fp-prep:
+	- mkdir output 2>/dev/null
+	- rm output/bowser*.png 2>/dev/null
+
+fp-makeframes: fp-prep
+	$(DIR)/$(EXECBIN) -l $(FP_SCRIPT) -d $(FP_BASE1) -i
+
+fp-flip:
+	bash $(FLIP) "$(FP_BASE1)" "$(FP_BASE2)"
+
+fp-encode:
+	bash $(ENCODE) "$(FP_BASE2)_%04d.png" $(FP_AUDIO) $(FP_AVI)
+
+fp-cleanup:
+	rm output/bowser_*.png
+	rm output/bowser1_*.png
+
+finalproduct: all fp-prep fp-makeframes fp-flip fp-encode fp-cleanup
+
