@@ -34,12 +34,14 @@ void gc_add(gc_func_t func, void* cls) {
     ++gcidx;
 }
 
+/* free gcitems in reverse order */
 void gc(void) {
-    for (size_t i = 0; i < ngcitems; ++i) {
+    size_t i = ngcitems-1;
+    do {
         if (gcitems[i].func) {
             (gcitems[i].func)(gcitems[i].cls);
         }
-    }
+    } while (i--);
     DBFREE(gcitems);
 }
 

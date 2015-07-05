@@ -23,7 +23,7 @@ CFLAGS := $(CFLAGS) $(CFLAGS_LIBS) $(EXTRA_CFLAGS)
 LDFLAGS := $(LDFLAGS) $(LDFLAGS_LIBS) $(EXTRA_LDFLAGS)
 
 EXEC_ARGS ?= 
-VALGRIND = valgrind --suppressions=$(DIR)/valgrind.supp --num-callers=32
+VALGRIND = valgrind --suppressions=$(DIR)/valgrind.supp --num-callers=64
 
 FLIP = $(DIR)/scripts/flip.sh
 ENCODE = $(DIR)/scripts/encode.sh

@@ -21,39 +21,48 @@
 #include "plist.h"
 #include "script.h"
 
-plist_t particles = NULL;
+struct global_ctx {
+    plist_t particles;
+    drawer_t drawer;
+    struct clargs* args;
+};
 
 void finalize(void);
-void mainloop(drawer_t drawer);
+void mainloop(struct global_ctx* ctx);
 
 plist_action_t animate_particle(particle_t p, size_t idx, void* userdefined);
-void display(drawer_t drawer);
-void timeout(void);
+void display(struct global_ctx* ctx);
+void timeout(struct global_ctx* ctx);
+
+void global_ctx_free(struct global_ctx* ctx);
 
 int main(int argc, char* argv[]) {
-    drawer_t drawer = NULL;
     script_t s = NULL;
     srand((unsigned)time(NULL));
 
+    struct global_ctx global_ctx;
+    ZEROINIT(&global_ctx);
+
     gc_init();
     
-    drawer = drawer_new();
-    if (!drawer) {
+    global_ctx.drawer = drawer_new();
+    if (!global_ctx.drawer) {
         exit(1);
     } else {
-        gc_add((gc_func_t)drawer_free, drawer);
+        gc_add((gc_func_t)drawer_free, global_ctx.drawer);
     }
-
-    particles = plist_new(VIS_PLIST_INITIAL_SIZE);
-    gc_add((gc_func_t)plist_free, particles);
     
-    emitter_setup(particles);
+    global_ctx.particles = plist_new(VIS_PLIST_INITIAL_SIZE);
+    gc_add((gc_func_t)plist_free, global_ctx.particles);
+    
+    emitter_setup(global_ctx.particles);
     gc_add((gc_func_t)emitter_free, NULL);
     
     audio_init();
     gc_add((gc_func_t)audio_free, NULL);
     
-    argparse(argc, argv);
+    global_ctx.args = argparse(argc, argv);
+    gc_add((gc_func_t)free, global_ctx.args);
     
     emit_t emit = emit_new();
     emit->n = 100;
@@ -64,62 +73,50 @@ int main(int argc, char* argv[]) {
     emit_set_color(emit, 0, 0, 0, 0.2f, 1, 1);
     emit->limit = VIS_LIMIT_SPRINGBOX;
     emit->blender = VIS_BLEND_QUADRATIC;
-    drawer_set_trace(drawer, emit);
+    drawer_set_trace(global_ctx.drawer, emit);
 
-    if (args.dumptrace) {
-        drawer_set_trace_verbose(drawer, TRUE);
-    }
-
-    if (args.dumpfile) {
-        drawer_set_dumpfile_template(drawer, args.dumpfile);
-    }
-
-    if (args.interactive) {
-        command_setup(particles);
+    if (global_ctx.args->interactive) {
+        command_setup(global_ctx.particles);
     }
     
-    if (args.scriptfile) {
+    if (global_ctx.args->scriptfile) {
         flist_t flist = NULL;
         s = script_new(SCRIPT_ALLOW_ALL);
-        script_set_drawer(s, drawer);
-        flist = script_run(s, args.scriptfile);
+        script_set_drawer(s, global_ctx.drawer);
+        flist = script_run(s, global_ctx.args->scriptfile);
         emitter_schedule(flist);
         gc_add((gc_func_t)script_free, s);
         gc_add((gc_func_t)flist_free, flist);
     }
     
-    mainloop(drawer);
+    mainloop(&global_ctx);
 
-    if (args.interactive) {
+    if (global_ctx.args->interactive) {
         command_teardown();
     }
 
     return 0;
 }
 
-void mainloop(drawer_t drawer) {
+void mainloop(struct global_ctx* ctx) {
     SDL_Event e;
     memset(&e, 0, sizeof(SDL_Event));
     while (TRUE) {
         while (SDL_PollEvent(&e)) {
             switch (e.type) {
                 case SDL_MOUSEBUTTONDOWN:
-                    drawer_begin_trace(drawer);
+                    drawer_begin_trace(ctx->drawer);
                 case SDL_MOUSEMOTION:
-                    drawer_trace(drawer, (float)e.button.x, (float)e.button.y);
+                    drawer_trace(ctx->drawer, (float)e.button.x,
+                                 (float)e.button.y);
                     break;
                 case SDL_MOUSEBUTTONUP:
-                    drawer_end_trace(drawer);
+                    drawer_end_trace(ctx->drawer);
                     break;
                 case SDL_KEYDOWN: {
                     if (e.key.keysym.sym == SDLK_ESCAPE) {
                         return;
                     }
-#if 0
-                    SDL_keysym* sym = &e.key.keysym;
-                    DBPRINTF("Key scan=%x sym=%x mod=%x", (int)sym->scancode,
-                             (int)sym->sym, (int)sym->mod);
-#endif
                 } break;
                 case SDL_QUIT: {
                     return;
@@ -127,27 +124,27 @@ void mainloop(drawer_t drawer) {
                 default: { } break;
             }
         }
-        display(drawer);
-        timeout();
+        display(ctx);
+        timeout(ctx);
     }
 }
  
 plist_action_t animate_particle(particle_t p, size_t idx, void* userdefined) {
     UNUSED_VARIABLE(idx);
-    drawer_t drawer = (drawer_t)userdefined;
-    drawer_add_particle(drawer, p);
+    struct global_ctx* ctx = (struct global_ctx*)userdefined;
+    drawer_add_particle(ctx->drawer, p);
     particle_tick(p);
     return particle_is_alive(p) ? ACTION_NEXT : ACTION_REMOVE;
 }
 
-void display(drawer_t drawer) {
-    plist_foreach(particles, animate_particle, drawer);
-    drawer_draw_to_screen(drawer);
+void display(struct global_ctx* ctx) {
+    plist_foreach(ctx->particles, animate_particle, ctx);
+    drawer_draw_to_screen(ctx->drawer);
 }
 
-void timeout(void) {
+void timeout(struct global_ctx* ctx) {
     static int delayctr = 0;
-    if (args.interactive) {
+    if (ctx->args->interactive) {
         if (++delayctr % VIS_CMD_DELAY_NSTEPS == 0) {
             command();
             delayctr = 0;

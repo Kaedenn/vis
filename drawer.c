@@ -38,6 +38,7 @@ struct drawer {
     BOOL tracing;
     emit_t emit_desc;
     BOOL verbose_trace;
+    double scale_factor;
     char* dump_file_fmt;
 };
 
@@ -74,6 +75,7 @@ drawer_t drawer_new(void) {
     drawer->rect_array = DBMALLOC(drawer->rect_count * sizeof(struct crect));
     /* initialize default values */
     drawer_bgcolor(drawer, 0, 0, 0);
+    drawer->scale_factor = 1.0;
     /* initialize fps analysis */
     drawer->fps.start = SDL_GetTicks();
     drawer->fps.framestart = drawer->fps.start;
@@ -90,6 +92,7 @@ void drawer_free(drawer_t drawer) {
     if (drawer->dump_file_fmt) {
         DBFREE(drawer->dump_file_fmt);
     }
+    SDL_DestroyRenderer(drawer->renderer);
     DBFREE(drawer->emit_desc);
     DBFREE(drawer);
     IMG_Quit();
@@ -106,10 +109,14 @@ int drawer_add_particle(drawer_t drawer, particle_t particle) {
     pextra_t pe = (pextra_t)particle->extra;
     if (drawer->rect_curr < drawer->rect_count) {
         struct crect* r = &drawer->rect_array[drawer->rect_curr];
-        r->r.x = (int)particle->x - (int)particle->radius;
-        r->r.y = (int)particle->y - (int)particle->radius;
-        r->r.w = 2 * (int)particle->radius;
-        r->r.h = 2 * (int)particle->radius;
+        int diameter = (int)(drawer->scale_factor * particle->radius);
+        int radius = diameter / 2;
+
+        r->r.x = (int)particle->x - radius;
+        r->r.y = (int)particle->y - radius;
+        r->r.w = diameter;
+        r->r.h = diameter;
+
         r->c.r = (Uint8)(pe->r*0xFF);
         r->c.g = (Uint8)(pe->g*0xFF);
         r->c.b = (Uint8)(pe->b*0xFF);
@@ -182,6 +189,22 @@ int drawer_draw_to_screen(drawer_t drawer) {
 
 float drawer_get_fps(drawer_t drawer) {
     return (float)drawer->fps.framecount / (float)(SDL_GetTicks() - drawer->fps.start) * 1000.0f;
+}
+
+void drawer_config(drawer_t drawer, struct clargs* clargs) {
+    drawer->verbose_trace = clargs->dumptrace ? TRUE : FALSE;
+    drawer->scale_factor = clargs->enlarge_particles ? 2.0 : 1.0;
+    if (clargs->dumpfile) {
+        SDL_RendererInfo ri;
+        SDL_GetRendererInfo(drawer->renderer, &ri);
+        if (ri.flags & SDL_RENDERER_TARGETTEXTURE) {
+            drawer->dump_file_fmt = dupstr(clargs->dumpfile);
+        }
+    }
+}
+
+void drawer_scale_particles(drawer_t drawer, double factor) {
+    drawer->scale_factor = factor;
 }
 
 void drawer_set_dumpfile_template(drawer_t drawer, const char* path) {

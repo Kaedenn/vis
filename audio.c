@@ -23,7 +23,7 @@ static audio_t audio = NULL;
 
 void audio_init(void) {
     SDL_AudioSpec fmt;
-    ZEROINIT(&fmt);
+    SDL_zero(fmt);
     
     /* 16-bit stereo at 22kHz */
     fmt.freq = VIS_AUDIO_FREQ;

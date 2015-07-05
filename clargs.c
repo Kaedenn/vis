@@ -1,14 +1,9 @@
 
-#define _GNU_SOURCE /* for getopt */
-#include <unistd.h>
-
 #include "clargs.h"
 #include "helper.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-struct clargs args;
 
 const char* usage_string = "Usage: %s [-d path] [-l path] [-t] [-i] [-h]\n";
 const char* help_string =
@@ -18,37 +13,53 @@ const char* help_string =
 "  -i        disable interactive mode (commands on stdin)\n"
 "  -h        this message\n";
 
-void argparse(int argc, char** argv) {
-    int opt;
-    args.execname = argv[0];
-    args.scriptfile = NULL;
-    args.dumpfile = NULL;
-    args.dumptrace = FALSE;
-    args.interactive = TRUE;
-    while ((opt = getopt(argc, argv, "d:l:tih")) != -1) {
-        switch (opt) {
-            case 'd':
-                args.dumpfile = optarg;
-                break;
-            case 'l':
-                args.scriptfile = optarg;
-                break;
-            case 't':
-                args.dumptrace = TRUE;
-                /* fall through */
-            case 'i':
-                args.interactive = FALSE;
-                break;
-            case 'h':
-                printf(usage_string, argv[0]);
-                printf("%s", help_string);
-                exit(0);
-            case '?':
-            default:
-                eprintf("Invalid argument %s", argv[optind-1]);
-                eprintf(usage_string, argv[0]);
-                exit(1);
+struct clargs* argparse(int argc, char** argv) {
+    struct clargs* clargs = DBMALLOC(sizeof(struct clargs));
+    clargs->execname = argv[0];
+    clargs->scriptfile = NULL;
+    clargs->dumpfile = NULL;
+    clargs->dumptrace = FALSE;
+    clargs->interactive = TRUE;
+    clargs->enlarge_particles = FALSE;
+    for (int argi = 1; argi < argc && argv[argi] && argv[argi][0]; ++argi) {
+        if (argv[argi][0] == '-') {
+            switch (argv[argi][1]) {
+                case 'd':
+                    if (argi+1 < argc) {
+                        clargs->dumpfile = argv[++argi];
+                    } else {
+                        eprintf("Argument -d requires value");
+                        exit(1);
+                    }
+                    break;
+                case 'l':
+                    if (argi+1 < argc) {
+                        clargs->scriptfile = argv[++argi];
+                    } else {
+                        eprintf("Argument -l requires value");
+                        exit(1);
+                    }
+                    break;
+                case 't':
+                    clargs->dumptrace = TRUE;
+                    break;
+                case 'i':
+                    clargs->interactive = FALSE;
+                    break;
+                case 'e':
+                    clargs->enlarge_particles = TRUE;
+                    break;
+                case 'h':
+                    printf(usage_string, argv[0]);
+                    printf("%s", help_string);
+                    exit(0);
+                    break;
+                default:
+                    eprintf("Invalid argument -%c", argv[argi][1]);
+                    break;
+            }
         }
     }
+    return clargs;
 }
 

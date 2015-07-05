@@ -4,15 +4,16 @@
 
 #include "defines.h"
 
-extern struct clargs {
+struct clargs {
     const char* execname;
     const char* scriptfile;
     const char* dumpfile;
     BOOL dumptrace;
     BOOL interactive;
-} args;
+    BOOL enlarge_particles;
+};
 
-void argparse(int argc, char** argv);
+struct clargs* argparse(int argc, char** argv);
 
 #endif
 
