@@ -26,9 +26,18 @@ const char* genlua_blender(blend_t blender);
 script_t script_new(script_cfg_t cfg);
 void script_free(script_t s);
 void script_callback_free(script_cb_t cb);
+
 struct flist* script_run(script_t script, const char* filename);
+void script_run_string(script_t script, const char* torun);
 void call_script(script_t state, script_cb_t func, void* args);
 void script_set_drawer(script_t script, drawer_t drawer);
+
+void script_mousemove(script_t script, int x, int y);
+void script_mousedown(script_t script, int x, int y);
+void script_mouseup(script_t script, int x, int y);
+void script_keydown(script_t script, const char* keyname);
+void script_keyup(script_t script, const char* keyname);
+void script_quit(script_t script);
 
 #endif
 

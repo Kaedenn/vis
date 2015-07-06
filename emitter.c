@@ -15,10 +15,12 @@
 
 #include <string.h>
 
+static struct commands* commands;
 static plist_t particles = NULL;
 static flist_t fl = NULL;
 
-void emitter_setup(plist_t plist) {
+void emitter_setup(struct commands* cmds, plist_t plist) {
+    commands = cmds;
     particles = plist;
 }
 
@@ -48,7 +50,7 @@ void emitter_tick(void) {
                 emit_frame(fn->data.frame);
                 break;
             case VIS_FTYPE_CMD:
-                docommand(fn->data.cmd);
+                docommand(commands, fn->data.cmd);
                 break;
             case VIS_FTYPE_BGCOLOR:
                 eprintf("No longer implemented, %s", "sorry!");

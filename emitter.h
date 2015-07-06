@@ -4,12 +4,13 @@
 
 #include "plist.h"
 #include "defines.h"
+#include "command.h"
 #include "emit.h"
 #include "flist.h"
 #include "forces.h"
 #include "plimits.h"
 
-void emitter_setup(plist_t particles);
+void emitter_setup(struct commands* cmds, plist_t particles);
 void emitter_free(void* arg);
 
 void emitter_schedule(flist_t frames);

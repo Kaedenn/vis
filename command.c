@@ -2,43 +2,46 @@
 #include "command.h"
 
 #include "async.h"
+#include "audio.h"
 #include "defines.h"
 #include "drawer.h"
 #include "emitter.h"
 #include "forces.h"
 #include "helper.h"
-#include "plimits.h"
 #include "particle.h"
 #include "particle_extra.h"
-#include "script.h"
-#include "audio.h"
-
+#include "plimits.h"
 #include "random.h"
+#include "script.h"
 
 /* for M_PI */
 #define __USE_BSD
 
+#include <errno.h>
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
 
-static plist_t particles = NULL;
+struct commands {
+    drawer_t drawer;
+    plist_t particles;
+    script_t script;
+};
 
-static void cmd_emit(const char* buffer);
-static void cmd_kick(const char* buffer);
-static void cmd_snare(const char* buffer);
-static void cmd_strum(const char* buffer);
-static void cmd_rain(const char* buffer);
-static void cmd_load(const char* buffer);
-static void cmd_lua(const char* buffer);
-static void cmd_audio(const char* buffer);
-static void cmd_exit(const char* buffer);
-static void cmd_bgc(const char* buffer);
-static void cmd_help(const char* buffer);
+static void cmd_emit(struct commands* cmds, const char* buffer);
+static void cmd_kick(struct commands* cmds, const char* buffer);
+static void cmd_snare(struct commands* cmds, const char* buffer);
+static void cmd_strum(struct commands* cmds, const char* buffer);
+static void cmd_rain(struct commands* cmds, const char* buffer);
+static void cmd_load(struct commands* cmds, const char* buffer);
+static void cmd_lua(struct commands* cmds, const char* buffer);
+static void cmd_audio(struct commands* cmds, const char* buffer);
+static void cmd_exit(struct commands* cmds, const char* buffer);
+static void cmd_help(struct commands* cmds, const char* buffer);
 
 static struct cmd_map {
     const char* cmd;
-    void (*func)(const char* buffer);
+    void (*func)(struct commands* cmds, const char* buffer);
     const char* synopsis;
 } commands[] = {
     {"emit", cmd_emit, "instant emit: type \"help emit\" to see args"},
@@ -47,46 +50,55 @@ static struct cmd_map {
     {"strum", cmd_strum, "takes one arg: number of particles"},
     {"rain", cmd_rain, "takes one arg: number of particles"},
     {"load", cmd_load, "takes one arg: scriptfile.lua path"},
-    {"lua", cmd_lua, "runs the lua script given"},
+    {"lua", cmd_lua, "runs the script specified as \"lua <script>\""},
     {"audio", cmd_audio, "takes one arg: filename.wav path"},
     {"exit", cmd_exit, "exits simulation immediately"},
-    {"bgc", cmd_bgc, "takes three args: red, green, blue"},
     {"help", cmd_help, "briefly describes commands"},
     {NULL, NULL, NULL}
 };
 
-void command_setup(plist_t plist) {
-    particles = plist;
+struct commands* command_setup(drawer_t drawer, plist_t plist, script_t script) {
+    struct commands* cmds = DBMALLOC(sizeof(struct commands));
+    cmds->drawer = drawer;
+    cmds->particles = plist;
+    cmds->script = script;
     async_setup_stdin();
     async_setup_stdout();
     async_write_stdout(">>> ");
+    return cmds;
 }
 
-void command_teardown(void) {
+void command_teardown(struct commands* cmds) {
+    DBFREE(cmds);
     async_write_stdout("\n");
 }
 
 /*
-
 nice strums:
 emit 1000 400 300 0 0 3 1 1 0.99 1.57 3.14 90 10 0 1.5 1.5 0 0 0 0 1
 emit 1000 400 0 0 0 3 1 2 1.99 1.57 3.14 90 10 0 1.5 1.5 0 0 0 1 1
-
 */
 
-void command(void) {
+void command(struct commands* cmds) {
     static char buffer[VIS_BUFFER_LEN];
     buffer[0] = '\0';
-    async_read_stdin(buffer, VIS_BUFFER_LEN);
-    if (buffer[0] != '\0') { /* something was read */
+    ssize_t bytes = async_read_stdin(buffer, VIS_BUFFER_LEN);
+    if (bytes == -1 && errno != EAGAIN) {
+        int err = errno;
+        const char* errstr = strerror(errno);
+        eprintf("received error %d: %s from async_read_stdin",
+                err, errstr);
+    } else if (bytes == 0) {
+        docommand(cmds, "exit");
+    } else if (buffer[0] != '\0') { /* something was read */
         if (buffer[0] != '\n') { /* and the line wasn't empty */
-            docommand(buffer);
+            docommand(cmds, buffer);
         }
         async_write_stdout(">>> ");
     }
 }
 
-void docommand(const char* buffer) {
+void docommand(struct commands* cmds, const char* buffer) {
     int i = 0;
     char* c;
     if ((c = strchr(buffer, '\n')) != NULL) {
@@ -94,17 +106,17 @@ void docommand(const char* buffer) {
     }
     while (commands[i].cmd != NULL) {
         if (startswith(buffer, commands[i].cmd)) {
-            (*commands[i].func)(buffer);
+            (*commands[i].func)(cmds, buffer);
             break;
         }
         ++i;
     }
     if (commands[i].cmd == NULL) {
-        eprintf("Invalid input");
+        eprintf("Unrecognized command");
     }
 }
 
-static void cmd_emit(const char* buffer) {
+static void cmd_emit(struct commands* cmds, const char* buffer) {
     static const int nargs = 22;
     int n;
     double x, y, ux, uy;
@@ -145,14 +157,16 @@ static void cmd_emit(const char* buffer) {
                                   theta, utheta, life, ulife,
                                   force, limit, pe);
             
-            plist_add(particles, p);
+            plist_add(cmds->particles, p);
         }
     } else {
-        eprintf("bad command arguments");
+        eprintf("usage: emit n x y ux uy rad urad ds uds theta utheta "
+                "life ulife r g b ur ug ub force limit blender");
+        eprintf("(type 'help emit' for explanation)");
     }
 }
 
-static void cmd_kick(const char* buffer) {
+static void cmd_kick(struct commands* cmds, const char* buffer) {
     static const int nargs = 1;
     static const double x = VIS_WIDTH / 2;
     static const double y = VIS_HEIGHT / 2;
@@ -177,15 +191,15 @@ static void cmd_kick(const char* buffer) {
             particle_push(p, ds*cos(theta), ds*sin(theta));
             particle_set_force(p, VIS_FORCE_FRICTION);
             particle_set_limit(p, VIS_LIMIT_SPRINGBOX);
-            plist_add(particles, p);
+            plist_add(cmds->particles, p);
             ++i;
         }
     } else {
-        eprintf("bad command arguments");
+        eprintf("usage: kick <#particles>");
     }
 }
 
-static void cmd_snare(const char* buffer) {
+static void cmd_snare(struct commands* cmds, const char* buffer) {
     static const int nargs = 1;
     static const double x = VIS_WIDTH / 2;
     static const double y = VIS_HEIGHT / 2;
@@ -210,15 +224,15 @@ static void cmd_snare(const char* buffer) {
             particle_push(p, ds*cos(theta), ds*sin(theta));
             particle_set_force(p, VIS_FORCE_GRAVITY);
             particle_set_limit(p, VIS_LIMIT_SPRINGBOX);
-            plist_add(particles, p);
+            plist_add(cmds->particles, p);
             ++i;
         }
     } else {
-        eprintf("bad command arguments");
+        eprintf("usage: snare <#particles>");
     }
 }
 
-static void cmd_strum(const char* buffer) {
+static void cmd_strum(struct commands* cmds, const char* buffer) {
     static const int nargs = 1;
     static const double x = VIS_WIDTH / 2;
     static const double y = VIS_HEIGHT;
@@ -244,15 +258,15 @@ static void cmd_strum(const char* buffer) {
             particle_push(p, ds*cos(theta), ds*sin(theta));
             particle_set_force(p, VIS_FORCE_FRICTION);
             particle_set_limit(p, VIS_LIMIT_SPRINGBOX);
-            plist_add(particles, p);
+            plist_add(cmds->particles, p);
             ++i;
         }
     } else {
-        eprintf("bad command arguments");
+        eprintf("usage: strum <#particles>");
     }
 }
 
-static void cmd_rain(const char* buffer) {
+static void cmd_rain(struct commands* cmds, const char* buffer) {
     static const int nargs = 1;
     int i = 0;
     int arg = 0;
@@ -279,71 +293,65 @@ static void cmd_rain(const char* buffer) {
             particle_push(p, ds*cos(theta), ds*sin(theta));
             particle_set_force(p, VIS_FORCE_GRAVITY);
             particle_set_limit(p, VIS_DEFAULT_LIMIT);
-            plist_add(particles, p);
+            plist_add(cmds->particles, p);
             ++i;
         }
     } else {
-        eprintf("bad command arguments");
+        eprintf("usage: rain <#particles>");
     }
 }
 
-static void cmd_load(const char* buffer) {
+static void cmd_load(struct commands* cmds, const char* buffer) {
     if (strlen(buffer) > strlen("load ")) {
-        script_t s = script_new(SCRIPT_NO_CB);
-        flist_t flist = script_run(s, buffer + strlen("load "));
+        flist_t flist = script_run(cmds->script, buffer + strlen("load "));
         if (flist != NULL) {
             emitter_schedule(flist);
         } else {
             eprintf("Failed to load script '%s'", buffer + strlen("load "));
         }
-        script_free(s);
-    }
-}
-
-static void cmd_lua(const char* buffer) {
-    if (strlen(buffer) > strlen("lua ")) {
-        /* TODO */
     } else {
-        eprintf("bad command arguments");
+        eprintf("usage: load <script-path>");
     }
 }
 
-static void cmd_audio(const char* buffer) {
+static void cmd_lua(struct commands* cmds, const char* buffer) {
+    if (strlen(buffer) > strlen("lua ")) {
+        script_run_string(cmds->script, buffer + strlen("lua "));
+    } else {
+        eprintf("usage: lua <script...>");
+    }
+}
+
+static void cmd_audio(UNUSED_PARAM(struct commands* cmds), const char* buffer) {
     if (strlen(buffer) > strlen("audio ")) {
         audio_open(buffer + strlen("audio "));
     } else {
-        eprintf("bad command arguments");
+        eprintf("usage: audio <path>");
     }
 }
 
-static void cmd_exit(UNUSED_PARAM(const char* buffer)) {
-    command_teardown();
+static void cmd_exit(UNUSED_PARAM(struct commands* cmds),
+                     UNUSED_PARAM(const char* buffer)) {
+    /* depends on the gc freeing everything else */
     exit(0);
 }
 
-static void cmd_bgc(const char* buffer) {
-    static const int nargs = 4;
-    float r, g, b, a;
-    if (sscanf(buffer, "bgc %f %f %f %f", &r, &g, &b, &a) == nargs) {
-        eprintf("No longer implemented, %s", "sorry!");
-    }
-}
-
-static void cmd_help(const char* buffer) {
+static void cmd_help(UNUSED_PARAM(struct commands* cmds), const char* buffer) {
     size_t i = 0;
     if (startswith(buffer, "help emit")) {
         const char* help[] = {
-            "instantaneous emit command:\n",
-            "emit n x y ux uy rad urad ds uds theta utheta life ulife r g b ur ug ub force limit blender\n",
-            "\tactual = val plus-or-minus uval; uval is \"uncertainty\" or variance\n",
-            "\tn, life, ulife, force, limit, and blender are all integers\n",
-            "\ttheta is between 0 and 2*PI\n",
-            "\tlife is measured in frames (30 per second), so 60 is two seconds\n",
-            "\tr, g, b are between 0 and 255\n",
-            "\tforces: 0=nothing, 1=friction 2=gravity\n",
-            "\tlimits: 0=nothing, 1=box (stop at edge), 2=springbox (bounce off edge)\n",
-            "\tblender: 0=nothing, 1=linear (fade to black), 2=quadratic, 3=ease-out\n",
-            NULL
+"instantaneous emit command (please see README.md):\n",
+"emit n x y ux uy rad urad ds uds theta utheta life ulife r g b ur ug ub force "
+    "limit blender\n",
+"\tx = random(x-ux, x+ux); u<val> is \"uncertainty\" or variance for <val>\n",
+"\tn, life, ulife, force, limit, and blender are all integers\n",
+"\ttheta is between 0 and 2*PI\n",
+"\tlife is measured in frames (30 per second), so 60 is two seconds\n",
+"\tr, g, b are between 0 and 255\n",
+"\tforces: 0=nothing, 1=friction 2=gravity\n",
+"\tlimits: 0=nothing, 1=box (stop at edge), 2=springbox (bounce off edge)\n",
+"\tblender: 0=nothing, 1=linear (fade to black), 2=quadratic, 3=ease-out\n",
+NULL
         };
         for (i = 0; help[i]; ++i) {
             printf("%s", help[i]);

@@ -177,11 +177,20 @@ script_t script_new(script_cfg_t cfg) {
     luaL_requiref(s->L, "Vis", initialize_vis_lib, 0);
     lua_pop(s->L, 1);
 
-    /* adjust lua search path, include ./lua and ./test */
+    /* adjust lua search path, include ./lua and ./test,
+     * include default modules */
     (void)luaL_dostring(s->L,
-        "Vis = require(\"Vis\")\n"
         "package = require('package')\n"
-        "package.path = '; ;./?.lua;./lua/?.lua;./test/?.lua'");
+        "package.path = '; ;./?.lua;./lua/?.lua;./test/?.lua'"
+        "Vis = require(\"Vis\")\n"
+        "VisUtil = require(\"visutil\")\n"
+        "Vis.on_mousedown = function() end\n"
+        "Vis.on_mouseup = function() end\n"
+        "Vis.on_mousemove = function() end\n"
+        "Vis.on_keydown = function() end\n"
+        "Vis.on_keyup = function() end\n"
+        "Vis.on_quit = function() end\n"
+    );
     if (file_exists(LUA_STARTUP_FILE)) {
         DBPRINTF("Executing startup file: %s", LUA_STARTUP_FILE);
         (void)luaL_dofile(s->L, LUA_STARTUP_FILE);
@@ -233,6 +242,12 @@ flist_t script_run(script_t s, const char* filename) {
     return s->fl;
 }
 
+void script_run_string(script_t script, const char* torun) {
+    if (luaL_dostring(script->L, torun) != LUA_OK) {
+        eprintf("script \"%s\" error: %s", torun, lua_tostring(script->L, -1));
+    }
+}
+
 void call_script(script_t s, script_cb_t cb, UNUSED_PARAM(void* args)) {
     if (luaL_dostring(s->L, cb->fn_code) != LUA_OK) {
         eprintf("callback error: %s", lua_tostring(s->L, -1));
@@ -247,6 +262,50 @@ void script_callback_free(script_cb_t cb) {
     DBFREE(cb->fn_name);
     DBFREE(cb->fn_code);
     DBFREE(cb);
+}
+
+static void do_mouse_event(lua_State* L, const char* func, int x, int y) {
+    kstr s = kstring_newfromvf("Vis.on_%s(%d, %d)", func, x, y);
+    if (luaL_dostring(L, kstring_content(s)) != LUA_OK) {
+        eprintf("Unknown error in %s", kstring_content(s));
+    }
+    kstring_free(s);
+}
+
+void script_mousemove(script_t script, int x, int y) {
+    do_mouse_event(script->L, "mousemove", x, y);
+}
+
+void script_mousedown(script_t script, int x, int y) {
+    do_mouse_event(script->L, "mousedown", x, y);
+}
+
+void script_mouseup(script_t script, int x, int y) {
+    do_mouse_event(script->L, "mouseup", x, y);
+}
+
+static void do_keyboard_event(lua_State* L, const char* func, const char* key) {
+    char* esc_key = escape_string(key);
+    kstr s = kstring_newfromvf("Vis.on_%s(\"%s\")", func, esc_key);
+    if (luaL_dostring(L, kstring_content(s)) != LUA_OK) {
+        eprintf("Unknown error in %s", kstring_content(s));
+    }
+    kstring_free(s);
+    free(esc_key);
+}
+
+void script_keydown(script_t script, const char* keyname) {
+    do_keyboard_event(script->L, "keydown", keyname);
+}
+
+void script_keyup(script_t script, const char* keyname) {
+    do_keyboard_event(script->L, "keyup", keyname);
+}
+
+void script_quit(script_t script) {
+    if (luaL_dostring(script->L, "Vis.on_quit()") != LUA_OK) {
+        eprintf("Unknown error in %s", "Vis.on_quit()");
+    }
 }
 
 /* end of public API */

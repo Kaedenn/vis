@@ -22,16 +22,20 @@ LDFLAGS_LIBS = -llua5.2 -lSDL2 -lSDL2_image
 CFLAGS := $(CFLAGS) $(CFLAGS_LIBS) $(EXTRA_CFLAGS)
 LDFLAGS := $(LDFLAGS) $(LDFLAGS_LIBS) $(EXTRA_LDFLAGS)
 
-EXEC_ARGS ?= 
-VALGRIND = valgrind --suppressions=$(DIR)/valgrind.supp --num-callers=64
+EXEC_ARGS ?= -i -l $(DIR)/test/4_random_short.lua
+VALGRIND_DEFAULT = valgrind --suppressions=$(DIR)/valgrind.supp --num-callers=64
+VG_LEAKCHECK = --leak-check=full
+VG_REACHABLE = $(VG_LEAKCHECK) --show-reachable=yes --show-leak-kinds=all
+VALGRIND = $(VALGRIND_DEFAULT) $(VALGRIND_EXTRA)
 
-FLIP = $(DIR)/scripts/flip.sh
-ENCODE = $(DIR)/scripts/encode.sh
+SCR_FLIP = $(DIR)/scripts/flip.sh
+SCR_ENCODE = $(DIR)/scripts/encode.sh
+FP_DIR = output
 FP_SCRIPT = lua/bowser.lua
-FP_BASE1 = output/bowser1
-FP_BASE2 = output/bowser
+FP_BASE1 = $(FP_DIR)/bowser1
+FP_BASE2 = $(FP_DIR)/bowser
 FP_AUDIO = media/Bowser.wav
-FP_AVI = output/bowser.avi
+FP_AVI = $(FP_DIR)/bowser.avi
 
 .PHONY: all fast debug profile execute valgrind leakcheck leakcheck-reachable \
 	clean distclean finalproduct fp-prep fp-makeframes fp-flip fp-encode \
@@ -41,48 +45,46 @@ all: $(SOURCES)
 	$(CC) -o $(DIR)/$(EXECBIN) $(SRCS) $(CFLAGS) $(LDFLAGS)
 
 fast: $(SOURCES)
-	$(CC) $(CFLAGS_FAST) -o $(DIR)/$(EXECBIN) $(SRCS) $(CFLAGS) $(LDFLAGS)
+	$(MAKE) "CFLAGS=$(CFLAGS) $(CFLAGS_FAST)" all
 
-debug: $(SOURCES)
-	$(CC) $(CFLAGS_DEBUG) -o $(DIR)/$(EXECBIN) $(SRCS) $(CFLAGS) $(LDFLAGS)
+debug:
+	$(MAKE) "CFLAGS=$(CFLAGS) $(CFLAGS_DEBUG)" all
 
 profile: $(SOURCES)
-	$(CC) $(CFLAGS_PROF) -o $(DIR)/$(EXECBIN) $(SRCS) $(CFLAGS) $(LDFLAGS)
+	$(MAKE) "CFLAGS=$(CFLAGS) $(CFLAGS_PROF)" all
 	$(DIR)/$(EXECBIN) -i -l $(DIR)/test/4_random_long.lua
 	gprof $(DIR)/$(EXECBIN)
-	- rm $(DIR)/gmon.out
+	- $(RM) $(DIR)/gmon.out
 
 valgrind: debug $(EXECBIN)
 	$(VALGRIND) $(DIR)/$(EXECBIN) $(EXEC_ARGS)
 
 leakcheck: debug $(EXECBIN)
-	$(VALGRIND) --leak-check=full $(DIR)/$(EXECBIN) $(EXEC_ARGS)
+	$(VALGRIND) $(VG_LEAKCHECK) $(DIR)/$(EXECBIN) $(EXEC_ARGS)
 
 leakcheck-reachable: debug $(EXECBIN)
-	$(VALGRIND) --leak-check=full --show-reachable=yes --show-leak-kinds=all \
-		$(DIR)/$(EXECBIN) $(EXEC_ARGS)
+	$(VALGRIND) $(VG_REACHABLE) $(DIR)/$(EXECBIN) $(EXEC_ARGS)
 
 clean:
-	- rm $(EXECBIN)
+	- $(RM) $(EXECBIN)
 
-distclean: clean
+distclean: clean fp-prep
 
 fp-prep:
-	- mkdir output 2>/dev/null
-	- rm output/bowser*.png 2>/dev/null
+	- $(RM) $(FP_DIR)/bowser*.png 2>/dev/null
 
 fp-makeframes: fp-prep
 	$(DIR)/$(EXECBIN) -l $(FP_SCRIPT) -d $(FP_BASE1) -i
 
 fp-flip:
-	bash $(FLIP) "$(FP_BASE1)" "$(FP_BASE2)"
+	$(SH) $(SCR_FLIP) "$(FP_BASE1)" "$(FP_BASE2)"
 
 fp-encode:
-	bash $(ENCODE) "$(FP_BASE2)_%04d.png" $(FP_AUDIO) $(FP_AVI)
+	$(SH) $(SCR_ENCODE) "$(FP_BASE2)_%04d.png" $(FP_AUDIO) $(FP_AVI)
 
 fp-cleanup:
-	rm output/bowser_*.png
-	rm output/bowser1_*.png
+	$(RM) $(FP_DIR)/bowser_*.png
+	$(RM) $(FP_DIR)/bowser1_*.png
 
 finalproduct: all fp-prep fp-makeframes fp-flip fp-encode fp-cleanup
 

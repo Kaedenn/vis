@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include "async.h"
+#include "helper.h"
 
 int async_setup_stdin(void) {
     return fcntl(STDIN_FILENO, F_SETFL,

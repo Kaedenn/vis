@@ -25,6 +25,8 @@ struct global_ctx {
     plist_t particles;
     drawer_t drawer;
     struct clargs* args;
+    struct commands* cmds;
+    script_t script;
 };
 
 void finalize(void);
@@ -37,7 +39,6 @@ void timeout(struct global_ctx* ctx);
 void global_ctx_free(struct global_ctx* ctx);
 
 int main(int argc, char* argv[]) {
-    script_t s = NULL;
     srand((unsigned)time(NULL));
 
     struct global_ctx global_ctx;
@@ -45,17 +46,20 @@ int main(int argc, char* argv[]) {
 
     gc_init();
     
+    global_ctx.args = argparse(argc, argv);
+    gc_add((gc_func_t)free, global_ctx.args);
+
     global_ctx.drawer = drawer_new();
     if (!global_ctx.drawer) {
         exit(1);
-    } else {
-        gc_add((gc_func_t)drawer_free, global_ctx.drawer);
     }
+    gc_add((gc_func_t)drawer_free, global_ctx.drawer);
+    drawer_config(global_ctx.drawer, global_ctx.args);
     
     global_ctx.particles = plist_new(VIS_PLIST_INITIAL_SIZE);
     gc_add((gc_func_t)plist_free, global_ctx.particles);
     
-    emitter_setup(global_ctx.particles);
+    emitter_setup(global_ctx.cmds, global_ctx.particles);
     gc_add((gc_func_t)emitter_free, NULL);
     
     audio_init();
@@ -64,6 +68,10 @@ int main(int argc, char* argv[]) {
     global_ctx.args = argparse(argc, argv);
     gc_add((gc_func_t)free, global_ctx.args);
     
+    global_ctx.script = script_new(SCRIPT_ALLOW_ALL);
+    script_set_drawer(global_ctx.script, global_ctx.drawer);
+    gc_add((gc_func_t)script_free, global_ctx.script);
+
     emit_t emit = emit_new();
     emit->n = 100;
     emit->rad = 1;
@@ -76,24 +84,23 @@ int main(int argc, char* argv[]) {
     drawer_set_trace(global_ctx.drawer, emit);
 
     if (global_ctx.args->interactive) {
-        command_setup(global_ctx.particles);
+        global_ctx.cmds = command_setup(global_ctx.drawer,
+                                        global_ctx.particles,
+                                        global_ctx.script);
+        gc_add((gc_func_t)command_teardown, global_ctx.cmds);
     }
     
     if (global_ctx.args->scriptfile) {
         flist_t flist = NULL;
-        s = script_new(SCRIPT_ALLOW_ALL);
-        script_set_drawer(s, global_ctx.drawer);
-        flist = script_run(s, global_ctx.args->scriptfile);
+        flist = script_run(global_ctx.script, global_ctx.args->scriptfile);
         emitter_schedule(flist);
-        gc_add((gc_func_t)script_free, s);
         gc_add((gc_func_t)flist_free, flist);
     }
+
+    /* MUST be the last thing added to the gc */
+    gc_add((gc_func_t)script_quit, global_ctx.script);
     
     mainloop(&global_ctx);
-
-    if (global_ctx.args->interactive) {
-        command_teardown();
-    }
 
     return 0;
 }
@@ -106,21 +113,30 @@ void mainloop(struct global_ctx* ctx) {
             switch (e.type) {
                 case SDL_MOUSEBUTTONDOWN:
                     drawer_begin_trace(ctx->drawer);
-                case SDL_MOUSEMOTION:
                     drawer_trace(ctx->drawer, (float)e.button.x,
                                  (float)e.button.y);
+                    script_mousedown(ctx->script, e.button.x, e.button.y);
+                    break;
+                case SDL_MOUSEMOTION:
+                    drawer_trace(ctx->drawer, (float)e.motion.x,
+                                 (float)e.motion.y);
+                    script_mousemove(ctx->script, e.motion.x, e.motion.y);
                     break;
                 case SDL_MOUSEBUTTONUP:
                     drawer_end_trace(ctx->drawer);
+                    script_mouseup(ctx->script, e.button.x, e.button.y);
                     break;
-                case SDL_KEYDOWN: {
+                case SDL_KEYDOWN:
                     if (e.key.keysym.sym == SDLK_ESCAPE) {
                         return;
                     }
-                } break;
-                case SDL_QUIT: {
-                    return;
-                } break;
+                    script_keydown(ctx->script, SDL_GetKeyName(e.key.keysym.sym));
+                    break;
+                case SDL_KEYUP:
+                    script_keyup(ctx->script, SDL_GetKeyName(e.key.keysym.sym));
+                    break;
+                break;
+                case SDL_QUIT: return;
                 default: { } break;
             }
         }
@@ -146,7 +162,7 @@ void timeout(struct global_ctx* ctx) {
     static int delayctr = 0;
     if (ctx->args->interactive) {
         if (++delayctr % VIS_CMD_DELAY_NSTEPS == 0) {
-            command();
+            command(ctx->cmds);
             delayctr = 0;
         }
     }

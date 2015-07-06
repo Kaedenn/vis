@@ -132,7 +132,7 @@ int drawer_add_particle(drawer_t drawer, particle_t particle) {
 
 int drawer_draw_to_screen(drawer_t drawer) {
     kstr s = NULL;
-    SDL_Texture* dump_tex;
+    SDL_Texture* dump_tex = NULL;
     SDL_Renderer* renderer = drawer->renderer;
     if (drawer->dump_file_fmt) {
         s = kstring_newfromvf("%s_%04d.png", drawer->dump_file_fmt,
