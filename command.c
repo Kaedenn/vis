@@ -140,7 +140,7 @@ static void cmd_emit(struct commands* cmds, const char* buffer) {
                &force, &limit, &blender) == nargs) {
         for (i = 0; i < n; ++i) {
             pextra_t pe = NULL;
-            particle_t p = NULL;
+            struct particle* p = NULL;
             ar = randfloat(r-ur, r+ur);
             ag = randfloat(g-ug, g+ug);
             ab = randfloat(b-ub, b+ub);
@@ -174,7 +174,7 @@ static void cmd_kick(struct commands* cmds, const char* buffer) {
     int arg = 0;
     if (sscanf(buffer, "kick %d", &arg) == nargs) {
         pextra_t pe = NULL;
-        particle_t p = NULL;
+        struct particle* p = NULL;
         float r, g, b;
         int radius, life;
         double ds, theta;
@@ -207,7 +207,7 @@ static void cmd_snare(struct commands* cmds, const char* buffer) {
     int arg = 0;
     if (sscanf(buffer, "snare %d", &arg) == nargs) {
         pextra_t pe = NULL;
-        particle_t p = NULL;
+        struct particle* p = NULL;
         float r, g, b;
         int radius, life;
         double ds, theta;
@@ -240,7 +240,7 @@ static void cmd_strum(struct commands* cmds, const char* buffer) {
     int arg = 0;
     if (sscanf(buffer, "strum %d", &arg) == nargs) {
         pextra_t pe = NULL;
-        particle_t p = NULL;
+        struct particle* p = NULL;
         float r, g, b;
         double radius;
         int life;
@@ -272,7 +272,7 @@ static void cmd_rain(struct commands* cmds, const char* buffer) {
     int arg = 0;
     if (sscanf(buffer, "rain %d", &arg) == nargs) {
         pextra_t pe = NULL;
-        particle_t p = NULL;
+        struct particle* p = NULL;
         int x, y;
         float r, g, b;
         double radius;

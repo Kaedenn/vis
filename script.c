@@ -470,10 +470,10 @@ int viscmd_mutate_fn(lua_State* L) {
     mutate_method_t method = DBMALLOC(sizeof(struct mutate_method));
     flist_t fl = *(flist_t*)luaL_checkudata(L, 1, "flist_t*");
     fnum_t when = (fnum_t)VIS_MSEC_TO_FRAMES(luaL_checkunsigned(L, 2));
-    mutate_t fnid = (mutate_t)luaL_checkint(L, 3);
+    mutate_id fnid = (mutate_id)luaL_checkint(L, 3);
     double factor = (double)luaL_checknumber(L, 4);
-    if (fnid < (mutate_t)0) fnid = (mutate_t)0;
-    if (fnid >= VIS_NMUTATES) fnid = (mutate_t)0;
+    if (fnid < (mutate_id)0) fnid = (mutate_id)0;
+    if (fnid >= VIS_NMUTATES) fnid = (mutate_id)0;
     method->func = MUTATE_MAP[fnid];
     method->factor = factor;
     DBPRINTF("Vis.mutate(%p, %d, {%d, %g})", fl, when, fnid, factor);

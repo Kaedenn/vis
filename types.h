@@ -3,7 +3,6 @@
 #define VIS_TYPES_HEADER_INCLUDED_ 1
 
 typedef unsigned int fnum_t;
-typedef unsigned int frame_type_t;
 
 /* force functions */
 typedef enum {
@@ -34,7 +33,7 @@ typedef enum {
     VIS_MUTATE_AGE,
     VIS_MUTATE_OPACITY,
     VIS_NMUTATES
-} mutate_t;
+} mutate_id;
 
 /* alpha-channel blending functions */
 typedef enum {
@@ -47,7 +46,6 @@ typedef enum {
     VIS_NBLENDS
 } blend_id;
 
-
 /* constants for frame types */
 typedef enum {
     VIS_FTYPE_EMIT = 0,
@@ -58,6 +56,6 @@ typedef enum {
     VIS_FTYPE_FRAMESEEK,
 
     VIS_MAX_FTYPE
-} ftype_t;
+} ftype_id;
 
 #endif

@@ -1,11 +1,11 @@
 
 #include "plimits.h"
 
-void no_limit(UNUSED_PARAM(particle_t particle)) {
+void no_limit(UNUSED_PARAM(struct particle* particle)) {
     /* nothing */
 }
 
-void box(particle_t particle) {
+void box(struct particle* particle) {
     if (particle->x < BOX_FUDGE(particle)) {
         particle->x = BOX_FUDGE(particle);
         particle->dx = 0.0;
@@ -22,7 +22,7 @@ void box(particle_t particle) {
     }
 }
 
-void springbox(particle_t particle) {
+void springbox(struct particle* particle) {
     if (particle->x < BOX_FUDGE(particle)) {
         particle->x = BOX_FUDGE(particle);
         particle->dx = -particle->dx;

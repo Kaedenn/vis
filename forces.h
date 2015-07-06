@@ -6,13 +6,13 @@
 #include "particle.h"
 
 /* default */
-void no_force(particle_t particle);
+void no_force(struct particle* particle);
 
 /* frictional force */
-void friction(particle_t particle);
+void friction(struct particle* particle);
 
 /* gravity */
-void gravity(particle_t particle);
+void gravity(struct particle* particle);
 
 static const force_fn FORCE_MAP[] = {
     no_force, friction, gravity

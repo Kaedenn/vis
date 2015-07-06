@@ -10,7 +10,7 @@
 
 #include <SDL_image.h>
 
-static double calculate_blend(particle_t particle);
+static double calculate_blend(struct particle* particle);
 static int render_to_file(SDL_Renderer* renderer, const char* path);
 
 /* combine a rect and a color */
@@ -105,7 +105,7 @@ void drawer_bgcolor(drawer_t drawer, float r, float g, float b) {
     drawer->bgcolor[2] = b;
 }
 
-int drawer_add_particle(drawer_t drawer, particle_t particle) {
+int drawer_add_particle(drawer_t drawer, struct particle* particle) {
     pextra_t pe = (pextra_t)particle->extra;
     if (drawer->rect_curr < drawer->rect_count) {
         struct crect* r = &drawer->rect_array[drawer->rect_curr];
@@ -251,7 +251,7 @@ void drawer_end_trace(drawer_t drawer) {
     drawer->tracing = FALSE;
 }
 
-double calculate_blend(particle_t particle) {
+double calculate_blend(struct particle* particle) {
     pextra_t pe = (pextra_t)particle->extra;
     double alpha = pe->a;
     double life = particle_get_life(particle);

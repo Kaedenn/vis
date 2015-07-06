@@ -35,7 +35,7 @@ void emitter_schedule(flist_t frames) {
     fl = frames;
 }
 
-static plist_action_t do_mutate_fn(particle_t p, UNUSED_PARAM(size_t idx),
+static plist_action_t do_mutate_fn(struct particle* p, UNUSED_PARAM(size_t idx),
                                    void* mutate) {
     mutate_method_t method = mutate;
     method->func(p, method->factor);
@@ -63,6 +63,7 @@ void emitter_tick(void) {
                 break;
             case VIS_FTYPE_FRAMESEEK:
                 flist_goto_frame(fl, fn->data.frameseek);
+            case VIS_MAX_FTYPE:
             default:
                 break;
         }
@@ -73,7 +74,7 @@ void emitter_tick(void) {
 void emit_frame(emit_t frame) {
     int i;
     for (i = 0; i < frame->n; ++i) {
-        particle_t p = NULL;
+        struct particle* p = NULL;
         pextra_t pe = NULL;
         float r, g, b;
         r = randfloat(frame->r - frame->ur, frame->r + frame->ur);

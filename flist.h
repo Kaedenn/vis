@@ -13,14 +13,14 @@
 */
 
 typedef struct flist_node {
-    frame_type_t type; /* defines.h: VIS_FTYPE_* */
+    ftype_id type; /* types.h, identifies which field to use below */
     union {
-        emit_t frame; /* emit frame */
-        const char* cmd; /* command frame */
-        float color[3]; /* bgcolor frame */
-        mutate_method_t method; /* mutate frame */
-        script_cb_t scriptcb; /* lua invoke frame */
-        fnum_t frameseek; /* go-to-frame-num frame */
+        emit_t frame; /* VIS_FTYPE_EMIT: emit frame */
+        const char* cmd; /* VIS_FTYPE_CMD: command frame */
+        float color[3]; /* VIS_FTYPE_BGCOLOR: bgcolor frame */
+        mutate_method_t method; /* VIS_FTYPE_MUTATE: mutate frame */
+        script_cb_t scriptcb; /* VIS_FTYPE_SCRIPTCB: lua invoke frame */
+        fnum_t frameseek; /* VIS_FTYPE_FRAMESEEK: go-to-frame-num frame */
     } data;
     struct flist_node* next;
 } *flist_node_t;

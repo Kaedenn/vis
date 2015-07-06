@@ -32,7 +32,7 @@ struct global_ctx {
 void finalize(void);
 void mainloop(struct global_ctx* ctx);
 
-plist_action_t animate_particle(particle_t p, size_t idx, void* userdefined);
+plist_action_t animate_particle(struct particle* p, size_t idx, void* userdefined);
 void display(struct global_ctx* ctx);
 void timeout(struct global_ctx* ctx);
 
@@ -145,7 +145,7 @@ void mainloop(struct global_ctx* ctx) {
     }
 }
  
-plist_action_t animate_particle(particle_t p, size_t idx, void* userdefined) {
+plist_action_t animate_particle(struct particle* p, size_t idx, void* userdefined) {
     UNUSED_VARIABLE(idx);
     struct global_ctx* ctx = (struct global_ctx*)userdefined;
     drawer_add_particle(ctx->drawer, p);

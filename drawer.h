@@ -15,7 +15,7 @@ void drawer_free(drawer_t drawer);
 
 void drawer_config(drawer_t drawer, struct clargs* clargs);
 void drawer_bgcolor(drawer_t drawer, float r, float g, float b);
-int drawer_add_particle(drawer_t drawer, particle_t particle);
+int drawer_add_particle(drawer_t drawer, struct particle* particle);
 int drawer_draw_to_screen(drawer_t drawer);
 float drawer_get_fps(drawer_t drawer);
 

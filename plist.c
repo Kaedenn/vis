@@ -6,7 +6,7 @@
 
 plist_t plist_new(size_t initial_size) {
     plist_t plist = DBMALLOC(sizeof(struct plist));
-    plist->particles = DBMALLOC(sizeof(particle_t) * initial_size);
+    plist->particles = DBMALLOC(sizeof(struct particle*) * initial_size);
     plist->size = 0;
     plist->capacity = initial_size;
     return plist;
@@ -27,7 +27,7 @@ void plist_foreach(plist_t plist, item_fn fn, void* userdefined) {
         plist_action_t action = (fn)(plist->particles[i], i, userdefined);
         if (action == ACTION_REMOVE) {
             /* implement swap-to-back */
-            particle_t* last = &plist->particles[plist->size - 1];
+            struct particle** last = &plist->particles[plist->size - 1];
             particle_free(plist->particles[i]);
             plist->particles[i] = *last;
             *last = NULL;
@@ -38,7 +38,7 @@ void plist_foreach(plist_t plist, item_fn fn, void* userdefined) {
     }
 }
 
-void plist_add(plist_t plist, particle_t p) {
+void plist_add(plist_t plist, struct particle* p) {
     if (plist->size < plist->capacity) {
         plist->particles[plist->size++] = p;
     } else {
