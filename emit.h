@@ -33,9 +33,9 @@ typedef struct emit {
     double utheta;      /* uncertainty in theta */
     float r, g, b;      /* color */
     float ur, ug, ub;   /* uncertainty in r, g and b */
-    force_t force;      /* force function */
-    limit_t limit;      /* limit function */
-    blend_t blender;   /* blending function */
+    force_id force;      /* force function */
+    limit_id limit;      /* limit function */
+    blend_id blender;   /* blending function */
 } *emit_t;
 
 emit_t make_emit_frame(int n,
@@ -43,7 +43,7 @@ emit_t make_emit_frame(int n,
         double rad, double urad, double ds, double uds,
         double theta, double utheta, int life, int ulife,
         float r, float g, float b, float ur, float ub, float ug,
-        force_t force, limit_t limit, blend_t blend); /* sorry */
+        force_id force, limit_id limit, blend_id blend); /* sorry */
 
 emit_t emit_new(void);
 void emit_free(emit_t emit);
@@ -56,9 +56,9 @@ void emit_set_ds(emit_t e, double ds, double uds);
 void emit_set_angle(emit_t e, double theta, double utheta);
 void emit_set_color(emit_t e, float r, float g, float b,
                     float ur, float ug, float ub);
-void emit_set_force(emit_t e, force_t force);
-void emit_set_limit(emit_t e, limit_t limit);
-void emit_set_blender(emit_t e, blend_t blender);
+void emit_set_force(emit_t e, force_id force);
+void emit_set_limit(emit_t e, limit_id limit);
+void emit_set_blender(emit_t e, blend_id blender);
 
 void dbprintf_emit_t(emit_t e);
 

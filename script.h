@@ -19,9 +19,9 @@ static const script_cfg_t SCRIPT_ALLOW_ALL = 0; /* allow all features */
 static const script_cfg_t SCRIPT_NO_CB = 1; /* disable callbacks */
 
 char* genlua_emit(emit_t emit, fnum_t when);
-const char* genlua_force(force_t force);
-const char* genlua_limit(limit_t limit);
-const char* genlua_blender(blend_t blender);
+const char* genlua_force(force_id force);
+const char* genlua_limit(limit_id limit);
+const char* genlua_blender(blend_id blender);
 
 script_t script_new(script_cfg_t cfg);
 void script_free(script_t s);

@@ -36,6 +36,6 @@ static const blend_fn blend_fns[VIS_NBLENDS] = {
     neggamma_blend
 };
 
-static const blend_t default_blender = VIS_BLEND_LINEAR;
+static const blend_id default_blender = VIS_BLEND_LINEAR;
 
 #endif

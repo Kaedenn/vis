@@ -9,7 +9,7 @@ emit_t make_emit_frame(int n,
         double rad, double urad, double ds, double uds,
         double theta, double utheta, int life, int ulife,
         float r, float g, float b, float ur, float ub, float ug,
-        force_t force, limit_t limit, blend_t blend) /* sorry */ {
+        force_id force, limit_id limit, blend_id blend) /* sorry */ {
     emit_t emit = emit_new();
     emit->n = n;
     emit->x = x;
@@ -71,9 +71,9 @@ void emit_set_color(emit_t e, float r, float g, float b,
     e->ug = ug;
     e->ub = ub;
 }
-void emit_set_force(emit_t e, force_t force) { e->force = force; }
-void emit_set_limit(emit_t e, limit_t limit) { e->limit = limit; }
-void emit_set_blender(emit_t e, blend_t blender) { e->blender = blender; }
+void emit_set_force(emit_t e, force_id force) { e->force = force; }
+void emit_set_limit(emit_t e, limit_id limit) { e->limit = limit; }
+void emit_set_blender(emit_t e, blend_id blender) { e->blender = blender; }
 
 void dbprintf_emit_t(emit_t e) {
     DBPRINTF("struct *emit_t { n=%d, x=%g, y=%g, ux=%g, uy=%g, "

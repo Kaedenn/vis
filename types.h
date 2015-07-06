@@ -12,7 +12,7 @@ typedef enum {
     VIS_FORCE_FRICTION,
     VIS_FORCE_GRAVITY,
     VIS_NFORCES
-} force_t;
+} force_id;
 
 /* position-limiting functions */
 typedef enum {
@@ -21,7 +21,7 @@ typedef enum {
     VIS_LIMIT_BOX,
     VIS_LIMIT_SPRINGBOX,
     VIS_NLIMITS
-} limit_t;
+} limit_id;
 
 /* mutation functions */
 typedef enum {
@@ -45,7 +45,7 @@ typedef enum {
     VIS_BLEND_QUADRATIC,
     VIS_BLEND_NEGGAMMA,
     VIS_NBLENDS
-} blend_t;
+} blend_id;
 
 
 /* constants for frame types */

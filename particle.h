@@ -17,8 +17,8 @@ typedef struct particle {
     double radius;
     int lifetime;
     int life;
-    force_t force;
-    limit_t limit;
+    force_id force;
+    limit_id limit;
     void* extra;
 } *particle_t;
 
@@ -30,7 +30,7 @@ particle_t particle_new_full(double x, double y,
                              double ds, double uds,
                              double theta, double utheta,
                              int life, int ulife,
-                             force_t force, limit_t limit,
+                             force_id force, limit_id limit,
                              void* extra);
 
 /* destructor */
@@ -38,8 +38,8 @@ void particle_free(particle_t p);
 
 /* specific mutation functions */
 void particle_push(particle_t p, double dx, double dy);
-void particle_set_force(particle_t p, force_t force);
-void particle_set_limit(particle_t p, limit_t limit);
+void particle_set_force(particle_t p, force_id force);
+void particle_set_limit(particle_t p, limit_id limit);
 
 /* special function for a particle's life to continue */
 void particle_tick(particle_t p);

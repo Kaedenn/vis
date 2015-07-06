@@ -33,7 +33,7 @@ particle_t particle_new_full(double x, double y,
                              double ds, double uds,
                              double theta, double utheta,
                              int life, int ulife,
-                             force_t force, limit_t limit,
+                             force_id force, limit_id limit,
                              void* extra) {
     particle_t p = DBMALLOC(sizeof(struct particle));
     
@@ -67,11 +67,11 @@ void particle_push(particle_t p, double dx, double dy) {
     p->dy += dy;
 }
 
-void particle_set_force(particle_t p, force_t force) {
+void particle_set_force(particle_t p, force_id force) {
     p->force = force;
 }
 
-void particle_set_limit(particle_t p, limit_t limit) {
+void particle_set_limit(particle_t p, limit_id limit) {
     p->limit = limit;
 }
 

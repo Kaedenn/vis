@@ -70,7 +70,7 @@ char* genlua_emit(emit_t emit, fnum_t when) {
     return result;
 }
 
-const char* genlua_force(force_t force) {
+const char* genlua_force(force_id force) {
     switch (force) {
         case VIS_DEFAULT_FORCE: return "Vis.DEFAULT_FORCE";
         case VIS_FORCE_FRICTION: return "Vis.FORCE_FRICTION";
@@ -80,7 +80,7 @@ const char* genlua_force(force_t force) {
     }
 }
 
-const char* genlua_limit(limit_t limit) {
+const char* genlua_limit(limit_id limit) {
     switch (limit) {
         case VIS_DEFAULT_LIMIT: return "Vis.DEFAULT_LIMIT";
         case VIS_LIMIT_BOX: return "Vis.LIMIT_BOX";
@@ -90,7 +90,7 @@ const char* genlua_limit(limit_t limit) {
     }
 }
 
-const char* genlua_blender(blend_t blender) {
+const char* genlua_blender(blend_id blender) {
     switch (blender) {
         case VIS_BLEND_NONE: return "Vis.BLEND_NONE";
         /* case VIS_DEFAULT_BLEND: */
