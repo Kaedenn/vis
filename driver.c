@@ -130,10 +130,12 @@ void mainloop(struct global_ctx* ctx) {
                     if (e.key.keysym.sym == SDLK_ESCAPE) {
                         return;
                     }
-                    script_keydown(ctx->script, SDL_GetKeyName(e.key.keysym.sym));
+                    script_keydown(ctx->script, SDL_GetKeyName(e.key.keysym.sym),
+                                   e.key.keysym.mod & KMOD_SHIFT);
                     break;
                 case SDL_KEYUP:
-                    script_keyup(ctx->script, SDL_GetKeyName(e.key.keysym.sym));
+                    script_keyup(ctx->script, SDL_GetKeyName(e.key.keysym.sym),
+                                 e.key.keysym.mod & KMOD_SHIFT);
                     break;
                 break;
                 case SDL_QUIT: return;
