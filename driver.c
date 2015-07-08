@@ -34,7 +34,7 @@ struct global_ctx {
 void finalize(void);
 void mainloop(struct global_ctx* ctx);
 
-plist_action_t animate_particle(struct particle* p, size_t idx, void* userdefined);
+plist_action_t animate_particle(struct particle* p, size_t idx, void* userdata);
 void display(struct global_ctx* ctx);
 void timeout(struct global_ctx* ctx);
 
@@ -43,46 +43,46 @@ void global_ctx_free(struct global_ctx* ctx);
 int main(int argc, char* argv[]) {
     srand((unsigned)time(NULL));
 
-    struct global_ctx global_ctx;
-    ZEROINIT(&global_ctx);
+    struct global_ctx global;
+    ZEROINIT(&global);
 
     gc_init();
     
-    global_ctx.args = argparse(argc, argv);
-    if (!global_ctx.args) {
+    global.args = argparse(argc, argv);
+    if (!global.args) {
         exit(1);
-    } else if (global_ctx.args->must_exit) {
-        exit(global_ctx.args->exit_status);
+    } else if (global.args->must_exit) {
+        exit(global.args->exit_status);
     }
-    gc_add((gc_func_t)free, global_ctx.args);
+    gc_add((gc_func_t)free, global.args);
 
-    global_ctx.drawer = drawer_new();
-    if (!global_ctx.drawer) {
+    global.drawer = drawer_new();
+    if (!global.drawer) {
         exit(1);
     }
-    gc_add((gc_func_t)drawer_free, global_ctx.drawer);
-    drawer_config(global_ctx.drawer, global_ctx.args);
+    gc_add((gc_func_t)drawer_free, global.drawer);
+    drawer_config(global.drawer, global.args);
     
-    global_ctx.particles = plist_new(VIS_PLIST_INITIAL_SIZE);
-    gc_add((gc_func_t)plist_free, global_ctx.particles);
+    global.particles = plist_new(VIS_PLIST_INITIAL_SIZE);
+    gc_add((gc_func_t)plist_free, global.particles);
     
-    global_ctx.script = script_new(SCRIPT_ALLOW_ALL);
-    script_set_drawer(global_ctx.script, global_ctx.drawer);
-    gc_add((gc_func_t)script_free, global_ctx.script);
+    global.script = script_new(SCRIPT_ALLOW_ALL);
+    script_set_drawer(global.script, global.drawer);
+    gc_add((gc_func_t)script_free, global.script);
 
-    global_ctx.cmds = command_setup(global_ctx.drawer,
-                                    global_ctx.particles,
-                                    global_ctx.script,
-                                    global_ctx.args->interactive);
-    gc_add((gc_func_t)command_teardown, global_ctx.cmds);
+    global.cmds = command_setup(global.drawer,
+                                    global.particles,
+                                    global.script,
+                                    global.args->interactive);
+    gc_add((gc_func_t)command_teardown, global.cmds);
     
-    emitter_setup(global_ctx.cmds, global_ctx.particles);
+    emitter_setup(global.cmds, global.particles);
     gc_add((gc_func_t)emitter_free, NULL);
     
     if (!audio_init()) {
         exit(1);
     }
-    if (global_ctx.args->quiet_audio) {
+    if (global.args->quiet_audio) {
         audio_mute();
     }
     gc_add((gc_func_t)audio_free, NULL);
@@ -96,24 +96,24 @@ int main(int argc, char* argv[]) {
     emit_set_color(emit, 0, 0, 0, 0.2f, 1, 1);
     emit->limit = VIS_LIMIT_SPRINGBOX;
     emit->blender = VIS_BLEND_QUADRATIC;
-    drawer_set_trace(global_ctx.drawer, emit);
+    drawer_set_trace(global.drawer, emit);
 
-    if (global_ctx.args->scriptfile) {
+    if (global.args->scriptfile) {
         flist_t flist = NULL;
-        flist = script_run(global_ctx.script, global_ctx.args->scriptfile);
+        flist = script_run(global.script, global.args->scriptfile);
         emitter_schedule(flist);
         gc_add((gc_func_t)flist_free, flist);
     }
 
-    mainloop(&global_ctx);
+    mainloop(&global);
 
-    script_on_quit(global_ctx.script);
+    script_on_quit(global.script);
 
-    if (global_ctx.exit_status < script_get_status(global_ctx.script)) {
-        global_ctx.exit_status = script_get_status(global_ctx.script);
+    if (global.exit_status < script_get_status(global.script)) {
+        global.exit_status = script_get_status(global.script);
     }
 
-    return global_ctx.exit_status;
+    return global.exit_status;
 }
 
 void mainloop(struct global_ctx* ctx) {
@@ -176,9 +176,9 @@ void mainloop(struct global_ctx* ctx) {
     }
 }
  
-plist_action_t animate_particle(struct particle* p, size_t idx, void* userdefined) {
+plist_action_t animate_particle(struct particle* p, size_t idx, void* userdata) {
     UNUSED_VARIABLE(idx);
-    struct global_ctx* ctx = (struct global_ctx*)userdefined;
+    struct global_ctx* ctx = (struct global_ctx*)userdata;
     drawer_add_particle(ctx->drawer, p);
     particle_tick(p);
     return particle_is_alive(p) ? ACTION_NEXT : ACTION_REMOVE;
