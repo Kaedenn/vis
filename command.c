@@ -76,10 +76,10 @@ struct commands* command_setup(drawer_t drawer, plist_t plist,
 }
 
 void command_teardown(struct commands* cmds) {
-    DBFREE(cmds);
     if (cmds->interactive) {
         async_write_stdout("\n");
     }
+    DBFREE(cmds);
 }
 
 BOOL command_should_exit(struct commands* cmds) {

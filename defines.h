@@ -15,6 +15,17 @@
 
 #include "types.h"
 
+/* debugging levels */
+#define DEBUG_NONE 0
+#define DEBUG_VERBOSE 1
+#define DEBUG_DEBUG 2
+#define DEBUG_INFO 3
+#define DEBUG_TRACE 4
+
+#ifndef DEBUG
+#define DEBUG DEBUG_NONE
+#endif
+
 /* allow toggling of the always_inline directive */
 #ifdef VIS_SKIP_MANUAL_OPTIMIZATION
 #undef REQUEST_INLINE

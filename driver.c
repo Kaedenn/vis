@@ -152,7 +152,6 @@ void mainloop(struct global_ctx* ctx) {
                     script_keyup(ctx->script, SDL_GetKeyName(e.key.keysym.sym),
                                  e.key.keysym.mod & KMOD_SHIFT);
                     break;
-                break;
                 case SDL_QUIT: return;
                 default: { } break;
             }
@@ -198,12 +197,12 @@ void timeout(struct global_ctx* ctx) {
     if (ctx->args->interactive) {
         if (++delayctr % VIS_CMD_DELAY_NSTEPS == 0) {
             command(ctx->cmds);
-            if (command_should_exit(ctx->cmds)) {
-                ctx->should_exit = TRUE;
-                ctx->exit_status = command_get_error(ctx->cmds);
-            }
             delayctr = 0;
         }
+    }
+    if (command_should_exit(ctx->cmds)) {
+        ctx->should_exit = TRUE;
+        ctx->exit_status = command_get_error(ctx->cmds);
     }
     emitter_tick();
 }

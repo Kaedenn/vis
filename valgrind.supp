@@ -24,3 +24,262 @@
     obj:/usr/lib/nvidia-331-updates/libGL.so.331.113
     ...
 }
+{
+    Memcheck:Cond
+    obj:/usr/lib/nvidia-331-updates/libnvidia-glcore.so.331.113
+    obj:/usr/lib/nvidia-331-updates/libnvidia-glcore.so.331.113
+    obj:/dev/nvidia0
+}
+{
+    libnvidia-cond
+    Memcheck:Cond
+    obj:/usr/lib/nvidia-331-updates/libnvidia-glcore.so.331.113
+}
+{
+    libsdl-audio-overlap
+    Memcheck:Overlap
+    fun:memcpy@@GLIBC_2.14
+    fun:open_audio_device
+    fun:SDL_OpenAudio_REAL
+    fun:audio_init
+    fun:main
+}
+{
+    libpa-do-call
+    Memcheck:Leak
+    match-leak-kinds: reachable
+    fun:malloc
+    fun:pa_xmalloc
+    fun:pa_xmemdup
+    fun:pa_flist_new_with_name
+    fun:entries_flist_init
+    fun:pa_run_once
+    fun:pa_queue_push
+    fun:pa_pstream_send_packet
+    fun:pa_pstream_send_tagstruct_with_creds
+    fun:on_connection
+    fun:do_call
+    fun:pa_mainloop_dispatch
+}
+{
+    libpa-dispatch-run-2
+    Memcheck:Leak
+    match-leak-kinds: reachable
+    fun:malloc
+    fun:pa_xmalloc
+    fun:pa_xmemdup
+    fun:pa_flist_new_with_name
+    fun:operations_flist_init
+    fun:pa_run_once
+    fun:pa_operation_new
+    fun:pa_stream_update_timing_info
+    fun:request_auto_timing_update
+    fun:pa_create_stream_callback
+    fun:run_action
+    fun:pa_pdispatch_run
+}
+{
+    libpa-mainloop-dispatch
+    Memcheck:Leak
+    match-leak-kinds: reachable
+    fun:malloc
+    fun:pa_xmalloc
+    fun:pa_mutex_new
+    fun:pa_static_mutex_get
+    fun:pa_once_begin
+    fun:pa_run_once
+    fun:pa_queue_push
+    fun:pa_pstream_send_packet
+    fun:pa_pstream_send_tagstruct_with_creds
+    fun:on_connection
+    fun:do_call
+    fun:pa_mainloop_dispatch
+}
+{
+    libpa-dispatch-run
+    Memcheck:Leak
+    match-leak-kinds: reachable
+    fun:malloc
+    fun:pa_xmalloc
+    fun:pa_mutex_new
+    fun:pa_static_mutex_get
+    fun:pa_once_begin
+    fun:pa_run_once
+    fun:pa_operation_new
+    fun:pa_stream_update_timing_info
+    fun:request_auto_timing_update
+    fun:pa_create_stream_callback
+    fun:run_action
+    fun:pa_pdispatch_run
+}
+{
+    libdbus-conn-reply-block
+    Memcheck:Leak
+    match-leak-kinds: reachable
+    fun:malloc
+    obj:/lib/x86_64-linux-gnu/libdbus-1.so.3.7.6
+    obj:/lib/x86_64-linux-gnu/libdbus-1.so.3.7.6
+    obj:/lib/x86_64-linux-gnu/libdbus-1.so.3.7.6
+    obj:/lib/x86_64-linux-gnu/libdbus-1.so.3.7.6
+    obj:/lib/x86_64-linux-gnu/libdbus-1.so.3.7.6
+    obj:/lib/x86_64-linux-gnu/libdbus-1.so.3.7.6
+    obj:/lib/x86_64-linux-gnu/libdbus-1.so.3.7.6
+    obj:/lib/x86_64-linux-gnu/libdbus-1.so.3.7.6
+    obj:/lib/x86_64-linux-gnu/libdbus-1.so.3.7.6
+    obj:/lib/x86_64-linux-gnu/libdbus-1.so.3.7.6
+    fun:dbus_connection_send_with_reply_and_block
+}
+{
+    libdl-glibc
+    Memcheck:Leak
+    match-leak-kinds: reachable
+    fun:malloc
+    fun:_dl_map_object
+    fun:openaux
+    fun:_dl_catch_error
+    fun:_dl_map_object_deps
+    fun:dl_open_worker
+    fun:_dl_catch_error
+    fun:_dl_open
+    fun:dlopen_doit
+    fun:_dl_catch_error
+    fun:_dlerror_run
+    fun:dlopen@@GLIBC_2.2.5
+}
+{
+    libdl-dlopen-doit
+    Memcheck:Leak
+    match-leak-kinds: reachable
+    fun:malloc
+    fun:_dl_new_object
+    fun:_dl_map_object_from_fd
+    fun:_dl_map_object
+    fun:openaux
+    fun:_dl_catch_error
+    fun:_dl_map_object_deps
+    fun:dl_open_worker
+    fun:_dl_catch_error
+    fun:_dl_open
+    fun:dlopen_doit
+    fun:_dl_catch_error
+}
+{
+    libpa-mainloop
+    Memcheck:Leak
+    match-leak-kinds: reachable
+    fun:malloc
+    fun:pa_xmalloc
+    fun:pa_hashmap_put
+    fun:pa_proplist_set
+    fun:pa_tagstruct_get_proplist
+    fun:pa_tagstruct_get_format_info
+    fun:pa_create_stream_callback
+    fun:run_action
+    fun:pa_pdispatch_run
+    fun:pstream_packet_callback
+    fun:do_pstream_read_write
+    fun:pa_mainloop_dispatch
+}
+{
+    libdbus-unknown
+    Memcheck:Leak
+    match-leak-kinds: reachable
+    fun:realloc
+    obj:/lib/x86_64-linux-gnu/libdbus-1.so.3.7.6
+    obj:/lib/x86_64-linux-gnu/libdbus-1.so.3.7.6
+    obj:/lib/x86_64-linux-gnu/libdbus-1.so.3.7.6
+    obj:/lib/x86_64-linux-gnu/libdbus-1.so.3.7.6
+    obj:/lib/x86_64-linux-gnu/libdbus-1.so.3.7.6
+    obj:/lib/x86_64-linux-gnu/libdbus-1.so.3.7.6
+    obj:/lib/x86_64-linux-gnu/libdbus-1.so.3.7.6
+    obj:/lib/x86_64-linux-gnu/libdbus-1.so.3.7.6
+    obj:/lib/x86_64-linux-gnu/libdbus-1.so.3.7.6
+    obj:/lib/x86_64-linux-gnu/libdbus-1.so.3.7.6
+    obj:/lib/x86_64-linux-gnu/libdbus-1.so.3.7.6
+}
+{
+    libdbus-register
+    Memcheck:Leak
+    match-leak-kinds: reachable
+    fun:calloc
+    obj:/lib/x86_64-linux-gnu/libdbus-1.so.3.7.6
+    obj:/lib/x86_64-linux-gnu/libdbus-1.so.3.7.6
+    obj:/lib/x86_64-linux-gnu/libdbus-1.so.3.7.6
+    obj:/lib/x86_64-linux-gnu/libdbus-1.so.3.7.6
+    obj:/lib/x86_64-linux-gnu/libdbus-1.so.3.7.6
+    obj:/lib/x86_64-linux-gnu/libdbus-1.so.3.7.6
+    obj:/lib/x86_64-linux-gnu/libdbus-1.so.3.7.6
+    obj:/lib/x86_64-linux-gnu/libdbus-1.so.3.7.6
+    obj:/lib/x86_64-linux-gnu/libdbus-1.so.3.7.6
+    fun:dbus_connection_send_with_reply_and_block
+    fun:dbus_bus_register
+}
+{
+    libdbus-connection
+    Memcheck:Leak
+    match-leak-kinds: reachable
+    fun:realloc
+    obj:/lib/x86_64-linux-gnu/libdbus-1.so.3.7.6
+    obj:/lib/x86_64-linux-gnu/libdbus-1.so.3.7.6
+    obj:/lib/x86_64-linux-gnu/libdbus-1.so.3.7.6
+    obj:/lib/x86_64-linux-gnu/libdbus-1.so.3.7.6
+    obj:/lib/x86_64-linux-gnu/libdbus-1.so.3.7.6
+    obj:/lib/x86_64-linux-gnu/libdbus-1.so.3.7.6
+    fun:dbus_message_iter_append_basic
+    fun:dbus_message_new_error
+    obj:/lib/x86_64-linux-gnu/libdbus-1.so.3.7.6
+    fun:dbus_connection_send_with_reply
+    fun:dbus_connection_send_with_reply_and_block
+}
+{
+    libdl-dlopen
+    Memcheck:Leak
+    match-leak-kinds: reachable
+    fun:calloc
+    fun:_dl_new_object
+    fun:_dl_map_object_from_fd
+    fun:_dl_map_object
+    fun:openaux
+    fun:_dl_catch_error
+    fun:_dl_map_object_deps
+    fun:dl_open_worker
+    fun:_dl_catch_error
+    fun:_dl_open
+    fun:dlopen_doit
+    fun:_dl_catch_error
+}
+{
+    libpa-packet-cb
+    Memcheck:Leak
+    match-leak-kinds: reachable
+    fun:calloc
+    fun:pa_xmalloc0
+    fun:pa_flist_new_with_name
+    fun:operations_flist_init
+    fun:pa_run_once
+    fun:pa_operation_new
+    fun:pa_stream_update_timing_info
+    fun:request_auto_timing_update
+    fun:pa_create_stream_callback
+    fun:run_action
+    fun:pa_pdispatch_run
+    fun:pstream_packet_callback
+}
+{
+    libx11-xopenim
+    Memcheck:Leak
+    match-leak-kinds: reachable
+    fun:malloc
+    obj:/usr/lib/x86_64-linux-gnu/libX11.so.6.3.0
+    fun:_XrmInternalStringToQuark
+    fun:_XlcGetCharSet
+    fun:_XlcAddCT
+    fun:_XlcInitCTInfo
+    obj:/usr/lib/x86_64-linux-gnu/libX11.so.6.3.0
+    obj:/usr/lib/x86_64-linux-gnu/libX11.so.6.3.0
+    fun:_XlcCreateLC
+    fun:_XlcUtf8Loader
+    fun:_XOpenLC
+    fun:XOpenIM
+}
+

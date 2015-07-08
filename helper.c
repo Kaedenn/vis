@@ -45,7 +45,7 @@ void eprintf(const char* fmt, ...) {
 
 void dbprintf(const char* fmt, ...) {
     va_list args;
-#ifdef DEBUG
+#if DEBUG > DEBUG_NONE
     fprintf(stderr, "debug: ");
     va_start(args, fmt);
     vfprintf(stderr, fmt, args);

@@ -22,7 +22,7 @@ void dbfree(void* ptr, const char* label);
 void eprintf(const char* fmt, ...);
 void dbprintf(const char* fmt, ...);
 
-#if defined(DEBUG_MALLOC) && defined(DEBUG)
+#if DEBUG >= DEBUG_TRACE
 #define DBMALLOC(size) dbmalloc((size), (#size))
 #define DBFREE(ptr) dbfree((ptr), (#ptr))
 #else
@@ -36,7 +36,7 @@ void dbprintf(const char* fmt, ...);
         eprintf(fmt, __VA_ARGS__); \
     } while (0)
 
-#ifdef DEBUG
+#if DEBUG > DEBUG_NONE
 #define DBPRINTF(fmt, ...) \
     do { \
         fprintf(stderr, "%s:%d: ", __FILE__, __LINE__); \

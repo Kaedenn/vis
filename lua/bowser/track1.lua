@@ -65,6 +65,7 @@ function T1.emit_circle(start, x, y, ds)
 
     et = VisUtil.make_emit_table()
     VisUtil.center_emit_table(et, x or Vis.WIDTH/3, y or Vis.HEIGHT*2/3)
+    et.radius = 2
     et.ds = ds or 1
     et.life = MAXLIFE
     VisUtil.color_emit_table(et, 0, 100, 200, 0, 50, 0);

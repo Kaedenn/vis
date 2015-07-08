@@ -56,8 +56,8 @@ function T3.make_emit_tables_for_level(level)
     local life_tab = {200, 210, 220, 230, 240, 250}
     local rgb_tab = {{.8, .2, .2, .2, .1, .1},
                      {.9, 0, 0, .1, 0, 0}}
-    local radius_tab = {1, 1, 2, 2, 2, 3, 3, 3, 4, 5}
     et.count = 200
+    et.radius = 2
     et.ds = ds_tab[level] or ds_tab[#ds_tab]
     et.uds = uds_tab[level] or et.ds / 2 - et.ds / 5
     et.life = life_tab[level] or life_tab[#life_tab]

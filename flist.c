@@ -119,7 +119,6 @@ void flist_insert_scriptcb(flist_t fl, fnum_t when, script_cb_t func) {
     fn->type = VIS_FTYPE_SCRIPTCB;
     fn->data.scriptcb = func;
     flist_insert(fl, when, fn);
-    DBPRINTF("insert scriptcb %p in %p at %d", func, fl, when);
 }
 
 void flist_insert_seekframe(flist_t fl, fnum_t when, fnum_t where) {
@@ -153,7 +152,7 @@ void flist_goto_frame(flist_t fl, fnum_t fn) {
 
 flist_node_t flist_tick(flist_t fl) {
     if (!fl || fl->curr_frame >= VIS_NFRAMES) return NULL;
-#ifdef DEBUG
+#if DEBUG >= DEBUG_TRACE
     fprintf(stderr, "Current frame: %d\r", fl->curr_frame);
 #endif
     return fl->frames[fl->curr_frame++];

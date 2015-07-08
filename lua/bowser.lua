@@ -49,6 +49,7 @@ function emit_spiral(steps)
 
     et = VisUtil.make_emit_table()
     center_emit_table(et)
+    et.radius = 2
     et.ds = 2
     et.uds = 1.75
     et.life = MAXLIFE
@@ -70,6 +71,7 @@ function emit_line_v(start, x, r, g, b, ur, ug, ub)
 
     et = VisUtil.make_emit_table()
     VisUtil.center_emit_table(et, x, 0, 0, Vis.HEIGHT)
+    et.radius = 2
     et.ds = 1
     et.life = MAXLIFE
     VisUtil.color_emit_table(et, r or 0, g or 100, b or 200,
@@ -90,6 +92,7 @@ function emit_line_h(start, y, r, g, b, ur, ug, ub)
 
     et = VisUtil.make_emit_table()
     VisUtil.center_emit_table(et, 0, y, Vis.WIDTH, 0)
+    et.radius = 2
     et.ds = 1
     et.life = MAXLIFE
     VisUtil.color_emit_table(et, r or 0, g or 100, b or 200,

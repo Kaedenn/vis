@@ -182,12 +182,13 @@ script_t script_new(script_cfg_t cfg) {
 void script_free(script_t s) {
     if (!s) return;
     lua_close(s->L);
+    DBFREE(s->dbg);
     DBFREE(s);
 }
 
 flist_t script_run(script_t script, const char* filename) {
     /* script->fl already bound to script in script_new */
-    DBPRINTF("Running %s to build %p", filename, script->fl);
+    /* DBPRINTF("Running %s to build %p", filename, script->fl); */
     if (luaL_dofile(script->L, filename) != LUA_OK) {
         script->errors += 1;
         kstr error = luautil_get_error(script->L);
@@ -340,7 +341,7 @@ int viscmd_command_fn(lua_State* L) {
     flist_t fl = *(flist_t *)luaL_checkudata(L, 1, "flist_t*");
     fnum_t when = (fnum_t)VIS_MSEC_TO_FRAMES(luaL_checkunsigned(L, 2));
     const char* cmd = luaL_checkstring(L, 3);
-    DBPRINTF("command(%p, %d, \"%s\")", fl, when, cmd);
+    /* DBPRINTF("command(%p, %d, \"%s\")", fl, when, cmd); */
     flist_insert_cmd(fl, when, cmd);
     return 0;
 }
@@ -471,7 +472,7 @@ int viscmd_callback_fn(lua_State* L) {
     scb->owner = s;
     scb->fn_name = dupstr("<lua>");
     scb->fn_code = escape_string(luaL_checkstring(L, 4));
-    DBPRINTF("Vis.callback(%p, %d, %p, %s)", fl, when, s, scb->fn_code);
+    /* DBPRINTF("Vis.callback(%p, %d, %p, %s)", fl, when, s, scb->fn_code); */
     flist_insert_scriptcb(fl, when, scb);
     return 0;
 }

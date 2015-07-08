@@ -13,7 +13,8 @@ CFLAGS = -fdiagnostics-show-option -std=c99 \
 LDFLAGS = -lm
 
 CFLAGS_FAST = -O3 -fexpensive-optimizations
-CFLAGS_DEBUG = -O0 -ggdb -DDEBUG
+CFLAGS_DEBUG = -O0 -ggdb -DDEBUG=3
+CFLAGS_TRACE = -O0 -ggdb -DDEBUG=10
 CFLAGS_PROF = -pg
 
 CFLAGS_LIBS = -I/usr/include/lua5.2 -I/usr/include/SDL2
@@ -22,7 +23,7 @@ LDFLAGS_LIBS = -llua5.2 -lSDL2 -lSDL2_image
 CFLAGS := $(CFLAGS) $(CFLAGS_LIBS) $(EXTRA_CFLAGS)
 LDFLAGS := $(LDFLAGS) $(LDFLAGS_LIBS) $(EXTRA_LDFLAGS)
 
-EXEC_ARGS ?= -i -l $(DIR)/test/4_random_short.lua
+EXEC_ARGS ?= -i -l $(DIR)/lua/demo_3_random.lua
 VALGRIND_DEFAULT = valgrind --suppressions=$(DIR)/valgrind.supp --num-callers=64
 VG_LEAKCHECK = --leak-check=full
 VG_REACHABLE = $(VG_LEAKCHECK) --show-reachable=yes --show-leak-kinds=all
@@ -37,9 +38,9 @@ FP_BASE2 ?= $(FP_DIR)/bowser
 FP_AUDIO ?= media/Bowser.wav
 FP_AVI ?= $(FP_DIR)/bowser.avi
 
-.PHONY: all fast debug profile execute valgrind leakcheck leakcheck-reachable \
-	clean distclean finalproduct fp-prep fp-makeframes fp-flip fp-encode \
-	fp-cleanup
+.PHONY: all fast debug trace profile execute valgrind leakcheck \
+	leakcheck-reachable clean distclean finalproduct fp-prep fp-makeframes \
+	fp-flip fp-encode fp-cleanup
 
 all: $(SOURCES)
 	$(CC) -o $(DIR)/$(EXECBIN) $(SRCS) $(CFLAGS) $(LDFLAGS)
@@ -50,9 +51,12 @@ fast: $(SOURCES)
 debug:
 	$(MAKE) "CFLAGS=$(CFLAGS) $(CFLAGS_DEBUG)" all
 
+trace:
+	$(MAKE) "CFLAGS=$(CFLAGS) $(CFLAGS_TRACE)" all
+
 profile: $(SOURCES)
-	$(MAKE) "CFLAGS=$(CFLAGS) $(CFLAGS_PROF)" all
-	$(DIR)/$(EXECBIN) -i -l $(DIR)/test/4_random_long.lua
+	$(MAKE) "CFLAGS=$(CFLAGS) $(CFLAGS_FAST) $(CFLAGS_PROF)" all
+	$(DIR)/$(EXECBIN) -i -l $(DIR)/lua/demo_5_random.lua
 	gprof $(DIR)/$(EXECBIN)
 	- $(RM) $(DIR)/gmon.out
 

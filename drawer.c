@@ -45,7 +45,7 @@ struct drawer {
 
 drawer_t drawer_new(void) {
     drawer_t drawer = DBMALLOC(sizeof(struct drawer));
-#ifdef DEBUG
+#if DEBUG > DEBUG_NONE
     setenv("SDL_DEBUG", "1", 1);
 #endif
     /* initialize SDL */
