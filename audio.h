@@ -12,6 +12,7 @@ void audio_close(void);
 
 void audio_play(void);
 void audio_pause(void);
+void audio_mute(void);
 void audio_seek(unsigned where);
 
 #endif

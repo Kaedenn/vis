@@ -16,6 +16,7 @@ typedef struct sample {
 
 typedef struct audio {
     char* file;
+    BOOL muted;
     sample_t sample;
 } *audio_t;
 
@@ -40,6 +41,7 @@ BOOL audio_init(void) {
     
     audio = DBMALLOC(sizeof(struct audio));
     audio->file = NULL;
+    audio->muted = FALSE;
     audio->sample = DBMALLOC(sizeof(struct sample));
     audio->sample->data = NULL;
     audio->sample->dpos = 0;
@@ -98,6 +100,10 @@ void audio_close(void) {
     SDL_AudioQuit();
 }
 
+void audio_mute(void) {
+    audio->muted = TRUE;
+}
+
 void audio_play(void) {
     SDL_PauseAudio(0);
 }
@@ -124,7 +130,8 @@ void mix(UNUSED_PARAM(void* unused), Uint8* stream, int length) {
     if (amount > (Uint32)length) {
         amount = (Uint32)length;
     }
-    SDL_MixAudio(stream, &sample->data[sample->dpos], amount, SDL_MIX_MAXVOLUME);
+    SDL_MixAudio(stream, &sample->data[sample->dpos], amount,
+                 audio->muted ? 0 : SDL_MIX_MAXVOLUME);
     sample->dpos += amount;
 }
 

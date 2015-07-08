@@ -82,10 +82,10 @@ int main(int argc, char* argv[]) {
     if (!audio_init()) {
         exit(1);
     }
+    if (global_ctx.args->quiet_audio) {
+        audio_mute();
+    }
     gc_add((gc_func_t)audio_free, NULL);
-    
-    global_ctx.args = argparse(argc, argv);
-    gc_add((gc_func_t)free, global_ctx.args);
     
     emit_t emit = emit_new();
     emit->n = 100;

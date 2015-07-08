@@ -5,12 +5,13 @@
 #include <stdlib.h>
 #include <string.h>
 
-const char* usage_string = "Usage: %s [-d path] [-l path] [-t] [-i] [-h]\n";
+const char* usage_string = "Usage: %s [-d path] [-l path] [-t] [-i] [-q] [-h]\n";
 const char* help_string =
 "  -d <FILE> dump frames to <FILE>_000.png\n"
 "  -l <FILE> run lua script <FILE>\n"
 "  -t        output the results of tracing to stdout, implies -i\n"
 "  -i        disable interactive mode (commands on stdin)\n"
+"  -q        disables the playback of audio\n"
 "  -h        this message\n";
 
 struct clargs* argparse(int argc, char** argv) {
@@ -21,6 +22,7 @@ struct clargs* argparse(int argc, char** argv) {
     clargs->dumptrace = FALSE;
     clargs->interactive = TRUE;
     clargs->enlarge_particles = FALSE;
+    clargs->quiet_audio = FALSE;
     for (int argi = 1; argi < argc && argv[argi] && argv[argi][0]; ++argi) {
         if (argv[argi][0] == '-') {
             switch (argv[argi][1]) {
@@ -50,6 +52,9 @@ struct clargs* argparse(int argc, char** argv) {
                     break;
                 case 'e':
                     clargs->enlarge_particles = TRUE;
+                    break;
+                case 'q':
+                    clargs->quiet_audio = TRUE;
                     break;
                 case 'h':
                     printf(usage_string, argv[0]);

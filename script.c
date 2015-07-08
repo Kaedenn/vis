@@ -296,6 +296,12 @@ script_t luautil_checkscript(lua_State* L, int arg) {
     }
 }
 
+void luautil_checkdrawer(lua_State* L, script_t script) {
+    if (script->drawer == NULL) {
+        luaL_error(L, "Script has no drawer, function may be disabled");
+    }
+}
+
 kstr luautil_get_error(lua_State* L) {
     kstr error = kstring_newfrom(luaL_checkstring(L, -1));
     lua_pop(L, 1);
@@ -442,9 +448,7 @@ int viscmd_seekframe_fn(lua_State* L) {
  * 0 <= @param rgb <= 1 */
 int viscmd_bgcolor_fn(lua_State* L) {
     script_t s = luautil_checkscript(L, 1);
-    if (s->drawer == NULL) {
-        return luaL_error(L, "drawer is NULL; function is disabled");
-    }
+    luautil_checkdrawer(L, s);
     float r = (float)luaL_optnumber(L, 2, 0);
     float g = (float)luaL_optnumber(L, 3, 0);
     float b = (float)luaL_optnumber(L, 4, 0);
@@ -488,11 +492,8 @@ int viscmd_callback_fn(lua_State* L) {
 /* fps = Vis.fps(Vis.script) */
 int viscmd_fps_fn(lua_State* L) {
     script_t s = luautil_checkscript(L, 1);
-    if (s->drawer == NULL) {
-        return luaL_error(L, "drawer is NULL; function is disabled");
-    } else {
-        lua_pushnumber(L, (lua_Number)drawer_get_fps(s->drawer));
-    }
+    luautil_checkdrawer(L, s);
+    lua_pushnumber(L, (lua_Number)drawer_get_fps(s->drawer));
     return 1;
 }
 
@@ -502,11 +503,8 @@ int viscmd_fps_fn(lua_State* L) {
  *      @param when is omitted */
 int viscmd_settrace_fn(lua_State* L) {
     script_t s = luautil_checkscript(L, 1);
-    if (s->drawer == NULL) {
-        return luaL_error(L, "drawer is NULL; function is disabled");
-    } else {
-        drawer_set_trace(s->drawer, lua_args_to_emit_t(L, 2, NULL));
-    }
+    luautil_checkdrawer(L, s);
+    drawer_set_trace(s->drawer, lua_args_to_emit_t(L, 2, NULL));
     return 0;
 }
 

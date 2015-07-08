@@ -11,6 +11,7 @@ struct clargs {
     BOOL dumptrace;
     BOOL interactive;
     BOOL enlarge_particles;
+    BOOL quiet_audio;
 
     BOOL must_exit;
     int exit_status;
