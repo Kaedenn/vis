@@ -45,7 +45,7 @@ void script_get_debug(script_t s, /*out*/ script_debug_t dbg);
 
 struct flist* script_run(script_t script, const char* filename);
 void script_run_string(script_t script, const char* torun);
-void call_script(script_t state, script_cb_t func, void* args);
+void script_run_cb(script_t state, script_cb_t func, void* args);
 void script_set_drawer(script_t script, drawer_t drawer);
 
 void script_mousemove(script_t script, int x, int y);

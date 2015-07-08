@@ -21,6 +21,14 @@
 #include "plist.h"
 #include "script.h"
 
+/* dependencies
+ *
+ *  drawer -> particles
+ *  script -> drawer
+ *  command -> drawer, particles, script
+ *  emitter -> command, particles
+ */
+
 struct global_ctx {
     plist_t particles;
     drawer_t drawer;
@@ -37,8 +45,6 @@ void mainloop(struct global_ctx* ctx);
 plist_action_t animate_particle(struct particle* p, size_t idx, void* userdata);
 void display(struct global_ctx* ctx);
 void timeout(struct global_ctx* ctx);
-
-void global_ctx_free(struct global_ctx* ctx);
 
 int main(int argc, char* argv[]) {
     srand((unsigned)time(NULL));
@@ -70,10 +76,8 @@ int main(int argc, char* argv[]) {
     script_set_drawer(global.script, global.drawer);
     gc_add((gc_func_t)script_free, global.script);
 
-    global.cmds = command_setup(global.drawer,
-                                    global.particles,
-                                    global.script,
-                                    global.args->interactive);
+    global.cmds = command_setup(global.drawer, global.particles, global.script,
+                                global.args->interactive);
     gc_add((gc_func_t)command_teardown, global.cmds);
     
     emitter_setup(global.cmds, global.particles);

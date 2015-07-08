@@ -75,7 +75,7 @@ void emitter_tick(void) {
                 plist_foreach(particles, do_mutate_fn, fn->data.method);
                 break;
             case VIS_FTYPE_SCRIPTCB:
-                call_script(fn->data.scriptcb->owner, fn->data.scriptcb, NULL);
+                script_run_cb(fn->data.scriptcb->owner, fn->data.scriptcb, NULL);
                 break;
             case VIS_FTYPE_FRAMESEEK:
                 flist_goto_frame(fl, fn->data.frameseek);

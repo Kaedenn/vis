@@ -9,6 +9,7 @@
 #include "kstring.h"
 #include "emitter.h"
 
+#include <assert.h>
 #include <errno.h>
 #include <stdarg.h>
 #include <stdlib.h>
@@ -138,7 +139,7 @@ script_t script_new(script_cfg_t cfg) {
 
     /* adjust lua search path, include ./lua and ./test,
      * include default modules */
-    (void)luaL_dostring(s->L,
+    assert(luaL_dostring(s->L,
         "package = require('package')\n"
         "package.path = '; ;./?.lua;./lua/?.lua;./test/?.lua'"
         "Vis = require(\"Vis\")\n"
@@ -150,7 +151,7 @@ script_t script_new(script_cfg_t cfg) {
         "Vis.on_keydown = function() end\n"
         "Vis.on_keyup = function() end\n"
         "Vis.on_quit = function() end\n"
-    );
+    ) == LUA_OK);
     if (file_exists(LUA_STARTUP_FILE)) {
         DBPRINTF("Executing startup file: %s", LUA_STARTUP_FILE);
         (void)luaL_dofile(s->L, LUA_STARTUP_FILE);
@@ -172,15 +173,6 @@ script_t script_new(script_cfg_t cfg) {
         *sbox = s;
         lua_setfield(s->L, -2, "script");
     }
-
-#ifdef notyet
-    struct emit* box = lua_newuserdata(s->L, sizeof(struct emit));
-    luaL_newmetatable(s->L, "emit*");
-    lua_newtable(s->L);
-    /* pushcfunction, setfield, repeat */
-    lua_setfield(s->L, -2, "__index");
-    luaL_setmetatable(s->L, "emit*");
-#endif
 
     lua_pop(s->L, 1); /* getglobal("Vis") */
 
@@ -209,20 +201,15 @@ void script_run_string(script_t script, const char* torun) {
     if (luaL_dostring(script->L, torun) != LUA_OK) {
         script->errors += 1;
         kstr error = luautil_get_error(script->L);
-        eprintf("Error in script \"%s\": %s", torun, kstring_content(error));
+        char* esc = escape_string(torun);
+        eprintf("Error in script \"%s\": %s", esc, kstring_content(error));
+        free(esc);
         kstring_free(error);
     }
 }
 
-void call_script(script_t script, script_cb_t cb, UNUSED_PARAM(void* args)) {
-    if (luaL_dostring(script->L, cb->fn_code) != LUA_OK) {
-        script->errors += 1;
-        kstr error = luautil_get_error(script->L);
-        char* esc = escape_string(cb->fn_code);
-        eprintf("Error in cb code %s: %s", esc, kstring_content(error));
-        free(esc);
-        kstring_free(error);
-    }
+void script_run_cb(script_t script, script_cb_t cb, UNUSED_PARAM(void* args)) {
+    script_run_string(script, cb->fn_code);
 }
 
 void script_set_drawer(script_t script, drawer_t drawer) {
@@ -358,6 +345,7 @@ int viscmd_command_fn(lua_State* L) {
     return 0;
 }
 
+/* Vis.exit(Vis.flist, when) */
 int viscmd_exit_fn(lua_State* L) {
     flist_t fl = *(flist_t*)luaL_checkudata(L, 1, "flist_t*");
     fnum_t when = (fnum_t)VIS_MSEC_TO_FRAMES(luaL_checkunsigned(L, 2));
@@ -449,12 +437,11 @@ int viscmd_seekframe_fn(lua_State* L) {
 int viscmd_bgcolor_fn(lua_State* L) {
     script_t s = luautil_checkscript(L, 1);
     luautil_checkdrawer(L, s);
-    float r = (float)luaL_optnumber(L, 2, 0);
-    float g = (float)luaL_optnumber(L, 3, 0);
-    float b = (float)luaL_optnumber(L, 4, 0);
-    drawer_bgcolor(s->drawer, r, g, b);
-    DBPRINTF("Vis.bgcolor(%p, %g, %g, %g)", s->drawer, (double)r, (double)g,
-             (double)b);
+    double r = luaL_optnumber(L, 2, 0);
+    double g = luaL_optnumber(L, 3, 0);
+    double b = luaL_optnumber(L, 4, 0);
+    drawer_bgcolor(s->drawer, (float)r, (float)g, (float)b);
+    DBPRINTF("Vis.bgcolor(%p, %g, %g, %g)", s->drawer, r, g, b);
     return 0;
 }
 
@@ -465,7 +452,7 @@ int viscmd_mutate_fn(lua_State* L) {
     flist_t fl = *(flist_t*)luaL_checkudata(L, 1, "flist_t*");
     fnum_t when = (fnum_t)VIS_MSEC_TO_FRAMES(luaL_checkunsigned(L, 2));
     mutate_id fnid = (mutate_id)luaL_checkint(L, 3);
-    double factor = (double)luaL_checknumber(L, 4);
+    double factor = luaL_checknumber(L, 4);
     if (fnid < (mutate_id)0) fnid = (mutate_id)0;
     if (fnid >= VIS_NMUTATES) fnid = (mutate_id)0;
     method->func = MUTATE_MAP[fnid];
