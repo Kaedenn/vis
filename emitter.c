@@ -61,6 +61,7 @@ void emitter_tick(void) {
                 emit_frame(fn->data.frame);
                 break;
             case VIS_FTYPE_EXIT:
+                DBPRINTF("received command %s", "exit");
                 command_str(commands, "exit");
                 break;
             case VIS_FTYPE_CMD:

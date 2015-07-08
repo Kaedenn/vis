@@ -53,21 +53,21 @@ drawer_t drawer_new(void) {
                  SDL_INIT_AUDIO |
                  SDL_INIT_VIDEO |
                  SDL_INIT_EVENTS) < 0) {
-        eprintf("error in drawer_new SDL_Init: %s", SDL_GetError());
+        EPRINTF("error in drawer_new SDL_Init: %s", SDL_GetError());
         return NULL;
     }
     drawer->window = SDL_CreateWindow("Vis",
                                       VIS_WINDOW_X, VIS_WINDOW_Y,
                                       VIS_WIDTH, VIS_HEIGHT, 0);
     if (drawer->window == NULL) {
-        eprintf("error in SDL_CreateWindow: %s", SDL_GetError());
+        EPRINTF("error in SDL_CreateWindow: %s", SDL_GetError());
         return NULL;
     }
     drawer->renderer = SDL_CreateRenderer(drawer->window, -1,
                                           SDL_RENDERER_PRESENTVSYNC);
     /* initialize SDL_image */
     if (IMG_Init(IMG_INIT_PNG) == 0) {
-        eprintf("error in IMG_Init: %s", SDL_GetError());
+        EPRINTF("error in IMG_Init: %s", SDL_GetError());
         return NULL;
     }
     /* initialize the vertex storage */
@@ -143,7 +143,7 @@ int drawer_draw_to_screen(drawer_t drawer) {
                                      SDL_TEXTUREACCESS_TARGET,
                                      VIS_WIDTH, VIS_HEIGHT);
         if (dump_tex == NULL) {
-            eprintf("Error creating dumping texture: %s",
+            EPRINTF("Error creating dumping texture: %s",
                     SDL_GetError());
         } else {
             SDL_SetRenderTarget(drawer->renderer, dump_tex);
@@ -269,7 +269,7 @@ static int render_to_file(SDL_Renderer* renderer, const char* path) {
     if (SDL_RenderReadPixels(renderer, NULL, SDL_PIXELFORMAT_RGBA8888, pixels,
                              pitch)) {
         DBFREE(pixels);
-        eprintf("Failed to read pixels: %s", SDL_GetError());
+        EPRINTF("Failed to read pixels: %s", SDL_GetError());
         return 0;
     }
 
@@ -279,7 +279,7 @@ static int render_to_file(SDL_Renderer* renderer, const char* path) {
                                                  0x0000FF00, 0x000000FF);
     if (surf == NULL) {
         DBFREE(pixels);
-        eprintf("Failed to alloc surface: %s", SDL_GetError());
+        EPRINTF("Failed to alloc surface: %s", SDL_GetError());
         return 0;
     }
 

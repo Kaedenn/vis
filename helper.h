@@ -30,6 +30,12 @@ void dbprintf(const char* fmt, ...);
 #define DBFREE(ptr) free((ptr))
 #endif
 
+#define EPRINTF(fmt, ...) \
+    do { \
+        fprintf(stderr, "%s:%d: ", __FILE__, __LINE__); \
+        eprintf(fmt, __VA_ARGS__); \
+    } while (0)
+
 #ifdef DEBUG
 #define DBPRINTF(fmt, ...) \
     do { \
