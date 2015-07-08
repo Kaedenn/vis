@@ -2,6 +2,11 @@ Vis = require("Vis")
 VisUtil = require("visutil")
 math = require("math")
 
+Vis.on_quit = function()
+    assert(Vis.get_debug(Vis.script, "NUM-MUTATES") == 4,
+           "performed four mutates")
+end
+
 random = math.random
 function rand3f(low, high)
     return random(low*1000, high*1000) / 100.0
@@ -33,4 +38,4 @@ do_emit_table(Vis.frames2msec(100))
 Vis.mutate(Vis.flist, Vis.frames2msec(125), Vis.MUTATE_PUSH_DX, 2)
 Vis.mutate(Vis.flist, Vis.frames2msec(150), Vis.MUTATE_PUSH_DY, 2)
 
-Vis.command(Vis.flist, Vis.frames2msec(200), "exit")
+Vis.exit(Vis.flist, Vis.frames2msec(200))

@@ -20,4 +20,4 @@ t.theta = math.pi
 t.utheta = math.pi
 VisUtil.emit_table(t)
 
-Vis.command(Vis.flist, 1000, "exit")
+Vis.exit(Vis.flist, 1000)

@@ -11,6 +11,9 @@ struct clargs {
     BOOL dumptrace;
     BOOL interactive;
     BOOL enlarge_particles;
+
+    BOOL must_exit;
+    int exit_status;
 };
 
 struct clargs* argparse(int argc, char** argv);

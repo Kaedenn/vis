@@ -20,6 +20,9 @@ typedef plist_action_t (*item_fn)(struct particle* p, size_t idx, void* userdefi
 plist_t plist_new(size_t initial_size);
 void plist_free(plist_t plist);
 
+size_t plist_get_capacity(plist_t plist);
+size_t plist_get_size(plist_t plist);
+
 void plist_foreach(plist_t plist, item_fn fn, void* userdefined);
 
 void plist_add(plist_t plist, struct particle* p);

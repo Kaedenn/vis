@@ -3,7 +3,7 @@ VisUtil = require("visutil")
 math = require("math")
 
 SECOND = 1000
-Vis.command(Vis.flist, 10*SECOND, "exit")
+Vis.exit(Vis.flist, 10*SECOND)
 
 t = VisUtil.make_emit_table()
 t.count = 100

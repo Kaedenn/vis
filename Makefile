@@ -1,7 +1,7 @@
 
 SRCS = async.c audio.c clargs.c command.c drawer.c driver.c emit.c emitter.c \
        flist.c forces.c gc.c helper.c kstring.c mutator.c particle.c \
-       particle_extra.c plimits.c plist.c random.c script.c
+       particle_extra.c plimits.c plist.c random.c script.c genlua.c
 SOURCES = $(CSRC) Makefile
 EXECBIN = vis
 
@@ -32,10 +32,10 @@ SCR_FLIP = $(DIR)/scripts/flip.sh
 SCR_ENCODE = $(DIR)/scripts/encode.sh
 FP_DIR = output
 FP_SCRIPT = lua/bowser.lua
-FP_BASE1 = $(FP_DIR)/bowser1
-FP_BASE2 = $(FP_DIR)/bowser
-FP_AUDIO = media/Bowser.wav
-FP_AVI = $(FP_DIR)/bowser.avi
+FP_BASE1 ?= $(FP_DIR)/bowser1
+FP_BASE2 ?= $(FP_DIR)/bowser
+FP_AUDIO ?= media/Bowser.wav
+FP_AVI ?= $(FP_DIR)/bowser.avi
 
 .PHONY: all fast debug profile execute valgrind leakcheck leakcheck-reachable \
 	clean distclean finalproduct fp-prep fp-makeframes fp-flip fp-encode \
@@ -70,6 +70,10 @@ clean:
 
 distclean: clean fp-prep
 
+encode:
+	$(info "make encode FP_BASE=<images> FP_AVI=<output.avi> FP_AUDIO=<song.wav>")
+	$(SH) $(SCR_ENCODE) "$(FP_BASE)_%04d.png" $(FP_AUDIO) $(FP_AVI)
+
 fp-prep:
 	- $(RM) $(FP_DIR)/bowser*.png 2>/dev/null
 
@@ -80,7 +84,8 @@ fp-flip:
 	$(SH) $(SCR_FLIP) "$(FP_BASE1)" "$(FP_BASE2)"
 
 fp-encode:
-	$(SH) $(SCR_ENCODE) "$(FP_BASE2)_%04d.png" $(FP_AUDIO) $(FP_AVI)
+	make encode "FP_BASE=$(FP_BASE2)"
+	#$(SH) $(SCR_ENCODE) "$(FP_BASE2)_%04d.png" $(FP_AUDIO) $(FP_AVI)
 
 fp-cleanup:
 	$(RM) $(FP_DIR)/bowser_*.png

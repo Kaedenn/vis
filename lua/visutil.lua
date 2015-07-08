@@ -34,9 +34,9 @@ function VisUtil.color_emit_table(t, r, g, b, ur, ug, ub)
     t.r = r>1 and r/255.0 or (r or 0)
     t.g = g>1 and g/255.0 or (g or 0)
     t.b = b>1 and b/255.0 or (b or 0)
-    t.ur = ur>1 and ur/255.0 or (ur or 0)
-    t.ug = ug>1 and ug/255.0 or (ug or 0)
-    t.ub = ub>1 and ub/255.0 or (ub or 0)
+    t.ur = ur and ur>1 and ur/255.0 or (ur or 0)
+    t.ug = ug and ug>1 and ug/255.0 or (ug or 0)
+    t.ub = ub and ub>1 and ub/255.0 or (ub or 0)
 end
 
 function VisUtil.color_emit_table_v(t, rgb)

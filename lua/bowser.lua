@@ -136,4 +136,4 @@ if skip_to ~= nil then
     VisUtil.seek_to(tonumber(skip_to))
 end
 
-Vis.command(Vis.flist, TrackTimes[TRACK_1] + 1000, "exit")
+Vis.exit(Vis.flist, TrackTimes[TRACK_1] + 1000)

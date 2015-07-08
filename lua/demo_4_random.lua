@@ -46,4 +46,4 @@ while i < 200 do
                  'print("FPS: "..Vis.fps(Vis.script))')
     i = i + 50
 end
-Vis.command(Vis.flist, Vis.frames2msec(200), "exit")
+Vis.exit(Vis.flist, Vis.frames2msec(200))

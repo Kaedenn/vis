@@ -26,6 +26,9 @@ struct commands {
     drawer_t drawer;
     plist_t particles;
     script_t script;
+    BOOL should_exit;
+    cmd_error_id exit_status;
+    BOOL interactive;
 };
 
 static void cmd_emit(struct commands* cmds, const char* buffer);
@@ -57,21 +60,36 @@ static struct cmd_map {
     {NULL, NULL, NULL}
 };
 
-struct commands* command_setup(drawer_t drawer, plist_t plist, script_t script) {
+struct commands* command_setup(drawer_t drawer, plist_t plist,
+                               script_t script, BOOL interactive) {
     struct commands* cmds = DBMALLOC(sizeof(struct commands));
     cmds->drawer = drawer;
     cmds->particles = plist;
     cmds->script = script;
-    async_setup_stdin();
-    async_setup_stdout();
-    async_write_stdout(">>> ");
+    cmds->interactive = interactive;
+    if (interactive) {
+        async_setup_stdin();
+        async_setup_stdout();
+        async_write_stdout(">>> ");
+    }
     return cmds;
 }
 
 void command_teardown(struct commands* cmds) {
     DBFREE(cmds);
-    async_write_stdout("\n");
+    if (cmds->interactive) {
+        async_write_stdout("\n");
+    }
 }
+
+BOOL command_should_exit(struct commands* cmds) {
+    return cmds->should_exit;
+}
+
+cmd_error_id command_get_error(struct commands* cmds) {
+    return cmds->exit_status;
+}
+
 
 /*
 nice strums:
@@ -88,25 +106,33 @@ void command(struct commands* cmds) {
         const char* errstr = strerror(errno);
         eprintf("received error %d: %s from async_read_stdin",
                 err, errstr);
+        cmds->should_exit = TRUE;
+        cmds->exit_status = CMD_ERROR_FATAL;
     } else if (bytes == 0) {
-        docommand(cmds, "exit");
+        command_str(cmds, "exit");
     } else if (buffer[0] != '\0') { /* something was read */
         if (buffer[0] != '\n') { /* and the line wasn't empty */
-            docommand(cmds, buffer);
+            command_str(cmds, buffer);
         }
         async_write_stdout(">>> ");
     }
 }
 
-void docommand(struct commands* cmds, const char* buffer) {
+void command_str(struct commands* cmds, const char* buffer) {
+    static char rw_buffer[1024];
     int i = 0;
     char* c;
-    if ((c = strchr(buffer, '\n')) != NULL) {
+    if (strlen(buffer) > 1024) {
+        eprintf("Refusing to handle insane command %p", buffer);
+        return;
+    }
+    strcpy(rw_buffer, buffer);
+    if ((c = strchr(rw_buffer, '\n')) != NULL) {
         *c = '\0';
     }
     while (commands[i].cmd != NULL) {
-        if (startswith(buffer, commands[i].cmd)) {
-            (*commands[i].func)(cmds, buffer);
+        if (startswith(rw_buffer, commands[i].cmd)) {
+            (*commands[i].func)(cmds, rw_buffer);
             break;
         }
         ++i;
@@ -333,7 +359,8 @@ static void cmd_audio(UNUSED_PARAM(struct commands* cmds), const char* buffer) {
 static void cmd_exit(UNUSED_PARAM(struct commands* cmds),
                      UNUSED_PARAM(const char* buffer)) {
     /* depends on the gc freeing everything else */
-    exit(0);
+    cmds->should_exit = TRUE;
+    cmds->exit_status = CMD_ERROR_NONE;
 }
 
 static void cmd_help(UNUSED_PARAM(struct commands* cmds), const char* buffer) {

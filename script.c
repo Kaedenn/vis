@@ -23,6 +23,7 @@ static kstr luautil_get_error(lua_State* L);
 
 static int viscmd_debug_fn(lua_State* L);
 static int viscmd_command_fn(lua_State* L);
+static int viscmd_exit_fn(lua_State* L);
 static int viscmd_emit_fn(lua_State* L);
 static int viscmd_audio_fn(lua_State* L);
 static int viscmd_play_fn(lua_State* L);
@@ -36,79 +37,28 @@ static int viscmd_callback_fn(lua_State* L);
 static int viscmd_fps_fn(lua_State* L);
 static int viscmd_settrace_fn(lua_State* L);
 static int viscmd_emitnow_fn(lua_State* L);
-
 static int viscmd_f2ms_fn(lua_State* L);
 static int viscmd_ms2f_fn(lua_State* L);
+static int viscmd_get_debug_fn(lua_State* L);
 
+static int do_mouse_event(lua_State* L, const char* func, int x, int y);
+static int do_keyboard_event(lua_State* L, const char* func, const char* key,
+                             BOOL shift);
 static emit_t lua_args_to_emit_t(lua_State* L, int arg, fnum_t* when);
 
 struct script {
+    script_debug_t dbg;
     lua_State* L;
     flist_t fl;
     drawer_t drawer;
+    int errors;
 };
-
-char* genlua_emit(emit_t emit, fnum_t when) {
-    char* result;
-    kstr s = kstring_newfrom("Vis.emit(");
-    kstring_append(s, "Vis.flist, ");
-    kstring_appendvf(s, "%d, Vis.frames2msec(%d), ", emit->n, when);
-    kstring_appendvf(s, "%g, %g, %g, %g, ", emit->x, emit->y, emit->ux,
-                     emit->uy);
-    kstring_appendvf(s, "%g, %g, ", emit->rad, emit->urad);
-    kstring_appendvf(s, "%g, %g, ", emit->ds, emit->uds);
-    kstring_appendvf(s, "%g, %g, ", emit->theta, emit->utheta);
-    kstring_appendvf(s, "Vis.frames2msec(%d), Vis.frames2msec(%d), ",
-                     emit->life, emit->ulife);
-    kstring_appendvf(s, "%g, %g, %g, ", (double)emit->r, (double)emit->g,
-                     (double)emit->b);
-    kstring_appendvf(s, "%g, %g, %g, ", (double)emit->ur, (double)emit->ug,
-                     (double)emit->ub);
-    kstring_appendvf(s, "%s, ", genlua_force(emit->force));
-    kstring_appendvf(s, "%s, ", genlua_limit(emit->limit));
-    kstring_appendvf(s, "%s)", genlua_blender(emit->blender));
-
-    result = dupstr(kstring_content(s));
-    kstring_free(s);
-    return result;
-}
-
-const char* genlua_force(force_id force) {
-    switch (force) {
-        case VIS_DEFAULT_FORCE: return "Vis.DEFAULT_FORCE";
-        case VIS_FORCE_FRICTION: return "Vis.FORCE_FRICTION";
-        case VIS_FORCE_GRAVITY: return "Vis.FORCE_GRAVITY";
-        case VIS_NFORCES: return "Vis.NFORCES";
-        default: return "nil";
-    }
-}
-
-const char* genlua_limit(limit_id limit) {
-    switch (limit) {
-        case VIS_DEFAULT_LIMIT: return "Vis.DEFAULT_LIMIT";
-        case VIS_LIMIT_BOX: return "Vis.LIMIT_BOX";
-        case VIS_LIMIT_SPRINGBOX: return "Vis.LIMIT_SPRINGBOX";
-        case VIS_NLIMITS: return "Vis.NLIMITS";
-        default: return "nil";
-    }
-}
-
-const char* genlua_blender(blend_id blender) {
-    switch (blender) {
-        case VIS_BLEND_NONE: return "Vis.BLEND_NONE";
-        /* case VIS_DEFAULT_BLEND: */
-        case VIS_BLEND_LINEAR: return "Vis.BLEND_LINEAR";
-        case VIS_BLEND_QUADRATIC: return "Vis.BLEND_QUADRATIC";
-        case VIS_BLEND_NEGGAMMA: return "Vis.BLEND_NEGGAMMA";
-        case VIS_NBLENDS: return "Vis.NBLENDS";
-        default: return "nil";
-    }
-}
 
 int initialize_vis_lib(lua_State* L) {
     static const struct luaL_Reg vis_lib[] = {
         {"debug", viscmd_debug_fn},
         {"command", viscmd_command_fn},
+        {"exit", viscmd_exit_fn},
         {"emit", viscmd_emit_fn},
         {"audio", viscmd_audio_fn},
         {"play", viscmd_play_fn},
@@ -124,6 +74,7 @@ int initialize_vis_lib(lua_State* L) {
         {"frames2msec", viscmd_f2ms_fn},
         {"msec2frames", viscmd_ms2f_fn},
         {"emitnow", viscmd_emitnow_fn},
+        {"get_debug", viscmd_get_debug_fn},
         {NULL, NULL}
     };
 
@@ -142,8 +93,11 @@ int initialize_vis_lib(lua_State* L) {
     NEW_CONST(DEFAULT_BLEND);
     NEW_CONST(BLEND_NONE);
     NEW_CONST(BLEND_LINEAR);
+    NEW_CONST(BLEND_PARABOLIC);
     NEW_CONST(BLEND_QUADRATIC);
+    NEW_CONST(BLEND_SINE);
     NEW_CONST(BLEND_NEGGAMMA);
+    NEW_CONST(BLEND_EASING);
     NEW_CONST(NBLENDS);
     /* forces */
     NEW_CONST(DEFAULT_FORCE);
@@ -175,6 +129,7 @@ int initialize_vis_lib(lua_State* L) {
 
 script_t script_new(script_cfg_t cfg) {
     script_t s = DBMALLOC(sizeof(struct script));
+    s->dbg = DBMALLOC(sizeof(struct script_debug));
     s->fl = flist_new();
     s->L = luaL_newstate();
     luaL_openlibs(s->L);
@@ -238,28 +193,31 @@ void script_free(script_t s) {
     DBFREE(s);
 }
 
-flist_t script_run(script_t s, const char* filename) {
-    /* s->fl already bound to script in script_new */
-    DBPRINTF("Running %s to build %p", filename, s->fl);
-    if (luaL_dofile(s->L, filename) != LUA_OK) {
-        kstr error = luautil_get_error(s->L);
+flist_t script_run(script_t script, const char* filename) {
+    /* script->fl already bound to script in script_new */
+    DBPRINTF("Running %s to build %p", filename, script->fl);
+    if (luaL_dofile(script->L, filename) != LUA_OK) {
+        script->errors += 1;
+        kstr error = luautil_get_error(script->L);
         eprintf("Error in script %s: %s", filename, kstring_content(error));
         kstring_free(error);
     }
-    return s->fl;
+    return script->fl;
 }
 
 void script_run_string(script_t script, const char* torun) {
     if (luaL_dostring(script->L, torun) != LUA_OK) {
+        script->errors += 1;
         kstr error = luautil_get_error(script->L);
         eprintf("Error in script \"%s\": %s", torun, kstring_content(error));
         kstring_free(error);
     }
 }
 
-void call_script(script_t s, script_cb_t cb, UNUSED_PARAM(void* args)) {
-    if (luaL_dostring(s->L, cb->fn_code) != LUA_OK) {
-        kstr error = luautil_get_error(s->L);
+void call_script(script_t script, script_cb_t cb, UNUSED_PARAM(void* args)) {
+    if (luaL_dostring(script->L, cb->fn_code) != LUA_OK) {
+        script->errors += 1;
+        kstr error = luautil_get_error(script->L);
         char* esc = escape_string(cb->fn_code);
         eprintf("Error in cb code %s: %s", esc, kstring_content(error));
         free(esc);
@@ -277,59 +235,58 @@ void script_callback_free(script_cb_t cb) {
     DBFREE(cb);
 }
 
-static void do_mouse_event(lua_State* L, const char* func, int x, int y) {
-    kstr s = kstring_newfromvf("Vis.on_%s(%d, %d)", func, x, y);
-    if (luaL_dostring(L, kstring_content(s)) != LUA_OK) {
-        const char* error = luaL_checkstring(L, -1);
-        eprintf("Error in %s: %s", kstring_content(s), error);
-        lua_pop(L, 1);
+int script_get_status(script_t script) {
+    return script->errors;
+}
+
+void script_set_debug(script_t script, enum script_debug_id what, uint32_t n) {
+    switch (what) {
+        case SCRIPT_DEBUG_PARTICLES_EMITTED:
+            script->dbg->particles_emitted = n;
+            break;
+        case SCRIPT_DEBUG_TIME_NOW:
+            script->dbg->time_now = n;
+            break;
+        case SCRIPT_DEBUG_FRAMES_EMITTED:
+            script->dbg->frames_emitted = n;
+            break;
+        case SCRIPT_DEBUG_NUM_MUTATES:
+            script->dbg->num_mutates = n;
+            break;
     }
-    kstring_free(s);
+}
+
+void script_get_debug(script_t script, script_debug_t dbg) {
+    *dbg = *script->dbg;
 }
 
 void script_mousemove(script_t script, int x, int y) {
-    do_mouse_event(script->L, "mousemove", x, y);
+    script->errors += do_mouse_event(script->L, "mousemove", x, y);
 }
 
 void script_mousedown(script_t script, int x, int y) {
-    do_mouse_event(script->L, "mousedown", x, y);
+    script->errors += do_mouse_event(script->L, "mousedown", x, y);
 }
 
 void script_mouseup(script_t script, int x, int y) {
-    do_mouse_event(script->L, "mouseup", x, y);
-}
-
-static void do_keyboard_event(lua_State* L, const char* func, const char* key,
-                              BOOL shift) {
-    char* esc_key = escape_string(key);
-    kstr s = kstring_newfromvf("Vis.on_%s(\"%s\", %d)", func, esc_key, (int)shift);
-    if (luaL_dostring(L, kstring_content(s)) != LUA_OK) {
-        const char* error = luaL_checkstring(L, -1);
-        eprintf("Error in %s: %s", kstring_content(s), error);
-        lua_pop(L, 1);
-    }
-    kstring_free(s);
-    free(esc_key);
+    script->errors += do_mouse_event(script->L, "mouseup", x, y);
 }
 
 void script_keydown(script_t script, const char* keyname, BOOL shift) {
-    do_keyboard_event(script->L, "keydown", keyname, shift);
+    script->errors += do_keyboard_event(script->L, "keydown", keyname, shift);
 }
 
 void script_keyup(script_t script, const char* keyname, BOOL shift) {
-    do_keyboard_event(script->L, "keyup", keyname, shift);
+    script->errors += do_keyboard_event(script->L, "keyup", keyname, shift);
 }
 
-void script_quit(script_t script) {
-    if (luaL_dostring(script->L, "Vis.on_quit()") != LUA_OK) {
-        kstr error = luautil_get_error(script->L);
-        eprintf("Error in %s: %s", "Vis.on_quit()", kstring_content(error));
-        kstring_free(error);
-    }
+void script_on_quit(script_t script) {
+    script_run_string(script, "Vis.on_quit()");
 }
 
 /* end of public API */
 script_t luautil_checkscript(lua_State* L, int arg) {
+    /* calling a disabled function is not an error */
     if (lua_isnil(L, arg)) {
         luaL_error(L, "expected Vis.script, received nil, "
                       "function may be disabled");
@@ -392,6 +349,13 @@ int viscmd_command_fn(lua_State* L) {
     const char* cmd = luaL_checkstring(L, 3);
     DBPRINTF("command(%p, %d, \"%s\")", fl, when, cmd);
     flist_insert_cmd(fl, when, cmd);
+    return 0;
+}
+
+int viscmd_exit_fn(lua_State* L) {
+    flist_t fl = *(flist_t*)luaL_checkudata(L, 1, "flist_t*");
+    fnum_t when = (fnum_t)VIS_MSEC_TO_FRAMES(luaL_checkunsigned(L, 2));
+    flist_insert_exit(fl, when);
     return 0;
 }
 
@@ -566,6 +530,54 @@ int viscmd_f2ms_fn(lua_State* L) {
 int viscmd_ms2f_fn(lua_State* L) {
     lua_pushinteger(L, VIS_MSEC_TO_FRAMES(luaL_checknumber(L, 1)));
     return 1;
+}
+
+/* Vis.get_debug(Vis.script, what) */
+int viscmd_get_debug_fn(lua_State* L) {
+    script_t s = luautil_checkscript(L, 1);
+    const char* what = luaL_checkstring(L, 2);
+    if (!strcmp(what, "PARTICLES-EMITTED")) {
+        lua_pushunsigned(L, s->dbg->particles_emitted);
+    } else if (!strcmp(what, "TIME-NOW")) {
+        lua_pushunsigned(L, s->dbg->time_now);
+    } else if (!strcmp(what, "FRAMES-EMITTED")) {
+        lua_pushunsigned(L, s->dbg->frames_emitted);
+    } else if (!strcmp(what, "NUM-MUTATES")) {
+        lua_pushunsigned(L, s->dbg->num_mutates);
+    } else {
+        s->errors += 1;
+        return luaL_error(L, "Debug token \"%s\" invalid", what);
+    }
+    return 1;
+}
+
+static int do_mouse_event(lua_State* L, const char* func, int x, int y) {
+    kstr s = kstring_newfromvf("Vis.on_%s(%d, %d)", func, x, y);
+    int nerror = 0;
+    if (luaL_dostring(L, kstring_content(s)) != LUA_OK) {
+        const char* error = luaL_checkstring(L, -1);
+        eprintf("Error in %s: %s", kstring_content(s), error);
+        lua_pop(L, 1);
+        nerror = 1;
+    }
+    kstring_free(s);
+    return nerror;
+}
+
+static int do_keyboard_event(lua_State* L, const char* func, const char* key,
+                             BOOL shift) {
+    int nerror = 0;
+    char* esc_key = escape_string(key);
+    kstr s = kstring_newfromvf("Vis.on_%s(\"%s\", %d)", func, esc_key, (int)shift);
+    if (luaL_dostring(L, kstring_content(s)) != LUA_OK) {
+        const char* error = luaL_checkstring(L, -1);
+        eprintf("Error in %s: %s", kstring_content(s), error);
+        lua_pop(L, 1);
+        nerror = 1;
+    }
+    kstring_free(s);
+    free(esc_key);
+    return nerror;
 }
 
 static emit_t lua_args_to_emit_t(lua_State* L, int arg, fnum_t* when) {

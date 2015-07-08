@@ -21,6 +21,14 @@ void plist_free(plist_t plist) {
     DBFREE(plist);
 }
 
+size_t plist_get_capacity(plist_t plist) {
+    return plist->capacity;
+}
+
+size_t plist_get_size(plist_t plist) {
+    return plist->size;
+}
+
 void plist_foreach(plist_t plist, item_fn fn, void* userdefined) {
     size_t i = 0;
     while (i < plist->size) {
@@ -42,6 +50,8 @@ void plist_add(plist_t plist, struct particle* p) {
     if (plist->size < plist->capacity) {
         plist->particles[plist->size++] = p;
     } else {
+        eprintf("Attempted to add more than %d particles to plist %p, "
+                "particle dropped", plist->capacity, plist);
         /* For now, ignore */
     }
 }

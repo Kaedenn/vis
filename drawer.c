@@ -3,6 +3,7 @@
 
 #include "drawer.h"
 #include "emitter.h"
+#include "genlua.h"
 #include "helper.h"
 #include "kstring.h"
 #include "particle_extra.h"
@@ -256,22 +257,8 @@ double calculate_blend(struct particle* particle) {
     double alpha = pe->a;
     double life = particle_get_life(particle);
     double lifetime = particle_get_lifetime(particle);
-    switch (pe->blender) {
-        /* default blend is linear */
-        case VIS_BLEND_LINEAR: {
-            alpha *= linear_blend(life, lifetime);
-        } break;
-        case VIS_BLEND_QUADRATIC: {
-            alpha *= quadratic_blend(life, lifetime);
-        } break;
-        case VIS_BLEND_NEGGAMMA: {
-            alpha *= neggamma_blend(life, lifetime);
-        } break;
-        case VIS_BLEND_NONE: {
-            alpha *= no_blend(life, lifetime);
-        } break;
-        case VIS_NBLENDS:
-        default: { } break;
+    if (pe->blender >= VIS_BLEND_NONE && pe->blender < VIS_NBLENDS) {
+        alpha *= blend_fns[pe->blender](life, lifetime);
     }
     return alpha;
 }

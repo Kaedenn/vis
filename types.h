@@ -41,14 +41,18 @@ typedef enum {
     /* default blend is linear */
     VIS_DEFAULT_BLEND = 1,
     VIS_BLEND_LINEAR = 1,
+    VIS_BLEND_PARABOLIC,
     VIS_BLEND_QUADRATIC,
+    VIS_BLEND_SINE,
     VIS_BLEND_NEGGAMMA,
+    VIS_BLEND_EASING,
     VIS_NBLENDS
 } blend_id;
 
 /* constants for frame types */
 typedef enum {
     VIS_FTYPE_EMIT = 0,
+    VIS_FTYPE_EXIT,
     VIS_FTYPE_CMD,
     VIS_FTYPE_BGCOLOR,
     VIS_FTYPE_MUTATE,

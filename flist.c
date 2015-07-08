@@ -70,6 +70,15 @@ void flist_insert_emit(flist_t fl, fnum_t when, emit_t what) {
     flist_insert(fl, when, fn);
 }
 
+void flist_insert_exit(flist_t fl, fnum_t when) {
+    flist_node_t fn = NULL;
+    if (!fl) return;
+    if (when >= VIS_NFRAMES) return;
+    fn = flist_node_new();
+    fn->type = VIS_FTYPE_EXIT;
+    flist_insert(fl, when, fn);
+}
+
 void flist_insert_cmd(flist_t fl, fnum_t when, const char* what) {
     flist_node_t fn = NULL;
     if (!fl) return;

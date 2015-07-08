@@ -15,9 +15,12 @@
 
 #include <string.h>
 
+/* FIXME: move all these to a heap-allocated structure */
 static struct commands* commands;
 static plist_t particles = NULL;
 static flist_t fl = NULL;
+static uint32_t emit_frame_count = 0;
+static uint32_t num_mutates = 0;
 
 void emitter_setup(struct commands* cmds, plist_t plist) {
     commands = cmds;
@@ -25,6 +28,14 @@ void emitter_setup(struct commands* cmds, plist_t plist) {
 }
 
 void emitter_free(UNUSED_PARAM(void* arg)) {
+}
+
+uint32_t emitter_get_emit_frame_count(void) {
+    return emit_frame_count;
+}
+
+uint32_t emitter_get_num_mutates(void) {
+    return num_mutates;
 }
 
 void emitter_schedule(flist_t frames) {
@@ -49,13 +60,17 @@ void emitter_tick(void) {
             case VIS_FTYPE_EMIT:
                 emit_frame(fn->data.frame);
                 break;
+            case VIS_FTYPE_EXIT:
+                command_str(commands, "exit");
+                break;
             case VIS_FTYPE_CMD:
-                docommand(commands, fn->data.cmd);
+                command_str(commands, fn->data.cmd);
                 break;
             case VIS_FTYPE_BGCOLOR:
                 eprintf("No longer implemented, %s", "sorry!");
                 break;
             case VIS_FTYPE_MUTATE:
+                num_mutates += 1;
                 plist_foreach(particles, do_mutate_fn, fn->data.method);
                 break;
             case VIS_FTYPE_SCRIPTCB:
@@ -72,8 +87,8 @@ void emitter_tick(void) {
 }
 
 void emit_frame(emit_t frame) {
-    int i;
-    for (i = 0; i < frame->n; ++i) {
+    emit_frame_count += 1;
+    for (int i = 0; i < frame->n; ++i) {
         struct particle* p = NULL;
         pextra_t pe = NULL;
         float r, g, b;

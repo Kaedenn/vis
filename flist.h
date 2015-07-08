@@ -34,6 +34,7 @@ flist_t flist_new(void);
 void flist_free(flist_t fl);
 void flist_insert(flist_t fl, fnum_t when, flist_node_t fn);
 void flist_insert_emit(flist_t fl, fnum_t when, emit_t what);
+void flist_insert_exit(flist_t fl, fnum_t when);
 void flist_insert_cmd(flist_t fl, fnum_t when, const char* what);
 void flist_insert_bgcolor(flist_t fl, fnum_t when, float color[3]);
 void flist_insert_mutate(flist_t fl, fnum_t when, mutate_method_t method);

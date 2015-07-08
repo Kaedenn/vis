@@ -2,6 +2,11 @@ Vis = require("Vis")
 VisUtil = require("visutil")
 math = require("math")
 
+Vis.on_quit = function()
+    assert(Vis.get_debug(Vis.script, "FRAMES-EMITTED") == 4,
+           "emitted four frames")
+end
+
 t = VisUtil.make_emit_table()
 t.ds = 2
 t.uds = 1
@@ -39,4 +44,4 @@ VisUtil.center_emit_table(t, 400, 400)
 t.theta = math.pi / 2
 VisUtil.emit_table(t)
 
-Vis.command(Vis.flist, t.life + t.when, "exit")
+Vis.exit(Vis.flist, t.life + t.when)

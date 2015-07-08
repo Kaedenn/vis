@@ -13,6 +13,9 @@
 void emitter_setup(struct commands* cmds, plist_t particles);
 void emitter_free(void* arg);
 
+uint32_t emitter_get_emit_frame_count(void);
+uint32_t emitter_get_num_mutates(void);
+
 void emitter_schedule(flist_t frames);
 void emitter_schedule_frame(emit_t frame, unsigned int when);
 void emitter_tick(void);

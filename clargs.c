@@ -29,7 +29,8 @@ struct clargs* argparse(int argc, char** argv) {
                         clargs->dumpfile = argv[++argi];
                     } else {
                         eprintf("Argument -d requires value");
-                        exit(1);
+                        clargs->must_exit = TRUE;
+                        clargs->exit_status = 1;
                     }
                     break;
                 case 'l':
@@ -37,7 +38,8 @@ struct clargs* argparse(int argc, char** argv) {
                         clargs->scriptfile = argv[++argi];
                     } else {
                         eprintf("Argument -l requires value");
-                        exit(1);
+                        clargs->must_exit = TRUE;
+                        clargs->exit_status = 1;
                     }
                     break;
                 case 't':
@@ -52,7 +54,7 @@ struct clargs* argparse(int argc, char** argv) {
                 case 'h':
                     printf(usage_string, argv[0]);
                     printf("%s", help_string);
-                    exit(0);
+                    clargs->must_exit = TRUE;
                     break;
                 default:
                     eprintf("Invalid argument -%c", argv[argi][1]);

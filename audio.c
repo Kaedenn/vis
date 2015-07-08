@@ -21,7 +21,7 @@ typedef struct audio {
 
 static audio_t audio = NULL;
 
-void audio_init(void) {
+BOOL audio_init(void) {
     SDL_AudioSpec fmt;
     SDL_zero(fmt);
     
@@ -35,7 +35,7 @@ void audio_init(void) {
     
     if (SDL_OpenAudio(&fmt, NULL) < 0) {
         eprintf("Unable to open audio: %s\n", SDL_GetError());
-        exit(1);
+        return FALSE;
     }
     
     audio = DBMALLOC(sizeof(struct audio));
@@ -44,6 +44,7 @@ void audio_init(void) {
     audio->sample->data = NULL;
     audio->sample->dpos = 0;
     audio->sample->dlen = 0;
+    return TRUE;
 }
 
 void audio_free(UNUSED_PARAM(void* arg)) {

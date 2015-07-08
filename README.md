@@ -290,3 +290,6 @@ Thank you SNESmusic.org for the Bowser theme, retrieved at
 http://snesmusic.org/v2/profile.php?profile=set&selected=2757
 on the 8th of October 2011.
 
+Thank you Kainui from ##math at irc.freenode.net for helping me with the
+blending functions. It would seem my algebra skills are lacking since I left
+university.
