@@ -1,5 +1,7 @@
 do
 
+debug = require("debug")
+
 T1 = {}
 T1.SCHEDULE_TRACK1 = {
     -- INTRO: PART ONE
@@ -34,7 +36,7 @@ T1.SCHEDULE_TRACK1 = {
     16671,          -- Circle (quieter)
     17220,          -- Circle (much quieter)
     17469,          -- Circle (much quieter)
-    -- MAIN TRACK: PART ONE
+    -- MAIN TRACK: PART ZERO
     18087, 18191,
     18208, 18313,
     18334, 18439,
@@ -43,9 +45,68 @@ T1.SCHEDULE_TRACK1 = {
     18835, 18941,
     18957, 19066,
     19084, 19190,
-    -- MAIN TRACK: PART TWO
-    19172, 39133
 }
+
+T1.SCHEDULE_TRACK1_MAIN1_REPEATS = {
+    19211, 23219, 27227, 31235
+}
+
+T1.SCHEDULE_TRACK1_MAIN1_PART1 = {
+       0,  103, -- note 1
+     123,  226, -- note 2
+     246,  349, -- note 3
+     369,  472, -- note 4
+     492,  595, -- note 5
+     615,  718, -- note 6
+     738,  841, -- note 7
+     861,  964, -- note 8
+     984, 1087, -- note 9
+    1107, 1210, -- note 10
+    1230, 1333, -- note 11
+    1353, 1456, -- note 12
+    1476, 1579, -- note 13
+    1599, 1702, -- note 14
+    1722, 1825, -- note 15
+    1845, 1948, -- note 16
+}
+
+T1.SCHEDULE_TRACK1_MAIN1_PART2 = {
+    2002, 2234,
+    2251, 2358,
+    2375, 2731,
+    2753, 2984,
+    3002, 3111,
+    3126, 3484,
+    3501, 3609,
+    3626, 3735,
+    3752, 3862,
+    3874, 3982
+}
+
+for _,i in pairs(T1.SCHEDULE_TRACK1_MAIN1_REPEATS) do
+    for n,j in pairs(T1.SCHEDULE_TRACK1_MAIN1_PART1) do
+        table.insert(T1.SCHEDULE_TRACK1, #T1.SCHEDULE_TRACK1, i + j)
+    end
+    for n,j in pairs(T1.SCHEDULE_TRACK1_MAIN1_PART2) do
+        table.insert(T1.SCHEDULE_TRACK1, #T1.SCHEDULE_TRACK1, i + j)
+    end
+end
+
+-- MAIN TRACK: PART ONE: 20008ms
+-- m1p1 total: 20008ms, repeat 4 times
+-- m1p1 each: 5002ms
+-- 19211, 21186, -- m1p1
+
+--[[
+--  Main track part one has sixteen uniform tones
+--      tone: 103ms
+--      gap: 20ms
+--      total: 123ms * 16 = duration of m1p1
+--  Main track part two has a b c, a, b, c, 1, 2, 3, 4
+--  length: b < a < c
+--  pitch: b < a < c
+--  pitch: 1 > 2, 1,2 < 3 < 4
+--]]
 
 T1.ScheduleIndex = 0;
 
@@ -54,6 +115,7 @@ function T1.NextSchedule()
     if T1.ScheduleIndex > #T1.SCHEDULE_TRACK1 then
         print("ScheduleIndex " .. T1.ScheduleIndex .. " is greater than " ..
               #T1.SCHEDULE_TRACK1)
+        print(debug.traceback())
         return T1.SCHEDULE_TRACK1[#T1.SCHEDULE_TRACK1]
     end
     return T1.SCHEDULE_TRACK1[T1.ScheduleIndex]
@@ -76,7 +138,25 @@ function T1.emit_circle(start, x, y, ds)
     VisUtil.emit_table(et)
 end
 
+if os.getenv('VIS_BOWSER_DUMP_TRACK1') ~= nil then
+    print("T1.SCHEDULE_TRACK1 = {")
+    print("\t"..T1.SCHEDULE_TRACK1[1]..",")
+    for i = 2, #T1.SCHEDULE_TRACK1, 2 do
+        print("\t"..T1.SCHEDULE_TRACK1[i]..", "..T1.SCHEDULE_TRACK1[i+1]..",")
+    end
+    print("}")
+    print("#T1.SCHEDULE_TRACK1 = "..#T1.SCHEDULE_TRACK1)
+end
+
+T1.REPEAT = {}
+T1.REPEAT.M1 = 0
+T1.REPEAT.M1_SHORT = 4
+
 dofile("lua/bowser/t1intro.lua")
-dofile("lua/bowser/t1main1.lua")
+dofile("lua/bowser/t1main0.lua")
+while T1.REPEAT.M1 < T1.REPEAT.M1_SHORT do
+    dofile("lua/bowser/t1main1.lua")
+    T1.REPEAT.M1 = T1.REPEAT.M1 + 1
+end
 
 end

@@ -15,12 +15,6 @@ TRACKS = 8
 TrackTimes = {0, 0, 0, 0, 0, 0, 0, 0}
 
 SECOND = 1000
-ONE_FRAME_MS = Vis.frames2msec(1)
-
---[[ For debugging
-Vis.command(Vis.flist, t, "exit")
-VisUtil.seek_to(t)
---]]
 
 function now(track)
     return TrackTimes[track]
@@ -34,7 +28,14 @@ function settime(track, offset)
     TrackTimes[track] = offset
 end
 
-Vis.audio("media/Bowser.wav")
+if os.getenv('VIS_NO_AUDIO') == nil then
+    t = os.getenv('VIS_ISOLATE')
+    if t ~= nil then
+        Vis.audio("media/bowser-"..t..".wav")
+    else
+        Vis.audio("media/Bowser.wav")
+    end
+end
 
 function asserteq(a, b)
     if a ~= b then
@@ -123,20 +124,57 @@ H_1_6 = Vis.HEIGHT / 6 -- 100
 H_5_6 = H_1_6 * 5      -- 500
 H_1_8 = Vis.HEIGHT / 8 -- 75
 
--- Only tracks 1, 2, 3, 4, and 8 have anything in them during the intro
-dofile("lua/bowser/track1.lua")
-dofile("lua/bowser/track3.lua")
+local function dotrack(track)
+    isolate = os.getenv('VIS_ISOLATE')
+    if isolate == nil or isolate == tostring(track) then
+        dofile("lua/bowser/track"..track..".lua")
+    end
+end
 
---[[
--- Offsets of various notable things:
---     1223: Track 1, Intro, part 1
---     7108: Track 1, Intro, part 2
---    13422: Track 1, Intro, part 3
---    18087: Start of main song
---]]
+-- Only tracks 1, 2, 3, 4, and 8 have anything in them during the intro
+dotrack(1)
+dotrack(2)
+dotrack(3)
+dotrack(4)
+dotrack(5)
+dotrack(6)
+dotrack(7)
+dotrack(8)
+
+if os.getenv('VIS_HELP') ~= nil then
+    help_msg = {
+        "Environment variables for bowser.lua:",
+        "VIS_NO_AUDIO                   Disable loading of Bowser.wav",
+        "VIS_ISOLATE=<track>            Play only <track>, 1 to 8",
+        "VIS_BOWSER_SKIP_TO=<msec>      Seek all to offset <msec> on load",
+        "VIS_BOWSER_FRAME_TWEAK=<frame> Seek the flist to <frame> on load",
+        "VIS_BOWSER_MS_TWEAK=<msec>     Seek the flist to <msec> on load",
+        "VIS_BOWSER_EXIT_MS=<msec>      Force exit after <msec>",
+        "VIS_HELP                       This message",
+        "",
+        "Useful offsets:",
+        "\t 1223:   Track 1, intro, part 1",
+        "\t 7108:   Track 1, intro, part 2",
+        "\t13422:   Track 1, intro, part 3",
+        "\t18087:   Start of main song",
+        "\t13675:   Track 3, intro, part 4, start of bottom fire"
+    }
+    print(table.concat(help_msg, "\n"))
+end
+
 skip_to = os.getenv('VIS_BOWSER_SKIP_TO')
 if skip_to ~= nil then
     VisUtil.seek_to(tonumber(skip_to))
 end
 
-Vis.exit(Vis.flist, TrackTimes[TRACK_1] + 1000)
+frame_tweak = os.getenv('VIS_BOWSER_FRAME_TWEAK')
+if frame_tweak == nil and os.getenv('VIS_BOWSER_MS_TWEAK') ~= nil then
+    frame_tweak = Vis.msec2frames(os.getenv('VIS_BOWSER_MS_TWEAK'))
+end
+if frame_tweak ~= nil then
+    Vis.seekframe(Vis.flist, 0, frame_tweak)
+end
+
+exit_ms = os.getenv('VIS_BOWSER_EXIT_MS') or TrackTimes[TRACK_1] + 500
+Vis.exit(Vis.flist, exit_ms)
+

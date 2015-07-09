@@ -31,3 +31,4 @@ media/programs
 media/raw
 media/copyrighted
 docs/lua-5.2.3*
+output/*

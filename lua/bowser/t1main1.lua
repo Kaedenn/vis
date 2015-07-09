@@ -1,42 +1,42 @@
 
--- MAIN TRACK: PART ONE
+local pos_tab_s1 = {
+    {W_1_2 - W_1_2/10, H_1_2 - H_1_2/10},
+    {W_1_2 + W_1_2/10, H_1_2 + H_1_2/10},
+    {W_1_2 - W_1_2/10, H_1_2 + H_1_2/10},
+    {W_1_2 + W_1_2/10, H_1_2 - H_1_2/10},
+}
 
-T1.emit_circle(now(TRACK_1), W_1_4, H_1_6, 2)
-T1.emit_circle(now(TRACK_1), W_3_4, H_1_6, 2)
-settime(TRACK_1, T1.NextSchedule())
+for i = 1,16 do
+    if i ~= 1 then settime(TRACK_1, T1.NextSchedule()) end
+    T1.emit_circle(now(TRACK_1), pos_tab_s1[i%4+1][1], pos_tab_s1[i%4+1][2])
+    settime(TRACK_1, T1.NextSchedule())
+end
 
-settime(TRACK_1, T1.NextSchedule())
-T1.emit_circle(now(TRACK_1), W_1_3, H_1_4, 1.9)
-T1.emit_circle(now(TRACK_1), W_2_3, H_1_4, 1.9)
-settime(TRACK_1, T1.NextSchedule())
+-- a b c, a b c
+local pos_tab_s2 = {
+    {W_1_2, H_3_4},
+    {W_1_2, H_2_3},
+    {W_1_2, H_1_2}
+}
 
-settime(TRACK_1, T1.NextSchedule())
-T1.emit_circle(now(TRACK_1), W_1_4, H_1_3, 1.7)
-T1.emit_circle(now(TRACK_1), W_3_4, H_1_3, 1.7)
-settime(TRACK_1, T1.NextSchedule())
+for _ = 1,2 do
+for i = 1,3 do
+    settime(TRACK_1, T1.NextSchedule())
+    T1.emit_circle(now(TRACK_1), pos_tab_s2[i][1], pos_tab_s2[i][2])
+    settime(TRACK_1, T1.NextSchedule())
+end
+end
 
-settime(TRACK_1, T1.NextSchedule())
-T1.emit_circle(now(TRACK_1), W_1_3, H_1_2, 1.5)
-T1.emit_circle(now(TRACK_1), W_2_3, H_1_2, 1.5)
-settime(TRACK_1, T1.NextSchedule())
+-- 1, 2, 3, 4
+local pos_tab_s3 = {
+    {W_1_3, H_1_2},
+    {W_2_3, H_1_2},
+    {W_1_4, H_1_3},
+    {W_3_4, H_1_3},
+}
 
-settime(TRACK_1, T1.NextSchedule())
-T1.emit_circle(now(TRACK_1), W_1_3, H_1_4)
-T1.emit_circle(now(TRACK_1), W_2_3, H_1_4)
-settime(TRACK_1, T1.NextSchedule())
-
-settime(TRACK_1, T1.NextSchedule())
-T1.emit_circle(now(TRACK_1), W_1_3, H_1_4)
-T1.emit_circle(now(TRACK_1), W_2_3, H_1_4)
-settime(TRACK_1, T1.NextSchedule())
-
-settime(TRACK_1, T1.NextSchedule())
-T1.emit_circle(now(TRACK_1), W_1_3, H_1_4)
-T1.emit_circle(now(TRACK_1), W_2_3, H_1_4)
-settime(TRACK_1, T1.NextSchedule())
-
-settime(TRACK_1, T1.NextSchedule())
-T1.emit_circle(now(TRACK_1), W_1_3, H_1_4)
-T1.emit_circle(now(TRACK_1), W_2_3, H_1_4)
-settime(TRACK_1, T1.NextSchedule())
-
+for i = 1,4 do
+    settime(TRACK_1, T1.NextSchedule())
+    T1.emit_circle(now(TRACK_1), pos_tab_s3[i][1], pos_tab_s3[i][2])
+    settime(TRACK_1, T1.NextSchedule())
+end
