@@ -67,8 +67,9 @@ def do_encode(args):
     if os.path.exists(ou_avi):
         sys.stderr.write("Warning: removing existing file %s!\n" % (ou_avi,))
         os.remove(ou_avi)
+    verbose(args, "Invoking %s", ' '.join(ffmpeg))
     if subprocess.call(ffmpeg) != 0:
-        sys.stderr.write("Failed to encode %s to %s\n", in_fmt, ou_avi)
+        sys.stderr.write("Failed to encode %s to %s\n" % (in_fmt, ou_avi))
         raise SystemExit(1)
 
 S_FFMPEG_NOT_INSTALLED = """\
