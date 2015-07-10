@@ -83,7 +83,7 @@ void emitter_tick(void) {
             default:
                 break;
         }
-        fn = flist_node_next(fn);
+        fn = fn->type != VIS_FTYPE_FRAMESEEK ? flist_node_next(fn) : NULL;
     }
 }
 
