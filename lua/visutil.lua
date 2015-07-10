@@ -1,6 +1,13 @@
 Vis = require('Vis')
 
 VisUtil = {}
+
+VisUtil.EMIT_FIELDS = {
+    "count", "when", "x", "y", "ux", "uy", "radius", "uradius",
+    "ds", "uds", "theta", "utheta", "life", "ulife", "r", "g", "b",
+    "ur", "ug", "ub", "force", "limit", "blender"
+}
+
 function VisUtil.make_emit_table()
     return {
         count = 0, when = 0,
@@ -76,7 +83,16 @@ function VisUtil.set_trace_table(t)
                  t.force, t.limit, t.blender)
 end
 
-function VisUtil.dumpobject(o, i, seen)
+function VisUtil.stremit(e)
+    s = "e = {\n"
+    for _,v in pairs(VisUtil.EMIT_FIELDS) do
+        s = s .. "\t"..v..": "..e._t[v]..",\n"
+    end
+    s = s .. "}"
+    return s
+end
+
+function VisUtil.strobject(o, i, seen)
     seen = seen or {}
     if type(o) ~= "table" then
         if type(o) == "string" then

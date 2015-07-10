@@ -3,20 +3,27 @@ VisUtil = require('visutil')
 
 Emit = {}
 
-function Emit:new(o)
-    o = o or {}
-    setmetatable(o, self)
-    self.__index = self
-    if o['_t'] == nil then
+function Emit:new(obj)
+    o = {}
+    o._t = {}
+    if obj ~= nil and obj._t ~= nil then
+        for k,v in pairs(obj._t) do
+            o._t[k] = v
+        end
+    else
         o._t = VisUtil.make_emit_table()
     end
+    setmetatable(o, self)
+    self.__index = self
     return o
 end
 
 function Emit:copy() return Emit:new(self) end
+function Emit:clone() return self:copy() end
 function Emit:emit() return VisUtil.emit_table(self._t) end
 function Emit:emit_now() return VisUtil.emit_table_now(self._t) end
 function Emit:set_trace() return VisUtil.set_trace_table(self._t) end
+function Emit:str() return VisUtil.stremit(self) end
 
 function Emit:count(n)
     self._t.count = n
