@@ -1,7 +1,6 @@
 do
 
-T3 = {}
-T3.SCHEDULE_TRACK3 = {
+T3.SCHEDULE = {
     -- INTRO
     0, 5848,
     5893, 12043,
@@ -15,38 +14,6 @@ T3.SCHEDULE_TRACK3 = {
     17595, 18048,
     -- MAIN SONG
 }
-
-T3.ScheduleIndex = 0;
-
-function T3.NextSchedule()
-    T3.ScheduleIndex = T3.ScheduleIndex + 1
-    if T3.ScheduleIndex > #T3.SCHEDULE_TRACK3 then
-        print("ScheduleIndex " .. T3.ScheduleIndex .. " is greater than " ..
-              #T3.SCHEDULE_TRACK3)
-        return T3.SCHEDULE_TRACK3[#T3.SCHEDULE_TRACK3]
-    end
-    return T3.SCHEDULE_TRACK3[T3.ScheduleIndex]
-end
-
-function T3.set_emit_left(et)
-    VisUtil.center_emit_table(et, 0, 0, 0, Vis.HEIGHT)
-    et.theta = 0
-end
-
-function T3.set_emit_right(et)
-    VisUtil.center_emit_table(et, Vis.WIDTH, 0, 0, Vis.HEIGHT)
-    et.theta = math.pi
-end
-
-function T3.set_emit_top(et)
-    VisUtil.center_emit_table(et, 0, 0, Vis.WIDTH, 0)
-    et.theta = math.pi/2
-end
-
-function T3.set_emit_bottom(et)
-    VisUtil.center_emit_table(et, 0, Vis.HEIGHT, Vis.WIDTH, 0)
-    et.theta = 3*math.pi/2
-end
 
 function T3.make_emit_tables_for_level(level)
     local results = {}
@@ -63,16 +30,16 @@ function T3.make_emit_tables_for_level(level)
     VisUtil.color_emit_table_v(et, rgb_tab[level] or rgb_tab[#rgb_tab])
     et.utheta = 0.8
 
-    T3.set_emit_left(et)
+    Emits.set_emit_left(et)
     table.insert(results, VisUtil.copy_table(et))
-    T3.set_emit_right(et)
+    Emits.set_emit_right(et)
     table.insert(results, VisUtil.copy_table(et))
     if level > 3 then
-        T3.set_emit_top(et)
+        Emits.set_emit_top(et)
         et.x = Vis.WIDTH / 2
         et.ux = Vis.WIDTH / 14 * (level - 3)
         table.insert(results, VisUtil.copy_table(et))
-        T3.set_emit_bottom(et)
+        Emits.set_emit_bottom(et)
         et.x = Vis.WIDTH / 2
         et.ux = Vis.WIDTH / 14 * (level - 3)
         table.insert(results, VisUtil.copy_table(et))

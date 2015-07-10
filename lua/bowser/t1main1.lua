@@ -8,7 +8,7 @@ local pos_tab_s1 = {
 
 for i = 1,16 do
     if i ~= 1 then settime(TRACK_1, T1.NextSchedule()) end
-    T1.emit_circle(now(TRACK_1), pos_tab_s1[i%4+1][1], pos_tab_s1[i%4+1][2])
+    Emits.emit_circle(now(TRACK_1), pos_tab_s1[i%4+1][1], pos_tab_s1[i%4+1][2])
     settime(TRACK_1, T1.NextSchedule())
 end
 
@@ -22,7 +22,7 @@ local pos_tab_s2 = {
 for _ = 1,2 do
 for i = 1,3 do
     settime(TRACK_1, T1.NextSchedule())
-    T1.emit_circle(now(TRACK_1), pos_tab_s2[i][1], pos_tab_s2[i][2])
+    Emits.emit_circle(now(TRACK_1), pos_tab_s2[i][1], pos_tab_s2[i][2])
     settime(TRACK_1, T1.NextSchedule())
 end
 end
@@ -37,6 +37,6 @@ local pos_tab_s3 = {
 
 for i = 1,4 do
     settime(TRACK_1, T1.NextSchedule())
-    T1.emit_circle(now(TRACK_1), pos_tab_s3[i][1], pos_tab_s3[i][2])
+    Emits.emit_circle(now(TRACK_1), pos_tab_s3[i][1], pos_tab_s3[i][2])
     settime(TRACK_1, T1.NextSchedule())
 end

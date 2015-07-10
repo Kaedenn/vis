@@ -2,8 +2,7 @@ do
 
 debug = require("debug")
 
-T1 = {}
-T1.SCHEDULE_TRACK1 = {
+T1.SCHEDULE = {
     -- INTRO: PART ONE
      1223,          -- Circle
      1594,          -- Circle
@@ -47,11 +46,11 @@ T1.SCHEDULE_TRACK1 = {
     19084, 19190,
 }
 
-T1.SCHEDULE_TRACK1_MAIN1_REPEATS = {
+T1.SCHEDULE_MAIN1_REPEATS = {
     19211, 23219, 27227, 31235
 }
 
-T1.SCHEDULE_TRACK1_MAIN1_PART1 = {
+T1.SCHEDULE_MAIN1_PART1 = {
        0,  103, -- note 1
      123,  226, -- note 2
      246,  349, -- note 3
@@ -70,7 +69,7 @@ T1.SCHEDULE_TRACK1_MAIN1_PART1 = {
     1845, 1948, -- note 16
 }
 
-T1.SCHEDULE_TRACK1_MAIN1_PART2 = {
+T1.SCHEDULE_MAIN1_PART2 = {
     2002, 2234,
     2251, 2358,
     2375, 2731,
@@ -83,12 +82,12 @@ T1.SCHEDULE_TRACK1_MAIN1_PART2 = {
     3874, 3982
 }
 
-for _,i in pairs(T1.SCHEDULE_TRACK1_MAIN1_REPEATS) do
-    for n,j in pairs(T1.SCHEDULE_TRACK1_MAIN1_PART1) do
-        table.insert(T1.SCHEDULE_TRACK1, #T1.SCHEDULE_TRACK1, i + j)
+for _,i in pairs(T1.SCHEDULE_MAIN1_REPEATS) do
+    for n,j in pairs(T1.SCHEDULE_MAIN1_PART1) do
+        table.insert(T1.SCHEDULE, #T1.SCHEDULE, i + j)
     end
-    for n,j in pairs(T1.SCHEDULE_TRACK1_MAIN1_PART2) do
-        table.insert(T1.SCHEDULE_TRACK1, #T1.SCHEDULE_TRACK1, i + j)
+    for n,j in pairs(T1.SCHEDULE_MAIN1_PART2) do
+        table.insert(T1.SCHEDULE, #T1.SCHEDULE, i + j)
     end
 end
 
@@ -107,46 +106,6 @@ end
 --  pitch: b < a < c
 --  pitch: 1 > 2, 1,2 < 3 < 4
 --]]
-
-T1.ScheduleIndex = 0;
-
-function T1.NextSchedule()
-    T1.ScheduleIndex = T1.ScheduleIndex + 1
-    if T1.ScheduleIndex > #T1.SCHEDULE_TRACK1 then
-        print("ScheduleIndex " .. T1.ScheduleIndex .. " is greater than " ..
-              #T1.SCHEDULE_TRACK1)
-        print(debug.traceback())
-        return T1.SCHEDULE_TRACK1[#T1.SCHEDULE_TRACK1]
-    end
-    return T1.SCHEDULE_TRACK1[T1.ScheduleIndex]
-end
-
-function T1.emit_circle(start, x, y, ds)
-    local MAXLIFE = SECOND/3
-    local MAXLIFE_ADJ = 0
-
-    et = VisUtil.make_emit_table()
-    VisUtil.center_emit_table(et, x or Vis.WIDTH/3, y or Vis.HEIGHT*2/3)
-    et.radius = 2
-    et.ds = ds or 1
-    et.life = MAXLIFE
-    VisUtil.color_emit_table(et, 0, 100, 200, 0, 50, 0);
-    et.count = 100
-    et.when = start
-    et.theta = math.pi
-    et.utheta = math.pi
-    VisUtil.emit_table(et)
-end
-
-if os.getenv('VIS_BOWSER_DUMP_TRACK1') ~= nil then
-    print("T1.SCHEDULE_TRACK1 = {")
-    print("\t"..T1.SCHEDULE_TRACK1[1]..",")
-    for i = 2, #T1.SCHEDULE_TRACK1, 2 do
-        print("\t"..T1.SCHEDULE_TRACK1[i]..", "..T1.SCHEDULE_TRACK1[i+1]..",")
-    end
-    print("}")
-    print("#T1.SCHEDULE_TRACK1 = "..#T1.SCHEDULE_TRACK1)
-end
 
 T1.REPEAT = {}
 T1.REPEAT.M1 = 0

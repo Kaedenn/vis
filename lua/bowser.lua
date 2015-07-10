@@ -2,6 +2,7 @@ Vis = require("Vis")
 VisUtil = require("visutil")
 math = require("math")
 os = require("os")
+Emits = require("lua/bowser/emit_fns")
 
 TRACK_1 = 1
 TRACK_2 = 2
@@ -44,85 +45,25 @@ function asserteq(a, b)
     end
 end
 
-function emit_spiral(steps)
-    local MAXLIFE = 10/3*SECOND
-    local MAXLIFE_ADJ = 1/3*SECOND
+W = function(num, denom) return Vis.WIDTH * num / denom end
+W_1_2 = W(1,2) -- 400
+W_1_3 = W(1,3) -- 266.6...
+W_2_3 = W(2,3) -- 533.3...
+W_1_4 = W(1,4) -- 200
+W_3_4 = W(3,4) -- 600
+W_1_6 = W(1,6) -- 133.3...
+W_5_6 = W(5,6) -- 666.6...
+W_1_8 = W(1,8) -- 100
 
-    et = VisUtil.make_emit_table()
-    center_emit_table(et)
-    et.radius = 2
-    et.ds = 2
-    et.uds = 1.75
-    et.life = MAXLIFE
-    et.ulife = MAXLIFE_ADJ
-    VisUtil.color_emit_table(et, 0, 100, 200, 0, 10, 50)
-    for i = 0, steps do
-        et.count = 1000
-        et.when = i
-        et.theta = 2*math.pi * i / steps
-        et.utheta = 2*math.pi / steps
-        VisUtil.emit_table(et)
-    end
-    return steps + MAXLIFE + MAXLIFE_ADJ
-end
-
-function emit_line_v(start, x, r, g, b, ur, ug, ub)
-    local MAXLIFE = SECOND/3
-    local MAXLIFE_ADJ = 0
-
-    et = VisUtil.make_emit_table()
-    VisUtil.center_emit_table(et, x, 0, 0, Vis.HEIGHT)
-    et.radius = 2
-    et.ds = 1
-    et.life = MAXLIFE
-    VisUtil.color_emit_table(et, r or 0, g or 100, b or 200,
-                                ur or 0, ug or 50, ub or 0)
-    et.count = 200
-    et.when = start
-    et.theta = math.pi/2
-    et.utheta = 0.1
-    VisUtil.emit_table(et)
-    et.theta = math.pi*3/2
-    et.utheta = 0.1
-    VisUtil.emit_table(et)
-end
-
-function emit_line_h(start, y, r, g, b, ur, ug, ub)
-    local MAXLIFE = SECOND/3
-    local MAXLIFE_ADJ = 0
-
-    et = VisUtil.make_emit_table()
-    VisUtil.center_emit_table(et, 0, y, Vis.WIDTH, 0)
-    et.radius = 2
-    et.ds = 1
-    et.life = MAXLIFE
-    VisUtil.color_emit_table(et, r or 0, g or 100, b or 200,
-                                ur or 0, ug or 50, ub or 0)
-    et.count = 200
-    et.when = start
-    et.theta = 0
-    VisUtil.emit_table(et)
-    et.theta = math.pi
-    VisUtil.emit_table(et)
-end
-
-W_1_2 = Vis.WIDTH / 2 -- 400
-W_1_3 = Vis.WIDTH / 3 -- 266.6...
-W_2_3 = W_1_3 * 2     -- 533.3...
-W_1_4 = Vis.WIDTH / 4 -- 200
-W_3_4 = W_1_4 * 3     -- 600
-W_1_6 = Vis.WIDTH / 6 -- 133.3...
-W_5_6 = W_1_6 * 5     -- 666.6...
-W_1_8 = Vis.WIDTH / 8 -- 100
-
-H_1_2 = Vis.HEIGHT / 2 -- 300
-H_1_3 = Vis.HEIGHT / 3 -- 200
-H_2_3 = H_1_3 * 2      -- 400
-H_1_4 = Vis.HEIGHT / 4 -- 150
-H_3_4 = H_1_4 * 3      -- 450
-H_1_6 = Vis.HEIGHT / 6 -- 100
-H_5_6 = H_1_6 * 5      -- 500
-H_1_8 = Vis.HEIGHT / 8 -- 75
+H = function(num, denom) return Vis.HEIGHT * num / denom end
+H_1_2 = H(1,2) -- 300
+H_1_3 = H(1,3) -- 200
+H_2_3 = H(2,3) -- 400
+H_1_4 = H(1,4) -- 150
+H_3_4 = H(3,4) -- 450
+H_1_6 = H(1,6) -- 100
+H_5_6 = H(5,6) -- 500
+H_1_8 = H(1,8) -- 75
 
 local function dotrack(track)
     isolate = os.getenv('VIS_ISOLATE')
@@ -131,15 +72,55 @@ local function dotrack(track)
     end
 end
 
+local function GenNextScheduleFn(track, track_num)
+    function NextSchedule()
+        track.ScheduleIndex = track.ScheduleIndex + 1
+        if track.ScheduleIndex > #track.SCHEDULE then
+            print("ScheduleIndex " .. track.ScheduleIndex .. " is greater than " ..
+                  #track.SCHEDULE)
+            print(debug.traceback())
+            return track.SCHEDULE[#track.SCHEDULE]
+        end
+        return track.SCHEDULE[track.ScheduleIndex]
+    end
+    return NextSchedule
+end
+
+-- Must be *before* scheduling to avoid conflicts
+skip_to = os.getenv('VIS_BOWSER_SKIP_TO')
+if skip_to ~= nil then
+    VisUtil.seek_to(tonumber(skip_to))
+end
+
+ms_tweak = os.getenv('VIS_BOWSER_MS_TWEAK')
+frame_tweak = os.getenv('VIS_BOWSER_FRAME_TWEAK')
+if ms_tweak ~= nil then
+    frame_tweak = Vis.msec2frames(ms_tweak)
+end
+
+if frame_tweak ~= nil then
+    Vis.seekframe(Vis.flist, 0, frame_tweak)
+end
+
+-- Provide a way for tracks to share schedules
 -- Only tracks 1, 2, 3, 4, and 8 have anything in them during the intro
-dotrack(1)
-dotrack(2)
-dotrack(3)
-dotrack(4)
-dotrack(5)
-dotrack(6)
-dotrack(7)
-dotrack(8)
+for i = 1,8 do
+    _G['T'..i] = {}
+    Tn = _G['T'..i]
+    Tn.ScheduleIndex = 0
+    Tn.NextSchedule = GenNextScheduleFn(Tn, i)
+    Tn.now = (function(n) return function() return TrackTimes[n] end end)(i)
+    Tn.adv = (function(n) return function(o) TrackTimes[n] = TrackTimes[n] + o end end)(i)
+    Tn.set = (function(n) return function(o) TrackTimes[n] = o end end)(i)
+    dotrack(i)
+    if os.getenv('VIS_BOWSER_DUMP_TRACK'..i) ~= nil then
+        print('T'..i..'.SCHEDULE = {')
+        for i = 1,#Tn.SCHEDULE,2 do
+            print("\t"..Tn.SCHEDULE[i]..", "..Tn.SCHEDULE[i+1]..",")
+        end
+        print("} -- #T"..i..".SCHEDULE = "..#Tn.SCHEDULE)
+    end
+end
 
 if os.getenv('VIS_HELP') ~= nil then
     help_msg = {
@@ -156,23 +137,11 @@ if os.getenv('VIS_HELP') ~= nil then
         "\t 1223:   Track 1, intro, part 1",
         "\t 7108:   Track 1, intro, part 2",
         "\t13422:   Track 1, intro, part 3",
+        "\t13675:   Track 3, intro, part 4, start of bottom fire",
         "\t18087:   Start of main song",
-        "\t13675:   Track 3, intro, part 4, start of bottom fire"
+        "\t19211:   Start of track 4's repeating sections"
     }
     print(table.concat(help_msg, "\n"))
-end
-
-skip_to = os.getenv('VIS_BOWSER_SKIP_TO')
-if skip_to ~= nil then
-    VisUtil.seek_to(tonumber(skip_to))
-end
-
-frame_tweak = os.getenv('VIS_BOWSER_FRAME_TWEAK')
-if frame_tweak == nil and os.getenv('VIS_BOWSER_MS_TWEAK') ~= nil then
-    frame_tweak = Vis.msec2frames(os.getenv('VIS_BOWSER_MS_TWEAK'))
-end
-if frame_tweak ~= nil then
-    Vis.seekframe(Vis.flist, 0, frame_tweak)
 end
 
 exit_ms = os.getenv('VIS_BOWSER_EXIT_MS') or TrackTimes[TRACK_1] + 500
