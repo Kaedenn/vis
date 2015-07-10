@@ -36,14 +36,20 @@ def do_flip(args):
     verbose(args, "found %s input files", len(in_files))
     if args.skip > 0:
         del in_files[:args.skip-1]
-    octr = 0
-    for filename in in_files:
+    if len(in_files) == 0:
+        raise RuntimeError("found no files to process; quitting")
+    error = False
+    for octr, filename in enumerate(in_files):
         outf = os.path.join(args.out_prefix + (SUFFIX_FMT % (octr,)))
         if subprocess.call([CONVERT, '-flip', filename, outf]) != 0:
             sys.stderr.write("Failed to flip %s to %s, skipping...\n" %
                              (filename, outf))
-        progress(args, "Processed file %s %s to %s", octr, filename, outf)
-        octr += 1
+            error = True
+        progress(args, "%02d%%: %s to %s", octr*100/len(in_files),
+                 filename, outf)
+    progress(args, "\n")
+    if error:
+        raise SystemExit(1)
 
 def do_encode(args):
     if args.skip > 0:
@@ -56,12 +62,14 @@ def do_encode(args):
         for piece in args.add_encode:
             ffmpeg.extend(['-i', piece])
     ffmpeg.extend(['-shortest', '-c:v', 'libx264', ou_avi])
-    # ffmpeg -framerate 30 -i "$i_img" -i "$i_wav" -shortest -c:v libx264 "$o_avi"
+    if args.ffargs is not None:
+        ffmpeg.extend(args.ffargs.split())
     if os.path.exists(ou_avi):
         sys.stderr.write("Warning: removing existing file %s!\n" % (ou_avi,))
         os.remove(ou_avi)
     if subprocess.call(ffmpeg) != 0:
         sys.stderr.write("Failed to encode %s to %s\n", in_fmt, ou_avi)
+        raise SystemExit(1)
 
 S_FFMPEG_NOT_INSTALLED = """\
 Error! ffmpeg not installed! Please be sure you install the ffmpeg version and
@@ -125,7 +133,6 @@ def check_ffmpeg():
     FFMPEG_WRONG_VERSION = 2
 
     status = FFMPEG_PRESENT
-
     try:
         p = subprocess.Popen([FFMPEG, '-version'], stdout=subprocess.PIPE,
                              stderr=subprocess.STDOUT)
@@ -146,7 +153,6 @@ def check_imagemagick():
     IMAGEMAGICK_ERROR = 2
 
     status = IMAGEMAGICK_PRESENT
-
     try:
         s = subprocess.call([CONVERT, '-version'], stdout=subprocess.PIPE,
                             stderr=subprocess.STDOUT)
@@ -187,6 +193,8 @@ def parse_args(argv):
                    help="see the 'examples' section below")
     p.add_argument("--add-encode", action="append",
                    help="add another input to ffmpeg")
+    p.add_argument("--ffargs", metavar='STR',
+                   help="additional arguments to pass to ffmpeg")
     p.add_argument("-s", "--skip", type=int, default=0, metavar='FRAMES',
                    help="skip the first <FRAMES> images")
     p.add_argument("-f", "--fps", type=int, default=30, metavar='FPS',
@@ -207,29 +215,6 @@ def main(argv):
 def do_test(argv):
     raise NotImplementedError("--test is not yet implemented")
 
-    def assert_raises(argv, exception, **kwargs):
-        try:
-            main(argv)
-        except Exception as e:
-            assert(isinstance(e, exception))
-            print "%r raised %s (args %s)" % (argv, exception, kwargs)
-            for arg,val in kwargs.items():
-                actual = getattr(e, arg)
-                if val != actual:
-                    sys.stderr.write("Assertion failed: desired %s != %s\n" %
-                                     (val, actual))
-                    assert(val == actual)
-        else:
-            assert(False)
-
-    print "Test one: no arguments"
-    assert_raises(argv[1:1], SystemExit, **{'code': 2})
-    print "Test two: --help"
-    assert_raises([argv[1], '--help'], SystemExit, **{'code': 0})
-    print "Test three: invalid ffmpeg"
-    os.environ['FFMPEG'] = '/usr/bin/ffmpeg'
-    assert_raises([argv[1], 'encode', 'in'], FFmpegError)
-
 if __name__ == "__main__":
     for i,a in enumerate(sys.argv):
         if a == '--test':
@@ -239,58 +224,16 @@ if __name__ == "__main__":
     try:
         main(sys.argv[1:])
     except FFmpegError as e:
-        sys.stderr.write("%s\n" % (e,))
+        sys.stderr.write("FFmpeg error: %s\n" % (e,))
         raise SystemExit(1)
     except ConvertError as e:
-        sys.stderr.write("%s\n" % (e,))
+        sys.stderr.write("ImageMagick convert error: %s\n" % (e,))
+        raise SystemExit(1)
+    except RuntimeError as e:
+        sys.stderr.write("Runtime error: %s\n" % (e,))
         raise SystemExit(1)
     except SystemExit as e:
         if e.code != 0:
             sys.stderr.write("Terminating!\n")
         raise
-
-## flip.sh
-#
-# #!/bin/bash
-#
-# which convert || {
-#     echo "please install ImageMagick" >&2
-#     exit 1
-# }
-#
-# iprefix="$1"
-# oprefix="$2"
-#
-# dorename() {
-#     iesc="$(echo "$iprefix" | sed 's/\//\\\//g')"
-#     oesc="$(echo "$oprefix" | sed 's/\//\\\//g')"
-#     echo "$@" | sed "s/$iesc/$oesc/"
-# }
-#
-# progress=0
-# doprogress() {
-#     echo -en "Processed $progress files...\r"
-#     progress=$(($progress+1))
-# }
-#
-# find . -wholename "./$iprefix*" -print | while read f; do
-#     doprogress
-#     convert -flip $f $(dorename $f) || exit
-# done
-
-## encode.sh
-#
-# #!/bin/bash
-#
-# which ffmpeg || {
-#     echo "please install the libffmpeg version of ffmpeg" >&2
-#     echo '(and NOT the libav version!)' >&2
-#     exit 1
-# }
-#
-# i_img="$1"
-# i_wav="$2"
-# o_avi="$3"
-#
-# ffmpeg -framerate 30 -i "$i_img" -i "$i_wav" -shortest -c:v libx264 "$o_avi"
 

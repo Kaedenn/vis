@@ -1,4 +1,14 @@
 
+# Makefile for the vis project
+#
+# Nice features:
+#
+# make <target> EXEC_ARGS="arguments to pass to vis"
+# make <target> EXTRA_CFLAGS="extra cflags to pass to gcc"
+# make <target> EXTRA_LDFLAGS="extra ldflags to pass to gcc"
+# make <target> SCR_ARGS="extra args to pass to process.py"
+#
+
 SRCS = async.c audio.c clargs.c command.c drawer.c driver.c emit.c emitter.c \
        flist.c forces.c gc.c helper.c kstring.c mutator.c particle.c \
        particle_extra.c plimits.c plist.c random.c script.c genlua.c
@@ -29,14 +39,18 @@ VG_LEAKCHECK = --leak-check=full
 VG_REACHABLE = $(VG_LEAKCHECK) --show-reachable=yes --show-leak-kinds=all
 VALGRIND = $(VALGRIND_DEFAULT) $(VALGRIND_EXTRA)
 
-SCR_FLIP = $(DIR)/scripts/flip.sh
-SCR_ENCODE = $(DIR)/scripts/encode.sh
+SCR_PROCESS = $(DIR)/scripts/process.py
+SCR_ARGS ?=
+
 FP_DIR = output
 FP_SCRIPT = lua/bowser.lua
 FP_BASE1 ?= $(FP_DIR)/bowser1
 FP_BASE2 ?= $(FP_DIR)/bowser
 FP_AUDIO ?= media/Bowser.wav
 FP_AVI ?= $(FP_DIR)/bowser.avi
+
+SCR_FLIP = $(DIR)/scripts/flip.sh
+SCR_ENCODE = $(DIR)/scripts/encode.sh
 
 .PHONY: all fast debug trace profile execute valgrind leakcheck \
 	leakcheck-reachable clean distclean finalproduct fp-prep fp-makeframes \
@@ -76,24 +90,24 @@ distclean: clean fp-prep
 
 encode:
 	$(info "make encode FP_BASE=<images> FP_AVI=<output.avi> FP_AUDIO=<song.wav>")
-	$(SH) $(SCR_ENCODE) "$(FP_BASE)_%04d.png" $(FP_AUDIO) $(FP_AVI)
+	python $(SCR_PROCESS) encode $(FP_BASE) $(FP_AVI) --add-encode \
+		$(FP_AUDIO) $(SCR_ARGS)
 
 fp-prep:
-	- $(RM) $(FP_DIR)/bowser*.png 2>/dev/null
+	- $(MAKE) fp-cleanup
 
 fp-makeframes: fp-prep
-	$(DIR)/$(EXECBIN) -l $(FP_SCRIPT) -d $(FP_BASE1) -i
+	$(DIR)/$(EXECBIN) -l $(FP_SCRIPT) -d $(FP_BASE1) -i -q
 
 fp-flip:
-	$(SH) $(SCR_FLIP) "$(FP_BASE1)" "$(FP_BASE2)"
+	python $(SCR_PROCESS) flip "$(FP_BASE1)" "$(FP_BASE2)" $(SCR_ARGS)
 
 fp-encode:
-	make encode "FP_BASE=$(FP_BASE2)"
-	#$(SH) $(SCR_ENCODE) "$(FP_BASE2)_%04d.png" $(FP_AUDIO) $(FP_AVI)
+	$(MAKE) encode "FP_BASE=$(FP_BASE2)"
 
 fp-cleanup:
-	$(RM) $(FP_DIR)/bowser_*.png
-	$(RM) $(FP_DIR)/bowser1_*.png
+	$(RM) $(FP_BASE1)_*.png
+	$(RM) $(FP_BASE2)_*.png
 
 finalproduct: all fp-prep fp-makeframes fp-flip fp-encode fp-cleanup
 
