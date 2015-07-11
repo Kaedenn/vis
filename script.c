@@ -20,7 +20,7 @@
 #include <lualib.h>
 
 static script_t luautil_checkscript(lua_State* L, int pos);
-static kstr luautil_get_error(lua_State* L);
+static const char* luautil_get_error(lua_State* L);
 
 static int viscmd_debug_fn(lua_State* L);
 static int viscmd_command_fn(lua_State* L);
@@ -192,9 +192,8 @@ flist_t script_run(script_t script, const char* filename) {
     /* DBPRINTF("Running %s to build %p", filename, script->fl); */
     if (luaL_dofile(script->L, filename) != LUA_OK) {
         script->errors += 1;
-        kstr error = luautil_get_error(script->L);
-        eprintf("Error in script %s: %s", filename, kstring_content(error));
-        kstring_free(error);
+        eprintf("Error in script %s: %s", filename,
+                luautil_get_error(script->L));
     }
     return script->fl;
 }
@@ -202,11 +201,10 @@ flist_t script_run(script_t script, const char* filename) {
 void script_run_string(script_t script, const char* torun) {
     if (luaL_dostring(script->L, torun) != LUA_OK) {
         script->errors += 1;
-        kstr error = luautil_get_error(script->L);
         char* esc = escape_string(torun);
-        eprintf("Error in script \"%s\": %s", esc, kstring_content(error));
+        eprintf("Error in script \"%s\": %s", esc,
+                luautil_get_error(script->L));
         free(esc);
-        kstring_free(error);
     }
 }
 
@@ -291,10 +289,11 @@ void luautil_checkdrawer(lua_State* L, script_t script) {
     }
 }
 
-kstr luautil_get_error(lua_State* L) {
-    kstr error = kstring_newfrom(luaL_checkstring(L, -1));
+const char* luautil_get_error(lua_State* L) {
+    static char error_buff[2048];
+    strncpy(error_buff, luaL_checkstring(L, -1), 2048);
     lua_pop(L, 1);
-    return error;
+    return error_buff;
 }
 
 /* Vis.debug(Vis.flist, ...) */

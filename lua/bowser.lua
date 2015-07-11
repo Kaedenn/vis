@@ -25,7 +25,7 @@ function adv(track, length)
     TrackTimes[track] = TrackTimes[track] + length
 end
 
-function settime(track, offset)
+function set(track, offset)
     TrackTimes[track] = offset
 end
 
@@ -105,8 +105,8 @@ end
 -- Provide a way for tracks to share schedules
 -- Only tracks 1, 2, 3, 4, and 8 have anything in them during the intro
 for i = 1,8 do
-    _G['T'..i] = {}
-    Tn = _G['T'..i]
+    local Tn = {}
+    _G['T'..i] = Tn
     Tn.ScheduleIndex = 0
     Tn.NextSchedule = GenNextScheduleFn(Tn, i)
     Tn.now = (function(n) return function() return TrackTimes[n] end end)(i)
@@ -114,9 +114,13 @@ for i = 1,8 do
     Tn.set = (function(n) return function(o) TrackTimes[n] = o end end)(i)
     dotrack(i)
     if os.getenv('VIS_BOWSER_DUMP_TRACK'..i) ~= nil then
-        print('T'..i..'.SCHEDULE = {')
+        print('T'..i..'.SCHEDULE = {' .. Tn.ScheduleIndex)
         for i = 1,#Tn.SCHEDULE,2 do
-            print("\t"..Tn.SCHEDULE[i]..", "..Tn.SCHEDULE[i+1]..",")
+            prefix = "\t";
+            if Tn.ScheduleIndex == i or Tn.ScheduleIndex == i+1 then
+                prefix = " >> \t"
+            end
+            print(prefix..Tn.SCHEDULE[i]..", "..Tn.SCHEDULE[i+1]..",")
         end
         print("} -- #T"..i..".SCHEDULE = "..#Tn.SCHEDULE)
     end
@@ -145,5 +149,10 @@ if os.getenv('VIS_HELP') ~= nil then
 end
 
 exit_ms = os.getenv('VIS_BOWSER_EXIT_MS') or TrackTimes[TRACK_1] + 500
+for track = TRACK_1,TRACK_8 do
+    if TrackTimes[track] + 500 > exit_ms then
+        exit_ms = TrackTimes[track] + 500
+    end
+end
 Vis.exit(Vis.flist, exit_ms)
 

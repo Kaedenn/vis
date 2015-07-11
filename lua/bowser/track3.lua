@@ -51,9 +51,9 @@ end
 local level
 local k
 for level = 1, 10 do
-    settime(TRACK_3, T3.NextSchedule())
+    set(TRACK_3, T3.NextSchedule())
     local j = now(TRACK_3)
-    settime(TRACK_3, T3.NextSchedule())
+    set(TRACK_3, T3.NextSchedule())
     while j < now(TRACK_3) do
         local ets = T3.make_emit_tables_for_level(level)
         for k = 1, #ets do

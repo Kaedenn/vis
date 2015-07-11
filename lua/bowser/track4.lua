@@ -56,6 +56,18 @@ T4.SCHEDULE_GENERATE1 = {
     25218, 27337,
 }
 
+T4.SCHEDULE_MAIN1_INTRO3 = {
+    21213, 21449, -- m1p2.1
+    21462, 21573, -- m1p2.2
+    21586, 21948, -- m1p2.3
+    21963, 22197, -- m1p2.4
+    22212, 22324, -- m1p2.5
+    22338, 22699, -- m1p2.6
+    22714, 22821, -- m1p2.7
+    22837, 22947, -- m1p2.8
+    22965, 23193, -- m1p2.9
+}
+
 T4.peek = function()
     return T4.SCHEDULE[T4.ScheduleIndex + 1] - T4.SCHEDULE[T4.ScheduleIndex]
 end
@@ -65,17 +77,15 @@ end
 -- into account by subtracting out the start of the first note.
 T4.T1M1P2_ERROR = T1.SCHEDULE_MAIN1_PART2[1]
 
-for _,start_ms in pairs(T4.SCHEDULE_GENERATE1) do
-    for note,ms in pairs(T1.SCHEDULE_MAIN1_PART1) do
-        table.insert(T4.SCHEDULE, start_ms + ms)
-    end
-    for note,ms in pairs(T1.SCHEDULE_MAIN1_PART2) do
-        table.insert(T4.SCHEDULE, start_ms + ms - T4.T1M1P2_ERROR)
-    end
+for note,ms in pairs(T1.SCHEDULE_MAIN1_PART1) do
+    table.insert(T4.SCHEDULE, T4.SCHEDULE_GENERATE1[1] + ms)
+end
+for note,ms in pairs(T4.SCHEDULE_MAIN1_INTRO3) do
+    table.insert(T4.SCHEDULE, ms)
 end
 
 local e = Emit:new()
-e:count(400)
+e:count(1000)
 e:radius(2)
 e:ds(4)
 e:life(SECOND/3)
@@ -86,13 +96,17 @@ e:blender(Vis.GEOMETRIC_BLEND)
 -- M1P0.1
 for i = 1,16,2 do
     T4.set(T4.NextSchedule())
-    e:when(T4.now())
-    e:center(0, H(i, 18))
+    e:ds(4,2)
     e:life(T4.peek(), T4.peek()/2)
-    e:emit()
-    e:center(Vis.WIDTH, H(i, 18))
-    e:life(T4.peek(), T4.peek()/2)
-    e:emit()
+    local e2 = e:clone()
+    e:center(10, H(i, 18))
+    e2:center(Vis.WIDTH - 10, H(i, 18))
+    for j = T4.now(),T4.now()+T4.peek(),Vis.frames2msec(1) do
+        e:when(j)
+        e:emit()
+        e2:when(j)
+        e2:emit()
+    end
     T4.set(T4.NextSchedule())
 end
 
@@ -102,14 +116,28 @@ for i = 1,32,2 do
     T4.set(T4.NextSchedule())
     dist = W_1_4
     angle = 2 * math.pi / 32 * i + (math.pi * (i % 2))
-    e:when(T4.now())
     e:center(W_1_2 + dist * math.cos(angle), H_1_2 + dist * math.sin(angle))
     e:life(T4.peek(), T4.peek()/2)
-    e:emit()
+    for j = T4.now(),T4.now()+T4.peek(),Vis.frames2msec(1) do
+        e:when(j)
+        e:emit()
+    end
     T4.set(T4.NextSchedule())
 end
 
 -- M1P0.3
+e:ds(8,4)
+e:count(2000)
+for i = 1,#T4.SCHEDULE_MAIN1_INTRO3,2 do
+    T4.set(T4.NextSchedule())
+    e:center(W_1_2, Vis.HEIGHT - H_1_4/#T4.SCHEDULE_MAIN1_INTRO3*(i+1))
+    e:life(math.max(T4.peek()/10, Vis.frames2msec(3)))
+    for j = T4.now(),T4.now()+T4.peek(),Vis.frames2msec(1) do
+        e:when(j)
+        e:emit()
+    end
+    T4.set(T4.NextSchedule())
+end
 
 -- END FILE
 
