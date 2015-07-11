@@ -129,4 +129,4 @@ for i = 0, 12*SECOND, step do
     Vis.callback(Vis.flist, i, Vis.script, 'update_fps('..i..')')
 end
 
-Vis.exit(Vis.flist, now + e2._t.life)
+Vis.exit(Vis.flist, now + e2.get('life'))

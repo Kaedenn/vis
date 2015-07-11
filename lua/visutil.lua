@@ -86,7 +86,7 @@ end
 function VisUtil.stremit(e)
     s = "e = {\n"
     for _,v in pairs(VisUtil.EMIT_FIELDS) do
-        s = s .. "\t"..v..": "..e._t[v]..",\n"
+        s = s .. "\t"..v..": "..e:get(v)..",\n"
     end
     s = s .. "}"
     return s
