@@ -348,7 +348,8 @@ static void cmd_lua(struct commands* cmds, const char* buffer) {
     }
 }
 
-static void cmd_audio(UNUSED_PARAM(struct commands* cmds), const char* buffer) {
+static void cmd_audio(UNUSED_PARAM(struct commands* cmds),
+                      const char* buffer) {
     if (strlen(buffer) > strlen("audio ")) {
         audio_open(buffer + strlen("audio "));
     } else {
@@ -368,8 +369,8 @@ static void cmd_help(UNUSED_PARAM(struct commands* cmds), const char* buffer) {
     if (startswith(buffer, "help emit")) {
         const char* help[] = {
 "instantaneous emit command (please see README.md):\n",
-"emit n x y ux uy rad urad ds uds theta utheta life ulife r g b ur ug ub force "
-    "limit blender\n",
+"emit n x y ux uy rad urad ds uds theta utheta life ulife r g b ur ug ub "
+    "force limit blender\n",
 "\tx = random(x-ux, x+ux); u<val> is \"uncertainty\" or variance for <val>\n",
 "\tn, life, ulife, force, limit, and blender are all integers\n",
 "\ttheta is between 0 and 2*PI\n",
@@ -385,7 +386,8 @@ NULL
         }
     } else {
         for (i = 0; commands[i].cmd != NULL; ++i) {
-            printf("Command: \"%s\": %s\n", commands[i].cmd, commands[i].synopsis);
+            printf("Command: \"%s\": %s\n", commands[i].cmd,
+                   commands[i].synopsis);
         }
     }
 }

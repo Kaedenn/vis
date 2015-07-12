@@ -48,7 +48,8 @@ void emitter_schedule(flist_t frames) {
     emitter.fl = frames;
 }
 
-static plist_action_t do_mutate_fn(struct particle* p, UNUSED_PARAM(size_t idx),
+static plist_action_t do_mutate_fn(struct particle* p,
+                                   UNUSED_PARAM(size_t idx),
                                    void* mutate) {
     mutate_method_t method = mutate;
     method->func(p, method->factor);
@@ -77,10 +78,12 @@ void emitter_tick(void) {
                 break;
             case VIS_FTYPE_MUTATE:
                 emitter.mutate_frame_count += 1;
-                plist_foreach(emitter.particles, do_mutate_fn, fn->data.method);
+                plist_foreach(emitter.particles, do_mutate_fn,
+                              fn->data.method);
                 break;
             case VIS_FTYPE_SCRIPTCB:
-                script_run_cb(fn->data.scriptcb->owner, fn->data.scriptcb, NULL);
+                script_run_cb(fn->data.scriptcb->owner, fn->data.scriptcb,
+                              NULL);
                 break;
             case VIS_FTYPE_FRAMESEEK:
                 flist_goto_frame(emitter.fl, fn->data.frameseek);

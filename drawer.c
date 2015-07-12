@@ -89,7 +89,8 @@ void drawer_free(drawer_t drawer) {
     double runtime_sec = (double)runtime / 1000.0;
     DBPRINTF("%d frames in %d ticks", drawer->fps.framecount, runtime);
     DBPRINTF("deduced fps: %g", (double)drawer->fps.framecount / runtime_sec);
-    DBPRINTF("frame error: %g", runtime_sec * VIS_FPS_LIMIT - drawer->fps.framecount);
+    DBPRINTF("frame error: %g",
+             runtime_sec * VIS_FPS_LIMIT - drawer->fps.framecount);
     DBFREE(drawer->rect_array);
     if (drawer->dump_file_fmt) {
         DBFREE(drawer->dump_file_fmt);
@@ -189,7 +190,8 @@ int drawer_draw_to_screen(drawer_t drawer) {
         if (framedelay < VIS_MSEC_PER_FRAME) {
             float fps = drawer_get_fps(drawer);
             Uint32 correction = (fps > VIS_FPS_LIMIT ? 1 : 0);
-            SDL_Delay((Uint32)round(VIS_MSEC_PER_FRAME - framedelay + correction));
+            SDL_Delay((Uint32)round(VIS_MSEC_PER_FRAME -
+                                        framedelay + correction));
         }
     }
     drawer->fps.framecount += 1;
@@ -198,7 +200,8 @@ int drawer_draw_to_screen(drawer_t drawer) {
 }
 
 float drawer_get_fps(drawer_t drawer) {
-    return (float)drawer->fps.framecount / (float)(SDL_GetTicks() - drawer->fps.start) * 1000.0f;
+    return (float)drawer->fps.framecount /
+        (float)(SDL_GetTicks() - drawer->fps.start) * 1000.0f;
 }
 
 void drawer_config(drawer_t drawer, struct clargs* clargs) {

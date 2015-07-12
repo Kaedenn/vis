@@ -555,7 +555,8 @@ static int do_keyboard_event(lua_State* L, const char* func, const char* key,
                              BOOL shift) {
     int nerror = 0;
     char* esc_key = escape_string(key);
-    kstr s = kstring_newfromvf("Vis.on_%s(\"%s\", %d)", func, esc_key, (int)shift);
+    kstr s = kstring_newfromvf("Vis.on_%s(\"%s\", %d)", func, esc_key,
+                               (int)shift);
     if (luaL_dostring(L, kstring_content(s)) != LUA_OK) {
         const char* error = luaL_checkstring(L, -1);
         eprintf("Error in %s: %s", kstring_content(s), error);

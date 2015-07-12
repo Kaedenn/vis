@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-const char* usage_string = "Usage: %s [-d path] [-l path] [-t] [-i] [-q] [-h]\n";
+const char* usage_string = "Usage: %s [-d path] [-l path] [-t] [-i] [-q] [-h]";
 const char* help_string =
 "  -d <FILE> dump frames to <FILE>_000.png\n"
 "  -l <FILE> run lua script <FILE>\n"
@@ -68,6 +68,7 @@ struct clargs* argparse(int argc, char** argv) {
                     break;
                 case 'h':
                     printf(usage_string, argv[0]);
+                    printf("\n");
                     printf("%s", help_string);
                     clargs->must_exit = TRUE;
                     break;

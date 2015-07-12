@@ -12,7 +12,8 @@
 #include <stdlib.h>
 #include <math.h>
 
-struct particle* particle_new(double x, double y, double r, int life, void* extra) {
+struct particle* particle_new(double x, double y, double r, int life,
+                              void* extra) {
     struct particle* p = DBMALLOC(sizeof(struct particle));
     p->x = x;
     p->y = y;

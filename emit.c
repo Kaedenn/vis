@@ -3,7 +3,8 @@
 #include "defines.h"
 #include "emit.h"
 
-/* n x y ux uy rad urad ds uds theta utheta life ulife r g b ur ug ub force limit blender */
+/* n x y ux uy rad urad ds uds theta utheta life ulife r g b ur ug ub
+ * force limit blender */
 emit_t make_emit_frame(int n,
         double x, double y, double ux, double uy,
         double rad, double urad, double ds, double uds,

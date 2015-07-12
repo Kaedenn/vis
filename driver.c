@@ -42,7 +42,8 @@ struct global_ctx {
 void finalize(void);
 void mainloop(struct global_ctx* ctx);
 
-plist_action_t animate_particle(struct particle* p, size_t idx, void* userdata);
+plist_action_t animate_particle(struct particle* p, size_t idx,
+                                void* userdata);
 void display(struct global_ctx* ctx);
 void timeout(struct global_ctx* ctx);
 
@@ -105,6 +106,7 @@ int main(int argc, char* argv[]) {
     if (global.args->scriptfile) {
         flist_t flist = script_run(global.script, global.args->scriptfile);
         emitter_schedule(flist);
+        /* FIXME: this breaks re-running scripts */
         gc_add((gc_func_t)flist_free, flist);
     }
 
@@ -144,7 +146,8 @@ void mainloop(struct global_ctx* ctx) {
                     if (e.key.keysym.sym == SDLK_ESCAPE) {
                         return;
                     }
-                    script_keydown(ctx->script, SDL_GetKeyName(e.key.keysym.sym),
+                    script_keydown(ctx->script,
+                                   SDL_GetKeyName(e.key.keysym.sym),
                                    e.key.keysym.mod & KMOD_SHIFT);
                     break;
                 case SDL_KEYUP:
@@ -178,7 +181,8 @@ void mainloop(struct global_ctx* ctx) {
     }
 }
  
-plist_action_t animate_particle(struct particle* p, size_t idx, void* userdata) {
+plist_action_t animate_particle(struct particle* p, size_t idx,
+                                void* userdata) {
     UNUSED_VARIABLE(idx);
     struct global_ctx* ctx = (struct global_ctx*)userdata;
     drawer_add_particle(ctx->drawer, p);
