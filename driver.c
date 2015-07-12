@@ -103,8 +103,7 @@ int main(int argc, char* argv[]) {
     drawer_set_trace(global.drawer, emit);
 
     if (global.args->scriptfile) {
-        flist_t flist = NULL;
-        flist = script_run(global.script, global.args->scriptfile);
+        flist_t flist = script_run(global.script, global.args->scriptfile);
         emitter_schedule(flist);
         gc_add((gc_func_t)flist_free, flist);
     }

@@ -2,7 +2,6 @@
 #include "audio.h"
 #include "helper.h"
 
-#include <assert.h>
 #include <SDL.h>
 #include <SDL_audio.h>
 
@@ -63,7 +62,11 @@ BOOL audio_open(const char* file) {
     Uint32 dlen;
     SDL_AudioCVT cvt;
     
-    assert(audio != NULL && "must call audio_init first!");
+    if (audio == NULL) {
+        if (!audio_init()) {
+            return FALSE;
+        }
+    }
     audio->file = dupstr(file);
     
     /* Load the sound file and convert it to 16-bit stereo at 22kHz */

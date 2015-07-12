@@ -1,7 +1,6 @@
 
 #include "helper.h"
 
-#include <assert.h>
 #include <errno.h>
 #include <math.h>
 #include <stdio.h>
@@ -19,7 +18,7 @@ FILE* try_fopen(const char* path, const char* mode) {
 
 void* chmalloc(size_t nbytes) {
     void* p = malloc(nbytes);
-    assert(p != NULL);
+    VIS_ASSERT(p != NULL);
     memset(p, 0, nbytes);
     return p;
 }
@@ -41,6 +40,20 @@ void eprintf(const char* fmt, ...) {
     vfprintf(stderr, fmt, args);
     va_end(args);
     fprintf(stderr, "\n");
+}
+
+static void do_assert_fail(const char* message, const char* file, int line)
+    NORETURN;
+
+static void do_assert_fail(const char* message, const char* file, int line) {
+    eprintf("Assertion failure: %s:%d: %s", file, line, message);
+    abort();
+}
+
+void do_assert(BOOL cond, const char* message, const char* file, int line) {
+    if (!cond) {
+        do_assert_fail(message, file, line);
+    }
 }
 
 void dbprintf(const char* fmt, ...) {
@@ -144,7 +157,7 @@ char* escape_string(const char* str) {
     char* result = NULL;
     len = escape_count_copy(NULL, str);
     result = DBMALLOC(len);
-    assert(len == escape_count_copy(result, str));
+    VIS_ASSERT(len == escape_count_copy(result, str));
     return result;
 }
 

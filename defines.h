@@ -5,12 +5,12 @@
 #ifdef __GNUC__
 /* GCC-specific extensions to make things a little easier */
 #define UNUSED_PARAM(param) param __attribute__((unused))
-#define REQUEST_INLINE __attribute__((always_inline))
 #define UNUSED_VARIABLE(var) (void)var
+#define NORETURN __attribute__((noreturn))
 #else
 #define UNUSED_PARAM(param) param
-#define REQUEST_INLINE
 #define UNUSED_VARIABLE(var) (void)var
+#define NORETURN
 #endif
 
 #include "types.h"
@@ -24,12 +24,6 @@
 
 #ifndef DEBUG
 #define DEBUG DEBUG_NONE
-#endif
-
-/* allow toggling of the always_inline directive */
-#ifdef VIS_SKIP_MANUAL_OPTIMIZATION
-#undef REQUEST_INLINE
-#define REQUEST_INLINE
 #endif
 
 /* lua startup file */

@@ -21,6 +21,10 @@ void dbfree(void* ptr, const char* label);
 /* helper printfs for errors or debugging */
 void eprintf(const char* fmt, ...);
 void dbprintf(const char* fmt, ...);
+void do_assert(BOOL cond, const char* message, const char* file, int line);
+
+#define VIS_ASSERT(cond) \
+    do_assert((BOOL)(long)(cond), (#cond), __FILE__, __LINE__)
 
 #if DEBUG >= DEBUG_TRACE
 #define DBMALLOC(size) dbmalloc((size), (#size))

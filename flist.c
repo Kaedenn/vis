@@ -49,6 +49,7 @@ void flist_free(flist_t fl) {
 }
 
 void flist_insert(flist_t fl, fnum_t when, flist_node_t fn) {
+    fl->total_frames += 1;
     if (fl->frames[when] == NULL) {
         fl->frames[when] = fn;
     } else {
@@ -157,6 +158,11 @@ void flist_restart(flist_t fl) {
 void flist_goto_frame(flist_t fl, fnum_t fn) {
     if (!fl) return;
     fl->curr_frame = fn;
+}
+
+BOOL flist_at_end(flist_t fl) {
+    VIS_ASSERT(fl);
+    return fl->curr_frame >= fl->total_frames;
 }
 
 flist_node_t flist_tick(flist_t fl) {

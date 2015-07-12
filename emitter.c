@@ -15,35 +15,37 @@
 
 #include <string.h>
 
-/* FIXME: move all these to a heap-allocated structure */
-static struct commands* commands;
-static plist_t particles = NULL;
-static flist_t fl = NULL;
-static uint32_t emit_frame_count = 0;
-static uint32_t num_mutates = 0;
+static struct emitter {
+    struct commands* commands;
+    plist_t particles;
+    flist_t fl;
+    uint32_t emit_frame_count;
+    uint32_t mutate_frame_count;
+} emitter;
 
 void emitter_setup(struct commands* cmds, plist_t plist) {
-    commands = cmds;
-    particles = plist;
+    ZEROINIT(&emitter);
+    emitter.commands = cmds;
+    emitter.particles = plist;
 }
 
 void emitter_free(UNUSED_PARAM(void* arg)) {
 }
 
 uint32_t emitter_get_emit_frame_count(void) {
-    return emit_frame_count;
+    return emitter.emit_frame_count;
 }
 
 uint32_t emitter_get_num_mutates(void) {
-    return num_mutates;
+    return emitter.mutate_frame_count;
 }
 
 void emitter_schedule(flist_t frames) {
-    if (fl) {
-        flist_clear(fl);
-        flist_free(fl);
+    if (emitter.fl) {
+        flist_clear(emitter.fl);
+        flist_free(emitter.fl);
     }
-    fl = frames;
+    emitter.fl = frames;
 }
 
 static plist_action_t do_mutate_fn(struct particle* p, UNUSED_PARAM(size_t idx),
@@ -54,7 +56,7 @@ static plist_action_t do_mutate_fn(struct particle* p, UNUSED_PARAM(size_t idx),
 }
 
 void emitter_tick(void) {
-    flist_node_t fn = flist_tick(fl);
+    flist_node_t fn = flist_tick(emitter.fl);
     while (fn != NULL) {
         switch (fn->type) {
             case VIS_FTYPE_EMIT:
@@ -62,26 +64,26 @@ void emitter_tick(void) {
                 break;
             case VIS_FTYPE_EXIT:
                 DBPRINTF("received command %s", "exit");
-                command_str(commands, "exit");
+                command_str(emitter.commands, "exit");
                 break;
             case VIS_FTYPE_PLAY:
                 audio_play();
                 break;
             case VIS_FTYPE_CMD:
-                command_str(commands, fn->data.cmd);
+                command_str(emitter.commands, fn->data.cmd);
                 break;
             case VIS_FTYPE_BGCOLOR:
                 eprintf("No longer implemented, %s", "sorry!");
                 break;
             case VIS_FTYPE_MUTATE:
-                num_mutates += 1;
-                plist_foreach(particles, do_mutate_fn, fn->data.method);
+                emitter.mutate_frame_count += 1;
+                plist_foreach(emitter.particles, do_mutate_fn, fn->data.method);
                 break;
             case VIS_FTYPE_SCRIPTCB:
                 script_run_cb(fn->data.scriptcb->owner, fn->data.scriptcb, NULL);
                 break;
             case VIS_FTYPE_FRAMESEEK:
-                flist_goto_frame(fl, fn->data.frameseek);
+                flist_goto_frame(emitter.fl, fn->data.frameseek);
             case VIS_MAX_FTYPE:
             default:
                 break;
@@ -91,7 +93,7 @@ void emitter_tick(void) {
 }
 
 void emit_frame(emit_t frame) {
-    emit_frame_count += 1;
+    emitter.emit_frame_count += 1;
     for (int i = 0; i < frame->n; ++i) {
         struct particle* p = NULL;
         pextra_t pe = NULL;
@@ -105,7 +107,7 @@ void emit_frame(emit_t frame) {
                               frame->theta, frame->utheta,
                               frame->life, frame->ulife,
                               frame->force, frame->limit, pe);
-        plist_add(particles, p);
+        plist_add(emitter.particles, p);
     }
 }
 

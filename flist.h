@@ -27,11 +27,20 @@ typedef struct flist_node {
 
 typedef struct flist {
     flist_node_t frames[VIS_NFRAMES]; /* with apologies to the hardware */
+    fnum_t total_frames;
     fnum_t curr_frame;
 } *flist_t;
 
 flist_t flist_new(void);
 void flist_free(flist_t fl);
+void flist_clear(flist_t fl);
+void flist_restart(flist_t fl);
+void flist_goto_frame(flist_t fl, fnum_t where);
+BOOL flist_at_end(flist_t fl);
+
+flist_node_t flist_tick(flist_t fl);
+flist_node_t flist_node_next(flist_node_t n);
+
 void flist_insert(flist_t fl, fnum_t when, flist_node_t fn);
 void flist_insert_emit(flist_t fl, fnum_t when, emit_t what);
 void flist_insert_exit(flist_t fl, fnum_t when);
@@ -41,12 +50,6 @@ void flist_insert_bgcolor(flist_t fl, fnum_t when, float color[3]);
 void flist_insert_mutate(flist_t fl, fnum_t when, mutate_method_t method);
 void flist_insert_scriptcb(flist_t fl, fnum_t when, script_cb_t func);
 void flist_insert_seekframe(flist_t fl, fnum_t when, fnum_t where);
-void flist_clear(flist_t fl);
-void flist_restart(flist_t fl);
-void flist_goto_frame(flist_t fl, fnum_t where);
-
-flist_node_t flist_tick(flist_t fl);
-flist_node_t flist_node_next(flist_node_t n);
 
 #endif
 

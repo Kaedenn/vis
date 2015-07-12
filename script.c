@@ -9,7 +9,6 @@
 #include "kstring.h"
 #include "emitter.h"
 
-#include <assert.h>
 #include <errno.h>
 #include <stdarg.h>
 #include <stdlib.h>
@@ -152,7 +151,7 @@ script_t script_new(script_cfg_t cfg) {
         "Vis.on_keyup = function() end\n"
         "Vis.on_quit = function() end\n"
     );
-    assert(s->errors == 0);
+    VIS_ASSERT(s->errors == 0);
     if (file_exists(LUA_STARTUP_FILE)) {
         DBPRINTF("Executing startup file: %s", LUA_STARTUP_FILE);
         (void)luaL_dofile(s->L, LUA_STARTUP_FILE);

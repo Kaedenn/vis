@@ -4,7 +4,6 @@
 
 #include <string.h>
 #include <stdlib.h>
-#include <assert.h>
 #include <stdarg.h>
 #include <ctype.h>
 
@@ -50,19 +49,19 @@ kstr kstring_newfromvf(const char* fmt, ...) {
 }
 
 void kstring_free(kstr s) {
-    assert(s);
+    VIS_ASSERT(s);
     DBFREE(s->content);
     DBFREE(s);
 }
 
 void kstring_strip(kstr s) {
-    assert(s);
+    VIS_ASSERT(s);
     kstring_stripl(s);
     kstring_stripr(s);
 }
 
 void kstring_stripl(kstr s) {
-    assert(s);
+    VIS_ASSERT(s);
     size_t i, j;
     for (i = 0; i < s->len; ++i) {
         if (!isspace(s->content[i])) break;
@@ -77,7 +76,7 @@ void kstring_stripl(kstr s) {
 }
 
 void kstring_stripr(kstr s) {
-    assert(s);
+    VIS_ASSERT(s);
     size_t i, newlen = s->len;
     for (i = s->len-1; i > 0; --i) {
         if (isspace(s->content[i])) {
@@ -91,8 +90,8 @@ void kstring_stripr(kstr s) {
 }
 
 void kstring_append(kstr s, const char* news) {
-    assert(s);
-    assert(news);
+    VIS_ASSERT(s);
+    VIS_ASSERT(news);
     size_t newcap = s->capacity + strlen(news) + 1;
     size_t newlen = s->len + strlen(news);
     char* newstr = DBMALLOC(newcap);
@@ -105,21 +104,21 @@ void kstring_append(kstr s, const char* news) {
 }
 
 void kstring_assimilate(kstr s1, kstr s2) {
-    assert(s1);
-    assert(s2);
+    VIS_ASSERT(s1);
+    VIS_ASSERT(s2);
     kstring_append(s1, kstring_content(s2));
     kstring_free(s2);
 }
 
 void kstring_realloc(kstr s, size_t newcapacity) {
-    assert(s);
-    assert(newcapacity > 0);
+    VIS_ASSERT(s);
+    VIS_ASSERT(newcapacity > 0);
     s->content = realloc(s->content, newcapacity);
-    assert(s->content != NULL);
+    VIS_ASSERT(s->content != NULL);
     s->capacity = newcapacity;
 }
 
-size_t kstring_length(kstr s) { assert(s); return s->len; }
-size_t kstring_capacity(kstr s) { assert(s); return s->capacity; }
-const char* kstring_content(kstr s) { assert(s); return s->content; }
+size_t kstring_length(kstr s) { VIS_ASSERT(s); return s->len; }
+size_t kstring_capacity(kstr s) { VIS_ASSERT(s); return s->capacity; }
+const char* kstring_content(kstr s) { VIS_ASSERT(s); return s->content; }
 
