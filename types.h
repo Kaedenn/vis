@@ -53,6 +53,7 @@ typedef enum {
 typedef enum {
     VIS_FTYPE_EMIT = 0,
     VIS_FTYPE_EXIT,
+    VIS_FTYPE_PLAY,
     VIS_FTYPE_CMD,
     VIS_FTYPE_BGCOLOR,
     VIS_FTYPE_MUTATE,

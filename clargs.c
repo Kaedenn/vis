@@ -19,6 +19,7 @@ struct clargs* argparse(int argc, char** argv) {
     clargs->execname = argv[0];
     clargs->scriptfile = NULL;
     clargs->dumpfile = NULL;
+    clargs->frameskip = 0;
     clargs->dumptrace = FALSE;
     clargs->interactive = TRUE;
     clargs->enlarge_particles = FALSE;
@@ -40,6 +41,15 @@ struct clargs* argparse(int argc, char** argv) {
                         clargs->scriptfile = argv[++argi];
                     } else {
                         eprintf("Argument -l requires value");
+                        clargs->must_exit = TRUE;
+                        clargs->exit_status = 1;
+                    }
+                    break;
+                case 's':
+                    if (argi+1 < argc) {
+                        clargs->frameskip = strtoi(argv[++argi]);
+                    } else {
+                        eprintf("Argument -s requires value");
                         clargs->must_exit = TRUE;
                         clargs->exit_status = 1;
                     }

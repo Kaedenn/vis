@@ -8,6 +8,7 @@ struct clargs {
     const char* execname;
     const char* scriptfile;
     const char* dumpfile;
+    int frameskip;
     BOOL dumptrace;
     BOOL interactive;
     BOOL enlarge_particles;

@@ -33,7 +33,7 @@ LDFLAGS_LIBS = -llua5.2 -lSDL2 -lSDL2_image
 CFLAGS := $(CFLAGS) $(CFLAGS_LIBS) $(EXTRA_CFLAGS)
 LDFLAGS := $(LDFLAGS) $(LDFLAGS_LIBS) $(EXTRA_LDFLAGS)
 
-EXEC_ARGS ?= -i -l $(DIR)/lua/demo_3_random.lua
+EXEC_ARGS ?= -i -l $(DIR)/lua/bowser.lua
 VALGRIND_DEFAULT = valgrind --suppressions=$(DIR)/valgrind.supp --num-callers=64
 VG_LEAKCHECK = --leak-check=full
 VG_REACHABLE = $(VG_LEAKCHECK) --show-reachable=yes --show-leak-kinds=all
@@ -44,8 +44,7 @@ SCR_ARGS ?=
 
 FP_DIR = output
 FP_SCRIPT = lua/bowser.lua
-FP_BASE1 ?= $(FP_DIR)/bowser1
-FP_BASE2 ?= $(FP_DIR)/bowser
+FP_BASE ?= $(FP_DIR)/bowser
 FP_AUDIO ?= media/Bowser.wav
 FP_AVI ?= $(FP_DIR)/bowser.avi
 
@@ -90,24 +89,19 @@ distclean: clean fp-prep
 
 encode:
 	$(info "make encode FP_BASE=<images> FP_AVI=<output.avi> FP_AUDIO=<song.wav>")
-	python $(SCR_PROCESS) encode $(FP_BASE) $(FP_AVI) --add-encode \
-		$(FP_AUDIO) $(SCR_ARGS)
+	python $(SCR_PROCESS) "$(FP_BASE)" "$(FP_AVI)" -i "$(FP_AUDIO)" $(SCR_ARGS)
 
 fp-prep:
 	- $(MAKE) fp-cleanup
 
 fp-makeframes: fp-prep
-	$(DIR)/$(EXECBIN) -l $(FP_SCRIPT) -d $(FP_BASE1) -i -q
-
-fp-flip:
-	python $(SCR_PROCESS) flip "$(FP_BASE1)" "$(FP_BASE2)" $(SCR_ARGS)
+	$(DIR)/$(EXECBIN) -l $(FP_SCRIPT) -d $(FP_BASE) -i -q -s 4 $(EXEC_ARGS)
 
 fp-encode:
-	$(MAKE) encode "FP_BASE=$(FP_BASE2)"
+	$(MAKE) encode
 
 fp-cleanup:
-	$(RM) $(FP_BASE1)_*.png
-	$(RM) $(FP_BASE2)_*.png
+	$(RM) $(FP_BASE)_*.png
 
-finalproduct: all fp-prep fp-makeframes fp-flip fp-encode fp-cleanup
+finalproduct: all fp-prep fp-makeframes fp-encode fp-cleanup
 

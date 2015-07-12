@@ -64,6 +64,9 @@ void emitter_tick(void) {
                 DBPRINTF("received command %s", "exit");
                 command_str(commands, "exit");
                 break;
+            case VIS_FTYPE_PLAY:
+                audio_play();
+                break;
             case VIS_FTYPE_CMD:
                 command_str(commands, fn->data.cmd);
                 break;

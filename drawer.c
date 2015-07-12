@@ -35,6 +35,7 @@ struct drawer {
     size_t rect_curr;
     size_t rect_count;
     float bgcolor[3];
+    Uint32 frame_skip;
     struct fps fps;
     BOOL tracing;
     emit_t emit_desc;
@@ -136,8 +137,10 @@ int drawer_draw_to_screen(drawer_t drawer) {
     SDL_Texture* dump_tex = NULL;
     SDL_Renderer* renderer = drawer->renderer;
     if (drawer->dump_file_fmt) {
-        s = kstring_newfromvf("%s_%04d.png", drawer->dump_file_fmt,
-                              drawer->fps.framecount);
+        if (drawer->fps.framecount >= drawer->frame_skip) {
+            s = kstring_newfromvf("%s_%04d.png", drawer->dump_file_fmt,
+                                  drawer->fps.framecount - drawer->frame_skip);
+        }
         dump_tex = SDL_CreateTexture(drawer->renderer,
                                      SDL_PIXELFORMAT_RGBA8888,
                                      SDL_TEXTUREACCESS_TARGET,
@@ -163,18 +166,24 @@ int drawer_draw_to_screen(drawer_t drawer) {
                                drawer->rect_array[i].c.g,
                                drawer->rect_array[i].c.b,
                                drawer->rect_array[i].c.a);
-        SDL_RenderFillRect(drawer->renderer, &drawer->rect_array[i].r);
+        SDL_Rect flip = drawer->rect_array[i].r;
+        if (drawer->dump_file_fmt) {
+            flip.y = VIS_HEIGHT - flip.y;
+        }
+        SDL_RenderFillRect(drawer->renderer, &flip);
     }
     SDL_RenderPresent(drawer->renderer);
     drawer->rect_curr = 0;
 
     if (drawer->dump_file_fmt) {
-        render_to_file(drawer->renderer, kstring_content(s));
+        if (s) {
+            render_to_file(drawer->renderer, kstring_content(s));
+            kstring_free(s);
+        }
         if (dump_tex != NULL) {
             SDL_DestroyTexture(dump_tex);
         }
-        kstring_free(s);
-    } else {
+    } else if (drawer->fps.framecount >= drawer->frame_skip) {
         Uint32 frameend = SDL_GetTicks();
         Uint32 framedelay = frameend - drawer->fps.framestart;
         if (framedelay < VIS_MSEC_PER_FRAME) {
@@ -193,6 +202,7 @@ float drawer_get_fps(drawer_t drawer) {
 }
 
 void drawer_config(drawer_t drawer, struct clargs* clargs) {
+    drawer->frame_skip = (Uint32)clargs->frameskip;
     drawer->verbose_trace = clargs->dumptrace ? TRUE : FALSE;
     drawer->scale_factor = clargs->enlarge_particles ? 2.0 : 1.0;
     if (clargs->dumpfile) {

@@ -72,7 +72,7 @@ emit_center_message(em, 3000, "2", Vis.WIDTH/2, Vis.HEIGHT/2 + Vis.HEIGHT/6, 4)
 em:theta(math.pi/2, 0)
 emit_center_message(em, 3500, "1", Vis.WIDTH/2, Vis.HEIGHT/2 + Vis.HEIGHT/6, 4)
 
-Vis.audio("output/drum4-simple.wav")
+Vis.audio(Vis.flist, 0, "output/drum4-simple.wav")
 em:blender(Vis.BLEND_PARABOLA)
 
 e1 = em:clone()
@@ -129,4 +129,4 @@ for i = 0, 12*SECOND, step do
     Vis.callback(Vis.flist, i, Vis.script, 'update_fps('..i..')')
 end
 
-Vis.exit(Vis.flist, now + e2.get('life'))
+Vis.exit(Vis.flist, now + e2:get('life'))

@@ -375,16 +375,18 @@ int viscmd_emit_fn(lua_State* L) {
     return 0;
 }
 
-/* Vis.audio(path),
+/* Vis.audio(Vis.flist, 0, path),
  * @param path must resolve to a .WAV file */
 int viscmd_audio_fn(lua_State* L) {
-    const char* file = luaL_checkstring(L, 1);
+    flist_t fl = *(flist_t*)luaL_checkudata(L, 1, "flist_t*");
+    fnum_t when = (fnum_t)VIS_MSEC_TO_FRAMES(luaL_checkunsigned(L, 2));
+    const char* file = luaL_checkstring(L, 3);
     if (!audio_open(file)) {
         DBPRINTF("Vis.audio(%s) failed", file);
         lua_pushnil(L);
     } else {
-        DBPRINTF("Vis.audio(%s) loaded, playing", file);
-        audio_play();
+        DBPRINTF("Vis.audio(%s) loaded", file);
+        flist_insert_play(fl, when);
         lua_pushboolean(L, TRUE);
     }
     return 1;

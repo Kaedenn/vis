@@ -32,9 +32,9 @@ end
 if os.getenv('VIS_NO_AUDIO') == nil then
     t = os.getenv('VIS_ISOLATE')
     if t ~= nil then
-        Vis.audio("media/bowser-"..t..".wav")
+        Vis.audio(Vis.flist, 0, "media/bowser-"..t..".wav")
     else
-        Vis.audio("media/Bowser.wav")
+        Vis.audio(Vis.flist, 0, "media/Bowser.wav")
     end
 end
 
