@@ -59,9 +59,11 @@ int main(int argc, char* argv[]) {
     if (!global.args) {
         exit(1);
     } else if (global.args->must_exit) {
-        exit(global.args->exit_status);
+        int status = global.args->exit_status;
+        clargs_free(global.args);
+        exit(status);
     }
-    gc_add((gc_func_t)free, global.args);
+    gc_add((gc_func_t)clargs_free, global.args);
 
     global.drawer = drawer_new();
     if (!global.drawer) {
@@ -75,6 +77,9 @@ int main(int argc, char* argv[]) {
     
     global.script = script_new(SCRIPT_ALLOW_ALL);
     script_set_drawer(global.script, global.drawer);
+    if (global.args->stay_after_script) {
+        script_disable_exit(global.script);
+    }
     gc_add((gc_func_t)script_free, global.script);
 
     global.cmds = command_setup(global.drawer, global.particles, global.script,
@@ -104,10 +109,7 @@ int main(int argc, char* argv[]) {
     drawer_set_trace(global.drawer, emit);
 
     if (global.args->scriptfile) {
-        flist_t flist = script_run(global.script, global.args->scriptfile);
-        emitter_schedule(flist);
-        /* FIXME: this breaks re-running scripts */
-        gc_add((gc_func_t)flist_free, flist);
+        emitter_schedule(script_run(global.script, global.args->scriptfile));
     }
 
     mainloop(&global);
@@ -199,7 +201,7 @@ void timeout(struct global_ctx* ctx) {
     static int delayctr = 0;
     if (ctx->args->interactive) {
         if (++delayctr % VIS_CMD_DELAY_NSTEPS == 0) {
-            command(ctx->cmds);
+            command_async(ctx->cmds);
             delayctr = 0;
         }
     }

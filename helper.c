@@ -69,7 +69,7 @@ void dbprintf(const char* fmt, ...) {
 #endif
 }
 
-BOOL file_exists(const char* path) {
+BOOL fexists(const char* path) {
     int olderrno = errno;
     BOOL exists = FALSE;
     errno = 0;

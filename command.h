@@ -23,10 +23,13 @@ BOOL command_should_exit(struct commands* commands);
 cmd_error_id command_get_error(struct commands* commands);
 
 /* handle commands via STDIN */
-void command(struct commands* commands);
+void command_async(struct commands* commands);
 
 /* handle commands via input buffer */
 void command_str(struct commands* commands, const char* buffer);
+
+/* handle commands by reading a file */
+void command_file(struct commands* commands, const char* file);
 
 #endif
 

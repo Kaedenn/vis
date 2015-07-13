@@ -34,7 +34,7 @@ BOOL audio_init(void) {
     fmt.userdata = NULL;
     
     if (SDL_OpenAudio(&fmt, NULL) < 0) {
-        eprintf("Unable to open audio: %s\n", SDL_GetError());
+        EPRINTF("Unable to open audio: %s\n", SDL_GetError());
         return FALSE;
     }
     
@@ -50,6 +50,8 @@ BOOL audio_init(void) {
 
 void audio_free(UNUSED_PARAM(void* arg)) {
     if (audio) {
+        DBFREE(audio->file);
+        DBFREE(audio->sample->data);
         DBFREE(audio->sample);
         DBFREE(audio);
     }
@@ -71,7 +73,7 @@ BOOL audio_open(const char* file) {
     
     /* Load the sound file and convert it to 16-bit stereo at 22kHz */
     if (SDL_LoadWAV(file, &wave, &data, &dlen) == NULL) {
-        eprintf("Couldn't load %s: %s\n", file, SDL_GetError());
+        EPRINTF("Couldn't load %s: %s\n", file, SDL_GetError());
         return FALSE;
     }
     

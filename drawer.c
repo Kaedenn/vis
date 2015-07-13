@@ -14,6 +14,9 @@
 static double calculate_blend(struct particle* particle);
 static int render_to_file(SDL_Renderer* renderer, const char* path);
 
+void drawer_ensure_fps_linear(drawer_t drawer);
+void drawer_ensure_fps_absolute(drawer_t drawer);
+
 /* combine a rect and a color */
 struct crect {
     SDL_Rect r;
@@ -22,6 +25,7 @@ struct crect {
 
 /* used, obviously, for fps tracking and limiting */
 struct fps {
+    void (*limiter)(drawer_t drawer);
     Uint32 framecount;
     Uint32 start;
     Uint32 framestart;
@@ -81,16 +85,20 @@ drawer_t drawer_new(void) {
     /* initialize fps analysis */
     drawer->fps.start = SDL_GetTicks();
     drawer->fps.framestart = drawer->fps.start;
+    drawer->fps.limiter = drawer_ensure_fps_linear;
     return drawer;
 }
 
 void drawer_free(drawer_t drawer) {
-    Uint32 runtime = SDL_GetTicks() - drawer->fps.start;
-    double runtime_sec = (double)runtime / 1000.0;
-    DBPRINTF("%d frames in %d ticks", drawer->fps.framecount, runtime);
-    DBPRINTF("deduced fps: %g", (double)drawer->fps.framecount / runtime_sec);
-    DBPRINTF("frame error: %g",
-             runtime_sec * VIS_FPS_LIMIT - drawer->fps.framecount);
+    double runtime = 1.0 * SDL_GetTicks() - drawer->fps.start;
+    double runtime_sec = runtime / 1000.0;
+    double fc_want = runtime_sec * VIS_FPS_LIMIT;
+    double fc_have = drawer->fps.framecount;
+    DBPRINTF("%s", "fps analysis:");
+    DBPRINTF("S=%g, S_ms=%g, F=%g, F/S=%g", runtime_sec, runtime, fc_have,
+             drawer->fps.framecount / runtime_sec);
+    DBPRINTF("frame error:   (S*FPS-F) %g", fc_want - fc_have);
+    DBPRINTF("error ratio: 1-(S*FPS/F) %g", 1 - fc_want / fc_have);
     DBFREE(drawer->rect_array);
     if (drawer->dump_file_fmt) {
         DBFREE(drawer->dump_file_fmt);
@@ -127,7 +135,7 @@ int drawer_add_particle(drawer_t drawer, struct particle* particle) {
         drawer->rect_curr += 1;
         return 0;
     } else {
-        eprintf("can't add more than %d particles, did you call "
+        EPRINTF("can't add more than %d particles, did you call "
                 "drawer_draw_to_screen?", drawer->rect_count);
         return 1;
     }
@@ -185,23 +193,44 @@ int drawer_draw_to_screen(drawer_t drawer) {
             SDL_DestroyTexture(dump_tex);
         }
     } else if (drawer->fps.framecount >= drawer->frame_skip) {
-        Uint32 frameend = SDL_GetTicks();
-        Uint32 framedelay = frameend - drawer->fps.framestart;
-        if (framedelay < VIS_MSEC_PER_FRAME) {
-            float fps = drawer_get_fps(drawer);
-            Uint32 correction = (fps > VIS_FPS_LIMIT ? 1 : 0);
-            SDL_Delay((Uint32)round(VIS_MSEC_PER_FRAME -
-                                        framedelay + correction));
-        }
+        drawer->fps.limiter(drawer);
     }
     drawer->fps.framecount += 1;
     drawer->fps.framestart = SDL_GetTicks();
     return 0;
 }
 
+void drawer_ensure_fps_linear(drawer_t drawer) {
+    Uint32 frameend = SDL_GetTicks();
+    Uint32 framedelay = frameend - drawer->fps.framestart;
+    if (framedelay < VIS_MSEC_PER_FRAME) {
+        float fps = drawer_get_fps(drawer);
+        Uint32 correction = (fps > VIS_FPS_LIMIT ? 1 : 0);
+        SDL_Delay((Uint32)round(VIS_MSEC_PER_FRAME - framedelay + correction));
+    }
+}
+
+void drawer_ensure_fps_absolute(drawer_t drawer) {
+    /* For an absolute fps limiter:
+     *  T_ms(frame) = T_ms(0) + VIS_MSEC_PER_FRAME * frame
+     *  T_ms(0)     = (drawer->fps.start)
+     * Therefore:
+     *  dT_ms(frame) = T_ms(frame) - (drawer->fps.start)
+     *
+     * SDL_Delay((Uint32)round(dT_ms(frame)))
+     */
+    Uint32 frametime = (Uint32)round(drawer->fps.start +
+                                     VIS_MSEC_PER_FRAME *
+                                     drawer->fps.framecount - 1);
+    Uint32 now = SDL_GetTicks();
+    if (now < frametime) {
+        SDL_Delay(frametime - now);
+    }
+}
+
 float drawer_get_fps(drawer_t drawer) {
-    return (float)drawer->fps.framecount /
-        (float)(SDL_GetTicks() - drawer->fps.start) * 1000.0f;
+    return (float)(drawer->fps.framecount - 1) /
+           (float)(SDL_GetTicks() - drawer->fps.start) * 1000.0f;
 }
 
 void drawer_config(drawer_t drawer, struct clargs* clargs) {
@@ -213,8 +242,29 @@ void drawer_config(drawer_t drawer, struct clargs* clargs) {
         SDL_GetRendererInfo(drawer->renderer, &ri);
         if (ri.flags & SDL_RENDERER_TARGETTEXTURE) {
             drawer->dump_file_fmt = dupstr(clargs->dumpfile);
+        } else {
+            EPRINTF("SDL texture targets disabled, not dumping to file \"%s\"",
+                    clargs->dumpfile);
         }
     }
+    if (clargs->absolute_fps) {
+        drawer->fps.limiter = drawer_ensure_fps_absolute;
+    }
+    DBPRINTF("%s", "Configured drawer:");
+    if (drawer->frame_skip > 0) {
+        DBPRINTF("\tdrawer->frame_skip = %d", drawer->frame_skip);
+    }
+    if (drawer->verbose_trace) {
+        DBPRINTF("\t%s", "drawer->verbose_trace = TRUE");
+    }
+    if (clargs->enlarge_particles) {
+        DBPRINTF("\tdrawer->scale_factor = %g", drawer->scale_factor);
+    }
+    if (drawer->dump_file_fmt != NULL) {
+        DBPRINTF("\tdrawer->dumpfile = \"%s\"", drawer->dump_file_fmt);
+    }
+    DBPRINTF("drawer is using the %s fps limiter", 
+             clargs->absolute_fps ? "absolute" : "linear");
 }
 
 void drawer_scale_particles(drawer_t drawer, double factor) {

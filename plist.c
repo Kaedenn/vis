@@ -50,7 +50,7 @@ void plist_add(plist_t plist, struct particle* p) {
     if (plist->size < plist->capacity) {
         plist->particles[plist->size++] = p;
     } else {
-        eprintf("Attempted to add more than %d particles to plist %p, "
+        EPRINTF("Attempted to add more than %d particles to plist %p, "
                 "particle dropped", plist->capacity, plist);
         /* For now, ignore */
     }

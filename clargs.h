@@ -8,17 +8,21 @@ struct clargs {
     const char* execname;
     const char* scriptfile;
     const char* dumpfile;
+    const char* commandfile;
     int frameskip;
     BOOL dumptrace;
     BOOL interactive;
     BOOL enlarge_particles;
     BOOL quiet_audio;
+    BOOL stay_after_script;
+    BOOL absolute_fps;
 
     BOOL must_exit;
     int exit_status;
 };
 
 struct clargs* argparse(int argc, char** argv);
+void clargs_free(struct clargs* args);
 
 #endif
 

@@ -43,6 +43,9 @@ int script_get_status(script_t s);
 void script_set_debug(script_t s, enum script_debug_id what, uint32_t n);
 void script_get_debug(script_t s, /*out*/ script_debug_t dbg);
 
+/* don't exit even when scripts call Vis.exit */
+void script_disable_exit(script_t s);
+
 struct flist* script_run(script_t script, const char* filename);
 void script_run_string(script_t script, const char* torun);
 void script_run_cb(script_t state, script_cb_t func, void* args);

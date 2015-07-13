@@ -30,6 +30,10 @@ void emitter_setup(struct commands* cmds, plist_t plist) {
 }
 
 void emitter_free(UNUSED_PARAM(void* arg)) {
+    if (emitter.fl) {
+        flist_clear(emitter.fl);
+        flist_free(emitter.fl);
+    }
 }
 
 uint32_t emitter_get_emit_frame_count(void) {
@@ -41,11 +45,14 @@ uint32_t emitter_get_num_mutates(void) {
 }
 
 void emitter_schedule(flist_t frames) {
-    if (emitter.fl) {
+    if (emitter.fl && emitter.fl != frames) {
         flist_clear(emitter.fl);
         flist_free(emitter.fl);
+    } else if (emitter.fl == frames) {
+        flist_restart(emitter.fl);
+    } else {
+        emitter.fl = frames;
     }
-    emitter.fl = frames;
 }
 
 static plist_action_t do_mutate_fn(struct particle* p,

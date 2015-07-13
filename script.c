@@ -152,7 +152,7 @@ script_t script_new(script_cfg_t cfg) {
         "Vis.on_quit = function() end\n"
     );
     VIS_ASSERT(s->errors == 0);
-    if (file_exists(LUA_STARTUP_FILE)) {
+    if (fexists(LUA_STARTUP_FILE)) {
         DBPRINTF("Executing startup file: %s", LUA_STARTUP_FILE);
         (void)luaL_dofile(s->L, LUA_STARTUP_FILE);
     }
@@ -194,12 +194,15 @@ flist_t script_run(script_t script, const char* filename) {
     int base = lua_gettop(script->L);
     if (luaL_loadfile(script->L, filename) != LUA_OK) {
         script->errors += 1;
-        eprintf("Error in compiling script %s: %s", filename,
+        EPRINTF("Error in compiling script %s: %s", filename,
                 luautil_get_error(script->L));
     } else if (lua_pcall(script->L, 0, LUA_MULTRET, base) != LUA_OK) {
         script->errors += 1;
-        eprintf("Error in running script: %s: %s", filename,
+        EPRINTF("Error in running script: %s: %s", filename,
                 luautil_get_error(script->L));
+    }
+    if (lua_gettop(script->L) > 0) {
+        lua_pop(script->L, lua_gettop(script->L));
     }
     return script->fl;
 }
@@ -208,7 +211,7 @@ void script_run_string(script_t script, const char* torun) {
     if (luaL_dostring(script->L, torun) != LUA_OK) {
         script->errors += 1;
         char* esc = escape_string(torun);
-        eprintf("Error in script \"%s\": %s", esc,
+        EPRINTF("Error in script \"%s\": %s", esc,
                 luautil_get_error(script->L));
         free(esc);
     }
@@ -251,6 +254,11 @@ void script_set_debug(script_t script, enum script_debug_id what, uint32_t n) {
 
 void script_get_debug(script_t script, script_debug_t dbg) {
     *dbg = *script->dbg;
+}
+
+void script_disable_exit(script_t script) {
+    VIS_ASSERT(luaL_dostring(script->L,
+                             "Vis.exit = function() end") == LUA_OK);
 }
 
 void script_mousemove(script_t script, int x, int y) {
@@ -550,7 +558,7 @@ static int do_mouse_event(lua_State* L, const char* func, int x, int y) {
     int nerror = 0;
     if (luaL_dostring(L, kstring_content(s)) != LUA_OK) {
         const char* error = luaL_checkstring(L, -1);
-        eprintf("Error in %s: %s", kstring_content(s), error);
+        EPRINTF("Error in %s: %s", kstring_content(s), error);
         lua_pop(L, 1);
         nerror = 1;
     }
@@ -566,7 +574,7 @@ static int do_keyboard_event(lua_State* L, const char* func, const char* key,
                                (int)shift);
     if (luaL_dostring(L, kstring_content(s)) != LUA_OK) {
         const char* error = luaL_checkstring(L, -1);
-        eprintf("Error in %s: %s", kstring_content(s), error);
+        EPRINTF("Error in %s: %s", kstring_content(s), error);
         lua_pop(L, 1);
         nerror = 1;
     }

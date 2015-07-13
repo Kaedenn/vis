@@ -97,14 +97,14 @@ emit 1000 400 300 0 0 3 1 1 0.99 1.57 3.14 90 10 0 1.5 1.5 0 0 0 0 1
 emit 1000 400 0 0 0 3 1 2 1.99 1.57 3.14 90 10 0 1.5 1.5 0 0 0 1 1
 */
 
-void command(struct commands* cmds) {
+void command_async(struct commands* cmds) {
     static char buffer[VIS_BUFFER_LEN];
     buffer[0] = '\0';
     ssize_t bytes = async_read_stdin(buffer, VIS_BUFFER_LEN);
     if (bytes == -1 && errno != EAGAIN) {
         int err = errno;
         const char* errstr = strerror(errno);
-        eprintf("received error %d: %s from async_read_stdin",
+        EPRINTF("received error %d: %s from async_read_stdin",
                 err, errstr);
         cmds->should_exit = TRUE;
         cmds->exit_status = CMD_ERROR_FATAL;
@@ -123,7 +123,7 @@ void command_str(struct commands* cmds, const char* buffer) {
     int i = 0;
     char* c;
     if (strlen(buffer) > 1024) {
-        eprintf("Refusing to handle insane command %p", buffer);
+        EPRINTF("Refusing to handle insane command %p", buffer);
         return;
     }
     strcpy(rw_buffer, buffer);
@@ -138,7 +138,31 @@ void command_str(struct commands* cmds, const char* buffer) {
         ++i;
     }
     if (commands[i].cmd == NULL) {
-        eprintf("Unrecognized command");
+        EPRINTF("%s", "Unrecognized command");
+    }
+}
+
+void command_file(struct commands* cmds, const char* file) {
+    static char line_buffer[1024];
+    FILE* fp = fopen(file, "r+");
+    if (!fp) {
+        int error = errno;
+        EPRINTF("Failed to open %s: error %s: %s", file, error,
+                strerror(error));
+        return;
+    }
+
+    DBPRINTF("Loading commands from %s", file);
+    while (1) {
+        const char* ret = fgets(line_buffer, 1024, fp);
+        int error = errno;
+        if (ret == NULL && feof(fp)) break;
+        if (ret == NULL && ferror(fp)) {
+            EPRINTF("Failed during read of %s: error %s: %s", file, error,
+                    strerror(error));
+            break;
+        }
+        command_str(cmds, line_buffer);
     }
 }
 
@@ -186,9 +210,10 @@ static void cmd_emit(struct commands* cmds, const char* buffer) {
             plist_add(cmds->particles, p);
         }
     } else {
-        eprintf("usage: emit n x y ux uy rad urad ds uds theta utheta "
+        EPRINTF("%s",
+                "usage: emit n x y ux uy rad urad ds uds theta utheta "
                 "life ulife r g b ur ug ub force limit blender");
-        eprintf("(type 'help emit' for explanation)");
+        EPRINTF("%s", "(type 'help emit' for explanation)");
     }
 }
 
@@ -221,7 +246,7 @@ static void cmd_kick(struct commands* cmds, const char* buffer) {
             ++i;
         }
     } else {
-        eprintf("usage: kick <#particles>");
+        EPRINTF("%s", "usage: kick <#particles>");
     }
 }
 
@@ -254,7 +279,7 @@ static void cmd_snare(struct commands* cmds, const char* buffer) {
             ++i;
         }
     } else {
-        eprintf("usage: snare <#particles>");
+        EPRINTF("%s", "usage: snare <#particles>");
     }
 }
 
@@ -288,7 +313,7 @@ static void cmd_strum(struct commands* cmds, const char* buffer) {
             ++i;
         }
     } else {
-        eprintf("usage: strum <#particles>");
+        EPRINTF("%s", "usage: strum <#particles>");
     }
 }
 
@@ -323,7 +348,7 @@ static void cmd_rain(struct commands* cmds, const char* buffer) {
             ++i;
         }
     } else {
-        eprintf("usage: rain <#particles>");
+        EPRINTF("%s", "usage: rain <#particles>");
     }
 }
 
@@ -333,10 +358,10 @@ static void cmd_load(struct commands* cmds, const char* buffer) {
         if (flist != NULL) {
             emitter_schedule(flist);
         } else {
-            eprintf("Failed to load script '%s'", buffer + strlen("load "));
+            EPRINTF("Failed to load script '%s'", buffer + strlen("load "));
         }
     } else {
-        eprintf("usage: load <script-path>");
+        EPRINTF("%s", "usage: load <script-path>");
     }
 }
 
@@ -344,7 +369,7 @@ static void cmd_lua(struct commands* cmds, const char* buffer) {
     if (strlen(buffer) > strlen("lua ")) {
         script_run_string(cmds->script, buffer + strlen("lua "));
     } else {
-        eprintf("usage: lua <script...>");
+        EPRINTF("%s", "usage: lua <script...>");
     }
 }
 
@@ -353,7 +378,7 @@ static void cmd_audio(UNUSED_PARAM(struct commands* cmds),
     if (strlen(buffer) > strlen("audio ")) {
         audio_open(buffer + strlen("audio "));
     } else {
-        eprintf("usage: audio <path>");
+        EPRINTF("%s", "usage: audio <path>");
     }
 }
 

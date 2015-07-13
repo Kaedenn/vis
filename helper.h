@@ -53,7 +53,7 @@ void do_assert(BOOL cond, const char* message, const char* file, int line);
 #define ZEROINIT(p) memset(p, '\0', sizeof(*p))
 
 /* tests if a file exists, portably */
-BOOL file_exists(const char* path);
+BOOL fexists(const char* path);
 
 /* short-circuiting strcmp */
 BOOL startswith(const char* s1, const char* s2);
