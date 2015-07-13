@@ -189,9 +189,16 @@ void script_free(script_t s) {
 flist_t script_run(script_t script, const char* filename) {
     /* script->fl already bound to script in script_new */
     /* DBPRINTF("Running %s to build %p", filename, script->fl); */
-    if (luaL_dofile(script->L, filename) != LUA_OK) {
+    lua_getglobal(script->L, "debug");
+    lua_getfield(script->L, -1, "traceback");
+    int base = lua_gettop(script->L);
+    if (luaL_loadfile(script->L, filename) != LUA_OK) {
         script->errors += 1;
-        eprintf("Error in script %s: %s", filename,
+        eprintf("Error in compiling script %s: %s", filename,
+                luautil_get_error(script->L));
+    } else if (lua_pcall(script->L, 0, LUA_MULTRET, base) != LUA_OK) {
+        script->errors += 1;
+        eprintf("Error in running script: %s: %s", filename,
                 luautil_get_error(script->L));
     }
     return script->fl;
