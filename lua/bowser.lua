@@ -4,14 +4,10 @@ math = require("math")
 os = require("os")
 Emits = require("lua/bowser/emit_fns")
 
-TRACK_1 = 1
-TRACK_2 = 2
-TRACK_3 = 3
-TRACK_4 = 4
-TRACK_5 = 5
-TRACK_6 = 6
-TRACK_7 = 7
-TRACK_8 = 8
+-- TRACK_n constants
+for i = 1,8 do
+    _G['TRACK_'..i] = i
+end
 TRACKS = 8
 TrackTimes = {0, 0, 0, 0, 0, 0, 0, 0}
 
@@ -23,10 +19,12 @@ end
 
 function adv(track, length)
     TrackTimes[track] = TrackTimes[track] + length
+    return now(track)
 end
 
 function set(track, offset)
     TrackTimes[track] = offset
+    return now(track)
 end
 
 if os.getenv('VIS_NO_AUDIO') == nil then
@@ -76,8 +74,8 @@ local function GenNextScheduleFn(track, track_num)
     function NextSchedule()
         track.ScheduleIndex = track.ScheduleIndex + 1
         if track.ScheduleIndex > #track.SCHEDULE then
-            print("ScheduleIndex " .. track.ScheduleIndex .. " is greater than " ..
-                  #track.SCHEDULE)
+            print("ScheduleIndex " .. track.ScheduleIndex ..
+                  " is greater than " ..  #track.SCHEDULE)
             print(debug.traceback())
             return track.SCHEDULE[#track.SCHEDULE]
         end
@@ -102,16 +100,41 @@ if frame_tweak ~= nil then
     Vis.seekframe(Vis.flist, 0, frame_tweak)
 end
 
--- Provide a way for tracks to share schedules
+function debug_wrap(fn, fnname)
+    function wrapper(...)
+        if fnname == nil then ffname = tostring(fn) end
+        s = "Calling %s with %s returning %s"
+        value = fn(...)
+        print(s:format(fnname, VisUtil.strobject(...), value))
+        if tonumber(os.getenv('VIS_DEBUG')) > 1 then
+            print(debug.traceback())
+        end
+        return value
+    end
+    return wrapper
+end
+
+-- Provide a way for tracks to share schedules:
+-- T1, T2, ..., T8 are the tracks local namespaces. Their schedules are
+-- T1.SCHEDULE, T2.SCHEDULE, ..., T8.SCHEDULE.
 -- Only tracks 1, 2, 3, 4, and 8 have anything in them during the intro
 for i = 1,8 do
-    local Tn = {}
+    local Tn = {} -- Track namespace
     _G['T'..i] = Tn
     Tn.ScheduleIndex = 0
     Tn.NextSchedule = GenNextScheduleFn(Tn, i)
-    Tn.now = (function(n) return function() return TrackTimes[n] end end)(i)
-    Tn.adv = (function(n) return function(o) TrackTimes[n] = TrackTimes[n] + o end end)(i)
-    Tn.set = (function(n) return function(o) TrackTimes[n] = o end end)(i)
+    Tn.now = (function(n) return function() return now(i) end end)(i)
+    Tn.adv = (function(n) return function(o) return adv(n, o) end end)(i)
+    Tn.set = (function(n) return function(o) return set(n, o) end end)(i)
+    Tn.next = (function(tn, n)
+        return function() return set(n, tn.NextSchedule()) end
+    end)(Tn, i)
+    if os.getenv('VIS_DEBUG') ~= nil then
+        Tn.now = debug_wrap(Tn.now, 'now')
+        Tn.adv = debug_wrap(Tn.adv, 'adv')
+        Tn.set = debug_wrap(Tn.set, 'set')
+        Tn.next = debug_wrap(Tn.next, 'next')
+    end
     dotrack(i)
     if os.getenv('VIS_BOWSER_DUMP_TRACK'..i) ~= nil then
         print('T'..i..'.SCHEDULE = {' .. Tn.ScheduleIndex)
@@ -148,7 +171,7 @@ if os.getenv('VIS_HELP') ~= nil then
     print(table.concat(help_msg, "\n"))
 end
 
-exit_ms = os.getenv('VIS_BOWSER_EXIT_MS') or TrackTimes[TRACK_1] + 500
+exit_ms = tonumber(os.getenv('VIS_BOWSER_EXIT_MS')) or TrackTimes[TRACK_1] + 500
 for track = TRACK_1,TRACK_8 do
     if TrackTimes[track] + 500 > exit_ms then
         exit_ms = TrackTimes[track] + 500

@@ -8,6 +8,12 @@ VisUtil.EMIT_FIELDS = {
     "ur", "ug", "ub", "force", "limit", "blender"
 }
 
+function VisUtil.wrap_coord(x, y)
+    while x < 0 do x = Vis.WIDTH + x end
+    while y < 0 do y = Vis.HEIGHT + y end
+    return x, y
+end
+
 function VisUtil.make_emit_table()
     return {
         count = 0, when = 0,
@@ -58,14 +64,16 @@ function VisUtil.color_emit_table_v2(t, rgb, urgb)
 end
 
 function VisUtil.emit_table(t)
-    Vis.emit(Vis.flist, t.count, t.when, t.x, t.y, t.ux, t.uy,
+    x, y = VisUtil.wrap_coord(t.x, t.y)
+    Vis.emit(Vis.flist, t.count, t.when, x, y, t.ux, t.uy,
              t.radius, t.uradius, t.ds, t.uds, t.theta, t.utheta,
              t.life, t.ulife, t.r, t.g, t.b, t.ur, t.ug, t.ub,
              t.force, t.limit, t.blender)
 end
 
 function VisUtil.emit_table_now(t)
-    Vis.emitnow(Vis.script, t.count, t.x, t.y, t.ux, t.uy,
+    x, y = VisUtil.wrap_coord(t.x, t.y)
+    Vis.emitnow(Vis.script, t.count, x, y, t.ux, t.uy,
                 t.radius, t.uradius, t.ds, t.uds, t.theta, t.utheta,
                 t.life, t.ulife, t.r, t.g, t.b, t.ur, t.ug, t.ub,
                 t.force, t.limit, t.blender)
