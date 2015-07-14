@@ -59,7 +59,7 @@ static plist_action_t do_mutate_fn(struct particle* p,
                                    UNUSED_PARAM(size_t idx),
                                    void* mutate) {
     mutate_method_t method = mutate;
-    method->func(p, method->factor);
+    method->func(p, method);
     return ACTION_NEXT;
 }
 

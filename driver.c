@@ -171,7 +171,13 @@ void mainloop(struct global_ctx* ctx) {
                          emitter_get_num_mutates());
         script_set_debug(ctx->script, SCRIPT_DEBUG_PARTICLES_EMITTED,
                          dbg.particles_emitted +
-                            (uint32_t)plist_get_size(ctx->particles));
+                            plist_get_size(ctx->particles));
+#if DEBUG >= DEBUG_DEBUG
+        script_set_debug(ctx->script, SCRIPT_DEBUG_PARTICLES_MUTATED,
+                        mutate_debug_get_particles_mutated());
+        script_set_debug(ctx->script, SCRIPT_DEBUG_PARTICLE_TAGS_MODIFIED,
+                        mutate_debug_get_particle_tags_modified());
+#endif
         int status;
         if ((status = script_get_status(ctx->script)) != 0) {
             ctx->should_exit = TRUE;

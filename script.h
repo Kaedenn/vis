@@ -19,14 +19,18 @@ enum script_debug_id {
     SCRIPT_DEBUG_PARTICLES_EMITTED,
     SCRIPT_DEBUG_TIME_NOW,
     SCRIPT_DEBUG_FRAMES_EMITTED,
-    SCRIPT_DEBUG_NUM_MUTATES
+    SCRIPT_DEBUG_NUM_MUTATES,
+    SCRIPT_DEBUG_PARTICLES_MUTATED,
+    SCRIPT_DEBUG_PARTICLE_TAGS_MODIFIED
 };
 
 typedef struct script_debug {
-    uint32_t particles_emitted;
-    uint32_t time_now;
-    uint32_t frames_emitted;
-    uint32_t num_mutates;
+    uint64_t particles_emitted;
+    uint64_t time_now;
+    uint64_t frames_emitted;
+    uint64_t num_mutates;
+    uint64_t particles_mutated;
+    uint64_t particle_tags_modified;
 } *script_debug_t;
 
 typedef unsigned int script_cfg_t;
@@ -40,7 +44,7 @@ void script_callback_free(script_cb_t cb);
 /* number of errors returned to the script API, 0 for success */
 int script_get_status(script_t s);
 
-void script_set_debug(script_t s, enum script_debug_id what, uint32_t n);
+void script_set_debug(script_t s, enum script_debug_id what, uint64_t n);
 void script_get_debug(script_t s, /*out*/ script_debug_t dbg);
 
 /* don't exit even when scripts call Vis.exit */

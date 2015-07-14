@@ -46,6 +46,13 @@ static int do_keyboard_event(lua_State* L, const char* func, const char* key,
                              BOOL shift);
 static emit_t lua_args_to_emit_t(lua_State* L, int arg, fnum_t* when);
 
+static void push_constant(lua_State* L, const char* name, double value,
+                                int stackidx) {
+    lua_pushstring(L, name);
+    lua_pushnumber(L, value);
+    lua_settable(L, stackidx);
+}
+
 struct script {
     script_debug_t dbg;
     lua_State* L;
@@ -80,10 +87,7 @@ int initialize_vis_lib(lua_State* L) {
 
     luaL_newlib(L, vis_lib);
 
-#define NEW_CONST(name) \
-    lua_pushliteral(L, #name); \
-    lua_pushnumber(L, VIS_##name); \
-    lua_settable(L, -3)
+#define NEW_CONST(name) push_constant(L, (#name), (VIS_##name), -3)
 
     /* grant access to all of the enums and constants */
     NEW_CONST(FPS_LIMIT);
@@ -118,10 +122,53 @@ int initialize_vis_lib(lua_State* L) {
     NEW_CONST(MUTATE_PUSH_DY);
     NEW_CONST(MUTATE_AGE);
     NEW_CONST(MUTATE_OPACITY);
+    NEW_CONST(MUTATE_TAG_SET);
+    NEW_CONST(MUTATE_TAG_INC);
+    NEW_CONST(MUTATE_TAG_DEC);
+    NEW_CONST(MUTATE_TAG_ADD);
+    NEW_CONST(MUTATE_TAG_SUB);
+    NEW_CONST(MUTATE_TAG_MUL);
+    NEW_CONST(MUTATE_TAG_DIV);
+    NEW_CONST(MUTATE_PUSH_IF);
+    NEW_CONST(MUTATE_PUSH_DX_IF);
+    NEW_CONST(MUTATE_PUSH_DY_IF);
+    NEW_CONST(MUTATE_SLOW_IF);
+    NEW_CONST(MUTATE_SHRINK_IF);
+    NEW_CONST(MUTATE_GROW_IF);
+    NEW_CONST(MUTATE_AGE_IF);
+    NEW_CONST(MUTATE_OPACITY_IF);
     NEW_CONST(NMUTATES);
+    /* mutate conditions */
+    NEW_CONST(MUTATE_IF_TRUE);
+    NEW_CONST(MUTATE_IF_EQ);
+    NEW_CONST(MUTATE_IF_NE);
+    NEW_CONST(MUTATE_IF_LT);
+    NEW_CONST(MUTATE_IF_LE);
+    NEW_CONST(MUTATE_IF_GT);
+    NEW_CONST(MUTATE_IF_GE);
+    NEW_CONST(MUTATE_IF_EVEN);
+    NEW_CONST(MUTATE_IF_ODD);
     /* other constants */
     NEW_CONST(FORCE_FRICTION_COEFF);
     NEW_CONST(FORCE_GRAVITY_FACTOR);
+    NEW_CONST(NFRAMES);
+    NEW_CONST(AUDIO_FREQ);
+    NEW_CONST(AUDIO_SAMPLES);
+    NEW_CONST(AUDIO_CHANNELS);
+    /* helpful non-Vis constants */
+    push_constant(L, "CONST_PUSH_STOP", 0.0, -3);
+    push_constant(L, "CONST_AGE_BORN", 1.0, -3);
+    push_constant(L, "CONST_AGE_DEAD", 0.0, -3);
+    push_constant(L, "DEBUG", DEBUG, -3);
+    push_constant(L, "DEBUG_NONE", DEBUG_NONE, -3);
+    push_constant(L, "DEBUG_VERBOSE", DEBUG_VERBOSE, -3);
+    push_constant(L, "DEBUG_DEBUG", DEBUG_DEBUG, -3);
+    push_constant(L, "DEBUG_INFO", DEBUG_INFO, -3);
+    push_constant(L, "DEBUG_TRACE", DEBUG_TRACE, -3);
+    /* helpful non-numeric constants */
+    lua_pushstring(L, "LUA_STARTUP_FILE");
+    lua_pushstring(L, LUA_STARTUP_FILE);
+    lua_settable(L, -3);
 #undef NEW_CONST
 
     return 1;
@@ -235,7 +282,7 @@ int script_get_status(script_t script) {
     return script->errors;
 }
 
-void script_set_debug(script_t script, enum script_debug_id what, uint32_t n) {
+void script_set_debug(script_t script, enum script_debug_id what, uint64_t n) {
     switch (what) {
         case SCRIPT_DEBUG_PARTICLES_EMITTED:
             script->dbg->particles_emitted = n;
@@ -248,6 +295,12 @@ void script_set_debug(script_t script, enum script_debug_id what, uint32_t n) {
             break;
         case SCRIPT_DEBUG_NUM_MUTATES:
             script->dbg->num_mutates = n;
+            break;
+        case SCRIPT_DEBUG_PARTICLES_MUTATED:
+            script->dbg->particles_mutated = n;
+            break;
+        case SCRIPT_DEBUG_PARTICLE_TAGS_MODIFIED:
+            script->dbg->particle_tags_modified = n;
             break;
     }
 }
@@ -462,19 +515,35 @@ int viscmd_bgcolor_fn(lua_State* L) {
     return 0;
 }
 
-/* Vis.mutate(Vis.flist, when, func, factor),
- * @param func is a valid Vis.MUTATE_* */
+/* Vis.mutate(Vis.flist, when, func, factor), OR
+ * Vis.mutate(Vis.flist, when, func, tag), OR
+ * Vis.mutate(Vis.flist, when, func, factor, cond, tag),
+ * @param func is a valid Vis.MUTATE_*
+ * @param cond is a valid Vis.MUTATE_IF_* */
 int viscmd_mutate_fn(lua_State* L) {
     mutate_method_t method = DBMALLOC(sizeof(struct mutate_method));
     flist_t fl = *(flist_t*)luaL_checkudata(L, 1, "flist_t*");
     fnum_t when = (fnum_t)VIS_MSEC_TO_FRAMES(luaL_checkunsigned(L, 2));
     mutate_id fnid = (mutate_id)luaL_checkint(L, 3);
-    double factor = luaL_checknumber(L, 4);
+    if (fnid >= (mutate_id)0 && fnid < VIS_MUTATE_TAG_SET) {
+        /* case 1: normal mutate */
+        method->factor = luaL_checknumber(L, 4);
+    } else if (fnid >= VIS_MUTATE_TAG_SET && fnid < VIS_MUTATE_PUSH_IF) {
+        if (lua_type(L, 4) == LUA_TSTRING) {
+        } else if (lua_type(L, 4) == LUA_TNUMBER) {
+            method->tag.l = luaL_checkint(L, 4);
+        }
+    } else if (fnid >= VIS_MUTATE_PUSH_IF && fnid < VIS_NMUTATES) {
+        method->factor = luaL_checknumber(L, 4);
+        method->cond = (mutate_cond_id)luaL_checkint(L, 5);
+        if (lua_type(L, 6) == LUA_TSTRING) {
+        } else if (lua_type(L, 6) == LUA_TNUMBER) {
+            method->tag.l = luaL_checkint(L, 6);
+        }
+    }
     if (fnid < (mutate_id)0) fnid = (mutate_id)0;
     if (fnid >= VIS_NMUTATES) fnid = (mutate_id)0;
     method->func = MUTATE_MAP[fnid];
-    method->factor = factor;
-    DBPRINTF("Vis.mutate(%p, %d, {%d, %g})", fl, when, fnid, factor);
     flist_insert_mutate(fl, when, method);
     return 0;
 }
@@ -539,13 +608,17 @@ int viscmd_get_debug_fn(lua_State* L) {
     script_t s = luautil_checkscript(L, 1);
     const char* what = luaL_checkstring(L, 2);
     if (!strcmp(what, "PARTICLES-EMITTED")) {
-        lua_pushunsigned(L, s->dbg->particles_emitted);
+        lua_pushunsigned(L, (uint32_t)s->dbg->particles_emitted);
     } else if (!strcmp(what, "TIME-NOW")) {
-        lua_pushunsigned(L, s->dbg->time_now);
+        lua_pushunsigned(L, (uint32_t)s->dbg->time_now);
     } else if (!strcmp(what, "FRAMES-EMITTED")) {
-        lua_pushunsigned(L, s->dbg->frames_emitted);
+        lua_pushunsigned(L, (uint32_t)s->dbg->frames_emitted);
     } else if (!strcmp(what, "NUM-MUTATES")) {
-        lua_pushunsigned(L, s->dbg->num_mutates);
+        lua_pushunsigned(L, (uint32_t)s->dbg->num_mutates);
+    } else if (!strcmp(what, "PARTICLES-MUTATED")) {
+        lua_pushunsigned(L, (uint32_t)s->dbg->particles_mutated);
+    } else if (!strcmp(what, "PARTICLE-TAGS-MODIFIED")) {
+        lua_pushunsigned(L, (uint32_t)s->dbg->particle_tags_modified);
     } else {
         s->errors += 1;
         return luaL_error(L, "Debug token \"%s\" invalid", what);

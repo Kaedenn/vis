@@ -8,6 +8,12 @@ VisUtil.EMIT_FIELDS = {
     "ur", "ug", "ub", "force", "limit", "blender"
 }
 
+VisUtil.COLOR = {}
+VisUtil.COLOR.BLUE1 = {0, 0.2, 0.8, 0, 0.1, 0.2}
+VisUtil.COLOR.BLUE2 = {0, 0.2, 0.8, 0, 0.21, 0.21}
+VisUtil.COLOR.GREEN1 = {0, 0.8, 0.2, 0, 0.2, 0.1}
+VisUtil.COLOR.GREEN2 = {0, 0.8, 0.2, 0, 0.21, 0.11}
+
 function VisUtil.wrap_coord(x, y)
     while x < 0 do x = Vis.WIDTH + x end
     while y < 0 do y = Vis.HEIGHT + y end
@@ -44,9 +50,9 @@ function VisUtil.center_emit_table(t, x, y, ux, uy)
 end
 
 function VisUtil.color_emit_table(t, r, g, b, ur, ug, ub)
-    t.r = r>1 and r/255.0 or (r or 0)
-    t.g = g>1 and g/255.0 or (g or 0)
-    t.b = b>1 and b/255.0 or (b or 0)
+    t.r = r and r>1 and r/255.0 or (r or 0)
+    t.g = g and g>1 and g/255.0 or (g or 0)
+    t.b = b and b>1 and b/255.0 or (b or 0)
     t.ur = ur and ur>1 and ur/255.0 or (ur or 0)
     t.ug = ug and ug>1 and ug/255.0 or (ug or 0)
     t.ub = ub and ub>1 and ub/255.0 or (ub or 0)
@@ -89,6 +95,14 @@ function VisUtil.set_trace_table(t)
                  t.rad, t.urad, t.ds, t.uds, t.theta, t.utheta,
                  t.life, t.ulife, t.r, t.g, t.b, t.ur, t.ug, t.ub,
                  t.force, t.limit, t.blender)
+end
+
+function VisUtil.mutate_tag(when, tagop, tagval)
+    Vis.mutate(Vis.flist, when, tagop, tagval)
+end
+
+function VisUtil.mutate_if(when, method, factor, methodcond, tagval)
+    Vis.mutate(Vis.flist, when, method, factor, methodcond, tagval)
 end
 
 function VisUtil.stremit(e)

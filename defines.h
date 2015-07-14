@@ -26,6 +26,12 @@
 #define DEBUG DEBUG_NONE
 #endif
 
+#if DEBUG >= DEBUG_DEBUG
+#define DEBUG_EXPRESSION(x) (x)
+#else
+#define DEBUG_EXPRESSION(x)
+#endif
+
 /* lua startup file */
 #ifndef LUA_STARTUP_FILE
 #define LUA_STARTUP_FILE "lua/startup.lua"
