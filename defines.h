@@ -86,7 +86,8 @@
 #define VIS_MSEC_PER_FRAME (1000.0 / VIS_FPS_LIMIT)
 
 /* audio constants */
-#define VIS_AUDIO_FREQ 22050
+/* old #define VIS_AUDIO_FREQ 22050 */
+#define VIS_AUDIO_FREQ 44100
 #define VIS_AUDIO_SAMPLES 512
 #define VIS_AUDIO_CHANNELS 2
 

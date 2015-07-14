@@ -69,6 +69,9 @@ BOOL audio_open(const char* file) {
             return FALSE;
         }
     }
+    if (audio->file != NULL) {
+        free(audio->file);
+    }
     audio->file = dupstr(file);
     
     /* Load the sound file and convert it to 16-bit stereo at 22kHz */
@@ -119,8 +122,7 @@ void audio_pause(void) {
 
 void audio_seek(unsigned where) {
     /* where: position in 1/100ths of a second */
-    where = where * 441 * 2; /* two channels, 441MHz */
-    where = where /* / 1024 * 1024*/; /* ensure it's a multiple of 1024 */
+    where = where * VIS_AUDIO_FREQ/100 * 2;
     SDL_LockAudio();
     audio->sample->dpos = where;
     SDL_UnlockAudio();
