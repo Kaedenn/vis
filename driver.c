@@ -42,7 +42,7 @@ struct global_ctx {
 void finalize(void);
 void mainloop(struct global_ctx* ctx);
 
-plist_action_t animate_particle(struct particle* p, size_t idx,
+plist_action_id animate_particle(struct particle* p, size_t idx,
                                 void* userdata);
 void display(struct global_ctx* ctx);
 void timeout(struct global_ctx* ctx);
@@ -86,7 +86,7 @@ int main(int argc, char* argv[]) {
                                 global.args->interactive);
     gc_add((gc_func_t)command_teardown, global.cmds);
     
-    emitter_setup(global.cmds, global.particles);
+    emitter_setup(global.cmds, global.particles, global.drawer);
     gc_add((gc_func_t)emitter_free, NULL);
     
     if (!audio_init()) {
@@ -189,7 +189,7 @@ void mainloop(struct global_ctx* ctx) {
     }
 }
  
-plist_action_t animate_particle(struct particle* p, size_t idx,
+plist_action_id animate_particle(struct particle* p, size_t idx,
                                 void* userdata) {
     UNUSED_VARIABLE(idx);
     struct global_ctx* ctx = (struct global_ctx*)userdata;

@@ -9,10 +9,7 @@
 typedef struct particle_extra {
     float r, g, b, a;
     blend_id blender;
-    union {
-        char c[8];
-        int64_t l;
-    } tag;
+    union particle_tag tag;
 } *pextra_t;
 
 pextra_t new_particle_extra(float red, float green, float blue,

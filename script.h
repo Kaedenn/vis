@@ -33,11 +33,11 @@ typedef struct script_debug {
     uint64_t particle_tags_modified;
 } *script_debug_t;
 
-typedef unsigned int script_cfg_t;
-static const script_cfg_t SCRIPT_ALLOW_ALL = 0; /* allow all features */
-static const script_cfg_t SCRIPT_NO_CB = 1; /* disable callbacks */
+typedef unsigned int script_cfg_mask;
+static const script_cfg_mask SCRIPT_ALLOW_ALL = 0; /* allow all features */
+static const script_cfg_mask SCRIPT_NO_CB = 1; /* disable callbacks */
 
-script_t script_new(script_cfg_t cfg);
+script_t script_new(script_cfg_mask cfg);
 void script_free(script_t s);
 void script_callback_free(script_cb_t cb);
 

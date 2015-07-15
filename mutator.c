@@ -28,18 +28,18 @@ uint64_t mutate_debug_get_particle_tags_modified(void) {
 }
 
 static int64_t get_tag_l(struct particle* p) {
-    return ((pextra_t)p->extra)->tag.l;
+    return ((pextra_t)p->extra)->tag.i.l;
 }
 
 BOOL mutate_cond_apply(struct particle* p, mutate_method_t method) {
     switch (method->cond) {
         case VIS_MUTATE_IF_TRUE: return TRUE;
-        case VIS_MUTATE_IF_EQ: return get_tag_l(p) == method->tag.l;
-        case VIS_MUTATE_IF_NE: return get_tag_l(p) != method->tag.l;
-        case VIS_MUTATE_IF_LT: return get_tag_l(p) < method->tag.l;
-        case VIS_MUTATE_IF_LE: return get_tag_l(p) <= method->tag.l;
-        case VIS_MUTATE_IF_GT: return get_tag_l(p) > method->tag.l;
-        case VIS_MUTATE_IF_GE: return get_tag_l(p) >= method->tag.l;
+        case VIS_MUTATE_IF_EQ: return get_tag_l(p) == method->tag.i.l;
+        case VIS_MUTATE_IF_NE: return get_tag_l(p) != method->tag.i.l;
+        case VIS_MUTATE_IF_LT: return get_tag_l(p) < method->tag.i.l;
+        case VIS_MUTATE_IF_LE: return get_tag_l(p) <= method->tag.i.l;
+        case VIS_MUTATE_IF_GT: return get_tag_l(p) > method->tag.i.l;
+        case VIS_MUTATE_IF_GE: return get_tag_l(p) >= method->tag.i.l;
         case VIS_MUTATE_IF_EVEN: return (get_tag_l(p) % 2) == 0;
         case VIS_MUTATE_IF_ODD: return (get_tag_l(p) % 2) == 1;
     }
@@ -91,37 +91,37 @@ void mutate_opacity(struct particle* p, mutate_method_t method) {
 
 void mutate_tag_set(struct particle* p, mutate_method_t method) {
     DEBUG_EXPRESSION(dbg_ctr.particle_tags_modified += 1);
-    ((pextra_t)p->extra)->tag.l = method->tag.l;
+    ((pextra_t)p->extra)->tag.i.l = method->tag.i.l;
 }
 
 void mutate_tag_inc(struct particle* p, UNUSED_PARAM(mutate_method_t method)) {
     DEBUG_EXPRESSION(dbg_ctr.particle_tags_modified += 1);
-    ((pextra_t)p->extra)->tag.l += 1;
+    ((pextra_t)p->extra)->tag.i.l += 1;
 }
 
 void mutate_tag_dec(struct particle* p, UNUSED_PARAM(mutate_method_t method)) {
     DEBUG_EXPRESSION(dbg_ctr.particle_tags_modified += 1);
-    ((pextra_t)p->extra)->tag.l -= 1;
+    ((pextra_t)p->extra)->tag.i.l -= 1;
 }
 
 void mutate_tag_add(struct particle* p, mutate_method_t method) {
     DEBUG_EXPRESSION(dbg_ctr.particle_tags_modified += 1);
-    ((pextra_t)p->extra)->tag.l += method->tag.l;
+    ((pextra_t)p->extra)->tag.i.l += method->tag.i.l;
 }
 
 void mutate_tag_sub(struct particle* p, mutate_method_t method) {
     DEBUG_EXPRESSION(dbg_ctr.particle_tags_modified += 1);
-    ((pextra_t)p->extra)->tag.l -= method->tag.l;
+    ((pextra_t)p->extra)->tag.i.l -= method->tag.i.l;
 }
 
 void mutate_tag_mul(struct particle* p, mutate_method_t method) {
     DEBUG_EXPRESSION(dbg_ctr.particle_tags_modified += 1);
-    ((pextra_t)p->extra)->tag.l *= method->tag.l;
+    ((pextra_t)p->extra)->tag.i.l *= method->tag.i.l;
 }
 
 void mutate_tag_div(struct particle* p, mutate_method_t method) {
     DEBUG_EXPRESSION(dbg_ctr.particle_tags_modified += 1);
-    ((pextra_t)p->extra)->tag.l /= method->tag.l;
+    ((pextra_t)p->extra)->tag.i.l /= method->tag.i.l;
 }
 
 

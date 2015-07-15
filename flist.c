@@ -48,7 +48,7 @@ void flist_free(flist_t fl) {
     DBFREE(fl);
 }
 
-void flist_insert(flist_t fl, fnum_t when, flist_node_t fn) {
+void flist_insert(flist_t fl, fnum when, flist_node_t fn) {
     fl->total_frames += 1;
     if (fl->frames[when] == NULL) {
         fl->frames[when] = fn;
@@ -61,7 +61,7 @@ void flist_insert(flist_t fl, fnum_t when, flist_node_t fn) {
     }
 }
 
-void flist_insert_emit(flist_t fl, fnum_t when, emit_t what) {
+void flist_insert_emit(flist_t fl, fnum when, emit_t what) {
     flist_node_t fn = NULL;
     if (!fl) return;
     if (when >= VIS_NFRAMES) return;
@@ -71,7 +71,7 @@ void flist_insert_emit(flist_t fl, fnum_t when, emit_t what) {
     flist_insert(fl, when, fn);
 }
 
-void flist_insert_exit(flist_t fl, fnum_t when) {
+void flist_insert_exit(flist_t fl, fnum when) {
     flist_node_t fn = NULL;
     if (!fl) return;
     if (when >= VIS_NFRAMES) return;
@@ -80,7 +80,7 @@ void flist_insert_exit(flist_t fl, fnum_t when) {
     flist_insert(fl, when, fn);
 }
 
-void flist_insert_play(flist_t fl, fnum_t when) {
+void flist_insert_play(flist_t fl, fnum when) {
     flist_node_t fn = NULL;
     if (!fl) return;
     if (when >= VIS_NFRAMES) return;
@@ -89,7 +89,7 @@ void flist_insert_play(flist_t fl, fnum_t when) {
     flist_insert(fl, when, fn);
 }
 
-void flist_insert_cmd(flist_t fl, fnum_t when, const char* what) {
+void flist_insert_cmd(flist_t fl, fnum when, const char* what) {
     flist_node_t fn = NULL;
     if (!fl) return;
     if (when >= VIS_NFRAMES) return;
@@ -99,7 +99,7 @@ void flist_insert_cmd(flist_t fl, fnum_t when, const char* what) {
     flist_insert(fl, when, fn);
 }
 
-void flist_insert_bgcolor(flist_t fl, fnum_t when, float color[3]) {
+void flist_insert_bgcolor(flist_t fl, fnum when, float color[3]) {
     flist_node_t fn = NULL;
     if (!fl) return;
     if (when >= VIS_NFRAMES) return;
@@ -111,7 +111,7 @@ void flist_insert_bgcolor(flist_t fl, fnum_t when, float color[3]) {
     flist_insert(fl, when, fn);
 }
 
-void flist_insert_mutate(flist_t fl, fnum_t when, mutate_method_t method) {
+void flist_insert_mutate(flist_t fl, fnum when, mutate_method_t method) {
     flist_node_t fn = NULL;
     if (!fl) return;
     if (when >= VIS_NFRAMES) return;
@@ -121,7 +121,7 @@ void flist_insert_mutate(flist_t fl, fnum_t when, mutate_method_t method) {
     flist_insert(fl, when, fn);
 }
 
-void flist_insert_scriptcb(flist_t fl, fnum_t when, script_cb_t func) {
+void flist_insert_scriptcb(flist_t fl, fnum when, script_cb_t func) {
     flist_node_t fn = NULL;
     if (!fl) return;
     if (when >= VIS_NFRAMES) return;
@@ -131,7 +131,7 @@ void flist_insert_scriptcb(flist_t fl, fnum_t when, script_cb_t func) {
     flist_insert(fl, when, fn);
 }
 
-void flist_insert_seekframe(flist_t fl, fnum_t when, fnum_t where) {
+void flist_insert_seekframe(flist_t fl, fnum when, fnum where) {
     flist_node_t fn = NULL;
     if (!fl || when >= VIS_NFRAMES) return;
     fn = flist_node_new();
@@ -155,7 +155,7 @@ void flist_restart(flist_t fl) {
     fl->curr_frame = 0;
 }
 
-void flist_goto_frame(flist_t fl, fnum_t fn) {
+void flist_goto_frame(flist_t fl, fnum fn) {
     if (!fl) return;
     fl->curr_frame = fn;
 }

@@ -138,6 +138,6 @@ struct clargs* argparse(int argc, char** argv) {
 }
 
 void clargs_free(struct clargs* args) {
-    free(args);
+    DBFREE(args);
 }
 

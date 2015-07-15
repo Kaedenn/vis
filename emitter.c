@@ -19,14 +19,16 @@ static struct emitter {
     struct commands* commands;
     plist_t particles;
     flist_t fl;
+    drawer_t drawer;
     uint32_t emit_frame_count;
     uint32_t mutate_frame_count;
 } emitter;
 
-void emitter_setup(struct commands* cmds, plist_t plist) {
+void emitter_setup(struct commands* cmds, plist_t plist, drawer_t drawer) {
     ZEROINIT(&emitter);
     emitter.commands = cmds;
     emitter.particles = plist;
+    emitter.drawer = drawer;
 }
 
 void emitter_free(UNUSED_PARAM(void* arg)) {
@@ -55,7 +57,7 @@ void emitter_schedule(flist_t frames) {
     }
 }
 
-static plist_action_t do_mutate_fn(struct particle* p,
+static plist_action_id do_mutate_fn(struct particle* p,
                                    UNUSED_PARAM(size_t idx),
                                    void* mutate) {
     mutate_method_t method = mutate;
@@ -71,7 +73,6 @@ void emitter_tick(void) {
                 emit_frame(fn->data.frame);
                 break;
             case VIS_FTYPE_EXIT:
-                DBPRINTF("received command %s", "exit");
                 command_str(emitter.commands, "exit");
                 break;
             case VIS_FTYPE_PLAY:
@@ -81,7 +82,8 @@ void emitter_tick(void) {
                 command_str(emitter.commands, fn->data.cmd);
                 break;
             case VIS_FTYPE_BGCOLOR:
-                eprintf("No longer implemented, %s", "sorry!");
+                drawer_bgcolor(emitter.drawer, fn->data.color[0],
+                               fn->data.color[1], fn->data.color[2]);
                 break;
             case VIS_FTYPE_MUTATE:
                 emitter.mutate_frame_count += 1;
@@ -94,10 +96,11 @@ void emitter_tick(void) {
                 break;
             case VIS_FTYPE_FRAMESEEK:
                 flist_goto_frame(emitter.fl, fn->data.frameseek);
+                break;
             case VIS_MAX_FTYPE:
-            default:
                 break;
         }
+        /* do not process next node if this is a frame seek */
         fn = fn->type != VIS_FTYPE_FRAMESEEK ? flist_node_next(fn) : NULL;
     }
 }

@@ -10,7 +10,7 @@
 #include "forces.h"
 #include "plimits.h"
 
-void emitter_setup(struct commands* cmds, plist_t particles);
+void emitter_setup(struct commands* cmds, plist_t plist, drawer_t drawer);
 void emitter_free(void* arg);
 
 uint32_t emitter_get_emit_frame_count(void);

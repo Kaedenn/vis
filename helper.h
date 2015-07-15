@@ -34,19 +34,19 @@ void do_assert(BOOL cond, const char* message, const char* file, int line);
 #define DBFREE(ptr) free((ptr))
 #endif
 
+#if DEBUG > DEBUG_NONE
 #define EPRINTF(fmt, ...) \
     do { \
         fprintf(stderr, "%s:%d: ", __FILE__, __LINE__); \
         eprintf(fmt, __VA_ARGS__); \
     } while (0)
-
-#if DEBUG > DEBUG_NONE
 #define DBPRINTF(fmt, ...) \
     do { \
         fprintf(stderr, "%s:%d: ", __FILE__, __LINE__); \
         dbprintf(fmt, __VA_ARGS__); \
     } while (0)
 #else
+#define EPRINTF(fmt, ...) eprintf(fmt, __VA_ARGS__)
 #define DBPRINTF(fmt, ...) dbprintf(fmt, __VA_ARGS__)
 #endif
 

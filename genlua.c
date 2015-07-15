@@ -6,7 +6,7 @@
 #include "defines.h"
 #include "drawer.h"
 
-char* genlua_emit(emit_t emit, fnum_t when) {
+char* genlua_emit(emit_t emit, fnum when) {
     char* result;
     kstr s = kstring_newfrom("Vis.emit(");
     kstring_append(s, "Vis.flist, ");

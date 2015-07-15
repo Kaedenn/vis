@@ -44,7 +44,7 @@ static int viscmd_get_debug_fn(lua_State* L);
 static int do_mouse_event(lua_State* L, const char* func, int x, int y);
 static int do_keyboard_event(lua_State* L, const char* func, const char* key,
                              BOOL shift);
-static emit_t lua_args_to_emit_t(lua_State* L, int arg, fnum_t* when);
+static emit_t lua_args_to_emit_t(lua_State* L, int arg, fnum* when);
 
 static void push_constant(lua_State* L, const char* name, double value,
                                 int stackidx) {
@@ -174,7 +174,7 @@ int initialize_vis_lib(lua_State* L) {
     return 1;
 }
 
-script_t script_new(script_cfg_t cfg) {
+script_t script_new(script_cfg_mask cfg) {
     script_t s = DBMALLOC(sizeof(struct script));
     s->dbg = DBMALLOC(sizeof(struct script_debug));
     s->fl = flist_new();
@@ -260,7 +260,7 @@ void script_run_string(script_t script, const char* torun) {
         char* esc = escape_string(torun);
         EPRINTF("Error in script \"%s\": %s", esc,
                 luautil_get_error(script->L));
-        free(esc);
+        DBFREE(esc);
     }
 }
 
@@ -397,8 +397,13 @@ int viscmd_debug_fn(lua_State* L) {
                 break;
          }
     }
+#if DEBUG >= DEBUG_DEBUG
     DBPRINTF("(function %s)[%d]: Vis.debug(%s)", ar.name, ar.currentline,
              kstring_content(s));
+#else
+    fprintf(stderr, "%s:%d: Debug: %s", ar.name, ar.currentline,
+            kstring_content(s));
+#endif
     kstring_free(s);
     return 0;
 }
@@ -406,7 +411,7 @@ int viscmd_debug_fn(lua_State* L) {
 /* Vis.command(Vis.flist, when, "command") */
 int viscmd_command_fn(lua_State* L) {
     flist_t fl = *(flist_t *)luaL_checkudata(L, 1, "flist_t*");
-    fnum_t when = (fnum_t)VIS_MSEC_TO_FRAMES(luaL_checkunsigned(L, 2));
+    fnum when = (fnum)VIS_MSEC_TO_FRAMES(luaL_checkunsigned(L, 2));
     const char* cmd = luaL_checkstring(L, 3);
     /* DBPRINTF("command(%p, %d, \"%s\")", fl, when, cmd); */
     flist_insert_cmd(fl, when, cmd);
@@ -416,7 +421,7 @@ int viscmd_command_fn(lua_State* L) {
 /* Vis.exit(Vis.flist, when) */
 int viscmd_exit_fn(lua_State* L) {
     flist_t fl = *(flist_t*)luaL_checkudata(L, 1, "flist_t*");
-    fnum_t when = (fnum_t)VIS_MSEC_TO_FRAMES(luaL_checkunsigned(L, 2));
+    fnum when = (fnum)VIS_MSEC_TO_FRAMES(luaL_checkunsigned(L, 2));
     flist_insert_exit(fl, when);
     return 0;
 }
@@ -435,7 +440,7 @@ int viscmd_exit_fn(lua_State* L) {
  * @param blender defaults to linear blend (fade to black) */
 int viscmd_emit_fn(lua_State* L) {
     int arg = 1;
-    fnum_t when;
+    fnum when;
     flist_t fl = *(flist_t*)luaL_checkudata(L, arg++, "flist_t*");
     emit_t frame = lua_args_to_emit_t(L, arg, &when);
     flist_insert_emit(fl, when, frame);
@@ -446,7 +451,7 @@ int viscmd_emit_fn(lua_State* L) {
  * @param path must resolve to a .WAV file */
 int viscmd_audio_fn(lua_State* L) {
     flist_t fl = *(flist_t*)luaL_checkudata(L, 1, "flist_t*");
-    fnum_t when = (fnum_t)VIS_MSEC_TO_FRAMES(luaL_checkunsigned(L, 2));
+    fnum when = (fnum)VIS_MSEC_TO_FRAMES(luaL_checkunsigned(L, 2));
     const char* file = luaL_checkstring(L, 3);
     if (!audio_open(file)) {
         DBPRINTF("Vis.audio(%s) failed", file);
@@ -485,8 +490,8 @@ int viscmd_seek_fn(lua_State* L) {
 /* Vis.seekms(Vis.flist, when, whereto) */
 int viscmd_seekms_fn(lua_State* L) {
     flist_t fl = *(flist_t*)luaL_checkudata(L, 1, "flist_t*");
-    fnum_t where = (fnum_t)VIS_MSEC_TO_FRAMES(luaL_checkunsigned(L, 2));
-    fnum_t whereto = (fnum_t)VIS_MSEC_TO_FRAMES(luaL_checkunsigned(L, 3));
+    fnum where = (fnum)VIS_MSEC_TO_FRAMES(luaL_checkunsigned(L, 2));
+    fnum whereto = (fnum)VIS_MSEC_TO_FRAMES(luaL_checkunsigned(L, 3));
     DBPRINTF("Vis.seekms(%p, (frames)%d, (frames)%d)", fl, where, whereto);
     flist_insert_seekframe(fl, where, whereto);
     return 0;
@@ -495,8 +500,8 @@ int viscmd_seekms_fn(lua_State* L) {
 /* Vis.seekframe(Vis.flist, when, whereto) */
 int viscmd_seekframe_fn(lua_State* L) {
     flist_t fl = *(flist_t*)luaL_checkudata(L, 1, "flist_t*");
-    fnum_t where = (fnum_t)luaL_checkunsigned(L, 2);
-    fnum_t whereto = (fnum_t)luaL_checkunsigned(L, 3);
+    fnum where = (fnum)luaL_checkunsigned(L, 2);
+    fnum whereto = (fnum)luaL_checkunsigned(L, 3);
     DBPRINTF("Vis.seekframe(%p, %d, %d)", fl, where, whereto);
     flist_insert_seekframe(fl, where, whereto);
     return 0;
@@ -523,26 +528,26 @@ int viscmd_bgcolor_fn(lua_State* L) {
 int viscmd_mutate_fn(lua_State* L) {
     mutate_method_t method = DBMALLOC(sizeof(struct mutate_method));
     flist_t fl = *(flist_t*)luaL_checkudata(L, 1, "flist_t*");
-    fnum_t when = (fnum_t)VIS_MSEC_TO_FRAMES(luaL_checkunsigned(L, 2));
+    fnum when = (fnum)VIS_MSEC_TO_FRAMES(luaL_checkunsigned(L, 2));
     mutate_id fnid = (mutate_id)luaL_checkint(L, 3);
     if (fnid >= (mutate_id)0 && fnid < VIS_MUTATE_TAG_SET) {
         /* case 1: normal mutate */
         method->factor = luaL_checknumber(L, 4);
     } else if (fnid >= VIS_MUTATE_TAG_SET && fnid < VIS_MUTATE_PUSH_IF) {
-        if (lua_type(L, 4) == LUA_TSTRING) {
-        } else if (lua_type(L, 4) == LUA_TNUMBER) {
-            method->tag.l = luaL_checkint(L, 4);
+        /* case 2: tag modification */
+        if (lua_type(L, 4) == LUA_TNUMBER) {
+            method->tag.i.l = luaL_checkint(L, 4);
         }
     } else if (fnid >= VIS_MUTATE_PUSH_IF && fnid < VIS_NMUTATES) {
+        /* case 3: conditional mutate */
         method->factor = luaL_checknumber(L, 4);
         method->cond = (mutate_cond_id)luaL_checkint(L, 5);
-        if (lua_type(L, 6) == LUA_TSTRING) {
-        } else if (lua_type(L, 6) == LUA_TNUMBER) {
-            method->tag.l = luaL_checkint(L, 6);
+        if (lua_type(L, 6) == LUA_TNUMBER) {
+            method->tag.i.l = luaL_checkint(L, 6);
         }
+    } else {
+        return luaL_error(L, "Invalid mutate ID %d", fnid);
     }
-    if (fnid < (mutate_id)0) fnid = (mutate_id)0;
-    if (fnid >= VIS_NMUTATES) fnid = (mutate_id)0;
     method->func = MUTATE_MAP[fnid];
     flist_insert_mutate(fl, when, method);
     return 0;
@@ -551,7 +556,7 @@ int viscmd_mutate_fn(lua_State* L) {
 /* Vis.callback(Vis.flist, when, Vis.script, "code") */
 int viscmd_callback_fn(lua_State* L) {
     flist_t fl = *(flist_t*)luaL_checkudata(L, 1, "flist_t*");
-    fnum_t when = (fnum_t)VIS_MSEC_TO_FRAMES(luaL_checkunsigned(L, 2));
+    fnum when = (fnum)VIS_MSEC_TO_FRAMES(luaL_checkunsigned(L, 2));
     script_t s = luautil_checkscript(L, 3);
     script_cb_t scb = DBMALLOC(sizeof(struct script_cb));
     scb->owner = s;
@@ -652,15 +657,15 @@ static int do_keyboard_event(lua_State* L, const char* func, const char* key,
         nerror = 1;
     }
     kstring_free(s);
-    free(esc_key);
+    DBFREE(esc_key);
     return nerror;
 }
 
-static emit_t lua_args_to_emit_t(lua_State* L, int arg, fnum_t* when) {
+static emit_t lua_args_to_emit_t(lua_State* L, int arg, fnum* when) {
     emit_t emit = emit_new();
     emit->n = luaL_checkint(L, arg++);
     if (when != NULL) {
-        *when = (fnum_t)VIS_MSEC_TO_FRAMES(luaL_checkunsigned(L, arg++));
+        *when = (fnum)VIS_MSEC_TO_FRAMES(luaL_checkunsigned(L, arg++));
     }
     emit->x = luaL_checknumber(L, arg++);
     emit->y = luaL_checknumber(L, arg++);

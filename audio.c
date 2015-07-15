@@ -7,19 +7,19 @@
 
 static void mix(void*, Uint8* stream, int length);
 
-typedef struct sample {
+struct sample {
     Uint8* data;
     Uint32 dpos;
     Uint32 dlen;
-} *sample_t;
+};
 
-typedef struct audio {
+struct audio {
     char* file;
     BOOL muted;
-    sample_t sample;
-} *audio_t;
+    struct sample* sample;
+};
 
-static audio_t audio = NULL;
+static struct audio* audio = NULL;
 
 BOOL audio_init(void) {
     SDL_AudioSpec fmt;
@@ -70,7 +70,7 @@ BOOL audio_open(const char* file) {
         }
     }
     if (audio->file != NULL) {
-        free(audio->file);
+        DBFREE(audio->file);
     }
     audio->file = dupstr(file);
     
@@ -84,7 +84,7 @@ BOOL audio_open(const char* file) {
     
     SDL_BuildAudioCVT(&cvt, wave.format, wave.channels, wave.freq,
                       AUDIO_S16, VIS_AUDIO_CHANNELS, VIS_AUDIO_FREQ);
-    cvt.buf = malloc(dlen * (Uint32)cvt.len_mult);
+    cvt.buf = DBMALLOC(dlen * (Uint32)cvt.len_mult);
     memcpy(cvt.buf, data, dlen);
     cvt.len = (int)dlen;
     SDL_ConvertAudio(&cvt);
@@ -132,7 +132,7 @@ void audio_seek(unsigned where) {
 void mix(UNUSED_PARAM(void* unused), Uint8* stream, int length) {
     SDL_memset(stream, 0, (size_t)length);
     Uint32 amount;
-    sample_t sample = audio->sample;
+    struct sample* sample = audio->sample;
     amount = sample->dlen - sample->dpos;
     if (amount > (Uint32)length) {
         amount = (Uint32)length;

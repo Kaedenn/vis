@@ -17,10 +17,7 @@ typedef struct mutate_method {
     mutate_fn func;
     double factor;
     mutate_cond_id cond;
-    union {
-        char c[8];
-        int64_t l;
-    } tag;
+    union particle_tag tag;
 } *mutate_method_t;
 
 BOOL mutate_cond_apply(struct particle* p, mutate_method_t method);

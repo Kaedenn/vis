@@ -2,7 +2,16 @@
 #ifndef VIS_TYPES_HEADER_INCLUDED_
 #define VIS_TYPES_HEADER_INCLUDED_ 1
 
-typedef unsigned int fnum_t;
+#include <stdint.h>
+
+typedef unsigned int fnum;
+
+union particle_tag {
+    int64_t l;
+    uint64_t ul;
+    struct { int32_t h; int32_t l; } i;
+    struct { uint32_t h; uint32_t l; } ui;
+};
 
 /* force functions */
 typedef enum {
