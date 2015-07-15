@@ -9,13 +9,19 @@
 # make <target> SCR_ARGS="extra args to pass to process.py"
 #
 
+DIR = .
+OBJDIR = $(DIR)/o
+DEPDIR = $(DIR)/d
+
 SRCS = async.c audio.c clargs.c command.c drawer.c driver.c emit.c emitter.c \
        flist.c forces.c gc.c helper.c kstring.c mutator.c particle.c \
        particle_extra.c plimits.c plist.c random.c script.c genlua.c
 SOURCES = $(CSRC) Makefile
+OBJECTS = $(patsubst %.c,$(OBJDIR)/%.o,$(SRCS))
+DEPFILES = $(patsubst %.c,$(DEPDIR)/%.d,$(SRCS))
 EXECBIN = vis
+VIS = $(DIR)/$(EXECBIN)
 
-DIR = $(realpath .)
 CFLAGS = -fdiagnostics-show-option -std=c99 \
 		 -Wno-unused-variable -Wall -Wextra -Wfloat-equal -Wwrite-strings \
 		 -Wshadow -Wpointer-arith -Wcast-qual -Wredundant-decls -Wtrigraphs \
@@ -40,6 +46,7 @@ VG_REACHABLE = $(VG_LEAKCHECK) --show-reachable=yes --show-leak-kinds=all
 VALGRIND = $(VALGRIND_DEFAULT) $(VALGRIND_EXTRA)
 
 SCR_PROCESS = $(DIR)/scripts/process.py
+SCR_MAKEDEP = $(DIR)/scripts/makedep.sh
 SCR_ARGS ?=
 
 FP_DIR = output
@@ -48,42 +55,56 @@ FP_BASE ?= $(FP_DIR)/bowser
 FP_AUDIO ?= media/Bowser.wav
 FP_AVI ?= $(FP_DIR)/bowser.avi
 
-SCR_FLIP = $(DIR)/scripts/flip.sh
-SCR_ENCODE = $(DIR)/scripts/encode.sh
-
 .PHONY: all fast debug trace profile execute valgrind leakcheck \
 	leakcheck-reachable clean distclean finalproduct fp-prep fp-makeframes \
 	fp-flip fp-encode fp-cleanup
 
-all: $(SOURCES)
-	$(CC) -o $(DIR)/$(EXECBIN) $(SRCS) $(CFLAGS) $(LDFLAGS)
+all: $(DEPFILES) $(VIS)
 
-fast: $(SOURCES)
+fast: $(DEPFILES)
 	$(MAKE) "CFLAGS=$(CFLAGS) $(CFLAGS_FAST)" all
 
-debug:
+debug: $(DEPFILES)
 	$(MAKE) "CFLAGS=$(CFLAGS) $(CFLAGS_DEBUG)" all
 
-trace:
+trace: $(DEPFILES)
 	$(MAKE) "CFLAGS=$(CFLAGS) $(CFLAGS_TRACE)" all
 
 profile: $(SOURCES)
 	$(MAKE) "CFLAGS=$(CFLAGS) $(CFLAGS_FAST) $(CFLAGS_PROF)" all
-	$(DIR)/$(EXECBIN) -i -l $(DIR)/lua/demo_5_random.lua
-	gprof $(DIR)/$(EXECBIN)
+	$(VIS) -i -l $(DIR)/lua/demo_5_random.lua
+	gprof $(VIS)
 	- $(RM) $(DIR)/gmon.out
 
-valgrind: debug $(EXECBIN)
-	$(VALGRIND) $(DIR)/$(EXECBIN) $(EXEC_ARGS)
+$(OBJDIR):
+	- mkdir $(OBJDIR) 2>/dev/null
 
-leakcheck: debug $(EXECBIN)
-	$(VALGRIND) $(VG_LEAKCHECK) $(DIR)/$(EXECBIN) $(EXEC_ARGS)
+$(DEPDIR)/%.d: $(DEPDIR)
+$(DEPFILES): $(DEPDIR)
 
-leakcheck-reachable: debug $(EXECBIN)
-	$(VALGRIND) $(VG_REACHABLE) $(DIR)/$(EXECBIN) $(EXEC_ARGS)
+$(OBJDIR)/%.o: %.c $(OBJDIR)
+	$(CC) -c -o $@ $< $(CFLAGS)
+
+$(DEPDIR): $(SOURCES) $(SCR_MAKEDEP)
+	- mkdir $(DEPDIR) 2>/dev/null
+	$(BASH) $(SCR_MAKEDEP)
+
+$(VIS): $(OBJECTS)
+	$(CC) -o $@ $^ $(LDFLAGS)
+
+valgrind: debug $(VIS)
+	$(VALGRIND) $(VIS) $(EXEC_ARGS)
+
+leakcheck: debug $(VIS)
+	$(VALGRIND) $(VG_LEAKCHECK) $(VIS) $(EXEC_ARGS)
+
+leakcheck-reachable: debug $(VIS)
+	$(VALGRIND) $(VG_REACHABLE) $(VIS) $(EXEC_ARGS)
 
 clean:
-	- $(RM) $(EXECBIN)
+	- $(RM) -r $(DEPDIR)
+	- $(RM) -r $(OBJDIR)
+	- $(RM) $(VIS)
 
 distclean: clean fp-prep
 
@@ -95,7 +116,7 @@ fp-prep:
 	- $(MAKE) fp-cleanup
 
 fp-makeframes: fp-prep
-	$(DIR)/$(EXECBIN) -l $(FP_SCRIPT) -d $(FP_BASE) -i -q -s 4 $(EXEC_ARGS)
+	$(VIS) -l $(FP_SCRIPT) -d $(FP_BASE) -i -q -s 4 $(EXEC_ARGS)
 
 fp-encode:
 	$(MAKE) encode
@@ -105,3 +126,4 @@ fp-cleanup:
 
 finalproduct: all fp-prep fp-makeframes fp-encode fp-cleanup
 
+include $(DEPFILES)

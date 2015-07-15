@@ -1,8 +1,16 @@
+
+# Dependency files
+*.d
+d
+d/*
+
 # Compiled Object files
 *.slo
 *.lo
 *.o
 *.obj
+o
+o/*
 
 # Precompiled Headers
 *.gch
@@ -27,6 +35,9 @@
 *.out
 *.app
 vis
+
+# Non-distributable assets
+scripts/makedep.awk
 media/programs
 media/raw
 media/copyrighted

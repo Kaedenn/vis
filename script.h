@@ -5,6 +5,7 @@
 #include "drawer.h"
 #include <stdint.h>
 
+/* FIXME: circular dependency between flist.h and script.h */
 struct flist;
 
 typedef struct script_cb {
@@ -35,7 +36,8 @@ typedef struct script_debug {
 
 typedef unsigned int script_cfg_mask;
 static const script_cfg_mask SCRIPT_ALLOW_ALL = 0; /* allow all features */
-static const script_cfg_mask SCRIPT_NO_CB = 1; /* disable callbacks */
+static const script_cfg_mask SCRIPT_NO_CB = 1; /* disable Vis.callback() */
+static const script_cfg_mask SCRIPT_NO_EXIT = 2; /* disable Vis.exit() */
 
 script_t script_new(script_cfg_mask cfg);
 void script_free(script_t s);
@@ -46,9 +48,6 @@ int script_get_status(script_t s);
 
 void script_set_debug(script_t s, enum script_debug_id what, uint64_t n);
 void script_get_debug(script_t s, /*out*/ script_debug_t dbg);
-
-/* don't exit even when scripts call Vis.exit */
-void script_disable_exit(script_t s);
 
 struct flist* script_run(script_t script, const char* filename);
 void script_run_string(script_t script, const char* torun);

@@ -75,11 +75,12 @@ int main(int argc, char* argv[]) {
     global.particles = plist_new(VIS_PLIST_INITIAL_SIZE);
     gc_add((gc_func_t)plist_free, global.particles);
     
-    global.script = script_new(SCRIPT_ALLOW_ALL);
-    script_set_drawer(global.script, global.drawer);
+    script_cfg_mask mask = SCRIPT_ALLOW_ALL;
     if (global.args->stay_after_script) {
-        script_disable_exit(global.script);
+        mask |= SCRIPT_NO_EXIT;
     }
+    global.script = script_new(mask);
+    script_set_drawer(global.script, global.drawer);
     gc_add((gc_func_t)script_free, global.script);
 
     global.cmds = command_setup(global.drawer, global.particles, global.script,

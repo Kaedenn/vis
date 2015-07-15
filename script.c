@@ -221,6 +221,11 @@ script_t script_new(script_cfg_mask cfg) {
         lua_setfield(s->L, -2, "script");
     }
 
+    if ((cfg & SCRIPT_NO_EXIT) != 0) {
+        script_run_string(s, "Vis.exit = function() end");
+        VIS_ASSERT(s->errors == 0);
+    }
+
     lua_pop(s->L, 1); /* getglobal("Vis") */
 
     return s;
@@ -307,11 +312,6 @@ void script_set_debug(script_t script, enum script_debug_id what, uint64_t n) {
 
 void script_get_debug(script_t script, script_debug_t dbg) {
     *dbg = *script->dbg;
-}
-
-void script_disable_exit(script_t script) {
-    VIS_ASSERT(luaL_dostring(script->L,
-                             "Vis.exit = function() end") == LUA_OK);
 }
 
 void script_mousemove(script_t script, int x, int y) {
