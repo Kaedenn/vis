@@ -12,7 +12,7 @@ typedef struct script_cb {
     struct script* owner;
     char* fn_name;
     char* fn_code;
-} *script_cb_t;
+} script_cb;
 
 typedef struct script* script_t;
 
@@ -32,7 +32,7 @@ typedef struct script_debug {
     uint64_t num_mutates;
     uint64_t particles_mutated;
     uint64_t particle_tags_modified;
-} *script_debug_t;
+} script_debug;
 
 typedef unsigned int script_cfg_mask;
 static const script_cfg_mask SCRIPT_ALLOW_ALL = 0; /* allow all features */
@@ -41,17 +41,17 @@ static const script_cfg_mask SCRIPT_NO_EXIT = 2; /* disable Vis.exit() */
 
 script_t script_new(script_cfg_mask cfg);
 void script_free(script_t s);
-void script_callback_free(script_cb_t cb);
+void script_callback_free(script_cb* cb);
 
 /* number of errors returned to the script API, 0 for success */
 int script_get_status(script_t s);
 
 void script_set_debug(script_t s, enum script_debug_id what, uint64_t n);
-void script_get_debug(script_t s, /*out*/ script_debug_t dbg);
+void script_get_debug(script_t s, /*out*/ script_debug* dbg);
 
 struct flist* script_run(script_t script, const char* filename);
 void script_run_string(script_t script, const char* torun);
-void script_run_cb(script_t state, script_cb_t func, void* args);
+void script_run_cb(script_t state, script_cb* func, void* args);
 void script_set_drawer(script_t script, drawer_t drawer);
 
 void script_mousemove(script_t script, int x, int y);

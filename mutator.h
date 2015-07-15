@@ -11,42 +11,42 @@ uint64_t mutate_debug_get_particle_tags_modified(void);
 
 struct mutate_method;
 
-typedef void(*mutate_fn)(struct particle* p, struct mutate_method* method);
+typedef void(*mutate_fn)(particle* p, struct mutate_method* method);
 
 typedef struct mutate_method {
     mutate_fn func;
     double factor;
     mutate_cond_id cond;
     union particle_tag tag;
-} *mutate_method_t;
+} mutate_method;
 
-BOOL mutate_cond_apply(struct particle* p, mutate_method_t method);
+BOOL mutate_cond_apply(particle* p, mutate_method* method);
 
-void mutate_push(struct particle* p, mutate_method_t method);
-void mutate_push_dx(struct particle* p, mutate_method_t method);
-void mutate_push_dy(struct particle* p, mutate_method_t method);
-void mutate_slow(struct particle* p, mutate_method_t method);
-void mutate_shrink(struct particle* p, mutate_method_t method);
-void mutate_grow(struct particle* p, mutate_method_t method);
-void mutate_age(struct particle* p, mutate_method_t method);
-void mutate_opacity(struct particle* p, mutate_method_t method);
+void mutate_push(particle* p, mutate_method* method);
+void mutate_push_dx(particle* p, mutate_method* method);
+void mutate_push_dy(particle* p, mutate_method* method);
+void mutate_slow(particle* p, mutate_method* method);
+void mutate_shrink(particle* p, mutate_method* method);
+void mutate_grow(particle* p, mutate_method* method);
+void mutate_age(particle* p, mutate_method* method);
+void mutate_opacity(particle* p, mutate_method* method);
 
-void mutate_tag_set(struct particle* p, mutate_method_t method);
-void mutate_tag_inc(struct particle* p, mutate_method_t method);
-void mutate_tag_dec(struct particle* p, mutate_method_t method);
-void mutate_tag_add(struct particle* p, mutate_method_t method);
-void mutate_tag_sub(struct particle* p, mutate_method_t method);
-void mutate_tag_mul(struct particle* p, mutate_method_t method);
-void mutate_tag_div(struct particle* p, mutate_method_t method);
+void mutate_tag_set(particle* p, mutate_method* method);
+void mutate_tag_inc(particle* p, mutate_method* method);
+void mutate_tag_dec(particle* p, mutate_method* method);
+void mutate_tag_add(particle* p, mutate_method* method);
+void mutate_tag_sub(particle* p, mutate_method* method);
+void mutate_tag_mul(particle* p, mutate_method* method);
+void mutate_tag_div(particle* p, mutate_method* method);
 
-void mutate_push_if(struct particle* p, mutate_method_t method);
-void mutate_push_dx_if(struct particle* p, mutate_method_t method);
-void mutate_push_dy_if(struct particle* p, mutate_method_t method);
-void mutate_slow_if(struct particle* p, mutate_method_t method);
-void mutate_shrink_if(struct particle* p, mutate_method_t method);
-void mutate_grow_if(struct particle* p, mutate_method_t method);
-void mutate_age_if(struct particle* p, mutate_method_t method);
-void mutate_opacity_if(struct particle* p, mutate_method_t method);
+void mutate_push_if(particle* p, mutate_method* method);
+void mutate_push_dx_if(particle* p, mutate_method* method);
+void mutate_push_dy_if(particle* p, mutate_method* method);
+void mutate_slow_if(particle* p, mutate_method* method);
+void mutate_shrink_if(particle* p, mutate_method* method);
+void mutate_grow_if(particle* p, mutate_method* method);
+void mutate_age_if(particle* p, mutate_method* method);
+void mutate_opacity_if(particle* p, mutate_method* method);
 
 static const mutate_fn MUTATE_MAP[] = {
     mutate_push,

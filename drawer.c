@@ -11,7 +11,7 @@
 
 #include <SDL_image.h>
 
-static double calculate_blend(struct particle* particle);
+static double calculate_blend(particle* p);
 static int render_to_file(SDL_Renderer* renderer, const char* path);
 
 void drawer_ensure_fps_linear(drawer_t drawer);
@@ -42,7 +42,7 @@ struct drawer {
     Uint32 frame_skip;
     struct fps fps;
     BOOL tracing;
-    emit_t emit_desc;
+    emit_desc emit_desc;
     BOOL verbose_trace;
     double scale_factor;
     char* dump_file_fmt;
@@ -116,22 +116,22 @@ void drawer_bgcolor(drawer_t drawer, float r, float g, float b) {
     drawer->bgcolor[2] = b;
 }
 
-int drawer_add_particle(drawer_t drawer, struct particle* particle) {
-    pextra_t pe = (pextra_t)particle->extra;
+int drawer_add_particle(drawer_t drawer, particle* p) {
+    pextra* pe = (pextra*)p->extra;
     if (drawer->rect_curr < drawer->rect_count) {
         struct crect* r = &drawer->rect_array[drawer->rect_curr];
-        int diameter = (int)(drawer->scale_factor * particle->radius);
+        int diameter = (int)(drawer->scale_factor * p->radius);
         int radius = diameter / 2;
 
-        r->r.x = (int)particle->x - radius;
-        r->r.y = (int)particle->y - radius;
+        r->r.x = (int)p->x - radius;
+        r->r.y = (int)p->y - radius;
         r->r.w = diameter;
         r->r.h = diameter;
 
         r->c.r = (Uint8)(pe->r*0xFF);
         r->c.g = (Uint8)(pe->g*0xFF);
         r->c.b = (Uint8)(pe->b*0xFF);
-        r->c.a = (Uint8)(calculate_blend(particle)*0xFF);
+        r->c.a = (Uint8)(calculate_blend(p)*0xFF);
         drawer->rect_curr += 1;
         return 0;
     } else {
@@ -283,11 +283,11 @@ void drawer_set_trace_verbose(drawer_t drawer, BOOL verbose) {
     drawer->verbose_trace = verbose;
 }
 
-void drawer_set_trace(drawer_t drawer, emit_t emit) {
+void drawer_set_trace(drawer_t drawer, emit_desc emit) {
     drawer->emit_desc = emit;
 }
 
-emit_t drawer_get_trace(drawer_t drawer) {
+emit_desc drawer_get_trace(drawer_t drawer) {
     return drawer->emit_desc;
 }
 
@@ -315,11 +315,11 @@ void drawer_end_trace(drawer_t drawer) {
     drawer->tracing = FALSE;
 }
 
-double calculate_blend(struct particle* particle) {
-    pextra_t pe = (pextra_t)particle->extra;
+double calculate_blend(particle* p) {
+    pextra* pe = (pextra*)p->extra;
     double alpha = pe->a;
-    double life = particle_get_life(particle);
-    double lifetime = particle_get_lifetime(particle);
+    double life = particle_get_life(p);
+    double lifetime = particle_get_lifetime(p);
     if (pe->blender >= VIS_BLEND_NONE && pe->blender < VIS_NBLENDS) {
         alpha *= blend_fns[pe->blender](life, lifetime);
     }

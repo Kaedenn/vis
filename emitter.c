@@ -18,7 +18,7 @@
 static struct emitter {
     struct commands* commands;
     plist_t particles;
-    flist_t fl;
+    flist* fl;
     drawer_t drawer;
     ftype_id frame_counts[VIS_MAX_FTYPE];
 } emitter;
@@ -44,7 +44,7 @@ uint32_t emitter_get_frame_count(ftype_id ft) {
     return emitter.frame_counts[ft];
 }
 
-void emitter_schedule(flist_t frames) {
+void emitter_schedule(flist* frames) {
     if (emitter.fl && emitter.fl != frames) {
         flist_clear(emitter.fl);
         flist_free(emitter.fl);
@@ -55,16 +55,16 @@ void emitter_schedule(flist_t frames) {
     }
 }
 
-static plist_action_id do_mutate_fn(struct particle* p,
+static plist_action_id do_mutate_fn(particle* p,
                                    UNUSED_PARAM(size_t idx),
                                    void* mutate) {
-    mutate_method_t method = mutate;
+    mutate_method* method = mutate;
     method->func(p, method);
     return ACTION_NEXT;
 }
 
 void emitter_tick(void) {
-    flist_node_t fn = flist_tick(emitter.fl);
+    flist_node* fn = flist_tick(emitter.fl);
     while (fn != NULL) {
         emitter.frame_counts[fn->type] += 1;
         switch (fn->type) {
@@ -103,10 +103,10 @@ void emitter_tick(void) {
     }
 }
 
-void emit_frame(emit_t frame) {
+void emit_frame(emit_desc frame) {
     for (int i = 0; i < frame->n; ++i) {
-        struct particle* p = NULL;
-        pextra_t pe = NULL;
+        particle* p = NULL;
+        pextra* pe = NULL;
         float r, g, b;
         r = randfloat(frame->r - frame->ur, frame->r + frame->ur);
         g = randfloat(frame->g - frame->ug, frame->g + frame->ug);

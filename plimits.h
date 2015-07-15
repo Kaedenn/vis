@@ -6,13 +6,13 @@
 #include "particle.h"
 
 /* default */
-void no_limit(struct particle* particle);
+void no_limit(particle* p);
 
 /* particles stop at borders */
-void box(struct particle* particle);
+void box(particle* p);
 
 /* particles bounce off borders */
-void springbox(struct particle* particle);
+void springbox(particle* p);
 
 static const limit_fn LIMIT_MAP[] = {
     no_limit, box, springbox

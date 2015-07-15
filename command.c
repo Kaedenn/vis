@@ -189,8 +189,8 @@ static void cmd_emit(struct commands* cmds, const char* buffer) {
                &life,  &ulife, &r, &g, &b, &ur, &ug, &ub,
                &force, &limit, &blender) == nargs) {
         for (i = 0; i < n; ++i) {
-            pextra_t pe = NULL;
-            struct particle* p = NULL;
+            pextra* pe = NULL;
+            particle* p = NULL;
             ar = randfloat(r-ur, r+ur);
             ag = randfloat(g-ug, g+ug);
             ab = randfloat(b-ub, b+ub);
@@ -224,8 +224,8 @@ static void cmd_kick(struct commands* cmds, const char* buffer) {
     int i = 0;
     int arg = 0;
     if (sscanf(buffer, "kick %d", &arg) == nargs) {
-        pextra_t pe = NULL;
-        struct particle* p = NULL;
+        pextra* pe = NULL;
+        particle* p = NULL;
         float r, g, b;
         int radius, life;
         double ds, theta;
@@ -257,8 +257,8 @@ static void cmd_snare(struct commands* cmds, const char* buffer) {
     int i = 0;
     int arg = 0;
     if (sscanf(buffer, "snare %d", &arg) == nargs) {
-        pextra_t pe = NULL;
-        struct particle* p = NULL;
+        pextra* pe = NULL;
+        particle* p = NULL;
         float r, g, b;
         int radius, life;
         double ds, theta;
@@ -290,8 +290,8 @@ static void cmd_strum(struct commands* cmds, const char* buffer) {
     int i = 0;
     int arg = 0;
     if (sscanf(buffer, "strum %d", &arg) == nargs) {
-        pextra_t pe = NULL;
-        struct particle* p = NULL;
+        pextra* pe = NULL;
+        particle* p = NULL;
         float r, g, b;
         double radius;
         int life;
@@ -322,8 +322,8 @@ static void cmd_rain(struct commands* cmds, const char* buffer) {
     int i = 0;
     int arg = 0;
     if (sscanf(buffer, "rain %d", &arg) == nargs) {
-        pextra_t pe = NULL;
-        struct particle* p = NULL;
+        pextra* pe = NULL;
+        particle* p = NULL;
         int x, y;
         float r, g, b;
         double radius;
@@ -354,9 +354,9 @@ static void cmd_rain(struct commands* cmds, const char* buffer) {
 
 static void cmd_load(struct commands* cmds, const char* buffer) {
     if (strlen(buffer) > strlen("load ")) {
-        flist_t flist = script_run(cmds->script, buffer + strlen("load "));
-        if (flist != NULL) {
-            emitter_schedule(flist);
+        flist* fl = script_run(cmds->script, buffer + strlen("load "));
+        if (fl != NULL) {
+            emitter_schedule(fl);
         } else {
             EPRINTF("Failed to load script '%s'", buffer + strlen("load "));
         }

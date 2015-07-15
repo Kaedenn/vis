@@ -78,7 +78,7 @@ profile: $(SOURCES)
 	- $(RM) $(DIR)/gmon.out
 
 $(OBJDIR):
-	- mkdir $(OBJDIR) 2>/dev/null
+	- test -d $(OBJDIR) || mkdir $(OBJDIR) 2>/dev/null
 
 $(DEPDIR)/%.d: $(DEPDIR)
 $(DEPFILES): $(DEPDIR)
@@ -87,7 +87,7 @@ $(OBJDIR)/%.o: %.c $(OBJDIR)
 	$(CC) -c -o $@ $< $(CFLAGS)
 
 $(DEPDIR): $(SOURCES) $(SCR_MAKEDEP)
-	- mkdir $(DEPDIR) 2>/dev/null
+	- test -d $(DEPDIR) || mkdir $(DEPDIR) 2>/dev/null
 	$(BASH) $(SCR_MAKEDEP)
 
 $(VIS): $(OBJECTS)
