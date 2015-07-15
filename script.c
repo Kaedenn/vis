@@ -47,7 +47,7 @@ static int do_keyboard_event(lua_State* L, const char* func, const char* key,
 static emit_desc lua_args_to_emit_desc(lua_State* L, int arg, fnum* when);
 
 static void push_constant(lua_State* L, const char* name, double value,
-                                int stackidx) {
+                          int stackidx) {
     lua_pushstring(L, name);
     lua_pushnumber(L, value);
     lua_settable(L, stackidx);
@@ -125,13 +125,14 @@ int initialize_vis_lib(lua_State* L) {
     NEW_CONST(NLIMITS);
     /* mutators */
     NEW_CONST(MUTATE_PUSH);
+    NEW_CONST(MUTATE_PUSH_DX);
+    NEW_CONST(MUTATE_PUSH_DY);
     NEW_CONST(MUTATE_SLOW);
     NEW_CONST(MUTATE_SHRINK);
     NEW_CONST(MUTATE_GROW);
-    NEW_CONST(MUTATE_PUSH_DX);
-    NEW_CONST(MUTATE_PUSH_DY);
     NEW_CONST(MUTATE_AGE);
     NEW_CONST(MUTATE_OPACITY);
+    /* tag mutators */
     NEW_CONST(MUTATE_TAG_SET);
     NEW_CONST(MUTATE_TAG_INC);
     NEW_CONST(MUTATE_TAG_DEC);
@@ -139,6 +140,7 @@ int initialize_vis_lib(lua_State* L) {
     NEW_CONST(MUTATE_TAG_SUB);
     NEW_CONST(MUTATE_TAG_MUL);
     NEW_CONST(MUTATE_TAG_DIV);
+    /* conditional mutators */
     NEW_CONST(MUTATE_PUSH_IF);
     NEW_CONST(MUTATE_PUSH_DX_IF);
     NEW_CONST(MUTATE_PUSH_DY_IF);
@@ -147,6 +149,7 @@ int initialize_vis_lib(lua_State* L) {
     NEW_CONST(MUTATE_GROW_IF);
     NEW_CONST(MUTATE_AGE_IF);
     NEW_CONST(MUTATE_OPACITY_IF);
+    /* total number of mutators */
     NEW_CONST(NMUTATES);
     /* mutate conditions */
     NEW_CONST(MUTATE_IF_TRUE);
@@ -248,43 +251,42 @@ void script_free(script_t s) {
     DBFREE(s);
 }
 
-flist* script_run(script_t script, const char* filename) {
-    /* script->fl already bound to script in script_new */
-    /* DBPRINTF("Running %s to build %p", filename, script->fl); */
-    lua_getglobal(script->L, "debug");
-    lua_getfield(script->L, -1, "traceback");
-    int base = lua_gettop(script->L);
-    if (luaL_loadfile(script->L, filename) != LUA_OK) {
-        script->errors += 1;
+flist* script_run(script_t s, const char* filename) {
+    /* s->fl already bound to script in script_new */
+    /* DBPRINTF("Running %s to build %p", filename, s->fl); */
+    lua_getglobal(s->L, "debug");
+    lua_getfield(s->L, -1, "traceback");
+    int base = lua_gettop(s->L);
+    if (luaL_loadfile(s->L, filename) != LUA_OK) {
+        s->errors += 1;
         EPRINTF("Error in compiling script %s: %s", filename,
-                luautil_get_error(script->L));
-    } else if (lua_pcall(script->L, 0, LUA_MULTRET, base) != LUA_OK) {
-        script->errors += 1;
+                luautil_get_error(s->L));
+    } else if (lua_pcall(s->L, 0, LUA_MULTRET, base) != LUA_OK) {
+        s->errors += 1;
         EPRINTF("Error in running script: %s: %s", filename,
-                luautil_get_error(script->L));
+                luautil_get_error(s->L));
     }
-    if (lua_gettop(script->L) > 0) {
-        lua_pop(script->L, lua_gettop(script->L));
+    if (lua_gettop(s->L) > 0) {
+        lua_pop(s->L, lua_gettop(s->L));
     }
-    return script->fl;
+    return s->fl;
 }
 
-void script_run_string(script_t script, const char* torun) {
-    if (luaL_dostring(script->L, torun) != LUA_OK) {
-        script->errors += 1;
+void script_run_string(script_t s, const char* torun) {
+    if (luaL_dostring(s->L, torun) != LUA_OK) {
+        s->errors += 1;
         char* esc = escape_string(torun);
-        EPRINTF("Error in script \"%s\": %s", esc,
-                luautil_get_error(script->L));
+        EPRINTF("Error in script \"%s\": %s", esc, luautil_get_error(s->L));
         DBFREE(esc);
     }
 }
 
-void script_run_cb(script_t script, script_cb* cb, UNUSED_PARAM(void* args)) {
-    script_run_string(script, cb->fn_code);
+void script_run_cb(script_t s, script_cb* cb, UNUSED_PARAM(void* args)) {
+    script_run_string(s, cb->fn_code);
 }
 
-void script_set_drawer(script_t script, drawer_t drawer) {
-    script->drawer = drawer;
+void script_set_drawer(script_t s, drawer_t drawer) {
+    s->drawer = drawer;
 }
 
 void script_callback_free(script_cb* cb) {
@@ -293,59 +295,59 @@ void script_callback_free(script_cb* cb) {
     DBFREE(cb);
 }
 
-int script_get_status(script_t script) {
-    return script->errors;
+int script_get_status(script_t s) {
+    return s->errors;
 }
 
-void script_set_debug(script_t script, enum script_debug_id what, uint64_t n) {
+void script_set_debug(script_t s, enum script_debug_id what, uint64_t n) {
     switch (what) {
         case SCRIPT_DEBUG_PARTICLES_EMITTED:
-            script->dbg->particles_emitted = n;
+            s->dbg->particles_emitted = n;
             break;
         case SCRIPT_DEBUG_TIME_NOW:
-            script->dbg->time_now = n;
+            s->dbg->time_now = n;
             break;
         case SCRIPT_DEBUG_FRAMES_EMITTED:
-            script->dbg->frames_emitted = n;
+            s->dbg->frames_emitted = n;
             break;
         case SCRIPT_DEBUG_NUM_MUTATES:
-            script->dbg->num_mutates = n;
+            s->dbg->num_mutates = n;
             break;
         case SCRIPT_DEBUG_PARTICLES_MUTATED:
-            script->dbg->particles_mutated = n;
+            s->dbg->particles_mutated = n;
             break;
         case SCRIPT_DEBUG_PARTICLE_TAGS_MODIFIED:
-            script->dbg->particle_tags_modified = n;
+            s->dbg->particle_tags_modified = n;
             break;
     }
 }
 
-void script_get_debug(script_t script, script_debug* dbg) {
-    *dbg = *script->dbg;
+void script_get_debug(script_t s, script_debug* dbg) {
+    *dbg = *s->dbg;
 }
 
-void script_mousemove(script_t script, int x, int y) {
-    script->errors += do_mouse_event(script->L, "mousemove", x, y);
+void script_mousemove(script_t s, int x, int y) {
+    s->errors += do_mouse_event(s->L, "mousemove", x, y);
 }
 
-void script_mousedown(script_t script, int x, int y) {
-    script->errors += do_mouse_event(script->L, "mousedown", x, y);
+void script_mousedown(script_t s, int x, int y) {
+    s->errors += do_mouse_event(s->L, "mousedown", x, y);
 }
 
-void script_mouseup(script_t script, int x, int y) {
-    script->errors += do_mouse_event(script->L, "mouseup", x, y);
+void script_mouseup(script_t s, int x, int y) {
+    s->errors += do_mouse_event(s->L, "mouseup", x, y);
 }
 
-void script_keydown(script_t script, const char* keyname, BOOL shift) {
-    script->errors += do_keyboard_event(script->L, "keydown", keyname, shift);
+void script_keydown(script_t s, const char* keyname, BOOL shift) {
+    s->errors += do_keyboard_event(s->L, "keydown", keyname, shift);
 }
 
-void script_keyup(script_t script, const char* keyname, BOOL shift) {
-    script->errors += do_keyboard_event(script->L, "keyup", keyname, shift);
+void script_keyup(script_t s, const char* keyname, BOOL shift) {
+    s->errors += do_keyboard_event(s->L, "keyup", keyname, shift);
 }
 
-void script_on_quit(script_t script) {
-    script_run_string(script, "Vis.on_quit()");
+void script_on_quit(script_t s) {
+    script_run_string(s, "Vis.on_quit()");
 }
 
 /* end of public API */
@@ -360,8 +362,8 @@ script_t luautil_checkscript(lua_State* L, int arg) {
     }
 }
 
-void luautil_checkdrawer(lua_State* L, script_t script) {
-    if (script->drawer == NULL) {
+void luautil_checkdrawer(lua_State* L, script_t s) {
+    if (s->drawer == NULL) {
         luaL_error(L, "Script has no drawer, function may be disabled");
     }
 }
@@ -624,8 +626,6 @@ int viscmd_ms2f_fn(lua_State* L) {
 int viscmd_get_debug_fn(lua_State* L) {
     script_t s = luautil_checkscript(L, 1);
     const char* what = luaL_checkstring(L, 2);
-    int nresults = 1;
-    DBPRINTF("Seeking debug info for \"%s\"...", what);
     if (!strcmp(what, "PARTICLES-EMITTED")) {
         lua_pushunsigned(L, (uint32_t)s->dbg->particles_emitted);
     } else if (!strcmp(what, "TIME-NOW")) {
@@ -649,8 +649,7 @@ int viscmd_get_debug_fn(lua_State* L) {
         s->errors += 1;
         return luaL_error(L, "Debug token \"%s\" invalid", what);
     }
-    DBPRINTF("... found %d result%s", nresults, nresults == 1 ? "" : "s");
-    return nresults;
+    return 1;
 }
 
 static int do_mouse_event(lua_State* L, const char* func, int x, int y) {
