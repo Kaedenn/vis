@@ -22,7 +22,8 @@ struct particle {
 };
 
 /* constructors */
-struct particle* particle_new(double x, double y, double r, int life, void* extra);
+struct particle* particle_new(double x, double y, double r, int life,
+                              void* extra);
 struct particle* particle_new_full(double x, double y,
                              double ux, double uy,
                              double r, double ur,

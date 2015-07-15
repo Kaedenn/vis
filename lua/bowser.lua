@@ -10,6 +10,7 @@ for i = 1,8 do
 end
 TRACKS = 8
 TrackTimes = {0, 0, 0, 0, 0, 0, 0, 0}
+TrackEndTime = 0
 
 SECOND = 1000
 
@@ -18,12 +19,14 @@ function now(track)
 end
 
 function adv(track, length)
-    TrackTimes[track] = TrackTimes[track] + length
-    return now(track)
+    return set(track, TrackTimes[track] + length)
 end
 
 function set(track, offset)
     TrackTimes[track] = offset
+    if TrackTimes[track] > TrackEndTime then
+        TrackEndTime = TrackTimes[track]
+    end
     return now(track)
 end
 
@@ -171,11 +174,6 @@ if os.getenv('VIS_HELP') ~= nil then
     print(table.concat(help_msg, "\n"))
 end
 
-exit_ms = tonumber(os.getenv('VIS_BOWSER_EXIT_MS')) or TrackTimes[TRACK_1] + 500
-for track = TRACK_1,TRACK_8 do
-    if TrackTimes[track] + 500 > exit_ms then
-        exit_ms = TrackTimes[track] + 500
-    end
-end
+exit_ms = tonumber(os.getenv('VIS_BOWSER_EXIT_MS')) or TrackEndTime
 Vis.exit(Vis.flist, exit_ms)
 

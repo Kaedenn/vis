@@ -352,3 +352,4 @@ static int render_to_file(SDL_Renderer* renderer, const char* path) {
     DBFREE(pixels);
     return 1;
 }
+

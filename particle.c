@@ -79,30 +79,8 @@ void particle_set_limit(struct particle* p, limit_id limit) {
 void particle_tick(struct particle* p) {
     p->x += p->dx;
     p->y += p->dy;
-    /*switch (p->force) {
-        case VIS_FORCE_FRICTION:
-            friction(p);
-            break;
-        case VIS_FORCE_GRAVITY:
-            gravity(p);
-            break;
-        case VIS_DEFAULT_FORCE:
-        case VIS_NFORCES:
-        default:
-            break;
-    }
-    switch (p->limit) {
-        case VIS_LIMIT_BOX:
-            box(p);
-            break;
-        case VIS_LIMIT_SPRINGBOX:
-            springbox(p);
-            break;
-        case VIS_DEFAULT_LIMIT:
-        case VIS_NLIMITS:
-        default:
-            break;
-    }*/
+    VIS_ASSERT(0 <= p->force && p->force < VIS_NFORCES);
+    VIS_ASSERT(0 <= p->limit && p->limit < VIS_NLIMITS);
     FORCE_MAP[p->force](p);
     LIMIT_MAP[p->limit](p);
     p->life -= 1;

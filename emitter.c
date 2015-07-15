@@ -20,8 +20,7 @@ static struct emitter {
     plist_t particles;
     flist_t fl;
     drawer_t drawer;
-    uint32_t emit_frame_count;
-    uint32_t mutate_frame_count;
+    ftype_id frame_counts[VIS_MAX_FTYPE];
 } emitter;
 
 void emitter_setup(struct commands* cmds, plist_t plist, drawer_t drawer) {
@@ -29,6 +28,9 @@ void emitter_setup(struct commands* cmds, plist_t plist, drawer_t drawer) {
     emitter.commands = cmds;
     emitter.particles = plist;
     emitter.drawer = drawer;
+    for (ftype_id i = (ftype_id)0; i < VIS_MAX_FTYPE; ++i) {
+        emitter.frame_counts[i] = (ftype_id)0;
+    }
 }
 
 void emitter_free(UNUSED_PARAM(void* arg)) {
@@ -38,12 +40,8 @@ void emitter_free(UNUSED_PARAM(void* arg)) {
     }
 }
 
-uint32_t emitter_get_emit_frame_count(void) {
-    return emitter.emit_frame_count;
-}
-
-uint32_t emitter_get_num_mutates(void) {
-    return emitter.mutate_frame_count;
+uint32_t emitter_get_frame_count(ftype_id ft) {
+    return emitter.frame_counts[ft];
 }
 
 void emitter_schedule(flist_t frames) {
@@ -68,6 +66,7 @@ static plist_action_id do_mutate_fn(struct particle* p,
 void emitter_tick(void) {
     flist_node_t fn = flist_tick(emitter.fl);
     while (fn != NULL) {
+        emitter.frame_counts[fn->type] += 1;
         switch (fn->type) {
             case VIS_FTYPE_EMIT:
                 emit_frame(fn->data.frame);
@@ -86,7 +85,6 @@ void emitter_tick(void) {
                                fn->data.color[1], fn->data.color[2]);
                 break;
             case VIS_FTYPE_MUTATE:
-                emitter.mutate_frame_count += 1;
                 plist_foreach(emitter.particles, do_mutate_fn,
                               fn->data.method);
                 break;
@@ -106,7 +104,6 @@ void emitter_tick(void) {
 }
 
 void emit_frame(emit_t frame) {
-    emitter.emit_frame_count += 1;
     for (int i = 0; i < frame->n; ++i) {
         struct particle* p = NULL;
         pextra_t pe = NULL;

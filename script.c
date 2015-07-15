@@ -93,6 +93,16 @@ int initialize_vis_lib(lua_State* L) {
     NEW_CONST(FPS_LIMIT);
     NEW_CONST(WIDTH);
     NEW_CONST(HEIGHT);
+    /* frame types */
+    NEW_CONST(FTYPE_EMIT);
+    NEW_CONST(FTYPE_EXIT);
+    NEW_CONST(FTYPE_PLAY);
+    NEW_CONST(FTYPE_CMD);
+    NEW_CONST(FTYPE_BGCOLOR);
+    NEW_CONST(FTYPE_MUTATE);
+    NEW_CONST(FTYPE_SCRIPTCB);
+    NEW_CONST(FTYPE_FRAMESEEK);
+    NEW_CONST(MAX_FTYPE);
     /* blenders */
     NEW_CONST(DEFAULT_BLEND);
     NEW_CONST(BLEND_NONE);
@@ -507,16 +517,18 @@ int viscmd_seekframe_fn(lua_State* L) {
     return 0;
 }
 
-/* Vis.bgcolor(Vis.script, r, g, b),
+/* Vis.bgcolor(Vis.flist, when, r, g, b),
  * 0 <= @param rgb <= 1 */
 int viscmd_bgcolor_fn(lua_State* L) {
-    script_t s = luautil_checkscript(L, 1);
-    luautil_checkdrawer(L, s);
-    double r = luaL_optnumber(L, 2, 0);
-    double g = luaL_optnumber(L, 3, 0);
-    double b = luaL_optnumber(L, 4, 0);
-    drawer_bgcolor(s->drawer, (float)r, (float)g, (float)b);
-    DBPRINTF("Vis.bgcolor(%p, %g, %g, %g)", s->drawer, r, g, b);
+    flist_t fl = *(flist_t*)luaL_checkudata(L, 1, "flist_t*");
+    fnum when = (fnum)VIS_MSEC_TO_FRAMES(luaL_checkunsigned(L, 2));
+    float rgb[3];
+    rgb[0] = (float)luaL_checknumber(L, 3);
+    rgb[1] = (float)luaL_checknumber(L, 4);
+    rgb[2] = (float)luaL_checknumber(L, 5);
+    flist_insert_bgcolor(fl, when, rgb);
+    DBPRINTF("Vis.bgcolor(%p, %d, %g, %g, %g)", fl, when, rgb[0], rgb[1],
+             rgb[2]);
     return 0;
 }
 
@@ -612,6 +624,8 @@ int viscmd_ms2f_fn(lua_State* L) {
 int viscmd_get_debug_fn(lua_State* L) {
     script_t s = luautil_checkscript(L, 1);
     const char* what = luaL_checkstring(L, 2);
+    int nresults = 1;
+    DBPRINTF("Seeking debug info for \"%s\"...", what);
     if (!strcmp(what, "PARTICLES-EMITTED")) {
         lua_pushunsigned(L, (uint32_t)s->dbg->particles_emitted);
     } else if (!strcmp(what, "TIME-NOW")) {
@@ -624,11 +638,19 @@ int viscmd_get_debug_fn(lua_State* L) {
         lua_pushunsigned(L, (uint32_t)s->dbg->particles_mutated);
     } else if (!strcmp(what, "PARTICLE-TAGS-MODIFIED")) {
         lua_pushunsigned(L, (uint32_t)s->dbg->particle_tags_modified);
+    } else if (!strcmp(what, "FRAME-EMIT-COUNTS")) {
+        lua_createtable(L, VIS_MAX_FTYPE, 0);
+        for (ftype_id i = (ftype_id)0; i < VIS_MAX_FTYPE; ++i) {
+            lua_pushunsigned(L, i);
+            lua_pushunsigned(L, emitter_get_frame_count(i));
+            lua_settable(L, -3);
+        }
     } else {
         s->errors += 1;
         return luaL_error(L, "Debug token \"%s\" invalid", what);
     }
-    return 1;
+    DBPRINTF("... found %d result%s", nresults, nresults == 1 ? "" : "s");
+    return nresults;
 }
 
 static int do_mouse_event(lua_State* L, const char* func, int x, int y) {

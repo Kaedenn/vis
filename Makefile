@@ -40,9 +40,10 @@ CFLAGS := $(CFLAGS) $(CFLAGS_LIBS) $(EXTRA_CFLAGS)
 LDFLAGS := $(LDFLAGS) $(LDFLAGS_LIBS) $(EXTRA_LDFLAGS)
 
 EXEC_ARGS ?= -i -l $(DIR)/lua/bowser.lua
-VALGRIND_DEFAULT = valgrind --suppressions=$(DIR)/valgrind.supp --num-callers=64
+VG_SUPP = --suppressions=$(DIR)/valgrind.supp
 VG_LEAKCHECK = --leak-check=full
 VG_REACHABLE = $(VG_LEAKCHECK) --show-reachable=yes --show-leak-kinds=all
+VALGRIND_DEFAULT = valgrind $(VG_SUPP) --num-callers=64
 VALGRIND = $(VALGRIND_DEFAULT) $(VALGRIND_EXTRA)
 
 SCR_PROCESS = $(DIR)/scripts/process.py

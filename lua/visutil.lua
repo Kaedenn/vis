@@ -143,9 +143,9 @@ function VisUtil.strobject(o, i, seen)
             if type(k) == "string" then
                 s = s .. string.format("%q", tostring(k))
             else
-                s = s.."["..VisUtil.dumpobject(k, 0, seen).."]"
+                s = s.."["..VisUtil.strobject(k, 0, seen).."]"
             end
-            s = s.." = "..VisUtil.dumpobject(v, i+2, seen)
+            s = s.." = "..VisUtil.strobject(v, i+2, seen)
         end
         s = s.."\n"..indent(i).."}"
         return s

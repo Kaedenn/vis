@@ -13,8 +13,7 @@
 void emitter_setup(struct commands* cmds, plist_t plist, drawer_t drawer);
 void emitter_free(void* arg);
 
-uint32_t emitter_get_emit_frame_count(void);
-uint32_t emitter_get_num_mutates(void);
+uint32_t emitter_get_frame_count(ftype_id ft);
 
 void emitter_schedule(flist_t frames);
 void emitter_schedule_frame(emit_t frame, unsigned int when);
