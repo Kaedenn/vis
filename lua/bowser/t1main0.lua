@@ -45,7 +45,8 @@ circle:count(100)
 circle:theta(math.pi, math.pi)
 
 ds = {2, 1.9, 1.7, 1.5, 1, 1, 1, 1}
-for dsi,dsv in pairs(ds) do
+for dsi = 1,8 do
+    dsv = ds[dsi]
     emit_pair(circle, dsv)
 end
 

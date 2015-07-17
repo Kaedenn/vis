@@ -178,23 +178,23 @@ Examples:
     %(prog)s output/bowser output/bowser.avi
         Simplest case: encodes bowser_%%04d.png to output/bowser.avi.
 
-    %(prog)s output/bowser2 output/bowser.avi -i bowser.wav
+    %(prog)s output/bowser2 output/bowser.avi -i bowser-full.mp3
         Encodes output/bowser2_%%04d.png to output/bowser.avi, also including
-        the file bowser.wav.
+        the file bowser-full.mp3
 
     %(prog)s "output/bowser::-dframes 100" bowser.avi
         As above, but skips the first 100 PNGs (-dframes skips over the number
         of frames given).
 
-    %(prog)s output/bowser "bowser.mov::-target dvd" -i bowser.wav
-        Reads output/bowser_%%04d.png and bowser.wav, writing to bowser.mov
-        and encoding it as a DVD-playable media.
+    %(prog)s output/bowser "bowser.mov::-target dvd" -i bowser-full.mp3
+        Reads output/bowser_%%04d.png and bowser-full.mp3, writing to
+        bowser.mov and encoding it as a DVD-playable media.
 
     %(prog)s "output/bowser::-dframes 100" "bowser.avi::-framerate 32" -i \
-"bowser.wav::-s 00:00:02.50"
+"bowser-full.mp3::-s 00:00:02.50"
         Reads output/bowser_%%04d.png skipping the first 100 PNGs, reads
-        bowser.wav skipping the first 2.5 seconds of audio, and writes the
-        combination to bowser.avi at 32 frames per second.
+        bowser-full.mp3 skipping the first 2.5 seconds of audio, and writes
+        the combination to bowser.avi at 32 frames per second.
 """
     p = argparse.ArgumentParser(usage=USAGE, epilog=EPILOG,
                                 formatter_class=

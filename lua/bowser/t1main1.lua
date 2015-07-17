@@ -7,8 +7,11 @@ local pos_tab_s1 = {
 }
 
 for i = 1,16 do
-    Emits.emit_circle(T1.next(), pos_tab_s1[i%4+1][1], pos_tab_s1[i%4+1][2])
-    T1.next()
+    start = T1.next()
+    stop = T1.next()
+    for j = start,stop,Vis.frames2msec(1) do
+        Emits.emit_circle(j, pos_tab_s1[i%4+1][1], pos_tab_s1[i%4+1][2])
+    end
 end
 
 -- a b c, a b c

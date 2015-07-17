@@ -3,8 +3,9 @@
 #include "helper.h"
 
 #include <SDL.h>
-#include <SDL_audio.h>
+#include <SDL_mixer.h>
 
+#if 0
 static void mix(void*, Uint8* stream, int length);
 
 struct sample {
@@ -12,14 +13,90 @@ struct sample {
     Uint32 dpos;
     Uint32 dlen;
 };
+#endif
 
 struct audio {
     char* file;
     BOOL muted;
-    struct sample* sample;
+    Mix_Music* music;
 };
 
 static struct audio* audio = NULL;
+
+#if 1
+BOOL audio_init(void) {
+    if (Mix_OpenAudio(VIS_AUDIO_FREQ, MIX_DEFAULT_FORMAT, 2,
+                      VIS_AUDIO_SAMPLES) < 0) {
+        EPRINTF("Unable to start audio engine: %s", Mix_GetError());
+        return FALSE;
+    }
+
+    audio = DBMALLOC(sizeof(struct audio));
+    return TRUE;
+}
+
+BOOL audio_open(const char* file) {
+    if (!audio) {
+        if (!audio_init()) {
+            EPRINTF("Failed to play %s", file);
+            return FALSE;
+        }
+    }
+
+    if ((audio->music = Mix_LoadMUS(file)) == NULL) {
+        EPRINTF("Failed to load %s: %s", file, Mix_GetError());
+        return FALSE;
+    }
+
+    if (Mix_PlayMusic(audio->music, -1) == -1) {
+        EPRINTF("Failed to play %s: %s", file, Mix_GetError());
+        Mix_FreeMusic(audio->music);
+        return FALSE;
+    }
+
+    audio->file = dupstr(file);
+    Mix_PauseMusic();
+    return TRUE;
+}
+
+void audio_free(UNUSED_PARAM(void* ptr)) {
+    audio_close();
+    DBFREE(audio);
+    audio = NULL;
+}
+
+void audio_close(void) {
+    Mix_FreeMusic(audio->music);
+    audio->music = NULL;
+    DBFREE(audio->file);
+    audio->file = NULL;
+}
+
+void audio_play(void) {
+    if (Mix_PausedMusic() == 1) {
+        Mix_ResumeMusic();
+    }
+}
+
+void audio_pause(void) {
+    if (Mix_PausedMusic() == 0) {
+        Mix_PauseMusic();
+    }
+}
+
+void audio_mute(void) {
+    Mix_VolumeMusic(0);
+}
+
+void audio_seek(unsigned where) {
+    DBPRINTF("Seeking to %u", where);
+    Mix_RewindMusic();
+    if (Mix_SetMusicPosition((double)where / 100) == -1) {
+        EPRINTF("Codec does not support seeking: %s", Mix_GetError());
+    }
+}
+
+#else
 
 BOOL audio_init(void) {
     SDL_AudioSpec fmt;
@@ -122,7 +199,7 @@ void audio_pause(void) {
 
 void audio_seek(unsigned where) {
     /* where: position in 1/100ths of a second */
-    where = where * VIS_AUDIO_FREQ/100 * 2;
+    where = where * 220500/100 * 2;
     SDL_LockAudio();
     audio->sample->dpos = where;
     SDL_UnlockAudio();
@@ -141,4 +218,5 @@ void mix(UNUSED_PARAM(void* unused), Uint8* stream, int length) {
                  audio->muted ? 0 : SDL_MIX_MAXVOLUME);
     sample->dpos += amount;
 }
+#endif
 

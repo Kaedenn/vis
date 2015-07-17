@@ -34,7 +34,7 @@ CFLAGS_TRACE = -O0 -ggdb -DDEBUG=10
 CFLAGS_PROF = -pg
 
 CFLAGS_LIBS = -I/usr/include/lua5.2 -I/usr/include/SDL2
-LDFLAGS_LIBS = -llua5.2 -lSDL2 -lSDL2_image
+LDFLAGS_LIBS = -llua5.2 -lSDL2 -lSDL2_image -lSDL2_mixer
 
 CFLAGS := $(CFLAGS) $(CFLAGS_LIBS) $(EXTRA_CFLAGS)
 LDFLAGS := $(LDFLAGS) $(LDFLAGS_LIBS) $(EXTRA_LDFLAGS)
@@ -53,7 +53,7 @@ SCR_ARGS ?=
 FP_DIR = output
 FP_SCRIPT = lua/bowser.lua
 FP_BASE ?= $(FP_DIR)/bowser
-FP_AUDIO ?= media/Bowser.wav
+FP_AUDIO ?= media/bowser-full.mp3
 FP_AVI ?= $(FP_DIR)/bowser.avi
 
 .PHONY: all fast debug trace profile execute valgrind leakcheck \
@@ -110,7 +110,7 @@ clean:
 distclean: clean fp-prep
 
 encode:
-	$(info "make encode FP_BASE=<images> FP_AVI=<output.avi> FP_AUDIO=<song.wav>")
+	$(info "make encode FP_BASE=<images> FP_AVI=<output.avi> FP_AUDIO=<song>")
 	python $(SCR_PROCESS) "$(FP_BASE)" "$(FP_AVI)" -i "$(FP_AUDIO)" $(SCR_ARGS)
 
 fp-prep:

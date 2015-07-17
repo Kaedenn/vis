@@ -10,9 +10,33 @@ for i = 1,8 do
 end
 TRACKS = 8
 TrackTimes = {0, 0, 0, 0, 0, 0, 0, 0}
+TrackAdvances = {0, 0, 0, 0, 0, 0, 0, 0}
 TrackEndTime = 0
 
 SECOND = 1000
+
+Env = {}
+Env['VIS_BOWSER_NO_AUDIO'] = ''
+Env['VIS_BOWSER_ISOLATE'] = ''
+Env['VIS_BOWSER_SKIP_INTRO'] = ''
+Env['VIS_BOWSER_SKIP_TO'] = ''
+Env['VIS_BOWSER_FRAME_TWEAK'] = ''
+Env['VIS_BOWSER_MS_TWEAK'] = ''
+Env['VIS_BOWSER_EXIT_MS'] = ''
+Env['VIS_DEBUG'] = ''
+Env['VIS_HELP'] = ''
+
+for t = 1,TRACKS do
+    Env['VIS_BOWSER_DUMP_TRACK'..t] = ''
+end
+
+if Vis.DEBUG > Vis.DEBUG_NONE then
+    print(VisUtil.strobject(Env))
+end
+
+for k, _ in pairs(Env) do
+    Env[k] = os.getenv(k)
+end
 
 function now(track)
     return TrackTimes[track]
@@ -23,6 +47,7 @@ function adv(track, length)
 end
 
 function set(track, offset)
+    TrackAdvances[track] = TrackAdvances[track] + 1
     TrackTimes[track] = offset
     if TrackTimes[track] > TrackEndTime then
         TrackEndTime = TrackTimes[track]
@@ -30,12 +55,12 @@ function set(track, offset)
     return now(track)
 end
 
-if os.getenv('VIS_NO_AUDIO') == nil then
-    t = os.getenv('VIS_ISOLATE')
-    if t ~= nil then
-        Vis.audio(Vis.flist, 0, "media/bowser-"..t..".wav")
+if Env['VIS_BOWSER_NO_AUDIO'] == nil then
+    isolate = Env['VIS_BOWSER_ISOLATE']
+    if isolate ~= nil then
+        Vis.audio(Vis.flist, 0, "media/bowser-track-"..isolate..".mp3")
     else
-        Vis.audio(Vis.flist, 0, "media/Bowser.wav")
+        Vis.audio(Vis.flist, 0, "media/bowser-full.mp3")
     end
 end
 
@@ -67,7 +92,7 @@ H_5_6 = H(5,6) -- 500
 H_1_8 = H(1,8) -- 75
 
 local function dotrack(track)
-    isolate = os.getenv('VIS_ISOLATE')
+    isolate = Env['VIS_BOWSER_ISOLATE']
     if isolate == nil or isolate == tostring(track) then
         dofile("lua/bowser/track"..track..".lua")
     end
@@ -88,19 +113,21 @@ local function GenNextScheduleFn(track, track_num)
 end
 
 -- Must be *before* scheduling to avoid conflicts
-skip_to = os.getenv('VIS_BOWSER_SKIP_TO')
-if skip_to ~= nil then
-    VisUtil.seek_to(tonumber(skip_to))
+if Env['VIS_BOWSER_SKIP_TO'] ~= nil then
+    VisUtil.seek_to(tonumber(Env['VIS_BOWSER_SKIP_TO']))
+elseif Env['VIS_BOWSER_SKIP_INTRO'] ~= nil then
+    VisUtil.seek_to(18087)
 end
 
-ms_tweak = os.getenv('VIS_BOWSER_MS_TWEAK')
-frame_tweak = os.getenv('VIS_BOWSER_FRAME_TWEAK')
-if ms_tweak ~= nil then
-    frame_tweak = Vis.msec2frames(ms_tweak)
+frameskip = 0
+if Env['VIS_BOWSER_MS_TWEAK'] ~= nil then
+    frameskip = Vis.msec2frames(tonumber(Env['VIS_BOWSER_MS_TWEAK']))
+elseif Env['VIS_BOWSER_FRAME_TWEAK'] ~= nil then
+    frameskip = tonumber(Env['VIS_BOWSER_FRAME_TWEAK'])
 end
 
-if frame_tweak ~= nil then
-    Vis.seekframe(Vis.flist, 0, frame_tweak)
+if frameskip ~= nil and frameskip ~= 0 then
+    Vis.seekframe(Vis.flist, 0, frameskip)
 end
 
 function debug_wrap(fn, fnname)
@@ -109,7 +136,7 @@ function debug_wrap(fn, fnname)
         s = "Calling %s with %s returning %s"
         value = fn(...)
         print(s:format(fnname, VisUtil.strobject(...), value))
-        if tonumber(os.getenv('VIS_DEBUG')) > 1 then
+        if tonumber(Env['VIS_DEBUG']) > 1 then
             print(debug.traceback())
         end
         return value
@@ -132,14 +159,14 @@ for i = 1,8 do
     Tn.next = (function(tn, n)
         return function() return set(n, tn.NextSchedule()) end
     end)(Tn, i)
-    if os.getenv('VIS_DEBUG') ~= nil then
+    if Env['VIS_DEBUG'] ~= nil then
         Tn.now = debug_wrap(Tn.now, 'now')
         Tn.adv = debug_wrap(Tn.adv, 'adv')
         Tn.set = debug_wrap(Tn.set, 'set')
         Tn.next = debug_wrap(Tn.next, 'next')
     end
     dotrack(i)
-    if os.getenv('VIS_BOWSER_DUMP_TRACK'..i) ~= nil then
+    if Env['VIS_BOWSER_DUMP_TRACK'..i] ~= nil then
         print('T'..i..'.SCHEDULE = {' .. Tn.ScheduleIndex)
         for i = 1,#Tn.SCHEDULE,2 do
             prefix = "\t";
@@ -152,15 +179,18 @@ for i = 1,8 do
     end
 end
 
-if os.getenv('VIS_HELP') ~= nil then
+if Env['VIS_HELP'] ~= nil then
     help_msg = {
         "Environment variables for bowser.lua:",
-        "VIS_NO_AUDIO                   Disable loading of Bowser.wav",
-        "VIS_ISOLATE=<track>            Play only <track>, 1 to 8",
+        "VIS_BOWSER_NO_AUDIO            Disable loading of bowser-full.mp3",
+        "VIS_BOWSER_ISOLATE=<track>     Play only <track>, 1 to 8",
+        "VIS_BOWSER_SKIP_INTRO          Seek to offset 18087; skip intro",
         "VIS_BOWSER_SKIP_TO=<msec>      Seek all to offset <msec> on load",
         "VIS_BOWSER_FRAME_TWEAK=<frame> Seek the flist to <frame> on load",
         "VIS_BOWSER_MS_TWEAK=<msec>     Seek the flist to <msec> on load",
         "VIS_BOWSER_EXIT_MS=<msec>      Force exit after <msec>",
+        "VIS_BOWSER_DUMP_TRACKn         Print schedule of track n",
+        "VIS_DEBUG                      Enable certain debugging messages",
         "VIS_HELP                       This message",
         "",
         "Useful offsets:",
@@ -174,6 +204,6 @@ if os.getenv('VIS_HELP') ~= nil then
     print(table.concat(help_msg, "\n"))
 end
 
-exit_ms = tonumber(os.getenv('VIS_BOWSER_EXIT_MS')) or TrackEndTime
+exit_ms = tonumber(Env['VIS_BOWSER_EXIT_MS']) or TrackEndTime
 Vis.exit(Vis.flist, exit_ms)
 

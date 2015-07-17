@@ -43,7 +43,7 @@ T1.SCHEDULE = {
     18709, 18815,
     18835, 18941,
     18957, 19066,
-    19084, 19190,
+    19084, 19190
 }
 
 T1.SCHEDULE_MAIN1_REPEATS = {
@@ -84,10 +84,10 @@ T1.SCHEDULE_MAIN1_PART2 = {
 
 for _,i in pairs(T1.SCHEDULE_MAIN1_REPEATS) do
     for n,j in pairs(T1.SCHEDULE_MAIN1_PART1) do
-        table.insert(T1.SCHEDULE, #T1.SCHEDULE, i + j)
+        table.insert(T1.SCHEDULE, i + j)
     end
     for n,j in pairs(T1.SCHEDULE_MAIN1_PART2) do
-        table.insert(T1.SCHEDULE, #T1.SCHEDULE, i + j)
+        table.insert(T1.SCHEDULE, i + j)
     end
 end
 
@@ -101,7 +101,7 @@ end
 --      tone: 103ms
 --      gap: 20ms
 --      total: 123ms * 16 = duration of m1p1
---  Main track part two has a b c, a, b, c, 1, 2, 3, 4
+--  Main track part two has a b c a b c 1 2 3 4
 --  length: b < a < c
 --  pitch: b < a < c
 --  pitch: 1 > 2, 1,2 < 3 < 4
