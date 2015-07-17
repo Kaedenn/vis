@@ -7,6 +7,7 @@
 struct clargs {
     const char* execname;
     const char* scriptfile;
+    const char* scriptstring;
     const char* dumpfile;
     const char* commandfile;
     int frameskip;

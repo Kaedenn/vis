@@ -10,18 +10,21 @@ print(table.concat({
 
 clicks = {}
 keys = {}
+curr_mb = 0
 
-Vis.on_mousedown = function(x, y)
+Vis.on_mousedown = function(x, y, b)
     table.insert(clicks, {x, y})
-    print("on_mousedown("..x..","..y..")")
+    curr_mb = b
+    print("on_mousedown("..x..","..y..","..b..")")
 end
 
-Vis.on_mouseup = function(x, y)
-    print("on_mouseup("..x..","..y..")")
+Vis.on_mouseup = function(x, y, b)
+    curr_mb = 0
+    print("on_mouseup("..x..","..y..","..b..")")
 end
 
 Vis.on_mousemove = function(x, y)
-    print("on_mousemove("..x..","..y..")")
+    print("on_mousemove("..x..","..y..")".." curr mb: "..curr_mb)
 end
 
 Vis.on_keydown = function(key)

@@ -6,22 +6,24 @@
 #include <string.h>
 
 const char* usage_string = "Usage: %s [-l path] [arguments...]";
-const char* help_string =
-" Short options:\n"
-"  -d <FILE> dump frames to <FILE>_000.png\n"
-"  -l <FILE> run lua script <FILE>\n"
-"  -f <FILE> run commands from <FILE>\n"
-"  -s <NUM>  skip <NUM> frames when dumping with -d\n"
-"  -t        output the results of tracing to stdout, implies -i\n"
-"  -i        disable interactive mode (commands on stdin)\n"
-"  -I        do not exit after a script finishes (if it calls Vis.exit)\n"
-"  -e        disables radius optimization: enlarge particles by 2x\n"
-"  -q        disables the playback of audio\n"
-"  -h        this message\n"
-" Long options:\n"
-"  --linear-fps use the old linear (self-correcting) fps limiter\n"
-"  --help       this message\n"
-"";
+const char* help_string[] = {
+    " Short options:",
+    "  -d <FILE> dump frames to <FILE>_000.png",
+    "  -l <FILE> run lua script <FILE>",
+    "  -L <LUA>  run lua string <LUA>",
+    "  -f <FILE> run commands from <FILE>",
+    "  -s <NUM>  skip <NUM> frames when dumping with -d",
+    "  -t        output the results of tracing to stdout, implies -i",
+    "  -i        disable interactive mode (commands on stdin)",
+    "  -I        do not exit after a script finishes (if it calls Vis.exit)",
+    "  -e        disables radius optimization: enlarge particles by 2x",
+    "  -q        disables the playback of audio",
+    "  -h        this message",
+    " Long options:",
+    "  --linear-fps use the old linear (self-correcting) fps limiter",
+    "  --help       this message",
+    "", NULL
+};
 
 static void mark_error(struct clargs* args, int error) {
     args->must_exit = TRUE;
@@ -34,6 +36,7 @@ struct clargs* argparse(int argc, char** argv) {
     struct clargs* args = DBMALLOC(sizeof(struct clargs));
     args->execname = argv[0];
     args->scriptfile = NULL;
+    args->scriptstring = NULL;
     args->dumpfile = NULL;
     args->commandfile = NULL;
     args->frameskip = 0;
@@ -60,6 +63,14 @@ struct clargs* argparse(int argc, char** argv) {
             case 'l':
                 if (argi+1 < argc) {
                     args->scriptfile = argv[++argi];
+                } else {
+                    EPRINTF("Argument -%s requires value", argv[argi][1]);
+                    mark_error(args, 1);
+                }
+                break;
+            case 'L':
+                if (argi+1 < argc) {
+                    args->scriptstring = argv[++argi];
                 } else {
                     EPRINTF("Argument -%s requires value", argv[argi][1]);
                     mark_error(args, 1);
@@ -96,17 +107,21 @@ struct clargs* argparse(int argc, char** argv) {
             case 'q':
                 args->quiet_audio = TRUE;
                 break;
-            case 'h':
+            case 'h': {
                 printf(usage_string, argv[0]);
-                printf("\n%s", help_string);
+                for (size_t i = 0; help_string[i] != NULL; ++i) {
+                    printf("\n%s", help_string[i]);
+                }
                 mark_error(args, 0);
-                break;
+            } break;
             case '-': /* longopt */
                 if (!strcmp(argv[argi], "--linear-fps")) {
                     args->absolute_fps = FALSE;
                 } else if (!strcmp(argv[argi], "--help")) {
                     printf(usage_string, argv[0]);
-                    printf("\n%s", help_string);
+                    for (size_t i = 0; help_string[i] != NULL; ++i) {
+                        printf("\n%s", help_string[i]);
+                    }
                     mark_error(args, 0);
                 } else {
                     EPRINTF("Invalid long option %s", argv[argi]);

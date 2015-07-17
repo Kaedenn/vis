@@ -114,8 +114,9 @@ function VisUtil.stremit(e)
     return s
 end
 
-function VisUtil.strobject(o, i, seen)
+function VisUtil.strobject(o, i, seen, whereami)
     seen = seen or {}
+    whereami = whereami or {"_G"}
     if type(o) ~= "table" then
         if type(o) == "string" then
             return string.format("%q", tostring(o))
@@ -123,34 +124,50 @@ function VisUtil.strobject(o, i, seen)
             return tostring(o)
         end
     elseif seen[o] == nil then
-        seen[o] = 1
+        seen[o] = table.concat(whereami, ".")
         local function indent(n)
             return string.rep(" ",n)
         end
         if next(o) == nil then
-            return "{}"
+            return "{empty}"
         end
         i = i or 0
         local s = "{"
         local f = true
+        local itemstr = ''
+        local sorted = {}
         for k,v in pairs(o) do
+            table.insert(sorted, k)
+        end
+        table.sort(sorted)
+        for _,k in pairs(sorted) do
+            local v = o[k]
             if f then
                 f = false
             else
                 s = s..","
             end
+            -- An interesting idea, saved for later
+            --s = s.."\n"..table.concat(whereami, '.')
             s = s.."\n"..indent(i+2)
             if type(k) == "string" then
-                s = s .. string.format("%q", tostring(k))
+                itemstr = ("%q"):format(k)
+                whereami[#whereami+1] = tostring(k)
+            elseif type(k) == "number" then
+                itemstr = ("[%d]"):format(k)
+                whereami[#whereami+1] = itemstr
             else
-                s = s.."["..VisUtil.strobject(k, 0, seen).."]"
+                itemstr = "["..VisUtil.strobject(k, 0, seen, whereami).."]"
+                whereami[#whereami+1] = itemstr
             end
-            s = s.." = "..VisUtil.strobject(v, i+2, seen)
+            s = s..itemstr
+            s = s.." = "..VisUtil.strobject(v, i+2, seen, whereami)
+            whereami[#whereami] = nil
         end
         s = s.."\n"..indent(i).."}"
         return s
     else
-        return "{...}"
+        return "{ see "..seen[o].." }"
     end
 end
 

@@ -116,6 +116,10 @@ int main(int argc, char* argv[]) {
     emit->blender = VIS_BLEND_QUADRATIC;
     drawer_set_trace(g.drawer, emit);
 
+    if (g.args->scriptstring) {
+        script_run_string(g.script, g.args->scriptstring);
+    }
+
     if (g.args->scriptfile) {
         emitter_schedule(script_run(g.script, g.args->scriptfile));
     }
@@ -141,7 +145,8 @@ void mainloop(struct global_ctx* ctx) {
                     drawer_begin_trace(ctx->drawer);
                     drawer_trace(ctx->drawer, (float)e.button.x,
                                  (float)e.button.y);
-                    script_mousedown(ctx->script, e.button.x, e.button.y);
+                    script_mousedown(ctx->script, e.button.x, e.button.y,
+                                     e.button.button);
                     break;
                 case SDL_MOUSEMOTION:
                     drawer_trace(ctx->drawer, (float)e.motion.x,
@@ -150,7 +155,8 @@ void mainloop(struct global_ctx* ctx) {
                     break;
                 case SDL_MOUSEBUTTONUP:
                     drawer_end_trace(ctx->drawer);
-                    script_mouseup(ctx->script, e.button.x, e.button.y);
+                    script_mouseup(ctx->script, e.button.x, e.button.y,
+                                   e.button.button);
                     break;
                 case SDL_KEYDOWN:
                     if (e.key.keysym.sym == SDLK_ESCAPE) {
