@@ -225,6 +225,7 @@ script_t script_new(script_cfg_mask cfg) {
         "Vis = require(\"Vis\")\n"
         "VisUtil = require(\"visutil\")\n"
         "Emit = require(\"emit\")\n"
+        "Letters = require(\"letters\")\n"
         "Vis.on_mousedown = function() end\n"
         "Vis.on_mouseup = function() end\n"
         "Vis.on_mousemove = function() end\n"
@@ -261,6 +262,7 @@ script_t script_new(script_cfg_mask cfg) {
     }
 
     lua_pop(s->L, 1); /* getglobal("Vis") */
+    VIS_ASSERT(lua_gettop(s->L) == 0);
 
     return s;
 }

@@ -88,7 +88,7 @@ drawer_t drawer_new(void) {
     drawer_bgcolor(drawer, 0, 0, 0);
     drawer->scale_factor = 1.0;
     /* load the generic pixel */
-    SDL_Surface* pixel = IMG_Load("pixel_3x3.png");
+    SDL_Surface* pixel = IMG_Load("assets/pixel_3x3.png");
     if (!pixel) {
         EPRINTF("Failed to load pixel image: %s", SDL_GetError());
     } else if (!(drawer->pixel = SDL_CreateTextureFromSurface(drawer->renderer,
