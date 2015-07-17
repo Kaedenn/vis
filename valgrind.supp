@@ -282,4 +282,11 @@
     fun:_XOpenLC
     fun:XOpenIM
 }
-
+{
+    dlopen-cxxnew
+    Memcheck:Leak
+    match-leak-kinds: reachable
+    ...
+    obj:/usr/lib/x86_64-linux-gnu/libjack.so.0.1.0
+    ...
+}

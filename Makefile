@@ -22,15 +22,15 @@ DEPFILES = $(patsubst %.c,$(DEPDIR)/%.d,$(SRCS))
 EXECBIN = vis
 VIS = $(DIR)/$(EXECBIN)
 
-CFLAGS = -fdiagnostics-show-option -std=c99 \
+CFLAGS = -fdiagnostics-show-option -ansi \
 		 -Wno-unused-variable -Wall -Wextra -Wfloat-equal -Wwrite-strings \
 		 -Wshadow -Wpointer-arith -Wcast-qual -Wredundant-decls -Wtrigraphs \
-		 -Wswitch-enum -Wundef -Wconversion -pedantic
+		 -Wswitch-enum -Wundef -Wconversion -pedantic -std=c99
 LDFLAGS = -lm
 
 CFLAGS_FAST = -O3 -fexpensive-optimizations
-CFLAGS_DEBUG = -O0 -ggdb -DDEBUG=3
-CFLAGS_TRACE = -O0 -ggdb -DDEBUG=10
+CFLAGS_DEBUG = -O0 -ggdb -DDEBUG=DEBUG_DEBUG
+CFLAGS_TRACE = -O0 -ggdb -DDEBUG=DEBUG_TRACE
 CFLAGS_PROF = -pg
 
 CFLAGS_LIBS = -I/usr/include/lua5.2 -I/usr/include/SDL2
@@ -39,7 +39,7 @@ LDFLAGS_LIBS = -llua5.2 -lSDL2 -lSDL2_image -lSDL2_mixer
 CFLAGS := $(CFLAGS) $(CFLAGS_LIBS) $(EXTRA_CFLAGS)
 LDFLAGS := $(LDFLAGS) $(LDFLAGS_LIBS) $(EXTRA_LDFLAGS)
 
-EXEC_ARGS ?= -i -l $(DIR)/lua/bowser.lua
+EXEC_ARGS ?= -i -l $(DIR)/lua/demo_4_random.lua
 VG_SUPP = --suppressions=$(DIR)/valgrind.supp
 VG_LEAKCHECK = --leak-check=full
 VG_REACHABLE = $(VG_LEAKCHECK) --show-reachable=yes --show-leak-kinds=all
@@ -93,13 +93,13 @@ $(DEPDIR): $(SOURCES) $(SCR_MAKEDEP)
 $(VIS): $(OBJECTS)
 	$(CC) -o $@ $^ $(LDFLAGS)
 
-valgrind: debug $(VIS)
+valgrind: debug
 	$(VALGRIND) $(VIS) $(EXEC_ARGS)
 
-leakcheck: debug $(VIS)
+leakcheck: debug
 	$(VALGRIND) $(VG_LEAKCHECK) $(VIS) $(EXEC_ARGS)
 
-leakcheck-reachable: debug $(VIS)
+leakcheck-reachable: debug
 	$(VALGRIND) $(VG_REACHABLE) $(VIS) $(EXEC_ARGS)
 
 clean:
@@ -110,14 +110,13 @@ clean:
 distclean: clean fp-prep
 
 encode:
-	$(info "make encode FP_BASE=<images> FP_AVI=<output.avi> FP_AUDIO=<song>")
 	python $(SCR_PROCESS) "$(FP_BASE)" "$(FP_AVI)" -i "$(FP_AUDIO)" $(SCR_ARGS)
 
 fp-prep:
 	- $(MAKE) fp-cleanup
 
 fp-makeframes: fp-prep
-	$(VIS) -l $(FP_SCRIPT) -d $(FP_BASE) -i -q -s 4 $(EXEC_ARGS)
+	$(VIS) -l $(FP_SCRIPT) -d $(FP_BASE) -i -q -s 4 -l $(FP_SCRIPT) $(EXEC_ARGS)
 
 fp-encode:
 	$(MAKE) encode

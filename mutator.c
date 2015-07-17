@@ -1,6 +1,7 @@
 
 #include "mutator.h"
 #include "particle_extra.h"
+#include "random.h"
 
 #if DEBUG >= DEBUG_DEBUG
 struct mutate_debug_ctr {
@@ -88,6 +89,24 @@ void mutate_opacity(particle* p, mutate_method* method) {
     ((pextra*)p->extra)->a = (float)method->factor;
 }
 
+void mutate_set_dx(particle* p, mutate_method* method) {
+    DEBUG_EXPRESSION(dbg_ctr.particles_mutated += 1);
+    p->dx = randdouble(method->factor - method->factor2,
+                       method->factor + method->factor2);
+}
+
+void mutate_set_dy(particle* p, mutate_method* method) {
+    DEBUG_EXPRESSION(dbg_ctr.particles_mutated += 1);
+    p->dy = randdouble(method->factor - method->factor2,
+                       method->factor + method->factor2);
+}
+
+void mutate_set_radius(particle* p, mutate_method* method) {
+    DEBUG_EXPRESSION(dbg_ctr.particles_mutated += 1);
+    p->radius = randdouble(method->factor - method->factor2,
+                           method->factor + method->factor2);
+}
+
 
 void mutate_tag_set(particle* p, mutate_method* method) {
     DEBUG_EXPRESSION(dbg_ctr.particle_tags_modified += 1);
@@ -140,6 +159,12 @@ GEN_COND_MUTATE_FN(mutate_shrink)
 GEN_COND_MUTATE_FN(mutate_grow)
 GEN_COND_MUTATE_FN(mutate_age)
 GEN_COND_MUTATE_FN(mutate_opacity)
+GEN_COND_MUTATE_FN(mutate_set_dx)
+GEN_COND_MUTATE_FN(mutate_set_dy)
+GEN_COND_MUTATE_FN(mutate_set_radius)
 
 #undef GEN_COND_MUTATE_FN
 
+void mutate_none(UNUSED_PARAM(particle* p),
+                 UNUSED_PARAM(mutate_method* method)) {
+}

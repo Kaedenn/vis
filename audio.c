@@ -25,6 +25,10 @@ static struct audio* audio = NULL;
 
 #if 1
 BOOL audio_init(void) {
+    if (audio != NULL) {
+        eprintf("Attempt to call audio_init more than once!");
+        return TRUE;
+    }
     if (Mix_OpenAudio(VIS_AUDIO_FREQ, MIX_DEFAULT_FORMAT, 2,
                       VIS_AUDIO_SAMPLES) < 0) {
         EPRINTF("Unable to start audio engine: %s", Mix_GetError());
@@ -70,6 +74,10 @@ void audio_close(void) {
     audio->music = NULL;
     DBFREE(audio->file);
     audio->file = NULL;
+    Mix_CloseAudio();
+    while (Mix_Init(0)) {
+        Mix_Quit();
+    }
 }
 
 void audio_play(void) {

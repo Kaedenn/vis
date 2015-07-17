@@ -81,12 +81,18 @@ desired_nmutated = desired_nmutated + e:get('count')
 
 Vis.mutate(Vis.flist, 1000, Vis.MUTATE_GROW_IF, 4.0, Vis.MUTATE_IF_LE, 4)
 desired_nmutates = desired_nmutates + 1
-desired_nmutated = desired_nmutated + e:get('count')
-desired_nmutated = desired_nmutated + e:get('count')
+desired_nmutated = desired_nmutated + e:get('count') * 2
 
 Vis.mutate(Vis.flist, 1000, Vis.MUTATE_AGE_IF, Vis.CONST_AGE_BORN, Vis.MUTATE_IF_GE, 6)
 desired_nmutates = desired_nmutates + 1
-desired_nmutated = desired_nmutated + e:get('count')
-desired_nmutated = desired_nmutated + e:get('count')
+desired_nmutated = desired_nmutated + e:get('count') * 2
+
+Vis.mutate(Vis.flist, 1500 - Vis.frames2msec(1), Vis.MUTATE_SET_DX, 2, 2)
+desired_nmutates = desired_nmutates + 1
+desired_nmutated = desired_nmutated + e:get('count') * 4
+
+Vis.mutate(Vis.flist, 1500 - Vis.frames2msec(1), Vis.MUTATE_SET_DY_IF, 2, Vis.MUTATE_IF_GE, 6, 2)
+desired_nmutates = desired_nmutates + 1
+desired_nmutated = desired_nmutated + e:get('count') * 2
 
 Vis.exit(Vis.flist, 3000)

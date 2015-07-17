@@ -66,3 +66,54 @@ const char* genlua_blender(blend_id blender) {
     }
 }
 
+const char* genlua_mutate(mutate_id fnid) {
+    switch (fnid) {
+        case VIS_MUTATE_PUSH: return "Vis.Vis.MUTATE_PUSH";
+        case VIS_MUTATE_PUSH_DX: return "Vis.Vis.MUTATE_PUSH_DX";
+        case VIS_MUTATE_PUSH_DY: return "Vis.Vis.MUTATE_PUSH_DY";
+        case VIS_MUTATE_SLOW: return "Vis.Vis.MUTATE_SLOW";
+        case VIS_MUTATE_SHRINK: return "Vis.Vis.MUTATE_SHRINK";
+        case VIS_MUTATE_GROW: return "Vis.Vis.MUTATE_GROW";
+        case VIS_MUTATE_AGE: return "Vis.Vis.MUTATE_AGE";
+        case VIS_MUTATE_OPACITY: return "Vis.Vis.MUTATE_OPACITY";
+        case VIS_MUTATE_SET_DX: return "Vis.Vis.MUTATE_SET_DX";
+        case VIS_MUTATE_SET_DY: return "Vis.Vis.MUTATE_SET_DY";
+        case VIS_MUTATE_SET_RADIUS: return "Vis.Vis.MUTATE_SET_RADIUS";
+        case VIS_MUTATE_TAG_SET: return "Vis.Vis.MUTATE_TAG_SET";
+        case VIS_MUTATE_TAG_INC: return "Vis.Vis.MUTATE_TAG_INC";
+        case VIS_MUTATE_TAG_DEC: return "Vis.Vis.MUTATE_TAG_DEC";
+        case VIS_MUTATE_TAG_ADD: return "Vis.Vis.MUTATE_TAG_ADD";
+        case VIS_MUTATE_TAG_SUB: return "Vis.Vis.MUTATE_TAG_SUB";
+        case VIS_MUTATE_TAG_MUL: return "Vis.Vis.MUTATE_TAG_MUL";
+        case VIS_MUTATE_TAG_DIV: return "Vis.Vis.MUTATE_TAG_DIV";
+        case VIS_MUTATE_PUSH_IF: return "Vis.Vis.MUTATE_PUSH_IF";
+        case VIS_MUTATE_PUSH_DX_IF: return "Vis.Vis.MUTATE_PUSH_DX_IF";
+        case VIS_MUTATE_PUSH_DY_IF: return "Vis.Vis.MUTATE_PUSH_DY_IF";
+        case VIS_MUTATE_SLOW_IF: return "Vis.Vis.MUTATE_SLOW_IF";
+        case VIS_MUTATE_SHRINK_IF: return "Vis.Vis.MUTATE_SHRINK_IF";
+        case VIS_MUTATE_GROW_IF: return "Vis.Vis.MUTATE_GROW_IF";
+        case VIS_MUTATE_AGE_IF: return "Vis.Vis.MUTATE_AGE_IF";
+        case VIS_MUTATE_OPACITY_IF: return "Vis.Vis.MUTATE_OPACITY_IF";
+        case VIS_MUTATE_SET_DX_IF: return "Vis.Vis.MUTATE_SET_DX_IF";
+        case VIS_MUTATE_SET_DY_IF: return "Vis.Vis.MUTATE_SET_DY_IF";
+        case VIS_MUTATE_SET_RADIUS_IF: return "Vis.Vis.MUTATE_SET_RADIUS_IF";
+        case VIS_NMUTATES: return "Vis.Vis.NMUTATES";
+        default: return "nil";
+    }
+}
+
+const char* genlua_mutate_cond(mutate_cond_id id) {
+    switch (id) {
+        case VIS_MUTATE_IF_TRUE: return "Vis.MUTATE_IF_TRUE";
+        case VIS_MUTATE_IF_EQ: return "Vis.MUTATE_IF_EQ";
+        case VIS_MUTATE_IF_NE: return "Vis.MUTATE_IF_NE";
+        case VIS_MUTATE_IF_LT: return "Vis.MUTATE_IF_LT";
+        case VIS_MUTATE_IF_LE: return "Vis.MUTATE_IF_LE";
+        case VIS_MUTATE_IF_GT: return "Vis.MUTATE_IF_GT";
+        case VIS_MUTATE_IF_GE: return "Vis.MUTATE_IF_GE";
+        case VIS_MUTATE_IF_EVEN: return "Vis.MUTATE_IF_EVEN";
+        case VIS_MUTATE_IF_ODD: return "Vis.MUTATE_IF_ODD";
+        default: return "nil";
+    }
+}
+

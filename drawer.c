@@ -104,6 +104,7 @@ void drawer_free(drawer_t drawer) {
         DBFREE(drawer->dump_file_fmt);
     }
     SDL_DestroyRenderer(drawer->renderer);
+    SDL_DestroyWindow(drawer->window);
     DBFREE(drawer->emit_desc);
     DBFREE(drawer);
     IMG_Quit();

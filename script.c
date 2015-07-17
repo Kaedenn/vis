@@ -2,8 +2,9 @@
 #define _BSD_SOURCE /* for setenv */
 
 #include "audio.h"
-#include "helper.h"
 #include "flist.h"
+#include "genlua.h"
+#include "helper.h"
 #include "script.h"
 #include "mutator.h"
 #include "kstring.h"
@@ -132,6 +133,9 @@ int initialize_vis_lib(lua_State* L) {
     NEW_CONST(MUTATE_GROW);
     NEW_CONST(MUTATE_AGE);
     NEW_CONST(MUTATE_OPACITY);
+    NEW_CONST(MUTATE_SET_DX);
+    NEW_CONST(MUTATE_SET_DY);
+    NEW_CONST(MUTATE_SET_RADIUS);
     /* tag mutators */
     NEW_CONST(MUTATE_TAG_SET);
     NEW_CONST(MUTATE_TAG_INC);
@@ -149,6 +153,9 @@ int initialize_vis_lib(lua_State* L) {
     NEW_CONST(MUTATE_GROW_IF);
     NEW_CONST(MUTATE_AGE_IF);
     NEW_CONST(MUTATE_OPACITY_IF);
+    NEW_CONST(MUTATE_SET_DX_IF);
+    NEW_CONST(MUTATE_SET_DY_IF);
+    NEW_CONST(MUTATE_SET_RADIUS_IF);
     /* total number of mutators */
     NEW_CONST(NMUTATES);
     /* mutate conditions */
@@ -534,9 +541,9 @@ int viscmd_bgcolor_fn(lua_State* L) {
     return 0;
 }
 
-/* Vis.mutate(Vis.flist, when, func, factor), OR
+/* Vis.mutate(Vis.flist, when, func, factor[, factor2]), OR
  * Vis.mutate(Vis.flist, when, func, tag), OR
- * Vis.mutate(Vis.flist, when, func, factor, cond, tag),
+ * Vis.mutate(Vis.flist, when, func, factor, cond, tag[, factor2]),
  * @param func is a valid Vis.MUTATE_*
  * @param cond is a valid Vis.MUTATE_IF_* */
 int viscmd_mutate_fn(lua_State* L) {
@@ -547,11 +554,16 @@ int viscmd_mutate_fn(lua_State* L) {
     if (fnid >= (mutate_id)0 && fnid < VIS_MUTATE_TAG_SET) {
         /* case 1: normal mutate */
         method->factor = luaL_checknumber(L, 4);
+        method->factor2 = luaL_optnumber(L, 5, 0);
+        DBPRINTF("Vis.mutate(%p, %d, %s, %g, %g)", fl, (int)when,
+                 genlua_mutate(fnid), method->factor, method->factor2);
     } else if (fnid >= VIS_MUTATE_TAG_SET && fnid < VIS_MUTATE_PUSH_IF) {
         /* case 2: tag modification */
         if (lua_type(L, 4) == LUA_TNUMBER) {
             method->tag.i.l = luaL_checkint(L, 4);
         }
+        DBPRINTF("Vis.mutate(%p, %d, %s, %d)", fl, (int)when,
+                 genlua_mutate(fnid), method->tag.i.l);
     } else if (fnid >= VIS_MUTATE_PUSH_IF && fnid < VIS_NMUTATES) {
         /* case 3: conditional mutate */
         method->factor = luaL_checknumber(L, 4);
@@ -559,6 +571,11 @@ int viscmd_mutate_fn(lua_State* L) {
         if (lua_type(L, 6) == LUA_TNUMBER) {
             method->tag.i.l = luaL_checkint(L, 6);
         }
+        method->factor2 = luaL_optnumber(L, 7, 0);
+        DBPRINTF("Vis.mutate(%p, %d, %s, %g, %s, %d, %g)", fl, (int)when,
+                 genlua_mutate(fnid), method->factor,
+                 genlua_mutate_cond(method->cond), method->tag.i.l,
+                 method->factor2);
     } else {
         return luaL_error(L, "Invalid mutate ID %d", fnid);
     }

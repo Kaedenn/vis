@@ -54,6 +54,11 @@ void do_assert(BOOL cond, const char* message, const char* file, int line) {
     if (!cond) {
         do_assert_fail(message, file, line);
     }
+#if DEBUG > DEBUG_DEBUG
+    else {
+        DBPRINTF("Assert passes: %s:%d: %s", file, line, message);
+    }
+#endif
 }
 
 void dbprintf(const char* fmt, ...) {

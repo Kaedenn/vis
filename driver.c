@@ -17,6 +17,7 @@
 #include "emitter.h"
 #include "gc.h"
 #include "helper.h"
+#include "mutator.h"
 #include "particle_extra.h"
 #include "plist.h"
 #include "script.h"
@@ -51,6 +52,10 @@ void advance(struct global_ctx* ctx);
 
 int main(int argc, char* argv[]) {
     srand((unsigned)time(NULL));
+
+#ifdef VIS_SELF_TEST
+    VIS_ASSERT(sizeof(MUTATE_MAP)/sizeof(mutate_fn) == VIS_NMUTATES + 1);
+#endif
 
     struct global_ctx g;
     ZEROINIT(&g);

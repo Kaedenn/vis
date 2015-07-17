@@ -24,7 +24,7 @@ void dbprintf(const char* fmt, ...);
 void do_assert(BOOL cond, const char* message, const char* file, int line);
 
 #define VIS_ASSERT(cond) \
-    do_assert((BOOL)(long)(cond), (#cond), __FILE__, __LINE__)
+    do_assert(((cond) ? 1 : 0), (#cond), __FILE__, __LINE__)
 
 #if DEBUG >= DEBUG_TRACE
 #define DBMALLOC(size) dbmalloc((size), (#size))
@@ -34,21 +34,20 @@ void do_assert(BOOL cond, const char* message, const char* file, int line);
 #define DBFREE(ptr) free((ptr))
 #endif
 
-#if DEBUG > DEBUG_NONE
-#define EPRINTF(fmt, ...) \
-    do { \
-        fprintf(stderr, "%s:%d: ", __FILE__, __LINE__); \
-        eprintf(fmt, __VA_ARGS__); \
-    } while (0)
-#define DBPRINTF(fmt, ...) \
-    do { \
-        fprintf(stderr, "%s:%d: ", __FILE__, __LINE__); \
-        dbprintf(fmt, __VA_ARGS__); \
-    } while (0)
+#if DEBUG > DEBUG_VERBOSE
+#define WHEREAMI_STDERR() \
+    fprintf(stderr, "%s:%d:%s: ", __FILE__, __LINE__, __func__)
+#elif DEBUG > DEBUG_NONE
+#define WHEREAMI_STDERR() \
+    fprintf(stderr, "%s:%d: ", __FILE__, __LINE__)
 #else
-#define EPRINTF(fmt, ...) eprintf(fmt, __VA_ARGS__)
-#define DBPRINTF(fmt, ...) dbprintf(fmt, __VA_ARGS__)
+#define WHEREAMI_STDERR()
 #endif
+
+#define EPRINTF(fmt, ...) \
+    do { WHEREAMI_STDERR(); eprintf(fmt, __VA_ARGS__); } while (0)
+#define DBPRINTF(fmt, ...) \
+    do { WHEREAMI_STDERR(); dbprintf(fmt, __VA_ARGS__); } while (0)
 
 #define ZEROINIT(p) memset(p, '\0', sizeof(*p))
 

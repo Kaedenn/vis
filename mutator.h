@@ -16,6 +16,7 @@ typedef void(*mutate_fn)(particle* p, struct mutate_method* method);
 typedef struct mutate_method {
     mutate_fn func;
     double factor;
+    double factor2;
     mutate_cond_id cond;
     union particle_tag tag;
 } mutate_method;
@@ -30,6 +31,10 @@ void mutate_shrink(particle* p, mutate_method* method);
 void mutate_grow(particle* p, mutate_method* method);
 void mutate_age(particle* p, mutate_method* method);
 void mutate_opacity(particle* p, mutate_method* method);
+
+void mutate_set_dx(particle* p, mutate_method* method);
+void mutate_set_dy(particle* p, mutate_method* method);
+void mutate_set_radius(particle* p, mutate_method* method);
 
 void mutate_tag_set(particle* p, mutate_method* method);
 void mutate_tag_inc(particle* p, mutate_method* method);
@@ -48,6 +53,12 @@ void mutate_grow_if(particle* p, mutate_method* method);
 void mutate_age_if(particle* p, mutate_method* method);
 void mutate_opacity_if(particle* p, mutate_method* method);
 
+void mutate_set_dx_if(particle* p, mutate_method* method);
+void mutate_set_dy_if(particle* p, mutate_method* method);
+void mutate_set_radius_if(particle* p, mutate_method* method);
+
+void mutate_none(particle* p, mutate_method* method);
+
 static const mutate_fn MUTATE_MAP[] = {
     mutate_push,
     mutate_push_dx,
@@ -57,6 +68,9 @@ static const mutate_fn MUTATE_MAP[] = {
     mutate_grow,
     mutate_age,
     mutate_opacity,
+    mutate_set_dx,
+    mutate_set_dy,
+    mutate_set_radius,
     mutate_tag_set,
     mutate_tag_inc,
     mutate_tag_dec,
@@ -72,6 +86,10 @@ static const mutate_fn MUTATE_MAP[] = {
     mutate_grow_if,
     mutate_age_if,
     mutate_opacity_if,
+    mutate_set_dx_if,
+    mutate_set_dy_if,
+    mutate_set_radius_if,
+    mutate_none
 };
 
 #endif
