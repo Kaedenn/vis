@@ -22,6 +22,8 @@ DEPFILES = $(patsubst %.c,$(DEPDIR)/%.d,$(SRCS))
 EXECBIN = vis
 VIS = $(DIR)/$(EXECBIN)
 
+TESTS = test/test_kstring test/test_audio
+
 CFLAGS = -fdiagnostics-show-option -ansi \
 		 -Wno-unused-variable -Wall -Wextra -Wfloat-equal -Wwrite-strings \
 		 -Wshadow -Wpointer-arith -Wcast-qual -Wredundant-decls -Wtrigraphs \
@@ -62,13 +64,13 @@ FP_AVI ?= $(FP_DIR)/bowser.avi
 
 all: $(DEPFILES) $(VIS)
 
-fast: $(DEPFILES)
+fast: $(DEPFILES) $(SOURCES)
 	$(MAKE) "CFLAGS=$(CFLAGS) $(CFLAGS_FAST)" all
 
-debug: $(DEPFILES)
+debug: $(DEPFILES) $(SOURCES)
 	$(MAKE) "CFLAGS=$(CFLAGS) $(CFLAGS_DEBUG)" all
 
-trace: $(DEPFILES)
+trace: $(DEPFILES) $(SOURCES)
 	$(MAKE) "CFLAGS=$(CFLAGS) $(CFLAGS_TRACE)" all
 
 profile: $(SOURCES)
@@ -92,6 +94,12 @@ $(DEPDIR): $(SOURCES) $(SCR_MAKEDEP)
 
 $(VIS): $(OBJECTS)
 	$(CC) -o $@ $^ $(LDFLAGS)
+
+test/test_kstring: test/test_kstring.c kstring.c helper.c 
+	$(CC) -o $@ $^ $(CFLAGS) $(LDFLAGS) 
+
+test/test_audio: test/test_audio.c
+	$(CC) -o $@ $^ $(CFLAGS) $(LDFLAGS) 
 
 valgrind: debug
 	$(VALGRIND) $(VIS) $(EXEC_ARGS)
