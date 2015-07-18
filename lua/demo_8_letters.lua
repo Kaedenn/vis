@@ -42,27 +42,28 @@ end
 
 assert_extents()
 
-magnification = 3
+magnification = 2
 
 e = Emit:new()
 e:count(magnification*2)
-e:radius(2)
-e:ds(0, 0.02)
+e:radius(1)
+e:ds(0)
 e:theta(0, math.pi)
-e:life(3000)
+e:life(10000)
 e:color(0, 0.8, 0.1, 0.2, .1)
 e:blender(Vis.BLEND_EASING)
 
-function emit_char(ord, x, y, lx, ly, zoom)
-    Letters.map_fn_xy(string.char(ord):upper(), function(bx, by)
+function emit_char(c, x, y, lx, ly, zoom)
+    Letters.map_fn_xy(c:upper(), function(bx, by)
         e:center(x + zoom*(bx+lx), y + zoom*(by+ly), zoom/2, zoom/2)
         e:emit_now()
     end)
 end
 
 function emit_message(msg, x, y, zoom)
-    for i,c in ipairs(table.pack(msg:byte(1, #msg))) do
-        emit_char(c, x, y, (i-1) * (Letters.LETTER_WIDTH+1), 0, zoom)
+    for i,ord in ipairs(table.pack(msg:byte(1, #msg))) do
+        chr = string.char(ord)
+        emit_char(chr, x, y, (i-1) * (Letters.LETTER_WIDTH+1), 0, zoom)
     end
 end
 
@@ -76,6 +77,6 @@ emit_center_message(message, Vis.WIDTH/2, Vis.HEIGHT/2, magnification)
 emit_center_message("Hi all!", Vis.WIDTH/2, Vis.HEIGHT/3, magnification)
 emit_center_message("ABCDEFGHIJKLMNOPQRSTUVWXYZ", Vis.WIDTH/2, Vis.HEIGHT*3/4,
                     magnification)
-emit_center_message("0 !?., 0", Vis.WIDTH/2, Vis.HEIGHT*2/3, magnification)
+emit_center_message("!?,. 0123456789 -+=_", Vis.WIDTH/2, Vis.HEIGHT*2/3, magnification)
 
-Vis.exit(Vis.flist, 3000)
+Vis.exit(Vis.flist, 10000)
