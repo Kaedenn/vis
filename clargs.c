@@ -16,7 +16,6 @@ const char* help_string[] = {
     "  -t        output the results of tracing to stdout, implies -i",
     "  -i        disable interactive mode (commands on stdin)",
     "  -I        do not exit after a script finishes (if it calls Vis.exit)",
-    "  -e        disables radius optimization: enlarge particles by 2x",
     "  -q        disables the playback of audio",
     "  -h        this message",
     " Long options:",
@@ -42,7 +41,6 @@ struct clargs* argparse(int argc, char** argv) {
     args->frameskip = 0;
     args->dumptrace = FALSE;
     args->interactive = TRUE;
-    args->enlarge_particles = FALSE;
     args->absolute_fps = TRUE;
     args->quiet_audio = FALSE;
     args->stay_after_script = FALSE;
@@ -100,9 +98,6 @@ struct clargs* argparse(int argc, char** argv) {
                 break;
             case 'I':
                 args->stay_after_script = TRUE;
-                break;
-            case 'e':
-                args->enlarge_particles = TRUE;
                 break;
             case 'q':
                 args->quiet_audio = TRUE;

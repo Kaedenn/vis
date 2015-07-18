@@ -13,7 +13,6 @@ struct clargs {
     int frameskip;
     BOOL dumptrace;
     BOOL interactive;
-    BOOL enlarge_particles;
     BOOL quiet_audio;
     BOOL stay_after_script;
     BOOL absolute_fps;

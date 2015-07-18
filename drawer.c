@@ -12,7 +12,7 @@
 #include <SDL_image.h>
 
 #ifndef MAX
-#define MAX(a,b) ((a)<(b) ? (a) : (b))
+#define MAX(a,b) ((a)<(b) ? (b) : (a))
 #endif
 
 static double calculate_blend(particle* p);
@@ -234,7 +234,7 @@ float drawer_get_fps(drawer_t drawer) {
 void drawer_config(drawer_t drawer, struct clargs* clargs) {
     drawer->frame_skip = (Uint32)clargs->frameskip;
     drawer->verbose_trace = clargs->dumptrace ? TRUE : FALSE;
-    drawer->scale_factor = clargs->enlarge_particles ? 2.0 : 1.0;
+    drawer->scale_factor = 1.0;
     if (clargs->dumpfile) {
         SDL_RendererInfo ri;
         SDL_GetRendererInfo(drawer->renderer, &ri);
@@ -248,21 +248,15 @@ void drawer_config(drawer_t drawer, struct clargs* clargs) {
     if (clargs->absolute_fps) {
         drawer->fps.limiter = drawer_ensure_fps_absolute;
     }
-    DBPRINTF("%s", "Configured drawer:");
     if (drawer->frame_skip > 0) {
         DBPRINTF("\tdrawer->frame_skip = %d", drawer->frame_skip);
     }
     if (drawer->verbose_trace) {
         DBPRINTF("\t%s", "drawer->verbose_trace = TRUE");
     }
-    if (clargs->enlarge_particles) {
-        DBPRINTF("\tdrawer->scale_factor = %g", drawer->scale_factor);
-    }
     if (drawer->dump_file_fmt != NULL) {
         DBPRINTF("\tdrawer->dumpfile = \"%s\"", drawer->dump_file_fmt);
     }
-    DBPRINTF("drawer is using the %s fps limiter", 
-             clargs->absolute_fps ? "absolute" : "linear");
 }
 
 void drawer_scale_particles(drawer_t drawer, double factor) {
