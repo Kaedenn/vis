@@ -27,6 +27,8 @@ struct crect {
     SDL_Color c;
 };
 
+static void drawer_render_pixel(drawer_t drawer, struct crect* pixel);
+
 /* used, obviously, for fps tracking and limiting */
 struct fps {
     void (*limiter)(drawer_t drawer);
@@ -43,7 +45,6 @@ struct drawer {
     size_t rect_curr;
     size_t rect_count;
     float bgcolor[3];
-    SDL_Texture* pixel;
     Uint32 frame_skip;
     struct fps fps;
     BOOL tracing;
@@ -87,19 +88,6 @@ drawer_t drawer_new(void) {
     /* initialize default values */
     drawer_bgcolor(drawer, 0, 0, 0);
     drawer->scale_factor = 1.0;
-    /* load the generic pixel */
-    SDL_Surface* pixel = IMG_Load("assets/pixel_3x3.png");
-    if (!pixel) {
-        EPRINTF("Failed to load pixel image: %s", SDL_GetError());
-    } else if (!(drawer->pixel = SDL_CreateTextureFromSurface(drawer->renderer,
-                                                              pixel))) {
-        EPRINTF("Failed to create pixel texture: %s", SDL_GetError());
-    } else {
-        SDL_SetTextureBlendMode(drawer->pixel, SDL_BLENDMODE_BLEND);
-    }
-    if (pixel) {
-        SDL_FreeSurface(pixel);
-    }
     /* initialize fps analysis */
     drawer->fps.start = SDL_GetTicks();
     drawer->fps.framestart = drawer->fps.start;
@@ -121,9 +109,6 @@ void drawer_free(drawer_t drawer) {
     if (drawer->dump_file_fmt) {
         DBFREE(drawer->dump_file_fmt);
     }
-    if (drawer->pixel) {
-        SDL_DestroyTexture(drawer->pixel);
-    }
     SDL_DestroyRenderer(drawer->renderer);
     SDL_DestroyWindow(drawer->window);
     DBFREE(drawer->emit_desc);
@@ -142,18 +127,12 @@ int drawer_add_particle(drawer_t drawer, particle* p) {
     pextra* pe = (pextra*)p->extra;
     if (drawer->rect_curr < drawer->rect_count) {
         struct crect* r = &drawer->rect_array[drawer->rect_curr];
-        int diameter = MAX((int)(drawer->scale_factor * p->radius), 3);
+        int diameter = MAX((int)(2 * drawer->scale_factor * p->radius), 2);
         int radius = diameter / 2;
 
-        if (drawer->pixel) {
-            r->r.x = (int)(p->x - radius * drawer->scale_factor);
-            r->r.y = (int)(p->y - radius * drawer->scale_factor);
-            r->r.w = r->r.h = (int)(diameter * drawer->scale_factor);
-        } else {
-            r->r.x = (int)p->x - radius;
-            r->r.y = (int)p->y - radius;
-            r->r.w = r->r.h = diameter;
-        }
+        r->r.x = (int)p->x - radius;
+        r->r.y = (int)p->y - radius;
+        r->r.w = r->r.h = diameter;
 
         r->c.r = (Uint8)(pe->r*0xFF);
         r->c.g = (Uint8)(pe->g*0xFF);
@@ -198,25 +177,7 @@ int drawer_draw_to_screen(drawer_t drawer) {
     SDL_RenderClear(drawer->renderer);
     SDL_Rect final_pos;
     for (size_t i = 0; i < drawer->rect_curr; ++i) {
-        SDL_SetRenderDrawColor(drawer->renderer,
-                               drawer->rect_array[i].c.r,
-                               drawer->rect_array[i].c.g,
-                               drawer->rect_array[i].c.b,
-                               drawer->rect_array[i].c.a);
-        final_pos = drawer->rect_array[i].r;
-        if (drawer->dump_file_fmt) {
-            final_pos.y = VIS_HEIGHT - final_pos.y;
-        }
-        if (drawer->pixel) {
-            SDL_SetTextureColorMod(drawer->pixel,
-                                   drawer->rect_array[i].c.r,
-                                   drawer->rect_array[i].c.g,
-                                   drawer->rect_array[i].c.b);
-            SDL_SetTextureAlphaMod(drawer->pixel, drawer->rect_array[i].c.a);
-            SDL_RenderCopy(drawer->renderer, drawer->pixel, NULL, &final_pos);
-        } else {
-            SDL_RenderFillRect(drawer->renderer, &final_pos);
-        }
+        drawer_render_pixel(drawer, &drawer->rect_array[i]);
     }
     SDL_RenderPresent(drawer->renderer);
     drawer->rect_curr = 0;
@@ -388,5 +349,62 @@ static int render_to_file(SDL_Renderer* renderer, const char* path) {
     SDL_FreeSurface(surf);
     DBFREE(pixels);
     return 1;
+}
+
+static void drawer_render_pixel(drawer_t drawer, struct crect* pixel) {
+    Uint8 r = pixel->c.r;
+    Uint8 g = pixel->c.g;
+    Uint8 b = pixel->c.b;
+    Uint8 a = pixel->c.a;
+    SDL_Rect final = pixel->r;
+    if (drawer->dump_file_fmt) {
+        final.y = VIS_HEIGHT - final.y;
+    }
+#ifdef VIS_DRAWER_FUZZY_PIXELS
+    if (pixel->r.w == 1 && pixel->r.h == 1) {
+        SDL_SetRenderDrawColor(drawer->renderer, r, g, b, a);
+        SDL_RenderFillRect(drawer->renderer, &final);
+    } else if (pixel->r.w == 2 && pixel->r.h == 2) {
+        SDL_Rect ul = {final.x, final.y, 1, 1};
+        SDL_Rect ur = {final.x+1, final.y, 1, 1};
+        SDL_Rect ll = {final.x, final.y+1, 1, 1};
+        SDL_Rect lr = {final.x+1, final.y+1, 1, 1};
+        SDL_SetRenderDrawColor(drawer->renderer, r, g, b, a);
+        SDL_RenderFillRect(drawer->renderer, &ur);
+        SDL_RenderFillRect(drawer->renderer, &ll);
+        SDL_SetRenderDrawColor(drawer->renderer, r, g, b, a/2);
+        SDL_RenderFillRect(drawer->renderer, &ul);
+        SDL_RenderFillRect(drawer->renderer, &lr);
+    } else {
+        int x = final.x;
+        int y = final.y;
+        int w = final.w;
+        int h = final.h;
+        SDL_Rect ul = {x, y, w/3, h/3};
+        SDL_Rect uc = {x + w/3, y, w/3, h/3};
+        SDL_Rect ur = {x + w*2/3, y, w/3, h/3};
+        SDL_Rect cl = {x, y + h/3, w/3, h/3};
+        SDL_Rect cc = {x + w/3, y + h/3, w/3, h/3};
+        SDL_Rect cr = {x + w*2/3, y + h/3, w/3, h/3};
+        SDL_Rect ll = {x, y + h*2/3, w/3, h/3};
+        SDL_Rect lc = {x + w/3, y + h*2/3, w/3, h/3};
+        SDL_Rect lr = {x + w*2/3, y + h*2/3, w/3, h/3};
+        SDL_SetRenderDrawColor(drawer->renderer, r, g, b, a/3);
+        SDL_RenderFillRect(drawer->renderer, &ul);
+        SDL_RenderFillRect(drawer->renderer, &ur);
+        SDL_RenderFillRect(drawer->renderer, &ll);
+        SDL_RenderFillRect(drawer->renderer, &lr);
+        SDL_SetRenderDrawColor(drawer->renderer, r, g, b, a/2);
+        SDL_RenderFillRect(drawer->renderer, &uc);
+        SDL_RenderFillRect(drawer->renderer, &cl);
+        SDL_RenderFillRect(drawer->renderer, &cr);
+        SDL_RenderFillRect(drawer->renderer, &lc);
+        SDL_SetRenderDrawColor(drawer->renderer, r, g, b, a);
+        SDL_RenderFillRect(drawer->renderer, &cc);
+    }
+#else
+    SDL_SetRenderDrawColor(drawer->renderer, r, g, b, a);
+    SDL_RenderFillRect(drawer->renderer, &final);
+#endif
 }
 

@@ -35,8 +35,8 @@ function emit_random(start)
     end
     t.ds = random(0, 6)
     t.uds = random(0, 10) / 10.0
-    t.radius = random(5, 10) / 5.0
-    t.uradius = random(1, 3)
+    t.radius = random(2, 20) / 2.0
+    t.uradius = random(1, 10)
     t.ds = random(-20, 20) / 10.0
     t.uds = random(-5, 5) / 5.0
     t.life = Vis.frames2msec(random(50, 200))
