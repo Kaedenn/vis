@@ -124,7 +124,7 @@ fp-prep:
 	- $(MAKE) fp-cleanup
 
 fp-makeframes: fp-prep
-	$(VIS) -l $(FP_SCRIPT) -d $(FP_BASE) -i -q -s 4 -l $(FP_SCRIPT) $(EXEC_ARGS)
+	$(VIS) -l $(FP_SCRIPT) -d $(FP_BASE) -i -q -s 4
 
 fp-encode:
 	$(MAKE) encode
