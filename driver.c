@@ -116,10 +116,6 @@ int main(int argc, char* argv[]) {
     emit->blender = VIS_BLEND_QUADRATIC;
     drawer_set_trace(g.drawer, emit);
 
-    if (g.args->scriptstring) {
-        script_run_string(g.script, g.args->scriptstring);
-    }
-
     if (g.args->scriptfile) {
         emitter_schedule(script_run(g.script, g.args->scriptfile));
     }
@@ -127,6 +123,10 @@ int main(int argc, char* argv[]) {
     mainloop(&g);
 
     script_on_quit(g.script);
+
+    if (g.args->scriptstring) {
+        script_run_string(g.script, g.args->scriptstring);
+    }
 
     if (g.exit_status < script_get_status(g.script)) {
         g.exit_status = script_get_status(g.script);
