@@ -1,16 +1,16 @@
 
 # Dependency files
 *.d
-d
-d/*
+.d
+.d/*
 
 # Compiled Object files
 *.slo
 *.lo
 *.o
 *.obj
-o
-o/*
+.o
+.o/*
 
 # Precompiled Headers
 *.gch

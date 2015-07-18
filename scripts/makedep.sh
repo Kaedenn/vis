@@ -24,7 +24,7 @@ END {
     for (f in incs) {
         d = f
         sub(/.c$/, ".d", d)
-        print f ":" incs[f] > "d/"d
+        print f ":" incs[f] > ".d/"d
     }
 }
 AWK_SCRIPT

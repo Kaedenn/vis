@@ -10,13 +10,13 @@
 #
 
 DIR = .
-OBJDIR = $(DIR)/o
-DEPDIR = $(DIR)/d
+OBJDIR = $(DIR)/.o
+DEPDIR = $(DIR)/.d
 
 SRCS = async.c audio.c clargs.c command.c drawer.c driver.c emit.c emitter.c \
        flist.c forces.c gc.c helper.c kstring.c mutator.c particle.c \
        particle_extra.c plimits.c plist.c random.c script.c genlua.c
-SOURCES = $(CSRC) Makefile
+SOURCES = $(patsubst %,$(DIR)/%,$(CSRC)) Makefile
 OBJECTS = $(patsubst %.c,$(OBJDIR)/%.o,$(SRCS))
 DEPFILES = $(patsubst %.c,$(DEPDIR)/%.d,$(SRCS))
 EXECBIN = vis
