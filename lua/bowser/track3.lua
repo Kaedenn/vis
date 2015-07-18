@@ -15,50 +15,45 @@ T3.SCHEDULE = {
     -- MAIN SONG
 }
 
-function T3.make_emit_tables_for_level(level)
+function T3.make_emits_for_level(level)
     local results = {}
-    local et = VisUtil.make_emit_table()
+    local e = Emit:new()
     local ds_tab = {2, 2.5, 3, 3.5}
     local life_tab = {200, 210, 220, 230, 240, 250}
     local rgb_tab = {{.8, .2, .2, .2, .1, .1},
                      {.9, 0, 0, .1, 0, 0}}
-    et.count = 200
-    et.radius = 2
-    et.ds = ds_tab[level] or ds_tab[#ds_tab]
-    et.uds = et.ds / 2 - et.ds / 5
-    et.life = life_tab[level] or life_tab[#life_tab]
-    VisUtil.color_emit_table_v(et, rgb_tab[level] or rgb_tab[#rgb_tab])
-    et.utheta = 0.8
+    e:count(200)
+    e:radius(2)
+    e:ds(ds_tab[level] or ds_tab[#ds_tab], et.ds / 2 - et.ds / 5)
+    e:life(life_tab[level] or life_tab[#life_tab])
+    e:color(rgb_tab[level] or rgb_tab[#rgb_tab])
 
-    Emits.set_emit_left(et)
-    table.insert(results, VisUtil.copy_table(et))
-    Emits.set_emit_right(et)
-    table.insert(results, VisUtil.copy_table(et))
+    e:center(0, 0, 0, Vis.HEIGHT)
+    e:theta(0, 0.8)
+    table.insert(results, e:clone())
+    e:center(Vis.WIDTH, 0, 0, Vis.HEIGHT)
+    e:theta(math.pi, 0.8)
+    table.insert(results, e:clone())
     if level > 3 then
-        Emits.set_emit_top(et)
-        et.x = Vis.WIDTH / 2
-        et.ux = Vis.WIDTH / 14 * (level - 3)
-        table.insert(results, VisUtil.copy_table(et))
-        Emits.set_emit_bottom(et)
-        et.x = Vis.WIDTH / 2
-        et.ux = Vis.WIDTH / 14 * (level - 3)
-        table.insert(results, VisUtil.copy_table(et))
+        e:center(Vis.WIDTH/2, 0, Vis.WIDTH / 14 * (level - 3), 0)
+        e:theta(math.pi/2, 0.8)
+        table.insert(results, e:clone())
+        e:center(Vis.WIDTH/2, Vis.HEIGHT, Vis.WIDTH / 14 * (level - 3), 0)
+        e:theta(3*math.pi/2, 0.8)
+        table.insert(results, e:clone())
     end
     return results
 end
 
 -- INTRO: ALL TEN PARTS
 local level
-local k
-for level = 1, 10 do
-    set(TRACK_3, T3.NextSchedule())
-    local j = now(TRACK_3)
-    set(TRACK_3, T3.NextSchedule())
-    while j < now(TRACK_3) do
-        local ets = T3.make_emit_tables_for_level(level)
-        for k = 1, #ets do
-            ets[k].when = j
-            VisUtil.emit_table(ets[k])
+for level = 1,10 do
+    local ets = T3.make_emits_for_level(level)
+    local j = T3.next()
+    local k = T3.next()
+    while j < k do
+        for _,e in pairs(ets) do
+            e:emit_at(j)
         end
         j = j + Vis.frames2msec(1)
     end

@@ -17,6 +17,8 @@ VisUtil.COLOR.GREEN2 = {0, 0.8, 0.2, 0, 0.21, 0.11}
 function VisUtil.wrap_coord(x, y)
     while x < 0 do x = Vis.WIDTH + x end
     while y < 0 do y = Vis.HEIGHT + y end
+    while x > Vis.WIDTH do x = x - Vis.WIDTH end
+    while y > Vis.HEIGHT do y = y - Vis.HEIGHT end
     return x, y
 end
 
@@ -64,12 +66,14 @@ function VisUtil.color_emit_table_v(t, rgb)
 end
 
 function VisUtil.color_emit_table_v2(t, rgb, urgb)
-    urgb = urgb or {0, 0, 0}
+    local urgb = urgb or {0, 0, 0}
     VisUtil.color_emit_table(t, rgb[1], rgb[2], rgb[3],
                                 urgb[1], urgb[2], urgb[3])
 end
 
 function VisUtil.emit_table(t)
+    local x
+    local y
     x, y = VisUtil.wrap_coord(t.x, t.y)
     Vis.emit(Vis.flist, t.count, t.when, x, y, t.ux, t.uy,
              t.radius, t.uradius, t.ds, t.uds, t.theta, t.utheta,
@@ -78,6 +82,8 @@ function VisUtil.emit_table(t)
 end
 
 function VisUtil.emit_table_now(t)
+    local x
+    local y
     x, y = VisUtil.wrap_coord(t.x, t.y)
     Vis.emitnow(Vis.script, t.count, x, y, t.ux, t.uy,
                 t.radius, t.uradius, t.ds, t.uds, t.theta, t.utheta,
@@ -106,17 +112,16 @@ function VisUtil.mutate_if(when, method, factor, methodcond, tagval)
 end
 
 function VisUtil.stremit(e)
-    s = "e = {\n"
+    local s = ""
     for _,v in pairs(VisUtil.EMIT_FIELDS) do
-        s = s .. "\t"..v..": "..e:get(v)..",\n"
+        s = ("%s\t%s: %s,\n"):format(s, v, e:get(v))
     end
-    s = s .. "}"
-    return s
+    return ("e = {\n%s}"):format(s)
 end
 
 function VisUtil.strobject(o, i, seen, whereami)
-    seen = seen or {}
-    whereami = whereami or {"_G"}
+    local seen = seen or {}
+    local whereami = whereami or {"_G"}
     if type(o) ~= "table" then
         if type(o) == "string" then
             return string.format("%q", tostring(o))
@@ -131,7 +136,7 @@ function VisUtil.strobject(o, i, seen, whereami)
         if next(o) == nil then
             return "{empty}"
         end
-        i = i or 0
+        local i = i or 0
         local s = "{"
         local f = true
         local itemstr = ''

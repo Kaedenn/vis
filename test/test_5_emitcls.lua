@@ -1,4 +1,4 @@
-
+Harness = require('harness')
 Vis = require('Vis')
 VisUtil = require('visutil')
 Emit = require('emit')
@@ -13,7 +13,7 @@ function debug(msg, ...)
 end
 
 function doassert(cond, msg)
-    if not cond then print(debug.traceback()) end
+    if not cond then print(package.loaded.debug.traceback()) end
     assert(cond, msg)
     debug(msg .. ": PASS")
 end
@@ -72,5 +72,60 @@ assert_field_eq1(e2, 'count', 1, 'test 3: set')
 e1:center(0, 0)
 assert_field_eq1(e1, 'x', 0, 'test 4: center')
 assert_field_eq1(e1, 'y', 0, 'test 4: center')
+
+-- Test 5: color
+e1:color(0.5, 0.5, 0.5)
+assert_field_eq1(e1, 'r', 0.5)
+assert_field_eq1(e1, 'g', 0.5)
+assert_field_eq1(e1, 'b', 0.5)
+assert_field_eq1(e1, 'ur', 0)
+assert_field_eq1(e1, 'ug', 0)
+assert_field_eq1(e1, 'ub', 0)
+e1:color(0, 0, 0, 1, 1, 1)
+
+e1:color() -- defaults: rgb=1, urgb=0
+assert_field_eq1(e1, 'r', 1)
+assert_field_eq1(e1, 'g', 1)
+assert_field_eq1(e1, 'b', 1)
+assert_field_eq1(e1, 'ur', 0)
+assert_field_eq1(e1, 'ug', 0)
+assert_field_eq1(e1, 'ub', 0)
+e1:color(0, 0, 0, 1, 1, 1)
+
+e1:color({0.5, 0.5, 0.5}) -- defaults: urgb=0
+assert_field_eq1(e1, 'r', 0.5)
+assert_field_eq1(e1, 'g', 0.5)
+assert_field_eq1(e1, 'b', 0.5)
+assert_field_eq1(e1, 'ur', 0)
+assert_field_eq1(e1, 'ug', 0)
+assert_field_eq1(e1, 'ub', 0)
+e1:color(0, 0, 0, 1, 1, 1)
+
+e1:color({0.5, 0.5, 0.5}, {0.5, 0.5, 0.5})
+assert_field_eq1(e1, 'r', 0.5)
+assert_field_eq1(e1, 'g', 0.5)
+assert_field_eq1(e1, 'b', 0.5)
+assert_field_eq1(e1, 'ur', 0.5)
+assert_field_eq1(e1, 'ug', 0.5)
+assert_field_eq1(e1, 'ub', 0.5)
+e1:color(0, 0, 0, 1, 1, 1)
+
+e1:color({0.5, 0.5, 0.5, 0.5, 0.5, 0.5})
+assert_field_eq1(e1, 'r', 0.5)
+assert_field_eq1(e1, 'g', 0.5)
+assert_field_eq1(e1, 'b', 0.5)
+assert_field_eq1(e1, 'ur', 0.5)
+assert_field_eq1(e1, 'ug', 0.5)
+assert_field_eq1(e1, 'ub', 0.5)
+e1:color(0, 0, 0, 1, 1, 1)
+
+e1:color(0.5, 0.5, 0.5, 0.5, 0.5, 0.5)
+assert_field_eq1(e1, 'r', 0.5)
+assert_field_eq1(e1, 'g', 0.5)
+assert_field_eq1(e1, 'b', 0.5)
+assert_field_eq1(e1, 'ur', 0.5)
+assert_field_eq1(e1, 'ug', 0.5)
+assert_field_eq1(e1, 'ub', 0.5)
+e1:color(0, 0, 0, 1, 1, 1)
 
 Vis.exit(Vis.flist, 0)

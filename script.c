@@ -225,14 +225,36 @@ script_t script_new(script_cfg_mask cfg) {
         "Vis = require(\"Vis\")\n"
         "VisUtil = require(\"visutil\")\n"
         "Emit = require(\"emit\")\n"
-        "Letters = require(\"letters\")\n"
-        "Vis.on_mousedown = function() end\n"
-        "Vis.on_mouseup = function() end\n"
-        "Vis.on_mousemove = function() end\n"
-        "Vis.on_keydown = function() end\n"
-        "Vis.on_keyup = function() end\n"
-        "Vis.on_quit = function() end\n"
-    );
+        "Letters = require(\"letters\")\n");
+    script_run_string(s,
+        "Vis._on_mousedowns = {}\n"
+        "Vis._on_mouseups = {}\n"
+        "Vis._on_mousemoves = {}\n"
+        "Vis._on_keydowns = {}\n"
+        "Vis._on_keyups = {}\n"
+        "Vis._on_quits = {}\n"
+        "Vis._do_on_event = function(tab, a, b, c, d, e, f, g, h)\n"
+        "   for i,f in pairs(tab) do f(a,b,c,d,e,f,g,h) end\n"
+        "end\n");
+    script_run_string(s,
+        "Vis.on_mousedown = function(f)\n"
+        "   table.insert(Vis._on_mousedowns, f)\n"
+        "end\n"
+        "Vis.on_mouseup = function(f)\n"
+        "   table.insert(Vis._on_mouseups, f)\n"
+        "end\n"
+        "Vis.on_mousemove = function(f)\n"
+        "   table.insert(Vis._on_mousemoves, f)\n"
+        "end\n"
+        "Vis.on_keydown = function(f)\n"
+        "   table.insert(Vis._on_keydowns, f)\n"
+        "end\n"
+        "Vis.on_keyup = function(f)\n"
+        "   table.insert(Vis._on_keyups, f)\n"
+        "end\n"
+        "Vis.on_quit = function(f)\n"
+        "   table.insert(Vis._on_quits, f)\n"
+        "end\n");
     VIS_ASSERT(s->errors == 0);
     if (fexists(LUA_STARTUP_FILE)) {
         DBPRINTF("Executing startup file: %s", LUA_STARTUP_FILE);
@@ -371,7 +393,7 @@ void script_keyup(script_t s, const char* keyname, BOOL shift) {
 }
 
 void script_on_quit(script_t s) {
-    script_run_string(s, "Vis.on_quit()");
+    script_run_string(s, "Vis._do_on_event(Vis._on_quits)");
 }
 
 /* end of public API */
@@ -689,11 +711,12 @@ int viscmd_get_debug_fn(lua_State* L) {
 
 static int do_mouse_event(lua_State* L, const char* func, int x, int y,
                           int button) {
-    kstr s = kstring_newfromvf("Vis.on_%s(%d, %d, %d)", func, x, y, button);
     int nerror = 0;
+    kstr s = kstring_newfromvf("Vis._do_on_event(Vis._on_%ss, %d, %d, %d)",
+                               func, x, y, button);
     if (luaL_dostring(L, kstring_content(s)) != LUA_OK) {
-        const char* error = luaL_checkstring(L, -1);
-        EPRINTF("Error in %s: %s", kstring_content(s), error);
+        EPRINTF("Error in %s: %s", kstring_content(s),
+                luaL_checkstring(L, -1));
         lua_pop(L, 1);
         nerror = 1;
     }
@@ -705,11 +728,11 @@ static int do_keyboard_event(lua_State* L, const char* func, const char* key,
                              BOOL shift) {
     int nerror = 0;
     char* esc_key = escape_string(key);
-    kstr s = kstring_newfromvf("Vis.on_%s(\"%s\", %d)", func, esc_key,
-                               (int)shift);
+    kstr s = kstring_newfromvf("Vis._do_on_event(Vis._on_%ss, \"%s\", %d)",
+                               func, esc_key, (int)shift);
     if (luaL_dostring(L, kstring_content(s)) != LUA_OK) {
-        const char* error = luaL_checkstring(L, -1);
-        EPRINTF("Error in %s: %s", kstring_content(s), error);
+        EPRINTF("Error in %s: %s", kstring_content(s),
+                luaL_checkstring(L, -1));
         lua_pop(L, 1);
         nerror = 1;
     }

@@ -39,6 +39,7 @@ function Emits.emit_circle(start, x, y, ds)
     VisUtil.emit_table(et)
 end
 
+--[[ Unused
 function Emits.emit_spiral(steps)
     local MAXLIFE = 10/3*SECOND
     local MAXLIFE_ADJ = 1/3*SECOND
@@ -60,6 +61,7 @@ function Emits.emit_spiral(steps)
     end
     return steps + MAXLIFE + MAXLIFE_ADJ
 end
+--]]
 
 function Emits.emit_line_v(start, x, r, g, b, ur, ug, ub)
     local MAXLIFE = SECOND/3

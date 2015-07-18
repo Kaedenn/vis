@@ -4,7 +4,7 @@ VisUtil = require('visutil')
 Emit = {}
 
 function Emit:new(obj)
-    o = {}
+    local o = {}
     o._t = {}
     if obj ~= nil and obj._t ~= nil then
         for k,v in pairs(obj._t) do
@@ -36,8 +36,8 @@ function Emit:when(t)
     self._t.when = t
 end
 
-function Emit:center(x, y)
-    return VisUtil.center_emit_table(self._t, x, y)
+function Emit:center(x, y, ux, uy)
+    return VisUtil.center_emit_table(self._t, x, y, ux or 0, uy or 0)
 end
 
 function Emit:radius(radius, uradius)
@@ -61,15 +61,23 @@ function Emit:life(life, ulife)
 end
 
 function Emit:color(r, g, b, ur, ug, ub)
-    return VisUtil.color_emit_table(self._t, r, g, b, ur, ug, ub)
-end
-
-function Emit:color2(rgb)
-    return VisUtil.color_emit_table_v(self._t, rgb)
-end
-
-function Emit:color3(rgb, urgb)
-    return VisUtil.color_emit_table_v2(self._t, rgb, urgb)
+    local rgb
+    local urgb
+    if type(r) == "table" then
+        rgb = {r[1] or 1, r[2] or 1, r[3] or 1}
+        if type(g) == "table" then
+            urgb = {g[1] or 0, g[2] or 0, g[3] or 0}
+        elseif #r > 3 then
+            urgb = {r[4] or 0, r[5] or 0, r[6] or 0}
+        else
+            urgb = {0, 0, 0}
+        end
+    else
+        rgb = {r or 1, g or 1, b or 1}
+        urgb = {ur or 0, ug or 0, ub or 0}
+    end
+    return VisUtil.color_emit_table(self._t, rgb[1], rgb[2], rgb[3],
+                                    urgb[1], urgb[2], urgb[3])
 end
 
 function Emit:force(force)

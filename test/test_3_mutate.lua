@@ -1,11 +1,12 @@
+Harness = require('harness')
 Vis = require("Vis")
 VisUtil = require("visutil")
 math = require("math")
 
-Vis.on_quit = function()
+Vis.on_quit(function()
     assert(Vis.get_debug(Vis.script, "NUM-MUTATES") == 4,
            "performed four mutates")
-end
+end)
 
 random = math.random
 function rand3f(low, high)

@@ -1,3 +1,4 @@
+Harness = require('harness')
 Vis = require("Vis")
 VisUtil = require("visutil")
 Emit = require('emit')
@@ -16,7 +17,7 @@ function get_mutate_debug()
             Vis.get_debug(Vis.script, "PARTICLE-TAGS-MODIFIED")}
 end
 
-Vis.on_quit = function()
+Vis.on_quit(function()
     md = get_mutate_debug()
     nmutates, nmutated, ntagsmod = md[1], md[2], md[3]
     print("Performed "..nmutates.." mutates")
@@ -28,7 +29,7 @@ Vis.on_quit = function()
     assert(desired_nmutates == nmutates, "performed proper number of mutates")
     assert(desired_nmutated == nmutated, "mutated peroper number of particles")
     assert(desired_ntagsmod == ntagsmod, "modified proper number of tags")
-end
+end)
 
 e = Emit:new()
 e:count(1000)
@@ -36,7 +37,7 @@ e:center()
 e:ds(1.5, 1)
 e:theta(math.pi, math.pi)
 e:life(2000, 500)
-e:color3(VisUtil.COLOR.BLUE1)
+e:color(VisUtil.COLOR.BLUE1)
 
 local colors = {
     VisUtil.COLOR.BLUE1,
@@ -54,7 +55,7 @@ local colors = {
 -- VisUtil.mutate_if(when, Vis.MUTATE_*_IF, factor, Vis.MUTATE_IF_*, tag)
 
 for i = 1,4 do
-    e:color3(colors[i])
+    e:color(colors[i])
     e:emit_at(0)
     Vis.mutate(Vis.flist, 0, Vis.MUTATE_TAG_ADD, 2)
     desired_nmutates = desired_nmutates + 1

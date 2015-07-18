@@ -1,3 +1,12 @@
+do
+
+local e = Emit:new()
+e:count(100)
+e:radius(2)
+e:ds(1)
+e:life(SECOND/3, SECOND/6)
+e:color(0, .4, .8, 0, .2, 0)
+e:theta(math.pi, math.pi)
 
 local pos_tab_s1 = {
     {W_1_2 - W_1_2/10, H_1_2 - H_1_2/10},
@@ -10,7 +19,8 @@ for i = 1,16 do
     start = T1.next()
     stop = T1.next()
     for j = start,stop,Vis.frames2msec(1) do
-        Emits.emit_circle(j, pos_tab_s1[i%4+1][1], pos_tab_s1[i%4+1][2])
+        e:center(pos_tab_s1[i%4+1][1], pos_tab_s1[i%4+1][2])
+        e:emit_at(j)
     end
 end
 
@@ -22,10 +32,14 @@ local pos_tab_s2 = {
 }
 
 for _ = 1,2 do
-for i = 1,3 do
-    Emits.emit_circle(T1.next(), pos_tab_s2[i][1], pos_tab_s2[i][2])
-    T1.next()
-end
+    for i = 1,3 do
+        start = T1.next()
+        stop = T1.next()
+        e:center(pos_tab_s2[i][1], pos_tab_s2[i][2])
+        for j = start,stop,Vis.frames2msec(1) do
+            e:emit_at(j)
+        end
+    end
 end
 
 -- 1, 2, 3, 4
@@ -37,6 +51,12 @@ local pos_tab_s3 = {
 }
 
 for i = 1,4 do
-    Emits.emit_circle(T1.next(), pos_tab_s3[i][1], pos_tab_s3[i][2])
-    T1.next()
+    start = T1.next()
+    stop = T1.next()
+    e:center(pos_tab_s3[i][1], pos_tab_s3[i][2])
+    for j = start,stop,Vis.frames2msec(1) do
+        e:emit_at(j)
+    end
+end
+
 end

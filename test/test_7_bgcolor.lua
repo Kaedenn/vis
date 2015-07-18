@@ -1,3 +1,4 @@
+Harness = require('harness')
 Vis = require("Vis")
 VisUtil = require("visutil")
 Emit = require('emit')
@@ -9,7 +10,7 @@ e:ds(1.5, 1)
 e:theta(math.pi, math.pi)
 e:life(2000, 500)
 
-e:color3(VisUtil.COLOR.BLUE2)
+e:color(VisUtil.COLOR.BLUE2)
 e:emit_at(0)
 
 rgb = {0, 0, 0}
@@ -31,13 +32,12 @@ end
 
 ftype_names = {}
 for name,value in pairs(Vis) do
-    print(("Vis.%s = %s"):format(name, tostring(value)))
     if name:match('FTYPE') then
         ftype_names[value] = name
     end
 end
 
-Vis.on_quit = function()
+Vis.on_quit(function()
     fec = Vis.get_debug(Vis.script, 'FRAME-EMIT-COUNTS')
     for id,count in pairs(fec) do
         if count > 0 then
@@ -46,6 +46,6 @@ Vis.on_quit = function()
     end
     assert(fec[Vis.FTYPE_BGCOLOR] == nframes,
            ("%d == %d"):format(fec[Vis.FTYPE_BGCOLOR], nframes))
-end
+end)
 
 Vis.exit(Vis.flist, 3000)

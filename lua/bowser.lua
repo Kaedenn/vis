@@ -1,3 +1,93 @@
+
+VIS_BOWSER_HELP_STRING = [[
+The Final Product: Bowser Visualization
+
+This script and all sub-scripts are to schedule and perform the
+visualization I've imagined for this project since shortly after its
+inception. It is separated into several distinct parts:
+
+1) The driver: bowser.lua
+2) The tracks: bowser/track{1..8}.lua
+3) The track implementations: bowser/t{1..8}*.lua
+
+This driver works in several distinct phases:
+
+1) Define all global variables, constants, and environments.
+    a) Timekeeping variables and constants
+    b) Environment variables and debugging configuration
+    c) Timekeeping functions (the lowest-level ones)
+    d) Music playback functions
+    e) Position constants
+    f) Starting position configuration (music and visualization)
+2) Define per-track variables, constants, and environments.
+    a) Track namespace
+    b) Track-specific timekeeping functions
+3) Load and execute each track in sequence
+    a) Specifically load and execute the track script
+    b) Debugging (if configured)
+4) Help information (via the VIS_HELP environment variable)
+5) Exit time configuration
+
+The program understands the following environment variables:
+
+VIS_BOWSER_NO_AUDIO     (boolean)
+    If set to any value, do not load audio.
+
+VIS_BOWSER_ISOLATE      (track number)
+    If set to a track number (1..8), only schedule that track. If possible,
+    only play the audio for that track as well (unless VIS_BOWSER_NO_AUDIO
+    is set).
+
+VIS_BOWSER_SKIP_INTRO   (boolean)
+    If set to any value, seek to offset 18 seconds 87 milliseconds, which
+    is the start of the main track.
+
+VIS_BOWSER_SKIP_TO      (milliseconds)
+    If set to a numeric value, seek both the visualization and the audio to
+    that offset in milliseconds.
+
+VIS_BOWSER_FRAME_TWEAK  (frame number)
+    If set to a numeric value, seek only the visualization and not the
+    audio to that offset in frames (running at Vis.FPS_LIMIT frames per
+    second).
+
+VIS_BOWSER_MS_TWEAK     (milliseconds)
+    If set to a numeric value, seek only the visualization and not the
+    audio to that offset in milliseconds.
+
+VIS_BOWSER_EXIT_MS      (milliseconds)
+    If set to a numeric value, exit at precisely this time in milliseconds.
+    If un-set, exit after the final scheduled emit has been emitted.
+
+VIS_BOWSER_DUMP_TRACKn  (boolean, n = track number)
+    If set to any value, print out the entire schedule of track n. The
+    value n is an integer between 1 and 8, inclusive.
+
+VIS_DEBUG               (boolean/integer)
+    If set to any value, enable debugging output.
+
+VIS_HELP                (boolean)
+    If set to any value, print out the understood environment variables
+    (this list) and some useful offsets in milliseconds to key positions
+    in the visualization.
+
+The following offsets may be helpful for the environment variables above:
+
+ 1223 (milliseconds)    36 (frames)     (at 30 frames per second)
+    Track 1 intro, part 1.
+ 7108 (milliseconds)    213 (frames)    (at 30 frames per second)
+    Track 1 intro, part 2.
+13422 (milliseconds)    402 (frames)    (at 30 frames per second)
+    Track 1 intro, part 3.
+13675 (milliseconds)    410 (frames)    (at 30 frames per second)
+    Track 3 intro, part 4, start of top and bottom fire.
+18087 (milliseconds)    542 (frames)    (at 30 frames per second)
+    Start of main song; VIS_BOWSER_SKIP_INTRO seeks to precisely this
+    offset.
+19211 (milliseconds)    576 (frames)    (at 30 frames per second)
+    Start of track 4's repeating sections.
+]]
+
 Vis = require("Vis")
 VisUtil = require("visutil")
 math = require("math")
@@ -21,18 +111,18 @@ BOWSER_TIME_START_MAIN = 18087
 
 -- Environment variables
 Env = {}
-Env['VIS_BOWSER_NO_AUDIO'] = ''
-Env['VIS_BOWSER_ISOLATE'] = ''
-Env['VIS_BOWSER_SKIP_INTRO'] = ''
-Env['VIS_BOWSER_SKIP_TO'] = ''
-Env['VIS_BOWSER_FRAME_TWEAK'] = ''
-Env['VIS_BOWSER_MS_TWEAK'] = ''
-Env['VIS_BOWSER_EXIT_MS'] = ''
-Env['VIS_DEBUG'] = ''
-Env['VIS_HELP'] = ''
+Env['VIS_BOWSER_NO_AUDIO'] = '<bool>'
+Env['VIS_BOWSER_ISOLATE'] = '<track-number>'
+Env['VIS_BOWSER_SKIP_INTRO'] = '<bool>'
+Env['VIS_BOWSER_SKIP_TO'] = '<offset>'
+Env['VIS_BOWSER_FRAME_TWEAK'] = '<frame-offset>'
+Env['VIS_BOWSER_MS_TWEAK'] = '<offset>'
+Env['VIS_BOWSER_EXIT_MS'] = '<offset>'
+Env['VIS_DEBUG'] = '<bool>'
+Env['VIS_HELP'] = '<bool>'
 
 for t = 1,TRACKS do
-    Env['VIS_BOWSER_DUMP_TRACK'..t] = ''
+    Env['VIS_BOWSER_DUMP_TRACK'..t] = '<bool>'
 end
 
 if Vis.DEBUG > Vis.DEBUG_NONE then
@@ -64,10 +154,15 @@ end
 
 -- Select which file to play and load it
 if Env['VIS_BOWSER_NO_AUDIO'] == nil then
-    isolate = Env['VIS_BOWSER_ISOLATE']
+    local isolate = Env['VIS_BOWSER_ISOLATE']
+    local result = nil
     if isolate ~= nil then
-        Vis.audio(Vis.flist, 0, "media/bowser-track-"..isolate..".mp3")
-    else
+        result = Vis.audio(Vis.flist, 0, "media/bowser-track-"..isolate..".mp3")
+    end
+    if result == nil then
+        if isolate ~= nil then
+            print("Failed to load isolated track, loading full track")
+        end
         Vis.audio(Vis.flist, 0, "media/bowser-full.mp3")
     end
 end
@@ -99,8 +194,8 @@ H_1_8 = H(1,8) -- 75
 function debug_wrap(fn, fnname)
     function wrapper(...)
         if fnname == nil then ffname = tostring(fn) end
-        s = "%s(%s) -> %s"
-        value = fn(...)
+        local s = "%s(%s) -> %s"
+        local value = fn(...)
         print(s:format(fnname, VisUtil.strobject(...), value))
         if tonumber(Env['VIS_DEBUG']) > 1 then
             print(debug.traceback())
@@ -112,25 +207,10 @@ end
 
 -- Load a specific track's configuration, unless instructed not to
 local function dotrack(track)
-    isolate = Env['VIS_BOWSER_ISOLATE']
+    local isolate = Env['VIS_BOWSER_ISOLATE']
     if isolate == nil or isolate == tostring(track) then
         dofile("lua/bowser/track"..track..".lua")
     end
-end
-
--- Helper function to generate a bound NextSchedule function for each track
-local function GenNextScheduleFn(track, track_num)
-    function NextSchedule()
-        track.ScheduleIndex = track.ScheduleIndex + 1
-        if track.ScheduleIndex > #track.SCHEDULE then
-            print("ScheduleIndex " .. track.ScheduleIndex ..
-                  " is greater than " ..  #track.SCHEDULE)
-            print(debug.traceback())
-            return track.SCHEDULE[#track.SCHEDULE]
-        end
-        return track.SCHEDULE[track.ScheduleIndex]
-    end
-    return NextSchedule
 end
 
 -- Adjust the audio starting position
@@ -153,11 +233,22 @@ end
 -- T1, T2, ..., T8 are the tracks local namespaces. Their schedules are
 -- T1.SCHEDULE, T2.SCHEDULE, ..., T8.SCHEDULE.
 -- Only tracks 1, 2, 3, 4, and 8 have anything in them during the intro
-for i = 1,TRACKS do
+for i = TRACK_1,TRACK_8 do
     local Tn = {} -- Track namespace
     _G['T'..i] = Tn
     Tn.ScheduleIndex = 0
-    Tn.NextSchedule = GenNextScheduleFn(Tn, i)
+    Tn.NextSchedule = (function(track, track_num)
+        return function()
+            track.ScheduleIndex = track.ScheduleIndex + 1
+            if track.ScheduleIndex > #track.SCHEDULE then
+                print("ScheduleIndex " .. track.ScheduleIndex ..
+                      " is greater than " ..  #track.SCHEDULE)
+                print(debug.traceback())
+                return track.SCHEDULE[#track.SCHEDULE]
+            end
+            return track.SCHEDULE[track.ScheduleIndex]
+        end
+    end)(Tn, i)
     Tn.now = (function(n) return function() return now(i) end end)(i)
     Tn.adv = (function(n) return function(o) return adv(n, o) end end)(i)
     Tn.set = (function(n) return function(o) return set(n, o) end end)(i)
@@ -176,7 +267,7 @@ for i = 1,TRACKS do
 end
 
 -- Actually load and calculate track schedules, all of them
-for i = 1,TRACKS do
+for i = TRACK_1,TRACK_8 do
     dotrack(i)
     if Env['VIS_BOWSER_DUMP_TRACK'..i] ~= nil then
         print('T'..i..'.SCHEDULE = {' .. Tn.ScheduleIndex)
@@ -193,31 +284,9 @@ end
 
 -- Display help if configured to do so
 if Env['VIS_HELP'] ~= nil then
-    help_msg = {
-        "Environment variables for bowser.lua:",
-        "VIS_BOWSER_NO_AUDIO            Disable loading of bowser-full.mp3",
-        "VIS_BOWSER_ISOLATE=<track>     Play only <track>, 1 to 8",
-        "VIS_BOWSER_SKIP_INTRO          Seek to offset 18087; skip intro",
-        "VIS_BOWSER_SKIP_TO=<msec>      Seek all to offset <msec> on load",
-        "VIS_BOWSER_FRAME_TWEAK=<frame> Seek the flist to <frame> on load",
-        "VIS_BOWSER_MS_TWEAK=<msec>     Seek the flist to <msec> on load",
-        "VIS_BOWSER_EXIT_MS=<msec>      Force exit after <msec>",
-        "VIS_BOWSER_DUMP_TRACKn         Print schedule of track n",
-        "VIS_DEBUG                      Enable certain debugging messages",
-        "VIS_HELP                       This message",
-        "",
-        "Useful offsets:",
-        "\t 1223:   Track 1, intro, part 1",
-        "\t 7108:   Track 1, intro, part 2",
-        "\t13422:   Track 1, intro, part 3",
-        "\t13675:   Track 3, intro, part 4, start of bottom fire",
-        "\t18087:   Start of main song",
-        "\t19211:   Start of track 4's repeating sections"
-    }
-    print(table.concat(help_msg, "\n"))
+    print(VIS_BOWSER_HELP_STRING)
 end
 
 -- Figure out when we exit
-exit_ms = tonumber(Env['VIS_BOWSER_EXIT_MS']) or TrackEndTime
-Vis.exit(Vis.flist, exit_ms)
+Vis.exit(Vis.flist, tonumber(Env['VIS_BOWSER_EXIT_MS']) or TrackEndTime)
 

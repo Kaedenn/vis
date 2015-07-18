@@ -1,3 +1,4 @@
+Harness = require('harness')
 Vis = require("Vis")
 VisUtil = require("visutil")
 
@@ -12,31 +13,31 @@ clicks = {}
 keys = {}
 curr_mb = 0
 
-Vis.on_mousedown = function(x, y, b)
+Vis.on_mousedown(function(x, y, b)
     table.insert(clicks, {x, y})
     curr_mb = b
     print("on_mousedown("..x..","..y..","..b..")")
-end
+end)
 
-Vis.on_mouseup = function(x, y, b)
+Vis.on_mouseup(function(x, y, b)
     curr_mb = 0
     print("on_mouseup("..x..","..y..","..b..")")
-end
+end)
 
-Vis.on_mousemove = function(x, y)
+Vis.on_mousemove(function(x, y)
     print("on_mousemove("..x..","..y..")".." curr mb: "..curr_mb)
-end
+end)
 
-Vis.on_keydown = function(key)
+Vis.on_keydown(function(key)
     table.insert(keys, {key})
     print("on_keydown("..key..")")
-end
+end)
 
-Vis.on_keyup = function(key)
+Vis.on_keyup(function(key)
     print("on_keyup("..key..")")
-end
+end)
 
-Vis.on_quit = function()
+Vis.on_quit(function()
     did_click = 0
     print("quitting")
     for i,click in pairs(clicks) do
@@ -50,4 +51,4 @@ Vis.on_quit = function()
     end
 
     assert(did_click == 1, "callbacks worked")
-end
+end)

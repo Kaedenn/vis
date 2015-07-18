@@ -1,9 +1,10 @@
+Harness = require('harness')
 Vis = require("Vis")
 
 _G.status = 0
-Vis.on_quit = function()
+Vis.on_quit(function()
     assert(status == 2, "callbacks did not call back")
-end
+end)
 
 t1 = Vis.frames2msec(20)
 t2 = Vis.frames2msec(40)

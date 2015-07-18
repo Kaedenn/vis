@@ -1,11 +1,12 @@
+Harness = require('harness')
 Vis = require("Vis")
 VisUtil = require("visutil")
 math = require("math")
 
-Vis.on_quit = function()
+Vis.on_quit(function()
     assert(Vis.get_debug(Vis.script, "FRAMES-EMITTED") == 4,
            "emitted four frames")
-end
+end)
 
 t = VisUtil.make_emit_table()
 t.ds = 2

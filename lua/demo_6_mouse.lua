@@ -107,7 +107,7 @@ function do_emit_to(x, y)
     e:ds(math.pow(math.pow(y, 2) + math.pow(x-Vis.WIDTH/2, 2), 1/4)*ds_scale, 2)
     e:theta(math.atan2(y, x - Vis.WIDTH/2), math.pi/30)
     e:life(life, 0)
-    e:color3(rgb, urgb)
+    e:color(rgb, urgb)
     e:force(force)
     e:limit(limit)
     e:blender(blend)
@@ -120,7 +120,7 @@ do
     VisUtil.set_trace_table(t)
 end
 
-Vis.on_mousedown = do_emit_to
-Vis.on_mouseup = do_emit_to
-Vis.on_mousemove = do_emit_to
+Vis.on_mousedown(do_emit_to)
+Vis.on_mouseup(do_emit_to)
+Vis.on_mousemove(do_emit_to)
 
