@@ -56,3 +56,11 @@ void plist_add(plist_t plist, particle* p) {
     }
 }
 
+void plist_clear(plist_t plist) {
+    for (size_t i = 0; i < plist->size; ++i) {
+        particle_free(plist->particles[i]);
+        plist->particles[i] = NULL;
+    }
+    plist->size = 0;
+}
+

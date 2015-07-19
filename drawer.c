@@ -198,6 +198,17 @@ int drawer_draw_to_screen(drawer_t drawer) {
     return 0;
 }
 
+void drawer_preserve_screen(drawer_t drawer) {
+    SDL_RenderPresent(drawer->renderer);
+    if (!drawer->dump_file_fmt) {
+        if (drawer->fps.framecount >= drawer->frame_skip) {
+            drawer->fps.limiter(drawer);
+        }
+    }
+    drawer->fps.framecount += 1;
+    drawer->fps.framestart = SDL_GetTicks();
+}
+
 void drawer_ensure_fps_linear(drawer_t drawer) {
     Uint32 frameend = SDL_GetTicks();
     Uint32 framedelay = frameend - drawer->fps.framestart;

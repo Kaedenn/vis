@@ -94,7 +94,7 @@ typedef enum {
 
 /* constants for frame types */
 typedef enum {
-    VIS_FTYPE_EMIT = 0,
+    VIS_FTYPE_EMIT,
     VIS_FTYPE_EXIT,
     VIS_FTYPE_PLAY,
     VIS_FTYPE_CMD,
@@ -102,7 +102,6 @@ typedef enum {
     VIS_FTYPE_MUTATE,
     VIS_FTYPE_SCRIPTCB,
     VIS_FTYPE_FRAMESEEK,
-
     VIS_MAX_FTYPE,
 } ftype_id;
 

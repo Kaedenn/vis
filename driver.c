@@ -41,14 +41,14 @@ struct global_ctx {
     int exit_status;
 };
 
-void finalize(void);
-void mainloop(struct global_ctx* ctx);
-
-plist_action_id animate_particle(struct particle* p, size_t idx,
-                                void* userdata);
-void animate(struct global_ctx* ctx);
-void display(struct global_ctx* ctx);
-void advance(struct global_ctx* ctx);
+static void doevents(struct global_ctx* ctx);
+static void mainloop(struct global_ctx* ctx);
+static void animate(struct global_ctx* ctx);
+static void display(struct global_ctx* ctx);
+static void advance(struct global_ctx* ctx);
+static void onkeydown(int key, struct global_ctx* ctx);
+static plist_action_id animate_particle(struct particle* p, size_t idx,
+                                        void* userdata);
 
 int main(int argc, char* argv[]) {
     srand((unsigned)time(NULL));
@@ -135,52 +135,68 @@ int main(int argc, char* argv[]) {
     return g.exit_status;
 }
 
+void onkeydown(int sym, struct global_ctx* ctx) {
+    switch (sym) {
+        case SDLK_ESCAPE:
+            ctx->should_exit = TRUE;
+            break;
+        case SDLK_SPACE:
+            if (ctx->paused) {
+                audio_play();
+            } else {
+                audio_pause();
+            }
+            ctx->paused = !ctx->paused;
+            break;
+        default:
+            break;
+    }
+}
+
+void doevents(struct global_ctx* ctx) {
+    SDL_Event e;
+    SDL_zero(e);
+    while (SDL_PollEvent(&e)) {
+        switch (e.type) {
+            case SDL_MOUSEBUTTONDOWN:
+                drawer_begin_trace(ctx->drawer);
+                drawer_trace(ctx->drawer, (float)e.button.x,
+                             (float)e.button.y);
+                script_mousedown(ctx->script, e.button.x, e.button.y,
+                                 e.button.button);
+                break;
+            case SDL_MOUSEMOTION:
+                drawer_trace(ctx->drawer, (float)e.motion.x,
+                             (float)e.motion.y);
+                script_mousemove(ctx->script, e.motion.x, e.motion.y);
+                break;
+            case SDL_MOUSEBUTTONUP:
+                drawer_end_trace(ctx->drawer);
+                script_mouseup(ctx->script, e.button.x, e.button.y,
+                               e.button.button);
+                break;
+            case SDL_KEYDOWN:
+                onkeydown(e.key.keysym.sym, ctx);
+                script_keydown(ctx->script, SDL_GetKeyName(e.key.keysym.sym),
+                               e.key.keysym.mod & KMOD_SHIFT);
+                break;
+            case SDL_KEYUP:
+                script_keyup(ctx->script, SDL_GetKeyName(e.key.keysym.sym),
+                             e.key.keysym.mod & KMOD_SHIFT);
+                break;
+            case SDL_QUIT:
+                ctx->should_exit = TRUE;
+                break;
+            default: { } break;
+        }
+    }
+}
+
 void mainloop(struct global_ctx* ctx) {
     SDL_Event e;
-    memset(&e, 0, sizeof(SDL_Event));
     while (!ctx->should_exit) {
-        while (SDL_PollEvent(&e)) {
-            switch (e.type) {
-                case SDL_MOUSEBUTTONDOWN:
-                    drawer_begin_trace(ctx->drawer);
-                    drawer_trace(ctx->drawer, (float)e.button.x,
-                                 (float)e.button.y);
-                    script_mousedown(ctx->script, e.button.x, e.button.y,
-                                     e.button.button);
-                    break;
-                case SDL_MOUSEMOTION:
-                    drawer_trace(ctx->drawer, (float)e.motion.x,
-                                 (float)e.motion.y);
-                    script_mousemove(ctx->script, e.motion.x, e.motion.y);
-                    break;
-                case SDL_MOUSEBUTTONUP:
-                    drawer_end_trace(ctx->drawer);
-                    script_mouseup(ctx->script, e.button.x, e.button.y,
-                                   e.button.button);
-                    break;
-                case SDL_KEYDOWN:
-                    if (e.key.keysym.sym == SDLK_ESCAPE) {
-                        return;
-                    } else if (e.key.keysym.sym == SDLK_SPACE) {
-                        ctx->paused = !ctx->paused;
-                        if (ctx->paused) {
-                            audio_pause();
-                        } else {
-                            audio_play();
-                        }
-                    }
-                    script_keydown(ctx->script,
-                                   SDL_GetKeyName(e.key.keysym.sym),
-                                   e.key.keysym.mod & KMOD_SHIFT);
-                    break;
-                case SDL_KEYUP:
-                    script_keyup(ctx->script, SDL_GetKeyName(e.key.keysym.sym),
-                                 e.key.keysym.mod & KMOD_SHIFT);
-                    break;
-                case SDL_QUIT: return;
-                default: { } break;
-            }
-        }
+        doevents(ctx);
+
         struct script_debug dbg;
         script_get_debug(ctx->script, &dbg);
 
@@ -199,6 +215,7 @@ void mainloop(struct global_ctx* ctx) {
         script_set_debug(ctx->script, SCRIPT_DEBUG_PARTICLE_TAGS_MODIFIED,
                         mutate_debug_get_particle_tags_modified());
 #endif
+
         if ((ctx->exit_status = script_get_status(ctx->script)) != 0) {
             ctx->should_exit = TRUE;
         } else {
@@ -225,7 +242,11 @@ void animate(struct global_ctx* ctx) {
 }
 
 void display(struct global_ctx* ctx) {
-    drawer_draw_to_screen(ctx->drawer);
+    if (!ctx->paused) {
+        drawer_draw_to_screen(ctx->drawer);
+    } else {
+        drawer_preserve_screen(ctx->drawer);
+    }
 }
 
 void advance(struct global_ctx* ctx) {
