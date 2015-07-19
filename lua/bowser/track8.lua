@@ -54,36 +54,51 @@ T8.SCHEDULE = {
     33234, 34217, -- m8p8
 }
 
+local e = Emit:new()
+e:count(100)
+e:radius(2)
+e:ds(3, 0.5)
+e:theta(math.pi, math.pi)
+e:life(SECOND/4)
+
+e:center(W_1_3, H_1_2, 0, 0)
 for i = 1,16 do
     start = T8.next()
     stop = T8.next()
-    print(("Block 1: start=%d, stop=%d"):format(start, stop))
     for j = start,stop,Vis.frames2msec(1) do
-
+        e:emit_at(j)
     end
+    e:set('x', -e:get('x'))
 end
 
-for i = 1,11 do
+e:center(W_1_2, H(1,20), 0, 0)
+for i = 1,8 do
     start = T8.next()
     stop = T8.next()
-    print(("Block 2: start=%d, stop=%d"):format(start, stop))
     for j = start,stop,Vis.frames2msec(1) do
-
+        e:emit_at(j)
     end
+    e:center(W_1_2, H(i+1, 20), 0, 0)
 end
+
+-- nom nom
+-- There's too much visual stimulation, so skip these three next notes
+for i = 1,6 do T8.next() end
 
 -- The tone
 local tonestart = T8.next()
 local tonestop = T8.next()
 local tonefadestart = T8.next()
 local tonefadestop = T8.next()
-local bgcolor = {0, 0, 0}
+local bgc = 0
 fc = math.floor((tonefadestop - tonestart)/Vis.frames2msec(1))
 fi = 0
 for j = tonestart,tonefadestop,Vis.frames2msec(1) do
-    if fi < 10 then
-        bgc = 0.05 * fi
-    elseif fi > fc-10 then
+    if fi < 5 then
+        bgc = 0.05 * 2*fi
+    elseif fi < fc-10 then
+        bgc = 0.50
+    else
         bgc = 0.05 * (fc - fi)
     end
     fi = fi + 1

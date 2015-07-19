@@ -8,8 +8,6 @@ circle:color(0, .4, .8, 0, .2, 0)
 circle:count(100)
 circle:theta(math.pi, math.pi)
 
-print(VisUtil.stremit(circle))
-
 function emit_circle(when, x, y, ds)
     circle:ds(ds or 1)
     circle:when(when)
