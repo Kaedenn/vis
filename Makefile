@@ -13,21 +13,22 @@ DIR = .
 OBJDIR = $(DIR)/.o
 DEPDIR = $(DIR)/.d
 
-SRCS = async.c audio.c clargs.c command.c drawer.c driver.c emit.c emitter.c \
-       flist.c forces.c gc.c helper.c kstring.c mutator.c particle.c \
-       particle_extra.c plimits.c plist.c random.c script.c genlua.c
+SRCS = async.c audio.c clargs.c command.c drawer.c driver.c emit.c \
+	   emitter.c flist.c forces.c gc.c genlua.c helper.c klist.c \
+	   kstring.c mutator.c particle.c particle_extra.c plimits.c \
+	   plist.c random.c script.c
 SOURCES = $(patsubst %,$(DIR)/%,$(CSRC)) Makefile
 OBJECTS = $(patsubst %.c,$(OBJDIR)/%.o,$(SRCS))
 DEPFILES = $(patsubst %.c,$(DEPDIR)/%.d,$(SRCS))
 EXECBIN = vis
 VIS = $(DIR)/$(EXECBIN)
 
-TESTS = test/test_kstring test/test_audio
+TESTS = test/test_kstring test/test_audio test/test_klist
 
-CFLAGS = -fdiagnostics-show-option -ansi \
-		 -Wno-unused-variable -Wall -Wextra -Wfloat-equal -Wwrite-strings \
+CFLAGS = -Wno-unused-variable -Wall -Wextra -Wfloat-equal -Wwrite-strings \
 		 -Wshadow -Wpointer-arith -Wcast-qual -Wredundant-decls -Wtrigraphs \
-		 -Wswitch-enum -Wundef -Wconversion -pedantic -std=c99
+		 -Wswitch-enum -Wundef -Wconversion -ansi -pedantic -std=c99 \
+		 -fdiagnostics-show-option
 LDFLAGS = -lm
 
 CFLAGS_FAST = -O3 -fexpensive-optimizations
@@ -95,11 +96,17 @@ $(DEPDIR): $(SOURCES) $(SCR_MAKEDEP)
 $(VIS): $(OBJECTS)
 	$(CC) -o $@ $^ $(LDFLAGS)
 
-test/test_kstring: test/test_kstring.c kstring.c helper.c 
-	$(CC) -o $@ $^ $(CFLAGS) $(LDFLAGS) 
+test/test_kstring: test/test_kstring.c kstring.c helper.c
+	$(CC) -o $@ $^ $(CFLAGS) $(CFLAGS_DEBUG) $(LDFLAGS)
+
+test/test_klist: test/test_klist.c klist.c helper.c
+	$(CC) -o $@ $^ $(CFLAGS) $(CFLAGS_DEBUG) $(LDFLAGS)
 
 test/test_audio: test/test_audio.c
-	$(CC) -o $@ $^ $(CFLAGS) $(LDFLAGS) 
+	$(CC) -o $@ $^ $(CFLAGS) $(CFLAGS_DEBUG) $(LDFLAGS)
+
+test: $(TESTS)
+	test -x "$(VIS)" || $(MAKE) debug
 
 valgrind: debug
 	$(VALGRIND) $(VIS) $(EXEC_ARGS)
@@ -114,6 +121,7 @@ clean:
 	- $(RM) -r $(DEPDIR)
 	- $(RM) -r $(OBJDIR)
 	- $(RM) $(VIS)
+	- $(RM) $(TESTS)
 
 distclean: clean fp-prep
 

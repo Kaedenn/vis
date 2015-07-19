@@ -35,6 +35,9 @@
 *.out
 *.app
 vis
+test/test_audio
+test/test_kstring
+test/test_klist
 
 # Non-distributable assets
 scripts/makedep.awk
