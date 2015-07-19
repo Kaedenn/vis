@@ -45,6 +45,7 @@ void script_callback_free(script_cb* cb);
 
 /* number of errors returned to the script API, 0 for success */
 int script_get_status(script_t s);
+void script_clear_status(script_t s);
 
 void script_set_debug(script_t s, enum script_debug_id what, uint64_t n);
 void script_get_debug(script_t s, /*out*/ script_debug* dbg);

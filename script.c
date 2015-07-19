@@ -347,6 +347,10 @@ int script_get_status(script_t s) {
     return s->errors;
 }
 
+void script_clear_status(script_t s) {
+    s->errors = 0;
+}
+
 void script_set_debug(script_t s, enum script_debug_id what, uint64_t n) {
     switch (what) {
         case SCRIPT_DEBUG_PARTICLES_EMITTED:

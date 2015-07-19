@@ -226,8 +226,7 @@ void mainloop(struct global_ctx* ctx) {
 }
  
 plist_action_id animate_particle(struct particle* p, void* userdata) {
-    struct global_ctx* ctx = (struct global_ctx*)userdata;
-    drawer_add_particle(ctx->drawer, p);
+    drawer_add_particle(((struct global_ctx*)userdata)->drawer, p);
     particle_tick(p);
     return particle_is_alive(p) ? ACTION_NEXT : ACTION_REMOVE;
 }
