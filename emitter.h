@@ -16,10 +16,10 @@ void emitter_free(void* arg);
 uint32_t emitter_get_frame_count(ftype_id ft);
 
 void emitter_schedule(flist* frames);
-void emitter_schedule_frame(emit_desc frame, unsigned int when);
+void emitter_schedule_frame(emit_desc* frame, unsigned int when);
 void emitter_tick(void);
 
-void emit_frame(emit_desc frame);
+void emit_frame(emit_desc* frame);
 
 #endif
 

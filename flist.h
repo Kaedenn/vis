@@ -15,7 +15,7 @@
 typedef struct flist_node {
     ftype_id type; /* types.h, identifies which field to use below */
     union {
-        emit_desc frame; /* VIS_FTYPE_EMIT: emit frame */
+        emit_desc* frame; /* VIS_FTYPE_EMIT: emit frame */
         const char* cmd; /* VIS_FTYPE_CMD: command frame */
         float color[3]; /* VIS_FTYPE_BGCOLOR: bgcolor frame */
         mutate_method* method; /* VIS_FTYPE_MUTATE: mutate frame */
@@ -42,7 +42,7 @@ flist_node* flist_tick(flist* fl);
 flist_node* flist_node_next(flist_node* n);
 
 void flist_insert(flist* fl, fnum when, flist_node* fn);
-void flist_insert_emit(flist* fl, fnum when, emit_desc what);
+void flist_insert_emit(flist* fl, fnum when, emit_desc* what);
 void flist_insert_exit(flist* fl, fnum when);
 void flist_insert_play(flist* fl, fnum when);
 void flist_insert_cmd(flist* fl, fnum when, const char* what);

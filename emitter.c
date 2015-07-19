@@ -102,7 +102,7 @@ void emitter_tick(void) {
     }
 }
 
-void emit_frame(emit_desc frame) {
+void emit_frame(emit_desc* frame) {
     for (int i = 0; i < frame->n; ++i) {
         particle* p = NULL;
         float r = randfloat(frame->r - frame->ur, frame->r + frame->ur);

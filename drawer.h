@@ -25,8 +25,8 @@ void drawer_scale_particles(drawer_t, double factor);
 void drawer_set_dumpfile_template(drawer_t drawer, const char* path);
 void drawer_set_trace_verbose(drawer_t drawer, BOOL verbose);
 
-void drawer_set_trace(drawer_t drawer, emit_desc emit);
-emit_desc drawer_get_trace(drawer_t drawer);
+void drawer_set_trace(drawer_t drawer, emit_desc* emit);
+emit_desc* drawer_get_trace(drawer_t drawer);
 void drawer_begin_trace(drawer_t drawer);
 void drawer_trace(drawer_t drawer, float x, float y);
 void drawer_end_trace(drawer_t drawer);

@@ -104,7 +104,7 @@ int main(int argc, char* argv[]) {
     }
     gc_add((gc_func_t)audio_free, NULL);
     
-    emit_desc emit = emit_new();
+    emit_desc* emit = emit_new();
     emit->n = 100;
     emit->rad = 1;
     emit_set_life(emit, 100, 200);

@@ -46,7 +46,7 @@ static int do_mouse_event(lua_State* L, const char* func, int x, int y,
                           int button);
 static int do_keyboard_event(lua_State* L, const char* func, const char* key,
                              BOOL shift);
-static emit_desc lua_args_to_emit_desc(lua_State* L, int arg, fnum* when);
+static emit_desc* lua_args_to_emit_desc(lua_State* L, int arg, fnum* when);
 
 static void push_constant_num(lua_State* L, const char* name, double value,
                               int stackidx) {
@@ -226,6 +226,7 @@ script_t script_new(script_cfg_mask cfg) {
         "VisUtil = require(\"visutil\")\n"
         "Emit = require(\"emit\")\n"
         "Letters = require(\"letters\")\n");
+    /* create tables for handling user input */
     script_run_string(s,
         "Vis._on_mousedowns = {}\n"
         "Vis._on_mouseups = {}\n"
@@ -233,9 +234,10 @@ script_t script_new(script_cfg_mask cfg) {
         "Vis._on_keydowns = {}\n"
         "Vis._on_keyups = {}\n"
         "Vis._on_quits = {}\n"
-        "Vis._do_on_event = function(tab, a, b, c, d, e, f, g, h)\n"
-        "   for i,f in pairs(tab) do f(a,b,c,d,e,f,g,h) end\n"
+        "Vis._do_on_event = function(tab, ...)\n"
+        "   for i,f in pairs(tab) do f(...) end\n"
         "end\n");
+    /* create functions for interfacing with said tables */
     script_run_string(s,
         "Vis.on_mousedown = function(f)\n"
         "   table.insert(Vis._on_mousedowns, f)\n"
@@ -500,7 +502,7 @@ int viscmd_emit_fn(lua_State* L) {
     int arg = 1;
     fnum when;
     flist* fl = *(flist**)luaL_checkudata(L, arg++, "flist**");
-    emit_desc frame = lua_args_to_emit_desc(L, arg, &when);
+    emit_desc* frame = lua_args_to_emit_desc(L, arg, &when);
     flist_insert_emit(fl, when, frame);
     return 0;
 }
@@ -570,17 +572,15 @@ int viscmd_seekframe_fn(lua_State* L) {
 int viscmd_bgcolor_fn(lua_State* L) {
     flist* fl = *(flist**)luaL_checkudata(L, 1, "flist**");
     fnum when = (fnum)VIS_MSEC_TO_FRAMES(luaL_checkunsigned(L, 2));
-    float rgb[3];
-    rgb[0] = (float)luaL_checknumber(L, 3);
-    rgb[1] = (float)luaL_checknumber(L, 4);
-    rgb[2] = (float)luaL_checknumber(L, 5);
-    flist_insert_bgcolor(fl, when, rgb);
-    DBPRINTF("Vis.bgcolor(%p, %d, %g, %g, %g)", fl, when, rgb[0], rgb[1],
-             rgb[2]);
+    float c[3];
+    c[0] = (float)luaL_checknumber(L, 3);
+    c[1] = (float)luaL_checknumber(L, 4);
+    c[2] = (float)luaL_checknumber(L, 5);
+    flist_insert_bgcolor(fl, when, c);
+    DBPRINTF("Vis.bgcolor(%p, %d, %g, %g, %g)", fl, when, c[0], c[1], c[2]);
     return 0;
 }
 
-/* XXX: Perhaps split these into three separate APIs */
 /* Vis.mutate(Vis.flist, when, func, factor[, factor2]), OR
  * Vis.mutate(Vis.flist, when, func, tag), OR
  * Vis.mutate(Vis.flist, when, func, factor, cond, tag[, factor2]),
@@ -624,7 +624,7 @@ int viscmd_mutate_fn(lua_State* L) {
     return 0;
 }
 
-/* Vis.callback(Vis.flist, when, Vis.script, "code") */
+/* Vis.callback(Vis.flist, when, Vis.script, "lua") */
 int viscmd_callback_fn(lua_State* L) {
     flist* fl = *(flist**)luaL_checkudata(L, 1, "flist**");
     fnum when = (fnum)VIS_MSEC_TO_FRAMES(luaL_checkunsigned(L, 2));
@@ -661,7 +661,7 @@ int viscmd_settrace_fn(lua_State* L) {
  * Function has the same args as Vis.settrace */
 int viscmd_emitnow_fn(lua_State* L) {
     /* Vis.script is actually ignored, but is present for consistency */
-    emit_desc emit = lua_args_to_emit_desc(L, 2, NULL);
+    emit_desc* emit = lua_args_to_emit_desc(L, 2, NULL);
     emit_frame(emit);
     emit_free(emit);
     return 0;
@@ -709,8 +709,7 @@ int viscmd_get_debug_fn(lua_State* L) {
     return 1;
 }
 
-static int do_mouse_event(lua_State* L, const char* func, int x, int y,
-                          int button) {
+int do_mouse_event(lua_State* L, const char* func, int x, int y, int button) {
     int nerror = 0;
     kstr s = kstring_newfromvf("Vis._do_on_event(Vis._on_%ss, %d, %d, %d)",
                                func, x, y, button);
@@ -724,8 +723,8 @@ static int do_mouse_event(lua_State* L, const char* func, int x, int y,
     return nerror;
 }
 
-static int do_keyboard_event(lua_State* L, const char* func, const char* key,
-                             BOOL shift) {
+int do_keyboard_event(lua_State* L, const char* func, const char* key,
+                      BOOL shift) {
     int nerror = 0;
     char* esc_key = escape_string(key);
     kstr s = kstring_newfromvf("Vis._do_on_event(Vis._on_%ss, \"%s\", %d)",
@@ -741,8 +740,8 @@ static int do_keyboard_event(lua_State* L, const char* func, const char* key,
     return nerror;
 }
 
-static emit_desc lua_args_to_emit_desc(lua_State* L, int arg, fnum* when) {
-    emit_desc emit = emit_new();
+emit_desc* lua_args_to_emit_desc(lua_State* L, int arg, fnum* when) {
+    emit_desc* emit = emit_new();
     emit->n = luaL_checkint(L, arg++);
     if (when != NULL) {
         *when = (fnum)VIS_MSEC_TO_FRAMES(luaL_checkunsigned(L, arg++));

@@ -48,7 +48,7 @@ struct drawer {
     Uint32 frame_skip;
     struct fps fps;
     BOOL tracing;
-    emit_desc emit_desc;
+    emit_desc* emit;
     BOOL verbose_trace;
     double scale_factor;
     char* dump_file_fmt;
@@ -111,7 +111,7 @@ void drawer_free(drawer_t drawer) {
     }
     SDL_DestroyRenderer(drawer->renderer);
     SDL_DestroyWindow(drawer->window);
-    DBFREE(drawer->emit_desc);
+    DBFREE(drawer->emit);
     DBFREE(drawer);
     IMG_Quit();
     SDL_Quit();
@@ -286,12 +286,12 @@ void drawer_set_trace_verbose(drawer_t drawer, BOOL verbose) {
     drawer->verbose_trace = verbose;
 }
 
-void drawer_set_trace(drawer_t drawer, emit_desc emit) {
-    drawer->emit_desc = emit;
+void drawer_set_trace(drawer_t drawer, emit_desc* emit) {
+    drawer->emit = emit;
 }
 
-emit_desc drawer_get_trace(drawer_t drawer) {
-    return drawer->emit_desc;
+emit_desc* drawer_get_trace(drawer_t drawer) {
+    return drawer->emit;
 }
 
 void drawer_begin_trace(drawer_t drawer) {
@@ -299,16 +299,16 @@ void drawer_begin_trace(drawer_t drawer) {
 }
 
 void drawer_trace(drawer_t drawer, float x, float y) {
-    if (!drawer->tracing || !drawer->emit_desc) return;
+    if (!drawer->tracing || !drawer->emit) return;
     if (x < 0.0f || y < 0.0f || x > VIS_WIDTH*1.0f || y > VIS_HEIGHT*1.0f) {
         return;
     }
 
-    drawer->emit_desc->x = (double)x;
-    drawer->emit_desc->y = (double)y;
-    emit_frame(drawer->emit_desc);
+    drawer->emit->x = (double)x;
+    drawer->emit->y = (double)y;
+    emit_frame(drawer->emit);
     if (drawer->verbose_trace) {
-        char* line = genlua_emit(drawer->emit_desc, drawer->fps.framecount);
+        char* line = genlua_emit(drawer->emit, drawer->fps.framecount);
         printf("%s\n", line);
         DBFREE(line);
     }

@@ -61,7 +61,7 @@ void flist_insert(flist* fl, fnum when, flist_node* fn) {
     }
 }
 
-void flist_insert_emit(flist* fl, fnum when, emit_desc what) {
+void flist_insert_emit(flist* fl, fnum when, emit_desc* what) {
     flist_node* fn = NULL;
     if (!fl) return;
     if (when >= VIS_NFRAMES) return;
