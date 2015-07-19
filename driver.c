@@ -47,8 +47,7 @@ static void animate(struct global_ctx* ctx);
 static void display(struct global_ctx* ctx);
 static void advance(struct global_ctx* ctx);
 static void onkeydown(int key, struct global_ctx* ctx);
-static plist_action_id animate_particle(struct particle* p, size_t idx,
-                                        void* userdata);
+static plist_action_id animate_particle(struct particle* p, void* userdata);
 
 int main(int argc, char* argv[]) {
     srand((unsigned)time(NULL));
@@ -91,7 +90,7 @@ int main(int argc, char* argv[]) {
     gc_add((gc_func_t)script_free, g.script);
 
     g.cmds = command_setup(g.drawer, g.particles, g.script,
-                                g.args->interactive);
+                           g.args->interactive);
     gc_add((gc_func_t)command_teardown, g.cmds);
     
     emitter_setup(g.cmds, g.particles, g.drawer);
@@ -220,15 +219,13 @@ void mainloop(struct global_ctx* ctx) {
             ctx->should_exit = TRUE;
         } else {
             animate(ctx);
-            display(ctx);
+            display(ctx); /* fps limiting done here */
             advance(ctx);
         }
     }
 }
  
-plist_action_id animate_particle(struct particle* p, size_t idx,
-                                void* userdata) {
-    UNUSED_VARIABLE(idx);
+plist_action_id animate_particle(struct particle* p, void* userdata) {
     struct global_ctx* ctx = (struct global_ctx*)userdata;
     drawer_add_particle(ctx->drawer, p);
     particle_tick(p);
@@ -242,6 +239,7 @@ void animate(struct global_ctx* ctx) {
 }
 
 void display(struct global_ctx* ctx) {
+    /* fps limiting done in the drawer */
     if (!ctx->paused) {
         drawer_draw_to_screen(ctx->drawer);
     } else {

@@ -32,7 +32,7 @@ size_t plist_get_size(plist_t plist) {
 void plist_foreach(plist_t plist, item_fn fn, void* userdefined) {
     size_t i = 0;
     while (i < plist->size) {
-        plist_action_id action = (fn)(plist->particles[i], i, userdefined);
+        plist_action_id action = (fn)(plist->particles[i], userdefined);
         if (action == ACTION_REMOVE) {
             /* implement swap-to-back */
             particle** last = &plist->particles[plist->size - 1];

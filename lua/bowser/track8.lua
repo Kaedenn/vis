@@ -82,7 +82,9 @@ for i = 1,8 do
 end
 
 -- nom nom
--- There's too much visual stimulation, so skip these three next notes
+-- There's too much visual stimulation, so skip these next three notes.
+-- Basically, I'm unable to descern these three notes apart from the rest of
+-- the visualization, and I can't get anything good out of them. So, skip.
 for i = 1,6 do T8.next() end
 
 -- The tone

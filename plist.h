@@ -15,8 +15,7 @@ typedef enum plist_action {
     ACTION_REMOVE
 } plist_action_id;
 
-typedef plist_action_id (*item_fn)(particle* p, size_t idx,
-                                   void* userdefined);
+typedef plist_action_id (*item_fn)(particle* p, void* userdefined);
 
 plist_t plist_new(size_t initial_size);
 void plist_free(plist_t plist);

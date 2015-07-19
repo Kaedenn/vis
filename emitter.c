@@ -20,7 +20,7 @@ static struct emitter {
     plist_t particles;
     flist* fl;
     drawer_t drawer;
-    ftype_id frame_counts[VIS_MAX_FTYPE];
+    uint32_t frame_counts[VIS_MAX_FTYPE];
 } emitter;
 
 void emitter_setup(struct commands* cmds, plist_t plist, drawer_t drawer) {
@@ -29,7 +29,7 @@ void emitter_setup(struct commands* cmds, plist_t plist, drawer_t drawer) {
     emitter.particles = plist;
     emitter.drawer = drawer;
     for (ftype_id i = (ftype_id)0; i < VIS_MAX_FTYPE; ++i) {
-        emitter.frame_counts[i] = (ftype_id)0;
+        emitter.frame_counts[i] = 0;
     }
 }
 
@@ -45,21 +45,20 @@ uint32_t emitter_get_frame_count(ftype_id ft) {
 }
 
 void emitter_schedule(flist* frames) {
-    if (emitter.fl && emitter.fl != frames) {
+    if (emitter.fl == NULL) {
+        emitter.fl = frames;
+    } else if (emitter.fl && emitter.fl != frames) {
         flist_clear(emitter.fl);
         flist_free(emitter.fl);
     } else if (emitter.fl == frames) {
         flist_restart(emitter.fl);
     } else {
-        emitter.fl = frames;
+        VIS_ASSERT(!"unreachable");
     }
 }
 
-static plist_action_id do_mutate_fn(particle* p,
-                                   UNUSED_PARAM(size_t idx),
-                                   void* mutate) {
-    mutate_method* method = mutate;
-    method->func(p, method);
+static plist_action_id do_mutate_fn(particle* p, void* mutate) {
+    ((mutate_method*)mutate)->func(p, mutate);
     return ACTION_NEXT;
 }
 
@@ -106,12 +105,10 @@ void emitter_tick(void) {
 void emit_frame(emit_desc frame) {
     for (int i = 0; i < frame->n; ++i) {
         particle* p = NULL;
-        pextra* pe = NULL;
-        float r, g, b;
-        r = randfloat(frame->r - frame->ur, frame->r + frame->ur);
-        g = randfloat(frame->g - frame->ug, frame->g + frame->ug);
-        b = randfloat(frame->b - frame->ub, frame->b + frame->ub);
-        pe = new_particle_extra(r, g, b, frame->blender);
+        float r = randfloat(frame->r - frame->ur, frame->r + frame->ur);
+        float g = randfloat(frame->g - frame->ug, frame->g + frame->ug);
+        float b = randfloat(frame->b - frame->ub, frame->b + frame->ub);
+        pextra* pe = new_particle_extra(r, g, b, frame->blender);
         p = particle_new_full(frame->x, frame->y, frame->ux, frame->uy,
                               frame->rad, frame->urad, frame->ds, frame->uds,
                               frame->theta, frame->utheta,
