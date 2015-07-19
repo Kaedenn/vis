@@ -9,18 +9,18 @@
 # make <target> SCR_ARGS="extra args to pass to process.py"
 #
 
+CC = gcc
+
 DIR = .
-OBJDIR = $(DIR)/.o
-DEPDIR = $(DIR)/.d
+OBJDIR ?= $(DIR)/.o
 
 SRCS = async.c audio.c clargs.c command.c drawer.c driver.c emit.c emitter.c \
        flist.c forces.c gc.c helper.c kstring.c mutator.c particle.c \
        particle_extra.c plimits.c plist.c random.c script.c genlua.c
-SOURCES = $(patsubst %,$(DIR)/%,$(CSRC)) Makefile
-OBJECTS = $(patsubst %.c,$(OBJDIR)/%.o,$(SRCS))
-DEPFILES = $(patsubst %.c,$(DEPDIR)/%.d,$(SRCS))
+SOURCES := $(patsubst %,$(DIR)/%,$(CSRC)) Makefile
+OBJECTS := $(patsubst %.c,$(OBJDIR)/%.o,$(SRCS))
 EXECBIN = vis
-VIS = $(DIR)/$(EXECBIN)
+VIS := $(DIR)/$(EXECBIN)
 
 TESTS = test/test_kstring test/test_audio
 
@@ -42,14 +42,13 @@ CFLAGS := $(CFLAGS) $(CFLAGS_LIBS) $(EXTRA_CFLAGS)
 LDFLAGS := $(LDFLAGS) $(LDFLAGS_LIBS) $(EXTRA_LDFLAGS)
 
 EXEC_ARGS ?= -i -l $(DIR)/lua/demo_4_random.lua
-VG_SUPP = --suppressions=$(DIR)/valgrind.supp
-VG_LEAKCHECK = --leak-check=full
-VG_REACHABLE = $(VG_LEAKCHECK) --show-reachable=yes --show-leak-kinds=all
-VALGRIND_DEFAULT = valgrind $(VG_SUPP) --num-callers=64
-VALGRIND = $(VALGRIND_DEFAULT) $(VALGRIND_EXTRA)
+VG_SUPP := --suppressions=$(DIR)/valgrind.supp
+VG_LEAKCHECK := --leak-check=full
+VG_REACHABLE := $(VG_LEAKCHECK) --show-reachable=yes --show-leak-kinds=all
+VALGRIND_DEFAULT := valgrind $(VG_SUPP) --num-callers=64
+VALGRIND := $(VALGRIND_DEFAULT) $(VALGRIND_EXTRA)
 
 SCR_PROCESS = $(DIR)/scripts/process.py
-SCR_MAKEDEP = $(DIR)/scripts/makedep.sh
 SCR_ARGS ?=
 
 FP_DIR = output
@@ -62,37 +61,44 @@ FP_AVI ?= $(FP_DIR)/bowser.avi
 	leakcheck-reachable clean distclean finalproduct fp-prep fp-makeframes \
 	fp-flip fp-encode fp-cleanup
 
-all: $(DEPFILES) $(VIS)
+all: $(VIS)
 
-fast: $(DEPFILES) $(SOURCES)
-	$(MAKE) "CFLAGS=$(CFLAGS) $(CFLAGS_FAST)" all
+fast: $(SOURCES)
+	- test -d "$(OBJDIR)/fast" || mkdir -p "$(OBJDIR)/fast"
+	$(MAKE) "OBJDIR=$(OBJDIR)/fast" "CFLAGS=$(CFLAGS) $(CFLAGS_FAST)" \
+		"$(OBJDIR)/fast/vis"
+	rm -f "$(VIS)" && ln "$(OBJDIR)/fast/vis" "$(VIS)"
 
-debug: $(DEPFILES) $(SOURCES)
-	$(MAKE) "CFLAGS=$(CFLAGS) $(CFLAGS_DEBUG)" all
+debug: $(SOURCES)
+	- test -d "$(OBJDIR)/debug" || mkdir -p "$(OBJDIR)/debug"
+	$(MAKE) "OBJDIR=$(OBJDIR)/debug" "CFLAGS=$(CFLAGS) $(CFLAGS_DEBUG)" \
+		"$(OBJDIR)/debug/vis"
+	rm -f "$(VIS)" && ln "$(OBJDIR)/debug/vis" "$(VIS)"
 
-trace: $(DEPFILES) $(SOURCES)
-	$(MAKE) "CFLAGS=$(CFLAGS) $(CFLAGS_TRACE)" all
+trace: $(SOURCES)
+	- test -d "$(OBJDIR)/trace" || mkdir -p "$(OBJDIR)/trace"
+	$(MAKE) "OBJDIR=$(OBJDIR)/trace" "CFLAGS=$(CFLAGS) $(CFLAGS_TRACE)" \
+		"$(OBJDIR)/trace/vis"
+	rm -f "$(VIS)" && ln "$(OBJDIR)/trace/vis" "$(VIS)"
 
 profile: $(SOURCES)
-	$(MAKE) "CFLAGS=$(CFLAGS) $(CFLAGS_FAST) $(CFLAGS_PROF)" all
+	- test -d "$(OBJDIR)/profile" || mkdir -p "$(OBJDIR)/profile"
+	$(MAKE) "OBJDIR=$(OBJDIR)/profile" \
+		"CFLAGS=$(CFLAGS) $(CFLAGS_FAST) $(CFLAGS_PROF)" \
+		"$(OBJDIR)/profile/vis"
+	rm -f "$(VIS)" && ln "$(OBJDIR)/profile/vis" "$(VIS)"
 	$(VIS) -i -l $(DIR)/lua/demo_5_random.lua
 	gprof $(VIS)
 	- $(RM) $(DIR)/gmon.out
 
-$(OBJDIR):
-	- test -d $(OBJDIR) || mkdir $(OBJDIR) 2>/dev/null
-
-$(DEPDIR)/%.d: $(DEPDIR)
-$(DEPFILES): $(DEPDIR)
-
-$(OBJDIR)/%.o: %.c $(OBJDIR)
+$(OBJDIR)/%.o: $(DIR)/%.c
+	- test -d $(OBJDIR) || mkdir -p $(OBJDIR)
 	$(CC) -c -o $@ $< $(CFLAGS)
 
-$(DEPDIR): $(SOURCES) $(SCR_MAKEDEP)
-	- test -d $(DEPDIR) || mkdir $(DEPDIR) 2>/dev/null
-	$(BASH) $(SCR_MAKEDEP)
+$(VIS): $(OBJDIR)/$(VIS)
+	rm -f "$@" && ln "$^" "$@"
 
-$(VIS): $(OBJECTS)
+$(OBJDIR)/$(VIS): $(OBJECTS)
 	$(CC) -o $@ $^ $(LDFLAGS)
 
 test/test_kstring: test/test_kstring.c kstring.c helper.c 
@@ -111,7 +117,6 @@ leakcheck-reachable: debug
 	$(VALGRIND) $(VG_REACHABLE) $(VIS) $(EXEC_ARGS)
 
 clean:
-	- $(RM) -r $(DEPDIR)
 	- $(RM) -r $(OBJDIR)
 	- $(RM) $(VIS)
 
@@ -134,4 +139,3 @@ fp-cleanup:
 
 finalproduct: all fp-prep fp-makeframes fp-encode fp-cleanup
 
-include $(DEPFILES)

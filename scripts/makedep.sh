@@ -24,14 +24,42 @@ END {
     for (f in incs) {
         d = f
         sub(/.c$/, ".d", d)
-        print f ":" incs[f] > ".d/"d
+        if (system("test "f" -nt .d/"d) == 0) {
+            print f ":" incs[f] > ".d/"d
+        }
     }
 }
 AWK_SCRIPT
 
+prep_depfile() {
+    if [[ $1 -nt $2 ]]; then
+        echo "Purging $1's depfile: $2"
+        rm "$2"
+    else
+        echo "Keeping $1's depfile: $2"
+    fi
+}
+
+srcs="$(ls -1 "$SRCDIR" | \grep '\.c$')"
+hdrs="$(ls -1 "$SRCDIR" | \grep '\.h$')"
+
+for srcf in $srcs; do
+    prep_depfile "$srcf" "$SRCDIR/.d/${srcf/.c$/.d}"
+done
+
 pushd $SRCDIR >/dev/null
 grep -F '#include "' *.h *.c | \
     sed -e 's/\.[hc][^ ]*/.c/' -e 's/#include "/ /g' -e 's/"//g' | \
-    awk -f "$SRCDIR/scripts/makedep.awk" | \
+    while read file; do
+        srcf="$(echo "$file" | awk '{ print $1 }')"
+        hdrf="$(echo "$file" | awk '{ print $2 }')"
+        depf="$(echo "$srcf" | awk '{ sub(/.c$/, ".d"); print }')"
+        echo "$depf: $srcf depends on $hdrf"
+        if [[ $file -nt ".d/${file/.c/.d}" ]]; then
+            echo "Generating $file"
+        else
+            echo "Preserving $file"
+        fi
+    done | \
     sort
 popd >/dev/null
