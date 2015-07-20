@@ -13,7 +13,7 @@ typedef struct drawer* drawer_t;
 drawer_t drawer_new(void);
 void drawer_free(drawer_t drawer);
 
-void drawer_config(drawer_t drawer, struct clargs* clargs);
+void drawer_config(drawer_t drawer, clargs* args);
 void drawer_bgcolor(drawer_t drawer, float r, float g, float b);
 int drawer_add_particle(drawer_t drawer, particle* p);
 int drawer_draw_to_screen(drawer_t drawer);

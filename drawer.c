@@ -242,21 +242,21 @@ float drawer_get_fps(drawer_t drawer) {
            (float)(SDL_GetTicks() - drawer->fps.start) * 1000.0f;
 }
 
-void drawer_config(drawer_t drawer, struct clargs* clargs) {
-    drawer->frame_skip = (Uint32)clargs->frameskip;
-    drawer->verbose_trace = clargs->dumptrace ? TRUE : FALSE;
+void drawer_config(drawer_t drawer, clargs* args) {
+    drawer->frame_skip = (Uint32)args->frameskip;
+    drawer->verbose_trace = args->dumptrace ? TRUE : FALSE;
     drawer->scale_factor = 1.0;
-    if (clargs->dumpfile) {
+    if (args->dumpfile) {
         SDL_RendererInfo ri;
         SDL_GetRendererInfo(drawer->renderer, &ri);
         if (ri.flags & SDL_RENDERER_TARGETTEXTURE) {
-            drawer->dump_file_fmt = dupstr(clargs->dumpfile);
+            drawer->dump_file_fmt = dupstr(args->dumpfile);
         } else {
             EPRINTF("SDL texture targets disabled, not dumping to file \"%s\"",
-                    clargs->dumpfile);
+                    args->dumpfile);
         }
     }
-    if (clargs->absolute_fps) {
+    if (args->absolute_fps) {
         drawer->fps.limiter = drawer_ensure_fps_absolute;
     }
     if (drawer->frame_skip > 0) {

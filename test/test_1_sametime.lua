@@ -11,7 +11,7 @@ end)
 t = VisUtil.make_emit_table()
 t.ds = 2
 t.uds = 1
-t.life = Vis.frames2msec(100)
+t.life = Vis.frames2msec(10)
 VisUtil.color_emit_table(t, 0, 100, 200, 0, 50, 100)
 t.count = 500
 t.utheta = 0.25
@@ -35,7 +35,7 @@ VisUtil.center_emit_table(t, 600, 300)
 t.theta = 0
 VisUtil.emit_table(t)
 
-t.when = Vis.frames2msec(100)
+t.when = Vis.frames2msec(20)
 
 VisUtil.center_emit_table(t, 400, 200)
 t.theta = math.pi * 3 / 2

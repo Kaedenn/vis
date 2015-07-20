@@ -33,7 +33,7 @@
 struct global_ctx {
     plist_t particles;
     drawer_t drawer;
-    struct clargs* args;
+    clargs* args;
     struct commands* cmds;
     script_t script;
     BOOL paused;

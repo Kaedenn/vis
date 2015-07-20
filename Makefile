@@ -15,15 +15,18 @@ DEPDIR = $(DIR)/.d
 
 SRCS = async.c audio.c clargs.c command.c drawer.c driver.c emit.c \
 	   emitter.c flist.c forces.c gc.c genlua.c helper.c klist.c \
-	   kstring.c mutator.c particle.c pextra.c plimits.c \
-	   plist.c random.c script.c
+	   kstring.c mutator.c particle.c pextra.c plimits.c plist.c \
+	   random.c script.c
 SOURCES = $(patsubst %,$(DIR)/%,$(CSRC)) Makefile
 OBJECTS = $(patsubst %.c,$(OBJDIR)/%.o,$(SRCS))
 DEPFILES = $(patsubst %.c,$(DEPDIR)/%.d,$(SRCS))
 EXECBIN = vis
 VIS = $(DIR)/$(EXECBIN)
 
-TESTS = test/test_kstring test/test_audio test/test_klist
+LUA_TESTS := $(wildcard $(DIR)/test/test_*.lua)
+C_TESTS := $(wildcard $(DIR)/test/test_*.c)
+TESTS := $(LUA_TESTS) $(patsubst %.c,%,$(C_TESTS))
+$(info $(C_TESTS) $(TESTS))
 
 CFLAGS = -Wno-unused-variable -Wall -Wextra -Wfloat-equal -Wwrite-strings \
 		 -Wshadow -Wpointer-arith -Wcast-qual -Wredundant-decls -Wtrigraphs \
@@ -59,9 +62,9 @@ FP_BASE ?= $(FP_DIR)/bowser
 FP_AUDIO ?= media/bowser-full.mp3
 FP_AVI ?= $(FP_DIR)/bowser.avi
 
-.PHONY: all fast debug trace profile execute valgrind leakcheck \
-	leakcheck-reachable clean distclean finalproduct fp-prep fp-makeframes \
-	fp-flip fp-encode fp-cleanup
+#.PHONY: all fast debug trace profile execute valgrind leakcheck \
+#	leakcheck-reachable clean distclean finalproduct fp-prep fp-makeframes \
+#	fp-flip fp-encode fp-cleanup test
 
 all: $(DEPFILES) $(VIS)
 
@@ -107,6 +110,8 @@ test/test_audio: test/test_audio.c
 
 test: $(TESTS)
 	test -x "$(VIS)" || $(MAKE) debug
+	for i in $(LUA_TESTS); do $(VIS) -i -l $$i || exit 1; done
+	for i in $(patsubst %.c,%,$(C_TESTS)); do $$i || exit 1; done
 
 valgrind: debug
 	$(VALGRIND) $(VIS) $(EXEC_ARGS)

@@ -24,15 +24,15 @@ const char* help_string[] = {
     "", NULL
 };
 
-static void mark_error(struct clargs* args, int error) {
+static void mark_error(clargs* args, int error) {
     args->must_exit = TRUE;
     if (error > args->exit_status) {
         args->exit_status = error;
     }
 }
 
-struct clargs* argparse(int argc, char** argv) {
-    struct clargs* args = DBMALLOC(sizeof(struct clargs));
+clargs* argparse(int argc, char** argv) {
+    clargs* args = DBMALLOC(sizeof(struct clargs));
     args->execname = argv[0];
     args->scriptfile = NULL;
     args->scriptstring = NULL;
@@ -147,7 +147,7 @@ struct clargs* argparse(int argc, char** argv) {
     return args;
 }
 
-void clargs_free(struct clargs* args) {
+void clargs_free(clargs* args) {
     DBFREE(args);
 }
 

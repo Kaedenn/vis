@@ -4,7 +4,7 @@
 
 #include "defines.h"
 
-struct clargs {
+typedef struct clargs {
     const char* execname;
     const char* scriptfile;
     const char* scriptstring;
@@ -19,10 +19,10 @@ struct clargs {
 
     BOOL must_exit;
     int exit_status;
-};
+} clargs;
 
-struct clargs* argparse(int argc, char** argv);
-void clargs_free(struct clargs* args);
+clargs* argparse(int argc, char** argv);
+void clargs_free(clargs* args);
 
 #endif
 

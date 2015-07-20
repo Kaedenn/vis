@@ -96,4 +96,4 @@ Vis.mutate(Vis.flist, 1500 - Vis.frames2msec(1), Vis.MUTATE_SET_DY_IF, 2, Vis.MU
 desired_nmutates = desired_nmutates + 1
 desired_nmutated = desired_nmutated + e:get('count') * 2
 
-Vis.exit(Vis.flist, 3000)
+Vis.exit(Vis.flist, 2000)
