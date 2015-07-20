@@ -18,7 +18,7 @@
 #include "gc.h"
 #include "helper.h"
 #include "mutator.h"
-#include "particle_extra.h"
+#include "pextra.h"
 #include "plist.h"
 #include "script.h"
 

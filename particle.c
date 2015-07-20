@@ -5,7 +5,7 @@
 #include "forces.h"
 #include "plimits.h"
 #include "helper.h"
-#include "particle_extra.h"
+#include "pextra.h"
 
 #include "random.h"
 
@@ -59,7 +59,7 @@ particle* particle_new_full(double x, double y,
 }
 
 void particle_free(particle* p) {
-    free_particle_extra(p->extra);
+    free_pextra(p->extra);
     DBFREE(p);
 }
 

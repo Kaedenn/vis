@@ -6,7 +6,7 @@
 #include "genlua.h"
 #include "helper.h"
 #include "kstring.h"
-#include "particle_extra.h"
+#include "pextra.h"
 #include <errno.h>
 
 #include <SDL_image.h>

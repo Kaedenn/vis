@@ -6,15 +6,15 @@
 #include "drawer.h"
 #include <stdint.h>
 
-typedef struct particle_extra {
+typedef struct pextra {
     float r, g, b, a;
     blend_id blender;
     union particle_tag tag;
 } pextra;
 
-pextra* new_particle_extra(float red, float green, float blue,
+pextra* new_pextra(float red, float green, float blue,
                             blend_id blender);
-void free_particle_extra(pextra* extra);
+void free_pextra(pextra* extra);
 
 #endif
 

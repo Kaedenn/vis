@@ -5,7 +5,7 @@
 #include "command.h"
 #include "helper.h"
 #include "particle.h"
-#include "particle_extra.h"
+#include "pextra.h"
 
 #include "forces.h"
 #include "plimits.h"
@@ -108,7 +108,7 @@ void emit_frame(emit_desc* frame) {
         float r = randfloat(frame->r - frame->ur, frame->r + frame->ur);
         float g = randfloat(frame->g - frame->ug, frame->g + frame->ug);
         float b = randfloat(frame->b - frame->ub, frame->b + frame->ub);
-        pextra* pe = new_particle_extra(r, g, b, frame->blender);
+        pextra* pe = new_pextra(r, g, b, frame->blender);
         p = particle_new_full(frame->x, frame->y, frame->ux, frame->uy,
                               frame->rad, frame->urad, frame->ds, frame->uds,
                               frame->theta, frame->utheta,

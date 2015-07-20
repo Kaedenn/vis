@@ -1,6 +1,6 @@
 
 #include "mutator.h"
-#include "particle_extra.h"
+#include "pextra.h"
 #include "random.h"
 
 #if DEBUG >= DEBUG_DEBUG

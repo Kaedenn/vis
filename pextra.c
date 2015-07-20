@@ -1,10 +1,10 @@
 
 #include "helper.h"
-#include "particle_extra.h"
+#include "pextra.h"
 
-pextra* new_particle_extra(float red, float green, float blue,
+pextra* new_pextra(float red, float green, float blue,
                             blend_id blender) {
-    pextra* extra = DBMALLOC(sizeof(struct particle_extra));
+    pextra* extra = DBMALLOC(sizeof(struct pextra));
     extra->r = red;
     extra->g = green;
     extra->b = blue;
@@ -13,7 +13,7 @@ pextra* new_particle_extra(float red, float green, float blue,
     return extra;
 }
 
-void free_particle_extra(pextra* extra) {
+void free_pextra(pextra* extra) {
     DBFREE(extra);
 }
 

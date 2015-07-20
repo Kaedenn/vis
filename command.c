@@ -9,7 +9,7 @@
 #include "forces.h"
 #include "helper.h"
 #include "particle.h"
-#include "particle_extra.h"
+#include "pextra.h"
 #include "plimits.h"
 #include "random.h"
 #include "script.h"
@@ -194,7 +194,7 @@ static void cmd_emit(struct commands* cmds, const char* buffer) {
             ar = randfloat(r-ur, r+ur);
             ag = randfloat(g-ug, g+ug);
             ab = randfloat(b-ub, b+ub);
-            pe = new_particle_extra(ar, ag, ab, blender);
+            pe = new_pextra(ar, ag, ab, blender);
             
             if (force < 0 || force >= VIS_NFORCES) {
                 force = VIS_DEFAULT_FORCE;
@@ -235,7 +235,7 @@ static void cmd_kick(struct commands* cmds, const char* buffer) {
             r = randfloat(1.0f, 2.0f);
             g = randfloat(0.0f, 0.7f);
             b = randfloat(0.0f, 0.4f);
-            pe = new_particle_extra(r, g, b, VIS_BLEND_LINEAR);
+            pe = new_pextra(r, g, b, VIS_BLEND_LINEAR);
             p = particle_new(x, y, radius, life, pe);
             ds = randdouble(0.1, 3.0);
             theta = randdouble(0.0, 2*M_PI);
@@ -268,7 +268,7 @@ static void cmd_snare(struct commands* cmds, const char* buffer) {
             r = randfloat(0.0f, 0.4f);
             g = randfloat(0.0f, 1.0f);
             b = randfloat(0.0f, 0.4f);
-            pe = new_particle_extra(r, g, b, VIS_BLEND_LINEAR);
+            pe = new_pextra(r, g, b, VIS_BLEND_LINEAR);
             p = particle_new(x, y, radius, life, pe);
             ds = randdouble(0.1, 2.0);
             theta = randdouble(0.0, 2*M_PI);
@@ -302,7 +302,7 @@ static void cmd_strum(struct commands* cmds, const char* buffer) {
             r = randfloat(0.0f, 0.4f);
             g = randfloat(0.0f, 0.7f);
             b = randfloat(0.0f, 1.0f);
-            pe = new_particle_extra(r, g, b, VIS_BLEND_LINEAR);
+            pe = new_pextra(r, g, b, VIS_BLEND_LINEAR);
             p = particle_new(x, y, radius, life, pe);
             ds = randdouble(0.1, 3.0);
             theta = randdouble(0.0, 2*M_PI);
@@ -337,7 +337,7 @@ static void cmd_rain(struct commands* cmds, const char* buffer) {
             r = 0.0f;
             g = randfloat(0.1f, 0.3f);
             b = randfloat(0.4f, 1.0f);
-            pe = new_particle_extra(r, g, b, VIS_BLEND_NONE);
+            pe = new_pextra(r, g, b, VIS_BLEND_NONE);
             p = particle_new(x, y, radius, life, pe);
             ds = randdouble(0.0, 1.0);
             theta = M_PI * 3 / 2;
