@@ -1,9 +1,9 @@
 
 #include "helper.h"
 #include "pextra.h"
+#include <stdlib.h>
 
-pextra* new_pextra(float red, float green, float blue,
-                            blend_id blender) {
+pextra* new_pextra(float red, float green, float blue, blend_id blender) {
     pextra* extra = DBMALLOC(sizeof(struct pextra));
     extra->r = red;
     extra->g = green;

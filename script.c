@@ -19,8 +19,14 @@
 #include <lauxlib.h>
 #include <lualib.h>
 
-static script_t luautil_checkscript(lua_State* L, int pos);
-static const char* luautil_get_error(lua_State* L);
+static int initialize_vis_lib(lua_State* L);
+static script_t util_checkscript(lua_State* L, int pos);
+static const char* util_get_error(lua_State* L);
+static emit_desc* lua_args_to_emit_desc(lua_State* L, int arg, fnum* when);
+static void push_constant_num(lua_State* L, const char* k, double v, int idx);
+static void push_constant_int(lua_State* L, const char* k, int v, int idx);
+static int do_mouse_event(lua_State* L, const char* fn, int x, int y, int b);
+static int do_kbd_event(lua_State* L, const char* fn, const char* k, BOOL shft);
 
 static int viscmd_debug_fn(lua_State* L);
 static int viscmd_command_fn(lua_State* L);
@@ -42,26 +48,6 @@ static int viscmd_f2ms_fn(lua_State* L);
 static int viscmd_ms2f_fn(lua_State* L);
 static int viscmd_get_debug_fn(lua_State* L);
 
-static int do_mouse_event(lua_State* L, const char* func, int x, int y,
-                          int button);
-static int do_keyboard_event(lua_State* L, const char* func, const char* key,
-                             BOOL shift);
-static emit_desc* lua_args_to_emit_desc(lua_State* L, int arg, fnum* when);
-
-static void push_constant_num(lua_State* L, const char* name, double value,
-                              int stackidx) {
-    lua_pushstring(L, name);
-    lua_pushnumber(L, value);
-    lua_settable(L, stackidx);
-}
-
-static void push_constant_int(lua_State* L, const char* name, int value,
-                              int stackidx) {
-    lua_pushstring(L, name);
-    lua_pushnumber(L, value);
-    lua_settable(L, stackidx);
-}
-
 struct script {
     script_debug* dbg;
     lua_State* L;
@@ -70,144 +56,7 @@ struct script {
     int errors;
 };
 
-int initialize_vis_lib(lua_State* L) {
-    static const struct luaL_Reg vis_lib[] = {
-        {"debug", viscmd_debug_fn},
-        {"command", viscmd_command_fn},
-        {"exit", viscmd_exit_fn},
-        {"emit", viscmd_emit_fn},
-        {"audio", viscmd_audio_fn},
-        {"play", viscmd_play_fn},
-        {"pause", viscmd_pause_fn},
-        {"seek", viscmd_seek_fn},
-        {"seekms", viscmd_seekms_fn},
-        {"seekframe", viscmd_seekframe_fn},
-        {"bgcolor", viscmd_bgcolor_fn},
-        {"mutate", viscmd_mutate_fn},
-        {"callback", viscmd_callback_fn},
-        {"fps", viscmd_fps_fn},
-        {"settrace", viscmd_settrace_fn},
-        {"frames2msec", viscmd_f2ms_fn},
-        {"msec2frames", viscmd_ms2f_fn},
-        {"emitnow", viscmd_emitnow_fn},
-        {"get_debug", viscmd_get_debug_fn},
-        {NULL, NULL}
-    };
-
-    luaL_newlib(L, vis_lib);
-
-#define NEW_VIS_CONST_INT(name) push_constant_int(L, (#name), (VIS_##name), -3)
-#define NEW_VIS_CONST_NUM(name) push_constant_num(L, (#name), (VIS_##name), -3)
-
-    /* grant access to all of the enums and constants */
-    NEW_VIS_CONST_INT(FPS_LIMIT);
-    NEW_VIS_CONST_INT(WIDTH);
-    NEW_VIS_CONST_INT(HEIGHT);
-    /* frame types */
-    NEW_VIS_CONST_INT(FTYPE_EMIT);
-    NEW_VIS_CONST_INT(FTYPE_EXIT);
-    NEW_VIS_CONST_INT(FTYPE_PLAY);
-    NEW_VIS_CONST_INT(FTYPE_CMD);
-    NEW_VIS_CONST_INT(FTYPE_BGCOLOR);
-    NEW_VIS_CONST_INT(FTYPE_MUTATE);
-    NEW_VIS_CONST_INT(FTYPE_SCRIPTCB);
-    NEW_VIS_CONST_INT(FTYPE_FRAMESEEK);
-    NEW_VIS_CONST_INT(MAX_FTYPE);
-    /* blenders */
-    NEW_VIS_CONST_INT(DEFAULT_BLEND);
-    NEW_VIS_CONST_INT(BLEND_NONE);
-    NEW_VIS_CONST_INT(BLEND_LINEAR);
-    NEW_VIS_CONST_INT(BLEND_PARABOLIC);
-    NEW_VIS_CONST_INT(BLEND_QUADRATIC);
-    NEW_VIS_CONST_INT(BLEND_SINE);
-    NEW_VIS_CONST_INT(BLEND_NEGGAMMA);
-    NEW_VIS_CONST_INT(BLEND_EASING);
-    NEW_VIS_CONST_INT(NBLENDS);
-    /* forces */
-    NEW_VIS_CONST_INT(DEFAULT_FORCE);
-    NEW_VIS_CONST_INT(FORCE_FRICTION);
-    NEW_VIS_CONST_INT(FORCE_GRAVITY);
-    NEW_VIS_CONST_INT(NFORCES);
-    /* limits */
-    NEW_VIS_CONST_INT(DEFAULT_LIMIT);
-    NEW_VIS_CONST_INT(LIMIT_BOX);
-    NEW_VIS_CONST_INT(LIMIT_SPRINGBOX);
-    NEW_VIS_CONST_INT(NLIMITS);
-    /* mutators */
-    NEW_VIS_CONST_INT(MUTATE_PUSH);
-    NEW_VIS_CONST_INT(MUTATE_PUSH_DX);
-    NEW_VIS_CONST_INT(MUTATE_PUSH_DY);
-    NEW_VIS_CONST_INT(MUTATE_SLOW);
-    NEW_VIS_CONST_INT(MUTATE_SHRINK);
-    NEW_VIS_CONST_INT(MUTATE_GROW);
-    NEW_VIS_CONST_INT(MUTATE_AGE);
-    NEW_VIS_CONST_INT(MUTATE_OPACITY);
-    NEW_VIS_CONST_INT(MUTATE_SET_DX);
-    NEW_VIS_CONST_INT(MUTATE_SET_DY);
-    NEW_VIS_CONST_INT(MUTATE_SET_RADIUS);
-    /* tag mutators */
-    NEW_VIS_CONST_INT(MUTATE_TAG_SET);
-    NEW_VIS_CONST_INT(MUTATE_TAG_INC);
-    NEW_VIS_CONST_INT(MUTATE_TAG_DEC);
-    NEW_VIS_CONST_INT(MUTATE_TAG_ADD);
-    NEW_VIS_CONST_INT(MUTATE_TAG_SUB);
-    NEW_VIS_CONST_INT(MUTATE_TAG_MUL);
-    NEW_VIS_CONST_INT(MUTATE_TAG_DIV);
-    /* conditional mutators */
-    NEW_VIS_CONST_INT(MUTATE_PUSH_IF);
-    NEW_VIS_CONST_INT(MUTATE_PUSH_DX_IF);
-    NEW_VIS_CONST_INT(MUTATE_PUSH_DY_IF);
-    NEW_VIS_CONST_INT(MUTATE_SLOW_IF);
-    NEW_VIS_CONST_INT(MUTATE_SHRINK_IF);
-    NEW_VIS_CONST_INT(MUTATE_GROW_IF);
-    NEW_VIS_CONST_INT(MUTATE_AGE_IF);
-    NEW_VIS_CONST_INT(MUTATE_OPACITY_IF);
-    NEW_VIS_CONST_INT(MUTATE_SET_DX_IF);
-    NEW_VIS_CONST_INT(MUTATE_SET_DY_IF);
-    NEW_VIS_CONST_INT(MUTATE_SET_RADIUS_IF);
-    /* total number of mutators */
-    NEW_VIS_CONST_INT(NMUTATES);
-    /* mutate conditions */
-    NEW_VIS_CONST_INT(MUTATE_IF_TRUE);
-    NEW_VIS_CONST_INT(MUTATE_IF_EQ);
-    NEW_VIS_CONST_INT(MUTATE_IF_NE);
-    NEW_VIS_CONST_INT(MUTATE_IF_LT);
-    NEW_VIS_CONST_INT(MUTATE_IF_LE);
-    NEW_VIS_CONST_INT(MUTATE_IF_GT);
-    NEW_VIS_CONST_INT(MUTATE_IF_GE);
-    NEW_VIS_CONST_INT(MUTATE_IF_EVEN);
-    NEW_VIS_CONST_INT(MUTATE_IF_ODD);
-    /* other constants */
-    NEW_VIS_CONST_NUM(FORCE_FRICTION_COEFF);
-    NEW_VIS_CONST_NUM(FORCE_GRAVITY_FACTOR);
-    NEW_VIS_CONST_INT(NFRAMES);
-    NEW_VIS_CONST_INT(AUDIO_FREQ);
-    NEW_VIS_CONST_INT(AUDIO_SAMPLES);
-    NEW_VIS_CONST_INT(AUDIO_CHANNELS);
-    /* helpful non-Vis constants */
-    push_constant_int(L, "MOUSE_LMB", 1, -3);
-    push_constant_int(L, "MOUSE_MMB", 2, -3);
-    push_constant_int(L, "MOUSE_RMB", 3, -3);
-    push_constant_int(L, "MOUSE_XMB", 4, -3);
-    push_constant_int(L, "MOUSE_YMB", 5, -3);
-    push_constant_num(L, "CONST_PUSH_STOP", 0.0, -3);
-    push_constant_num(L, "CONST_AGE_BORN", 1.0, -3);
-    push_constant_num(L, "CONST_AGE_DEAD", 0.0, -3);
-    push_constant_int(L, "DEBUG", DEBUG, -3);
-    push_constant_int(L, "DEBUG_NONE", DEBUG_NONE, -3);
-    push_constant_int(L, "DEBUG_VERBOSE", DEBUG_VERBOSE, -3);
-    push_constant_int(L, "DEBUG_DEBUG", DEBUG_DEBUG, -3);
-    push_constant_int(L, "DEBUG_INFO", DEBUG_INFO, -3);
-    push_constant_int(L, "DEBUG_TRACE", DEBUG_TRACE, -3);
-    /* helpful non-numeric constants */
-    lua_pushstring(L, "LUA_STARTUP_FILE");
-    lua_pushstring(L, LUA_STARTUP_FILE);
-    lua_settable(L, -3);
-#undef NEW_VIS_CONST_INT
-
-    return 1;
-}
-
+/* start of public API */
 script_t script_new(script_cfg_mask cfg) {
     script_t s = DBMALLOC(sizeof(struct script));
     s->dbg = DBMALLOC(sizeof(struct script_debug));
@@ -215,7 +64,7 @@ script_t script_new(script_cfg_mask cfg) {
     s->L = luaL_newstate();
     luaL_openlibs(s->L);
     luaL_requiref(s->L, "Vis", initialize_vis_lib, 0);
-    lua_pop(s->L, 1);
+    lua_pop(s->L, 1); /* requiref("Vis") */
 
     /* adjust lua search path, include ./lua and ./test,
      * include default modules */
@@ -306,15 +155,14 @@ flist* script_run(script_t s, const char* filename) {
     int base = lua_gettop(s->L);
     if (luaL_loadfile(s->L, filename) != LUA_OK) {
         s->errors += 1;
-        EPRINTF("Error in compiling script %s: %s", filename,
-                luautil_get_error(s->L));
+        EPRINTF("Error in script %s: %s", filename, util_get_error(s->L));
     } else if (lua_pcall(s->L, 0, LUA_MULTRET, base) != LUA_OK) {
         s->errors += 1;
-        EPRINTF("Error in running script: %s: %s", filename,
-                luautil_get_error(s->L));
+        EPRINTF("Error in script: %s: %s", filename, util_get_error(s->L));
     }
     /* clean the stack of everything else on it */
     if (lua_gettop(s->L) > 0) {
+        DBPRINTF("Popping %d stray items", lua_gettop(s->L));
         lua_pop(s->L, lua_gettop(s->L));
     }
     return s->fl;
@@ -324,7 +172,7 @@ void script_run_string(script_t s, const char* torun) {
     if (luaL_dostring(s->L, torun) != LUA_OK) {
         s->errors += 1;
         char* esc = escape_string(torun);
-        EPRINTF("Error in script \"%s\": %s", esc, luautil_get_error(s->L));
+        EPRINTF("Error in script \"%s\": %s", esc, util_get_error(s->L));
         DBFREE(esc);
     }
 }
@@ -391,19 +239,171 @@ void script_mouseup(script_t s, int x, int y, int button) {
 }
 
 void script_keydown(script_t s, const char* keyname, BOOL shift) {
-    s->errors += do_keyboard_event(s->L, "keydown", keyname, shift);
+    s->errors += do_kbd_event(s->L, "keydown", keyname, shift);
 }
 
 void script_keyup(script_t s, const char* keyname, BOOL shift) {
-    s->errors += do_keyboard_event(s->L, "keyup", keyname, shift);
+    s->errors += do_kbd_event(s->L, "keyup", keyname, shift);
 }
 
 void script_on_quit(script_t s) {
     script_run_string(s, "Vis._do_on_event(Vis._on_quits)");
 }
-
 /* end of public API */
-script_t luautil_checkscript(lua_State* L, int arg) {
+
+/* begin of private API */
+int initialize_vis_lib(lua_State* L) {
+    static const struct luaL_Reg vis_lib[] = {
+        {"debug", viscmd_debug_fn},
+        {"command", viscmd_command_fn},
+        {"exit", viscmd_exit_fn},
+        {"emit", viscmd_emit_fn},
+        {"audio", viscmd_audio_fn},
+        {"play", viscmd_play_fn},
+        {"pause", viscmd_pause_fn},
+        {"seek", viscmd_seek_fn},
+        {"seekms", viscmd_seekms_fn},
+        {"seekframe", viscmd_seekframe_fn},
+        {"bgcolor", viscmd_bgcolor_fn},
+        {"mutate", viscmd_mutate_fn},
+        {"callback", viscmd_callback_fn},
+        {"fps", viscmd_fps_fn},
+        {"settrace", viscmd_settrace_fn},
+        {"frames2msec", viscmd_f2ms_fn},
+        {"msec2frames", viscmd_ms2f_fn},
+        {"emitnow", viscmd_emitnow_fn},
+        {"get_debug", viscmd_get_debug_fn},
+        {NULL, NULL}
+    };
+
+    luaL_newlib(L, vis_lib);
+
+#define NEW_VIS_CONST_INT(name) push_constant_int(L, (#name), (VIS_##name), -1)
+#define NEW_VIS_CONST_NUM(name) push_constant_num(L, (#name), (VIS_##name), -1)
+
+    /* grant access to all of the enums and constants */
+    NEW_VIS_CONST_INT(FPS_LIMIT);
+    NEW_VIS_CONST_INT(WIDTH);
+    NEW_VIS_CONST_INT(HEIGHT);
+    /* frame types */
+    NEW_VIS_CONST_INT(FTYPE_EMIT);
+    NEW_VIS_CONST_INT(FTYPE_EXIT);
+    NEW_VIS_CONST_INT(FTYPE_PLAY);
+    NEW_VIS_CONST_INT(FTYPE_CMD);
+    NEW_VIS_CONST_INT(FTYPE_BGCOLOR);
+    NEW_VIS_CONST_INT(FTYPE_MUTATE);
+    NEW_VIS_CONST_INT(FTYPE_SCRIPTCB);
+    NEW_VIS_CONST_INT(FTYPE_FRAMESEEK);
+    NEW_VIS_CONST_INT(MAX_FTYPE);
+    /* blenders */
+    NEW_VIS_CONST_INT(DEFAULT_BLEND);
+    NEW_VIS_CONST_INT(BLEND_NONE);
+    NEW_VIS_CONST_INT(BLEND_LINEAR);
+    NEW_VIS_CONST_INT(BLEND_PARABOLIC);
+    NEW_VIS_CONST_INT(BLEND_QUADRATIC);
+    NEW_VIS_CONST_INT(BLEND_SINE);
+    NEW_VIS_CONST_INT(BLEND_NEGGAMMA);
+    NEW_VIS_CONST_INT(BLEND_EASING);
+    NEW_VIS_CONST_INT(NBLENDS);
+    /* forces */
+    NEW_VIS_CONST_INT(DEFAULT_FORCE);
+    NEW_VIS_CONST_INT(FORCE_FRICTION);
+    NEW_VIS_CONST_INT(FORCE_GRAVITY);
+    NEW_VIS_CONST_INT(NFORCES);
+    /* limits */
+    NEW_VIS_CONST_INT(DEFAULT_LIMIT);
+    NEW_VIS_CONST_INT(LIMIT_BOX);
+    NEW_VIS_CONST_INT(LIMIT_SPRINGBOX);
+    NEW_VIS_CONST_INT(NLIMITS);
+    /* mutators */
+    NEW_VIS_CONST_INT(MUTATE_PUSH);
+    NEW_VIS_CONST_INT(MUTATE_PUSH_DX);
+    NEW_VIS_CONST_INT(MUTATE_PUSH_DY);
+    NEW_VIS_CONST_INT(MUTATE_SLOW);
+    NEW_VIS_CONST_INT(MUTATE_SHRINK);
+    NEW_VIS_CONST_INT(MUTATE_GROW);
+    NEW_VIS_CONST_INT(MUTATE_AGE);
+    NEW_VIS_CONST_INT(MUTATE_OPACITY);
+    NEW_VIS_CONST_INT(MUTATE_SET_DX);
+    NEW_VIS_CONST_INT(MUTATE_SET_DY);
+    NEW_VIS_CONST_INT(MUTATE_SET_RADIUS);
+    /* tag mutators */
+    NEW_VIS_CONST_INT(MUTATE_TAG_SET);
+    NEW_VIS_CONST_INT(MUTATE_TAG_INC);
+    NEW_VIS_CONST_INT(MUTATE_TAG_DEC);
+    NEW_VIS_CONST_INT(MUTATE_TAG_ADD);
+    NEW_VIS_CONST_INT(MUTATE_TAG_SUB);
+    NEW_VIS_CONST_INT(MUTATE_TAG_MUL);
+    NEW_VIS_CONST_INT(MUTATE_TAG_DIV);
+    /* conditional mutators */
+    NEW_VIS_CONST_INT(MUTATE_PUSH_IF);
+    NEW_VIS_CONST_INT(MUTATE_PUSH_DX_IF);
+    NEW_VIS_CONST_INT(MUTATE_PUSH_DY_IF);
+    NEW_VIS_CONST_INT(MUTATE_SLOW_IF);
+    NEW_VIS_CONST_INT(MUTATE_SHRINK_IF);
+    NEW_VIS_CONST_INT(MUTATE_GROW_IF);
+    NEW_VIS_CONST_INT(MUTATE_AGE_IF);
+    NEW_VIS_CONST_INT(MUTATE_OPACITY_IF);
+    NEW_VIS_CONST_INT(MUTATE_SET_DX_IF);
+    NEW_VIS_CONST_INT(MUTATE_SET_DY_IF);
+    NEW_VIS_CONST_INT(MUTATE_SET_RADIUS_IF);
+    /* total number of mutators */
+    NEW_VIS_CONST_INT(NMUTATES);
+    /* mutate conditions */
+    NEW_VIS_CONST_INT(MUTATE_IF_TRUE);
+    NEW_VIS_CONST_INT(MUTATE_IF_EQ);
+    NEW_VIS_CONST_INT(MUTATE_IF_NE);
+    NEW_VIS_CONST_INT(MUTATE_IF_LT);
+    NEW_VIS_CONST_INT(MUTATE_IF_LE);
+    NEW_VIS_CONST_INT(MUTATE_IF_GT);
+    NEW_VIS_CONST_INT(MUTATE_IF_GE);
+    NEW_VIS_CONST_INT(MUTATE_IF_EVEN);
+    NEW_VIS_CONST_INT(MUTATE_IF_ODD);
+    /* other constants */
+    NEW_VIS_CONST_NUM(FORCE_FRICTION_COEFF);
+    NEW_VIS_CONST_NUM(FORCE_GRAVITY_FACTOR);
+    NEW_VIS_CONST_INT(NFRAMES);
+    NEW_VIS_CONST_INT(AUDIO_FREQ);
+    NEW_VIS_CONST_INT(AUDIO_SAMPLES);
+    NEW_VIS_CONST_INT(AUDIO_CHANNELS);
+#undef NEW_VIS_CONST_INT
+#undef NEW_VIS_CONST_NUM
+    /* helpful non-Vis constants */
+    push_constant_int(L, "MOUSE_LMB", 1, -1);
+    push_constant_int(L, "MOUSE_MMB", 2, -1);
+    push_constant_int(L, "MOUSE_RMB", 3, -1);
+    push_constant_int(L, "MOUSE_XMB", 4, -1);
+    push_constant_int(L, "MOUSE_YMB", 5, -1);
+    push_constant_num(L, "CONST_PUSH_STOP", 0.0, -1);
+    push_constant_num(L, "CONST_AGE_BORN", 1.0, -1);
+    push_constant_num(L, "CONST_AGE_DEAD", 0.0, -1);
+    push_constant_int(L, "DEBUG", DEBUG, -1);
+    push_constant_int(L, "DEBUG_NONE", DEBUG_NONE, -1);
+    push_constant_int(L, "DEBUG_VERBOSE", DEBUG_VERBOSE, -1);
+    push_constant_int(L, "DEBUG_DEBUG", DEBUG_DEBUG, -1);
+    push_constant_int(L, "DEBUG_INFO", DEBUG_INFO, -1);
+    push_constant_int(L, "DEBUG_TRACE", DEBUG_TRACE, -1);
+    /* helpful non-numeric constants */
+    lua_pushstring(L, "LUA_STARTUP_FILE");
+    lua_pushstring(L, LUA_STARTUP_FILE);
+    lua_settable(L, -1);
+
+    return 1;
+}
+
+void push_constant_num(lua_State* L, const char* k, double v, int idx) {
+    lua_pushstring(L, k);
+    lua_pushnumber(L, v);
+    lua_settable(L, idx - 2);
+}
+
+void push_constant_int(lua_State* L, const char* k, int v, int idx) {
+    lua_pushstring(L, k);
+    lua_pushnumber(L, v);
+    lua_settable(L, idx - 2);
+}
+
+script_t util_checkscript(lua_State* L, int arg) {
     /* calling a disabled function is not an error */
     if (lua_isnil(L, arg)) {
         luaL_error(L, "expected Vis.script, received nil, "
@@ -414,21 +414,80 @@ script_t luautil_checkscript(lua_State* L, int arg) {
     }
 }
 
-void luautil_checkdrawer(lua_State* L, script_t s) {
+void util_checkdrawer(lua_State* L, script_t s) {
     if (s->drawer == NULL) {
         luaL_error(L, "Script has no drawer, function may be disabled");
     }
 }
 
-const char* luautil_get_error(lua_State* L) {
+const char* util_get_error(lua_State* L) {
     static char error_buff[2048];
     strncpy(error_buff, luaL_checkstring(L, -1), 2048);
     lua_pop(L, 1);
     return error_buff;
 }
 
+int do_mouse_event(lua_State* L, const char* func, int x, int y, int button) {
+    int nerror = 0;
+    kstr s = kstring_newfromvf("Vis._do_on_event(Vis._on_%ss, %d, %d, %d)",
+                               func, x, y, button);
+    if (luaL_dostring(L, kstring_content(s)) != LUA_OK) {
+        EPRINTF("Error in %s: %s", kstring_content(s), util_get_error(L));
+        nerror = 1;
+    }
+    kstring_free(s);
+    return nerror;
+}
+
+int do_kbd_event(lua_State* L, const char* func, const char* key, BOOL shift) {
+    int nerror = 0;
+    char* esc_key = escape_string(key);
+    kstr s = kstring_newfromvf("Vis._do_on_event(Vis._on_%ss, \"%s\", %d)",
+                               func, esc_key, (int)shift);
+    DBFREE(esc_key);
+    if (luaL_dostring(L, kstring_content(s)) != LUA_OK) {
+        EPRINTF("Error in %s: %s", kstring_content(s), util_get_error(L));
+        nerror = 1;
+    }
+    kstring_free(s);
+    return nerror;
+}
+
+emit_desc* lua_args_to_emit_desc(lua_State* L, int arg, fnum* when) {
+    emit_desc* emit = emit_new();
+    emit->n = luaL_checkint(L, arg++);
+    if (when != NULL) {
+        *when = (fnum)VIS_MSEC_TO_FRAMES(luaL_checkunsigned(L, arg++));
+    }
+    emit->x = luaL_checknumber(L, arg++);
+    emit->y = luaL_checknumber(L, arg++);
+    emit->ux = luaL_optnumber(L, arg++, 0);
+    emit->uy = luaL_optnumber(L, arg++, 0);
+    emit->rad = luaL_optnumber(L, arg++, 1);
+    emit->urad = luaL_optnumber(L, arg++, 0);
+    emit->ds = luaL_optnumber(L, arg++, 0);
+    emit->uds = luaL_optnumber(L, arg++, 0);
+    emit->theta = luaL_optnumber(L, arg++, 0);
+    emit->utheta = luaL_optnumber(L, arg++, 0);
+    emit->life = VIS_MSEC_TO_FRAMES(luaL_optint(L, arg++, 100));
+    emit->ulife = VIS_MSEC_TO_FRAMES(luaL_optint(L, arg++, 0));
+    emit->r = (float)luaL_optnumber(L, arg++, 1.0);
+    emit->g = (float)luaL_optnumber(L, arg++, 1.0);
+    emit->b = (float)luaL_optnumber(L, arg++, 1.0);
+    emit->ur = (float)luaL_optnumber(L, arg++, 0.0);
+    emit->ug = (float)luaL_optnumber(L, arg++, 0.0);
+    emit->ub = (float)luaL_optnumber(L, arg++, 0.0);
+    emit->force = luaL_optint(L, arg++, VIS_DEFAULT_FORCE);
+    emit->limit = luaL_optint(L, arg++, VIS_DEFAULT_LIMIT);
+    emit->blender = luaL_optint(L, arg++, VIS_BLEND_LINEAR);
+    return emit;
+}
+/* end of private API */
+
+/* start of Lua API */
 /* Vis.debug(Vis.flist, ...) */
 int viscmd_debug_fn(lua_State* L) {
+    static const char* SBOOL[2] = {"false", "true"};
     int nargs = lua_gettop(L);
     lua_Debug ar;
     lua_getstack(L, 1, &ar);
@@ -443,8 +502,7 @@ int viscmd_debug_fn(lua_State* L) {
                 kstring_appendvf(s, ", %g", luaL_checknumber(L, i));
                 break;
             case LUA_TBOOLEAN:
-                kstring_appendvf(s, ", %s",
-                                 luaL_checkint(L, i) ? "true" : "false");
+                kstring_appendvf(s, ", %s", SBOOL[luaL_checkint(L, i)>0]);
                 break;
             case LUA_TSTRING: {
                 char* esc = escape_string(luaL_checkstring(L, i));
@@ -462,10 +520,10 @@ int viscmd_debug_fn(lua_State* L) {
          }
     }
 #if DEBUG >= DEBUG_DEBUG
-    DBPRINTF("(function %s)[%d]: Vis.debug(%s)", ar.name, ar.currentline,
-             kstring_content(s));
+    DBPRINTF("(function %s)[%s:%d]: Vis.debug(%s)", ar.name, ar.source,
+             ar.currentline, kstring_content(s));
 #else
-    fprintf(stderr, "%s:%d: Debug: %s", ar.name, ar.currentline,
+    fprintf(stderr, "%s:%d: Debug: %s", ar.source, ar.currentline,
             kstring_content(s));
 #endif
     kstring_free(s);
@@ -496,7 +554,7 @@ int viscmd_exit_fn(lua_State* L) {
  * particle.x = x + random(-ux, ux)
  * particle.y = y + random(-uy, uy)
  * and so on for all <arg>, u<arg> pairs.
- * 0 <= r, g, b, ur, ug, ub <= 1,
+ * 0 <= r, g, b, ur, ug, ub <= 1
  * @param radius defaults to 1
  * color (r, g, b) defaults to 1
  * @param force defaults to no passive force
@@ -632,7 +690,7 @@ int viscmd_mutate_fn(lua_State* L) {
 int viscmd_callback_fn(lua_State* L) {
     flist* fl = *(flist**)luaL_checkudata(L, 1, "flist**");
     fnum when = (fnum)VIS_MSEC_TO_FRAMES(luaL_checkunsigned(L, 2));
-    script_t s = luautil_checkscript(L, 3);
+    script_t s = util_checkscript(L, 3);
     script_cb* scb = DBMALLOC(sizeof(struct script_cb));
     scb->owner = s;
     scb->fn_name = dupstr("<lua>");
@@ -644,8 +702,8 @@ int viscmd_callback_fn(lua_State* L) {
 
 /* fps = Vis.fps(Vis.script) */
 int viscmd_fps_fn(lua_State* L) {
-    script_t s = luautil_checkscript(L, 1);
-    luautil_checkdrawer(L, s);
+    script_t s = util_checkscript(L, 1);
+    util_checkdrawer(L, s);
     lua_pushnumber(L, (lua_Number)drawer_get_fps(s->drawer));
     return 1;
 }
@@ -655,8 +713,8 @@ int viscmd_fps_fn(lua_State* L) {
  *      @param Vis.flist is replaced with Vis.script
  *      @param when is omitted */
 int viscmd_settrace_fn(lua_State* L) {
-    script_t s = luautil_checkscript(L, 1);
-    luautil_checkdrawer(L, s);
+    script_t s = util_checkscript(L, 1);
+    util_checkdrawer(L, s);
     drawer_set_trace(s->drawer, lua_args_to_emit_desc(L, 2, NULL));
     return 0;
 }
@@ -685,7 +743,7 @@ int viscmd_ms2f_fn(lua_State* L) {
 
 /* Vis.get_debug(Vis.script, what) */
 int viscmd_get_debug_fn(lua_State* L) {
-    script_t s = luautil_checkscript(L, 1);
+    script_t s = util_checkscript(L, 1);
     const char* what = luaL_checkstring(L, 2);
     if (!strcmp(what, "PARTICLES-EMITTED")) {
         lua_pushunsigned(L, (uint32_t)s->dbg->particles_emitted);
@@ -712,65 +770,5 @@ int viscmd_get_debug_fn(lua_State* L) {
     }
     return 1;
 }
-
-int do_mouse_event(lua_State* L, const char* func, int x, int y, int button) {
-    int nerror = 0;
-    kstr s = kstring_newfromvf("Vis._do_on_event(Vis._on_%ss, %d, %d, %d)",
-                               func, x, y, button);
-    if (luaL_dostring(L, kstring_content(s)) != LUA_OK) {
-        EPRINTF("Error in %s: %s", kstring_content(s),
-                luaL_checkstring(L, -1));
-        lua_pop(L, 1);
-        nerror = 1;
-    }
-    kstring_free(s);
-    return nerror;
-}
-
-int do_keyboard_event(lua_State* L, const char* func, const char* key,
-                      BOOL shift) {
-    int nerror = 0;
-    char* esc_key = escape_string(key);
-    kstr s = kstring_newfromvf("Vis._do_on_event(Vis._on_%ss, \"%s\", %d)",
-                               func, esc_key, (int)shift);
-    if (luaL_dostring(L, kstring_content(s)) != LUA_OK) {
-        EPRINTF("Error in %s: %s", kstring_content(s),
-                luaL_checkstring(L, -1));
-        lua_pop(L, 1);
-        nerror = 1;
-    }
-    kstring_free(s);
-    DBFREE(esc_key);
-    return nerror;
-}
-
-emit_desc* lua_args_to_emit_desc(lua_State* L, int arg, fnum* when) {
-    emit_desc* emit = emit_new();
-    emit->n = luaL_checkint(L, arg++);
-    if (when != NULL) {
-        *when = (fnum)VIS_MSEC_TO_FRAMES(luaL_checkunsigned(L, arg++));
-    }
-    emit->x = luaL_checknumber(L, arg++);
-    emit->y = luaL_checknumber(L, arg++);
-    emit->ux = luaL_optnumber(L, arg++, 0);
-    emit->uy = luaL_optnumber(L, arg++, 0);
-    emit->rad = luaL_optnumber(L, arg++, 1);
-    emit->urad = luaL_optnumber(L, arg++, 0);
-    emit->ds = luaL_optnumber(L, arg++, 0);
-    emit->uds = luaL_optnumber(L, arg++, 0);
-    emit->theta = luaL_optnumber(L, arg++, 0);
-    emit->utheta = luaL_optnumber(L, arg++, 0);
-    emit->life = VIS_MSEC_TO_FRAMES(luaL_optint(L, arg++, 100));
-    emit->ulife = VIS_MSEC_TO_FRAMES(luaL_optint(L, arg++, 0));
-    emit->r = (float)luaL_optnumber(L, arg++, 1.0);
-    emit->g = (float)luaL_optnumber(L, arg++, 1.0);
-    emit->b = (float)luaL_optnumber(L, arg++, 1.0);
-    emit->ur = (float)luaL_optnumber(L, arg++, 0.0);
-    emit->ug = (float)luaL_optnumber(L, arg++, 0.0);
-    emit->ub = (float)luaL_optnumber(L, arg++, 0.0);
-    emit->force = luaL_optint(L, arg++, VIS_DEFAULT_FORCE);
-    emit->limit = luaL_optint(L, arg++, VIS_DEFAULT_LIMIT);
-    emit->blender = luaL_optint(L, arg++, VIS_BLEND_LINEAR);
-    return emit;
-}
+/* end of Lua API */
 

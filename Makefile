@@ -66,6 +66,9 @@ FP_AVI ?= $(FP_DIR)/bowser.avi
 #	leakcheck-reachable clean distclean finalproduct fp-prep fp-makeframes \
 #	fp-flip fp-encode fp-cleanup test
 
+# Remove when releasing product
+all: CFLAGS += $(CFLAGS_DEBUG)
+
 all: $(DEPFILES) $(VIS)
 
 fast: $(DEPFILES) $(SOURCES)
@@ -86,7 +89,6 @@ profile: $(SOURCES)
 $(OBJDIR):
 	- test -d $(OBJDIR) || mkdir $(OBJDIR) 2>/dev/null
 
-$(DEPDIR)/%.d: $(DEPDIR)
 $(DEPFILES): $(DEPDIR)
 
 $(OBJDIR)/%.o: %.c $(OBJDIR)

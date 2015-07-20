@@ -173,8 +173,8 @@ static void cmd_emit(struct commands* cmds, const char* buffer) {
     double rad, urad;
     double ds, uds, theta, utheta;
     int life, ulife;
-    float r, g, b;        /* particle color expected value */
-    float ur, ug, ub; /* particle color std. dev. */
+    float r, g, b;    /* particle color average value */
+    float ur, ug, ub; /* particle color uncertainty */
     float ar, ag, ab; /* actual particle color */
     int force;
     int limit;
