@@ -52,6 +52,46 @@ T8.SCHEDULE = {
     33105, 33216, -- m8p7
     -- TRACK 8 TONE
     33234, 34217, -- m8p8
+
+    -- Similar notes: p9 ~ p14: high med low HIGH MED LOW pitch
+    34234, 34341, -- m8p9  3
+    34356, 34466, -- m8p10 4
+    34482, 34591, -- m8p11 5
+    34604, 34717, -- m8p12 7
+    34735, 34810, -- m8p13 8
+    34858, 34934, -- m8p14 9
+
+    -- Similar short notes: p15 ~ p26
+    34983, 35061, -- m8p15 10 (pitch guide)
+    35108, 35186, -- m8p16  9
+    35239, 35292, -- m8p17  8
+    35358, 35417, -- m8p18  7
+    35484, 35539, -- m8p19  2
+    35609, 35667, -- m8p20  3
+    35735, 35790, -- m8p21  4
+    35858, 35914, -- m8p22  5
+    35985, 36040, -- m8p23  6
+    36108, 36167, -- m8p24  7
+    36235, 36293, -- m8p25  8
+    36359, 36478, -- m8p26  9
+    
+    -- Longer notes: p27 ~ p29
+    36608, 36729, -- m8p27 high
+    36859, 36978, -- m8p28 higher
+    37109, 37292, -- m8p29 higher+
+
+    -- Long tones: p30 ~ p36
+    37359, 37777, -- m8p30.a higher++
+    37777, 38219, -- m8p30.b higher+++
+    38235, 38593, -- m8p31 same
+    38608, 38969, -- m8p32 same
+    38987, 39220, -- m8p33 same
+    39240, 39598, -- m8p34 same
+    39610, 39972, -- m8p35 higher++++
+    39988, 40723, -- m8p36 higher+++
+
+    -- Similar short notes: p37 ~
+    40738, 40848, -- m8p37
 }
 
 local e = Emit:new()
@@ -85,27 +125,56 @@ end
 -- There's too much visual stimulation, so skip these next three notes.
 -- Basically, I'm unable to descern these three notes apart from the rest of
 -- the visualization, and I can't get anything good out of them. So, skip.
-for i = 1,6 do T8.next() end
+for i = 1,6 do T8.next() end -- skip m8p1.2{5,6,7}
 
 -- The tone
-local tonestart = T8.next()
-local tonestop = T8.next()
-local tonefadestart = T8.next()
-local tonefadestop = T8.next()
+local tonestart = T8.next() -- m8p2
+local tonestop = T8.next() -- m8p2
+local tonefadestart = T8.next() -- m8p2-fade
+local tonefadestop = T8.next() -- m8p2-fade
 local bgc = 0
-fc = math.floor((tonefadestop - tonestart)/Vis.frames2msec(1))
-fi = 0
+local fc = math.floor((tonefadestop - tonestart)/Vis.frames2msec(1))
+local fi = 0
 for j = tonestart,tonefadestop,Vis.frames2msec(1) do
-    if fi < 5 then
+    if fi <= 5 then
         bgc = 0.05 * 2*fi
-    elseif fi < fc-10 then
-        bgc = 0.50
-    else
+        Vis.bgcolor(Vis.flist, j, bgc, 0, 0)
+    elseif fi >= fc-10 then
         bgc = 0.05 * (fc - fi)
+        Vis.bgcolor(Vis.flist, j, bgc, 0, 0)
     end
     fi = fi + 1
-    Vis.bgcolor(Vis.flist, j, bgc, 0, 0)
 end
-Vis.bgcolor(Vis.flist, tonefadestop+Vis.frames2msec(1), 0, 0, 0)
+
+for rep = 1,2 do
+    local pos = {
+        {W(1,5), H(4,5)},
+        {-W(1,5), H(4,5)}
+    }
+    for i = 1,2 do
+        start = T8.next()
+        stop = T8.next()
+        e:center(pos[i][1], pos[i][2])
+        for j = start,stop,Vis.frames2msec(1) do
+            e:emit_at(j)
+        end
+    end
+
+    tonestart = T8.next()
+    tonestop = T8.next()
+    bgc = 0
+    fc = (tonestop - tonestart)/Vis.frames2msec(1)
+    fi = 0
+    for j = tonestart,tonestop,Vis.frames2msec(1) do
+        if fi <= 5 then
+            bgc = bgc + 0.10
+            Vis.bgcolor(Vis.flist, j, bgc, 0, 0)
+        elseif fi > fc-5 then
+            bgc = bgc - 0.10
+            Vis.bgcolor(Vis.flist, j, bgc, 0, 0)
+        end
+        fi = fi + 1
+    end
+end
 
 end
