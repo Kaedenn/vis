@@ -113,7 +113,7 @@ test/test_audio: test/test_audio.c
 test: $(TESTS)
 	test -x "$(VIS)" || $(MAKE) debug
 	for i in $(LUA_TESTS); do $(VIS) -i -l $$i || exit 1; done
-	for i in $(BIN_TESTS); do $$i || exit 1; done
+	for i in $(BIN_TESTS); do $$i --automated || exit 1; done
 
 valgrind: debug
 	$(VALGRIND) $(VIS) $(EXEC_ARGS)

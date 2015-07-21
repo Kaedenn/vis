@@ -25,8 +25,11 @@ static struct global g = {0};
 
 int main(int argc, char* argv[]) {
     const char* sndfile = "output/drum4-simple.wav";
-    if (argc > 1) {
+    if (argc == 2) {
         sndfile = argv[1];
+    } else if (argc == 3 && !strcmp(argv[1], "--automated")) {
+        fprintf(stderr, "%s is not an automated test, exiting\n", argv[0]);
+        return 0;
     }
 
     SDL_Init(SDL_INIT_AUDIO | SDL_INIT_EVENTS);

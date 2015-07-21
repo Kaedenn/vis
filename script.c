@@ -160,9 +160,8 @@ flist* script_run(script_t s, const char* filename) {
         s->errors += 1;
         EPRINTF("Error in script: %s: %s", filename, util_get_error(s->L));
     }
-    /* clean the stack of everything else on it */
+    /* clean the stack of everything else on it: debug.traceback */
     if (lua_gettop(s->L) > 0) {
-        DBPRINTF("Popping %d stray items", lua_gettop(s->L));
         lua_pop(s->L, lua_gettop(s->L));
     }
     return s->fl;
@@ -386,7 +385,7 @@ int initialize_vis_lib(lua_State* L) {
     /* helpful non-numeric constants */
     lua_pushstring(L, "LUA_STARTUP_FILE");
     lua_pushstring(L, LUA_STARTUP_FILE);
-    lua_settable(L, -1);
+    lua_settable(L, -3);
 
     return 1;
 }

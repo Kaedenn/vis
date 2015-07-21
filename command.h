@@ -14,8 +14,8 @@ typedef enum {
 
 struct commands;
 
-struct commands* command_setup(drawer_t drawer, plist_t plist, script_t script,
-                               BOOL interactive);
+struct commands* command_setup(drawer_t drawer, plist_t plist,
+                               script_t script, BOOL interactive);
 void command_teardown(struct commands* commands);
 
 /* returns an exit status if the commands module encountered an error */
