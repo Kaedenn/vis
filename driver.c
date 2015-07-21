@@ -69,17 +69,17 @@ int main(int argc, char* argv[]) {
         clargs_free(g.args);
         exit(status);
     }
-    gc_add((gc_func_t)clargs_free, g.args);
+    gc_add((gc_func)clargs_free, g.args);
 
     g.drawer = drawer_new();
     if (!g.drawer) {
         exit(1);
     }
-    gc_add((gc_func_t)drawer_free, g.drawer);
+    gc_add((gc_func)drawer_free, g.drawer);
     drawer_config(g.drawer, g.args);
     
     g.particles = plist_new(VIS_PLIST_INITIAL_SIZE);
-    gc_add((gc_func_t)plist_free, g.particles);
+    gc_add((gc_func)plist_free, g.particles);
     
     script_cfg_mask mask = SCRIPT_ALLOW_ALL;
     if (g.args->stay_after_script) {
@@ -87,14 +87,14 @@ int main(int argc, char* argv[]) {
     }
     g.script = script_new(mask);
     script_set_drawer(g.script, g.drawer);
-    gc_add((gc_func_t)script_free, g.script);
+    gc_add((gc_func)script_free, g.script);
 
     g.cmds = command_setup(g.drawer, g.particles, g.script,
                            g.args->interactive);
-    gc_add((gc_func_t)command_teardown, g.cmds);
+    gc_add((gc_func)command_teardown, g.cmds);
     
     emitter_setup(g.cmds, g.particles, g.drawer);
-    gc_add((gc_func_t)emitter_free, NULL);
+    gc_add((gc_func)emitter_free, NULL);
     
     if (!audio_init()) {
         exit(1);
@@ -102,7 +102,7 @@ int main(int argc, char* argv[]) {
     if (g.args->quiet_audio) {
         audio_mute();
     }
-    gc_add((gc_func_t)audio_free, NULL);
+    gc_add((gc_func)audio_free, NULL);
     
     emit_desc* emit = emit_new();
     emit->n = 100;

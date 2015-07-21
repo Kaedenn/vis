@@ -10,7 +10,7 @@
 static void gc(void);
 
 struct gcitem {
-    gc_func_t func;
+    gc_func func;
     void* cls;
 };
 
@@ -24,7 +24,7 @@ void gc_init(void) {
     atexit(gc);
 }
 
-void gc_add(gc_func_t func, void* cls) {
+void gc_add(gc_func func, void* cls) {
     if (gcidx == ngcitems) {
         ngcitems *= 2;
         gcitems = realloc(gcitems, ngcitems);

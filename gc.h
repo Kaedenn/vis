@@ -13,10 +13,10 @@
  *  gc_add(free, x);
  */
 
-typedef void (*gc_func_t)(void* cls);
+typedef void (*gc_func)(void* cls);
 
 void gc_init(void);
 
-void gc_add(gc_func_t func, void* cls);
+void gc_add(gc_func func, void* cls);
 
 #endif

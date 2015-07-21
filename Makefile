@@ -25,8 +25,8 @@ VIS = $(DIR)/$(EXECBIN)
 
 LUA_TESTS := $(wildcard $(DIR)/test/test_*.lua)
 C_TESTS := $(wildcard $(DIR)/test/test_*.c)
-TESTS := $(LUA_TESTS) $(patsubst %.c,%,$(C_TESTS))
-$(info $(C_TESTS) $(TESTS))
+BIN_TESTS := $(patsubst %.c,%,$(C_TESTS))
+TESTS := $(LUA_TESTS) $(BIN_TESTS)
 
 CFLAGS = -Wno-unused-variable -Wall -Wextra -Wfloat-equal -Wwrite-strings \
 		 -Wshadow -Wpointer-arith -Wcast-qual -Wredundant-decls -Wtrigraphs \
@@ -84,7 +84,7 @@ profile: $(SOURCES)
 	$(MAKE) "CFLAGS=$(CFLAGS) $(CFLAGS_FAST) $(CFLAGS_PROF)" all
 	$(VIS) -i -l $(DIR)/lua/demo_5_random.lua
 	gprof $(VIS)
-	- $(RM) $(DIR)/gmon.out
+	- $(RM) $(DIR)/gmon.out 2>/dev/null
 
 $(OBJDIR):
 	- test -d $(OBJDIR) || mkdir $(OBJDIR) 2>/dev/null
@@ -113,7 +113,7 @@ test/test_audio: test/test_audio.c
 test: $(TESTS)
 	test -x "$(VIS)" || $(MAKE) debug
 	for i in $(LUA_TESTS); do $(VIS) -i -l $$i || exit 1; done
-	for i in $(patsubst %.c,%,$(C_TESTS)); do $$i || exit 1; done
+	for i in $(BIN_TESTS); do $$i || exit 1; done
 
 valgrind: debug
 	$(VALGRIND) $(VIS) $(EXEC_ARGS)
@@ -125,10 +125,10 @@ leakcheck-reachable: debug
 	$(VALGRIND) $(VG_REACHABLE) $(VIS) $(EXEC_ARGS)
 
 clean:
-	- $(RM) -r $(DEPDIR)
-	- $(RM) -r $(OBJDIR)
-	- $(RM) $(VIS)
-	- $(RM) $(TESTS)
+	- $(RM) -r $(DEPDIR) 2>/dev/null
+	- $(RM) -r $(OBJDIR) 2>/dev/null
+	- $(RM) $(VIS) 2>/dev/null
+	- $(RM) $(BIN_TESTS) 2>/dev/null
 
 distclean: clean fp-prep
 
@@ -145,7 +145,7 @@ fp-encode:
 	$(MAKE) encode
 
 fp-cleanup:
-	$(RM) $(FP_BASE)_*.png
+	$(RM) $(FP_BASE)_*.png 2>/dev/null
 
 finalproduct: all fp-prep fp-makeframes fp-encode fp-cleanup
 
