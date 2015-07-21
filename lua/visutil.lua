@@ -1,4 +1,5 @@
 Vis = require('Vis')
+bit32 = require('bit32')
 
 VisUtil = {}
 
@@ -13,6 +14,96 @@ VisUtil.COLOR.BLUE1 = {0, 0.2, 0.8, 0, 0.1, 0.2}
 VisUtil.COLOR.BLUE2 = {0, 0.2, 0.8, 0, 0.21, 0.21}
 VisUtil.COLOR.GREEN1 = {0, 0.8, 0.2, 0, 0.2, 0.1}
 VisUtil.COLOR.GREEN2 = {0, 0.8, 0.2, 0, 0.21, 0.11}
+
+VisUtil.Debug = {}
+VisUtil.Debug.ENABLED = (function()
+    if os.getenv('VIS_DEBUG') ~= nil then return true end
+    if os.getenv('LUA_DEBUG') ~= nil then return true end
+    if os.getenv('DEBUG') ~= nil then return true end
+    if Vis.DEBUG > Vis.DEBUG_NONE then return true end
+    return false
+end)()
+setmetatable(VisUtil.Debug, {
+    __tostring = function(self) return VisUtil.strobject(self) end,
+    __call = function(self, level, str, ...)
+        if VisUtil.Debug.ENABLED ~= true then return end
+
+        varargs = {...}
+        if type(level) == "table" then
+            table.insert(varargs, 1, str)
+            str, level = VisUtil.strobject(level), 0
+        elseif type(level) == "string" then
+            table.insert(varargs, 1, str)
+            str, level = level, 0
+        elseif type(level) == "number" and type(str) ~= "string" then
+            str = VisUtil.strobject(str)
+        end
+
+        ar = debug.getinfo(2)
+        wrap = ('Debug: %s:%s:%d: %%s'):format(
+            ar.name or '<top>', ar.short_src,
+            ar.linedefined ~= 0 and ar.linedefined or ar.currentline)
+        if bit32.band(level, VisUtil.Debug.L_INSPECT) > 0 then
+            -- L_INSPECT implies L_ESCAPE
+            wrap = ("Debug(%s, %s, %s)"):format(self, wrap, VisUtil.strobject(varargs))
+        elseif bit32.band(level, VisUtil.Debug.L_ESCAPE) > 0 then
+            wrap = ("Debug(%s, %s)"):format(VisUtil.strobject(self), wrap)
+        end
+        if bit32.band(level, VisUtil.Debug.L_TRACEBACK) > 0 then
+            wrap = ("%s: %s"):format(wrap, debug.traceback())
+        end
+
+        if #varargs > 0 then
+            str = str:format(table.unpack(varargs))
+        end
+        print(wrap:format(str))
+    end
+})
+
+VisUtil.Debug.TRACEBACK = false
+
+VisUtil.Debug.L_ESCAPE = 1
+VisUtil.Debug.L_TRACEBACK = 2
+VisUtil.Debug.L_INSPECT = 4
+
+VisUtil.Debug.Print = function(msg, args)
+    if args ~= nil then
+        msg = msg:format(args)
+    end
+    if VisUtil.Debug.ENABLED == true then
+        print(("Debug: %s"):format(msg))
+    end
+    if VisUtil.Debug.TRACEBACK == true then
+        print(debug.traceback())
+    end
+end
+
+VisUtil.Debug.QUOTE_CHARS = {}
+VisUtil.Debug.QUOTE_CHARS["\a"] = "\\a"
+VisUtil.Debug.QUOTE_CHARS["\b"] = "\\b"
+VisUtil.Debug.QUOTE_CHARS["\f"] = "\\f"
+VisUtil.Debug.QUOTE_CHARS["\n"] = "\\n"
+VisUtil.Debug.QUOTE_CHARS["\r"] = "\\r"
+VisUtil.Debug.QUOTE_CHARS["\t"] = "\\t"
+VisUtil.Debug.QUOTE_CHARS["\v"] = "\\v"
+VisUtil.Debug.QUOTE_CHARS["\\"] = "\\\\"
+VisUtil.Debug.QUOTE_CHARS['"'] = '\\"'
+
+VisUtil.Debug.QuoteString = function(str)
+    result = ''
+    for i = 1,#str do
+        b = str:byte(i)
+        c = string.char(b)
+        if VisUtil.Debug.QUOTE_CHARS[c] ~= nil then
+            result = result .. VisUtil.Debug.QUOTE_CHARS[c]
+        elseif 0x20 <= b and b < 0x7F then
+            result = result .. c
+        else
+            result = result .. ("\\x%02x"):format(b)
+        end
+    end
+    return '"' .. result .. '"'
+end
 
 function VisUtil.wrap_coord(x, y)
     while x < 0 do x = Vis.WIDTH + x end
@@ -156,7 +247,7 @@ function VisUtil.strobject(o, i, seen, whereami)
             --s = s.."\n"..table.concat(whereami, '.')
             s = s.."\n"..indent(i+2)
             if type(k) == "string" then
-                itemstr = ("%q"):format(k)
+                itemstr = VisUtil.Debug.QuoteString(k)
                 whereami[#whereami+1] = tostring(k)
             elseif type(k) == "number" then
                 itemstr = ("[%d]"):format(k)

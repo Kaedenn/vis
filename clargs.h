@@ -3,6 +3,7 @@
 #define VIS_CLARGS_HEADER_INCLUDED_ 1
 
 #include "defines.h"
+#include "klist.h"
 
 typedef struct clargs {
     const char* execname;
@@ -11,6 +12,7 @@ typedef struct clargs {
     const char* dumpfile;
     const char* commandfile;
     int frameskip;
+    klist scriptargs;
     BOOL dumptrace;
     BOOL interactive;
     BOOL quiet_audio;

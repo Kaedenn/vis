@@ -1,4 +1,5 @@
 
+-- Imagine this as a Python docstring:
 VIS_BOWSER_HELP_STRING = [[
 The Final Product: Bowser Visualization
 
@@ -93,6 +94,7 @@ VisUtil = require("visutil")
 math = require("math")
 os = require("os")
 Emits = require("lua/bowser/emit_fns")
+Debug = VisUtil.Debug
 
 -- TRACK_n constants
 for i = 1,8 do
@@ -121,15 +123,8 @@ Env['VIS_BOWSER_EXIT_MS'] = '<offset>'
 Env['VIS_DEBUG'] = '<bool>'
 Env['VIS_HELP'] = '<bool>'
 
-for t = 1,TRACKS do
+for t = TRACK_1,TRACK_8 do
     Env['VIS_BOWSER_DUMP_TRACK'..t] = '<bool>'
-end
-
-if Vis.DEBUG > Vis.DEBUG_NONE then
-    if Env['VIS_DEBUG'] == nil and Vis.DEBUG >= Vis.DEBUG_TRACE then
-        Env['VIS_DEBUG'] = '1'
-    end
-    print(VisUtil.strobject(Env))
 end
 
 for k, _ in pairs(Env) do
@@ -147,6 +142,9 @@ end
 
 function set(track, offset)
     TrackAdvances[track] = TrackAdvances[track] + 1
+    if offset < TrackTimes[track] then
+        error("Should not be going back in time!")
+    end
     TrackTimes[track] = offset
     TrackEndTime = math.max(TrackTimes[track], TrackEndTime)
     return now(track)
@@ -158,11 +156,11 @@ if Env['VIS_BOWSER_NO_AUDIO'] == nil then
     local result = nil
     if isolate ~= nil then
         result = Vis.audio(Vis.flist, 0, "media/bowser-track-"..isolate..".mp3")
-    end
-    if result == nil then
-        if isolate ~= nil then
+        if result == nil then
             print("Failed to load isolated track, loading full track")
         end
+    end
+    if result == nil then
         Vis.audio(Vis.flist, 0, "media/bowser-full.mp3")
     end
 end
@@ -170,16 +168,16 @@ end
 -- Position helpers for placing emits at precise locations
 W = function(num, denom) return Vis.WIDTH * num / denom end
 W_1_2 = W(1,2) -- 400
-W_1_3 = W(1,3) -- 266.6...
-W_2_3 = W(2,3) -- 533.3...
+W_1_3 = W(1,3) -- 266.67
+W_2_3 = W(2,3) -- 533.33
 W_1_4 = W(1,4) -- 200
 W_3_4 = W(3,4) -- 600
-W_1_5 = W(1,5)
-W_2_5 = W(2,5)
-W_3_5 = W(3,5)
-W_4_5 = W(4,5)
-W_1_6 = W(1,6) -- 133.3...
-W_5_6 = W(5,6) -- 666.6...
+W_1_5 = W(1,5) -- 160
+W_2_5 = W(2,5) -- 320
+W_3_5 = W(3,5) -- 480
+W_4_5 = W(4,5) -- 640
+W_1_6 = W(1,6) -- 133.33
+W_5_6 = W(5,6) -- 666.67
 W_1_8 = W(1,8) -- 100
 
 H = function(num, denom) return Vis.HEIGHT * num / denom end
@@ -188,26 +186,26 @@ H_1_3 = H(1,3) -- 200
 H_2_3 = H(2,3) -- 400
 H_1_4 = H(1,4) -- 150
 H_3_4 = H(3,4) -- 450
-H_1_5 = H(1,5)
-H_2_5 = H(2,5)
-H_3_5 = H(3,5)
-H_4_5 = H(4,5)
+H_1_5 = H(1,5) -- 120
+H_2_5 = H(2,5) -- 240
+H_3_5 = H(3,5) -- 360
+H_4_5 = H(4,5) -- 480
 H_1_6 = H(1,6) -- 100
 H_5_6 = H(5,6) -- 500
-H_1_8 = H(1,8) -- 75
+H_1_8 = H(1,8) --  75
 
 -- Helper functions
 
 -- Transparently wrap a function and provide debugging messages
 function debug_wrap(fn, fnname)
     function wrapper(...)
-        if fnname == nil then ffname = tostring(fn) end
-        local s = "%s(%s) -> %s"
-        local value = fn(...)
-        print(s:format(fnname, VisUtil.strobject(...), value))
-        if tonumber(Env['VIS_DEBUG']) > 1 then
-            print(debug.traceback())
+        if fnname == nil then
+            ar = debug.getinfo(fn)
+            fnname = ("%s:%s:%s"):format(ar.name, ar.namewhat, ar.source)
         end
+        local value = fn(...)
+        Debug(Vis.DEBUG > Vis.DEBUG_DEBUG and Debug.L_TRACEBACK or 0,
+              "%s(%s) -> %s", fnname, VisUtil.strobject(...), value)
         return value
     end
     return wrapper
@@ -245,12 +243,13 @@ for i = TRACK_1,TRACK_8 do
     local Tn = {} -- Track namespace
     _G['T'..i] = Tn
     Tn.ScheduleIndex = 0
+    -- This kind of function binding makes the functions lose their names. Try
+    -- to find a way to preserve function names so debugging works better.
     Tn.NextSchedule = (function(track, track_num)
         return function()
             track.ScheduleIndex = track.ScheduleIndex + 1
             if track.ScheduleIndex > #track.SCHEDULE then
-                print("ScheduleIndex " .. track.ScheduleIndex ..
-                      " is greater than " ..  #track.SCHEDULE)
+                print(("SI %d > %d"):format(track.ScheduleIndex, #track.SCHEDULE))
                 print(debug.traceback())
                 return track.SCHEDULE[#track.SCHEDULE]
             end
@@ -277,16 +276,21 @@ end
 -- Actually load and calculate track schedules, all of them
 for i = TRACK_1,TRACK_8 do
     dotrack(i)
-    if Env['VIS_BOWSER_DUMP_TRACK'..i] ~= nil then
-        print('T'..i..'.SCHEDULE = {' .. Tn.ScheduleIndex)
-        for i = 1,#Tn.SCHEDULE,2 do
-            prefix = "\t";
-            if Tn.ScheduleIndex == i or Tn.ScheduleIndex == i+1 then
-                prefix = " >> \t"
+    tn = _G['T'..i]
+    if Env['VIS_BOWSER_DUMP_TRACK'..i] ~= nil and tn.SCHEDULE ~= nil then
+        local si = tn.ScheduleIndex
+        print(("T%d.ScheduleIndex = %d"):format(i, si))
+        print(("T%d.SCHEDULE = {"):format(i))
+        print(("    -- msec, msec, -- idx, dt"))
+        for i = 1,#tn.SCHEDULE,2 do
+            str = "    %s, %s, -- [%s] %s msec"
+            if si == i or si == i+1 then
+                str = "    %s, %s, -- [%s] %s msec << ScheduleIndex: " .. si
             end
-            print(prefix..Tn.SCHEDULE[i]..", "..Tn.SCHEDULE[i+1]..",")
+            s1, s2 = tn.SCHEDULE[i], tn.SCHEDULE[i+1]
+            print(str:format(s1, s2, i, (s2 or s1) - s1))
         end
-        print("} -- #T"..i..".SCHEDULE = "..#Tn.SCHEDULE)
+        print("}")
     end
 end
 
@@ -296,5 +300,7 @@ if Env['VIS_HELP'] ~= nil then
 end
 
 -- Figure out when we exit
-Vis.exit(Vis.flist, tonumber(Env['VIS_BOWSER_EXIT_MS']) or TrackEndTime)
+local exit_time = tonumber(Env['VIS_BOWSER_EXIT_MS']) or TrackEndTime
+Debug("Exiting at %d ms", exit_time)
+Vis.exit(Vis.flist, exit_time)
 

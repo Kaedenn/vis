@@ -5,7 +5,7 @@ Emit = require('emit')
 string = require('string')
 debug = require('debug')
 
-function debug(msg, ...)
+function debugmsg(msg, ...)
     if ... and #... > 0 then
         msg = msg:format(...)
     end
@@ -15,7 +15,7 @@ end
 function doassert(cond, msg)
     if not cond then print(package.loaded.debug.traceback()) end
     assert(cond, msg)
-    debug(msg .. ": PASS")
+    debugmsg(msg .. ": PASS")
 end
 
 function assert_field_eq(e1, e2, field, s)

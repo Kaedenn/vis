@@ -2,9 +2,6 @@
 do
 
 debug = require('debug')
-local fn = function() end
-local filename = debug.getinfo(fn).short_src
-
-print("Starting test "..filename)
+print("harness: Starting test "..debug.getinfo(3).short_src)
 
 end

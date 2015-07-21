@@ -86,6 +86,12 @@ int main(int argc, char* argv[]) {
         mask |= SCRIPT_NO_EXIT;
     }
     g.script = script_new(mask);
+    if (klist_length(g.args->scriptargs) > 0) {
+        script_set_args(g.script, g.args->scriptargs);
+    } else {
+        klist_free(g.args->scriptargs);
+        g.args->scriptargs = NULL;
+    }
     script_set_drawer(g.script, g.drawer);
     gc_add((gc_func)script_free, g.script);
 

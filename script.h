@@ -3,6 +3,7 @@
 #define VIS_SCRIPT_HEADER_INCLUDED_ 1
 
 #include "drawer.h"
+#include "klist.h"
 #include <stdint.h>
 
 /* FIXME: circular dependency between flist.h and script.h */
@@ -50,6 +51,7 @@ void script_clear_status(script_t s);
 void script_set_debug(script_t s, enum script_debug_id what, uint64_t n);
 void script_get_debug(script_t s, /*out*/ script_debug* dbg);
 
+void script_set_args(script_t script, klist args);
 struct flist* script_run(script_t script, const char* filename);
 void script_run_string(script_t script, const char* torun);
 void script_run_cb(script_t state, script_cb* func, void* args);

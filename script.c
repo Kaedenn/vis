@@ -20,6 +20,8 @@
 #include <lualib.h>
 
 static int initialize_vis_lib(lua_State* L);
+static void prepare_stack(script_t s, klist args);
+static void cleanup_stack(script_t s);
 static script_t util_checkscript(lua_State* L, int pos);
 static const char* util_get_error(lua_State* L);
 static emit_desc* lua_args_to_emit_desc(lua_State* L, int arg, fnum* when);
@@ -51,6 +53,8 @@ static int viscmd_get_debug_fn(lua_State* L);
 struct script {
     script_debug* dbg;
     lua_State* L;
+    int debugidx;
+    klist args;
     flist* fl;
     drawer_t drawer;
     int errors;
@@ -73,8 +77,7 @@ script_t script_new(script_cfg_mask cfg) {
         "package.path = '; ;./?.lua;./lua/?.lua;./test/?.lua'"
         "Vis = require(\"Vis\")\n"
         "VisUtil = require(\"visutil\")\n"
-        "Emit = require(\"emit\")\n"
-        "Letters = require(\"letters\")\n");
+        "Emit = require(\"emit\")\n");
     /* create tables for handling user input */
     script_run_string(s,
         "Vis._on_mousedowns = {}\n"
@@ -143,37 +146,43 @@ script_t script_new(script_cfg_mask cfg) {
 void script_free(script_t s) {
     if (!s) return;
     lua_close(s->L);
+    if (s->args) klist_free(s->args);
     DBFREE(s->dbg);
     DBFREE(s);
+}
+
+void script_set_args(script_t s, klist args) {
+    s->args = args;
 }
 
 flist* script_run(script_t s, const char* filename) {
     /* s->fl already bound to script in script_new */
     /* DBPRINTF("Running %s to build %p", filename, s->fl); */
-    lua_getglobal(s->L, "debug");
-    lua_getfield(s->L, -1, "traceback");
-    int base = lua_gettop(s->L);
+    prepare_stack(s, s->args);
     if (luaL_loadfile(s->L, filename) != LUA_OK) {
         s->errors += 1;
         EPRINTF("Error in script %s: %s", filename, util_get_error(s->L));
-    } else if (lua_pcall(s->L, 0, LUA_MULTRET, base) != LUA_OK) {
+    } else if (lua_pcall(s->L, 0, LUA_MULTRET, s->debugidx) != LUA_OK) {
         s->errors += 1;
+        DBPRINTF("%d items left on the stack", lua_gettop(s->L));
         EPRINTF("Error in script: %s: %s", filename, util_get_error(s->L));
     }
-    /* clean the stack of everything else on it: debug.traceback */
-    if (lua_gettop(s->L) > 0) {
-        lua_pop(s->L, lua_gettop(s->L));
-    }
+    cleanup_stack(s);
     return s->fl;
 }
 
 void script_run_string(script_t s, const char* torun) {
-    if (luaL_dostring(s->L, torun) != LUA_OK) {
+    prepare_stack(s, s->args);
+    char* esc = escape_string(torun);
+    if (luaL_loadstring(s->L, torun) != LUA_OK) {
         s->errors += 1;
-        char* esc = escape_string(torun);
         EPRINTF("Error in script \"%s\": %s", esc, util_get_error(s->L));
-        DBFREE(esc);
+    } else if (lua_pcall(s->L, 0, LUA_MULTRET, s->debugidx) != LUA_OK) {
+        s->errors += 1;
+        EPRINTF("Error in script \"%s\": %s", esc, util_get_error(s->L));
     }
+    DBFREE(esc);
+    cleanup_stack(s);
 }
 
 void script_run_cb(script_t s, script_cb* cb, UNUSED_PARAM(void* args)) {
@@ -390,6 +399,31 @@ int initialize_vis_lib(lua_State* L) {
     return 1;
 }
 
+void prepare_stack(script_t s, klist args) {
+    lua_getglobal(s->L, "debug");
+    lua_getfield(s->L, -1, "traceback");
+    s->debugidx = lua_gettop(s->L);
+    if (args != NULL) {
+        lua_pushglobaltable(s->L);
+        lua_pushstring(s->L, "Arguments");
+        lua_createtable(s->L, (int)klist_length(args), 0);
+        for (size_t i = 0; i < klist_length(args); ++i) {
+            lua_pushinteger(s->L, (int)i+1);
+            lua_pushstring(s->L, klist_getn(args, i));
+            lua_settable(s->L, -3);
+        }
+        lua_settable(s->L, -3);
+        lua_pop(s->L, 1); /* pushglobaltable(s->L) */
+    }
+    VIS_ASSERT(lua_gettop(s->L) == 2);
+}
+
+void cleanup_stack(script_t s) {
+    int top = lua_gettop(s->L);
+    DBPRINTF("Cleaning up %d item%s", top, top == 1 ? "" : "s");
+    lua_pop(s->L, top);
+}
+
 void push_constant_num(lua_State* L, const char* k, double v, int idx) {
     lua_pushstring(L, k);
     lua_pushnumber(L, v);
@@ -403,14 +437,11 @@ void push_constant_int(lua_State* L, const char* k, int v, int idx) {
 }
 
 script_t util_checkscript(lua_State* L, int arg) {
-    /* calling a disabled function is not an error */
-    if (lua_isnil(L, arg)) {
-        luaL_error(L, "expected Vis.script, received nil, "
-                      "function may be disabled");
-        return NULL;
-    } else {
+    if (!lua_isnil(L, arg)) {
         return *(script_t*)luaL_checkudata(L, arg++, "script_t*");
     }
+    luaL_error(L, "Vis.script is nil; function may be disabled");
+    return NULL;
 }
 
 void util_checkdrawer(lua_State* L, script_t s) {

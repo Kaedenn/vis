@@ -100,6 +100,7 @@ e:radius(2)
 e:ds(3, 0.5)
 e:theta(math.pi, math.pi)
 e:life(SECOND/4)
+e:color({0.9, 0.9, 0.9, 0.09, 0.09, 0.09})
 
 e:center(W_1_3, H_1_2, 0, 0)
 for i = 1,16 do

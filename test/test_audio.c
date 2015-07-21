@@ -25,11 +25,12 @@ static struct global g = {0};
 
 int main(int argc, char* argv[]) {
     const char* sndfile = "output/drum4-simple.wav";
+    if (argc > 1 && !strcmp(argv[1], "--automated")) {
+        fprintf(stderr, "Automated testing, skipping %s\n", argv[0]);
+        return 0;
+    }
     if (argc == 2) {
         sndfile = argv[1];
-    } else if (argc == 3 && !strcmp(argv[1], "--automated")) {
-        fprintf(stderr, "%s is not an automated test, exiting\n", argv[0]);
-        return 0;
     }
 
     SDL_Init(SDL_INIT_AUDIO | SDL_INIT_EVENTS);
@@ -66,7 +67,7 @@ int main(int argc, char* argv[]) {
                       AUDIO_S16, 2, 44100/2);
     cvt.buf = malloc(dlen * (Uint32)cvt.len_mult);
     memcpy(cvt.buf, data, dlen);
-    cvt.len = dlen;
+    cvt.len = (int)dlen;
     SDL_ConvertAudio(&cvt);
 #if 1
     SDL_FreeWAV(data);
@@ -76,7 +77,7 @@ int main(int argc, char* argv[]) {
 
     SDL_LockAudio();
     g.sample.data = cvt.buf;
-    g.sample.dlen = cvt.len_cvt;
+    g.sample.dlen = (Uint32)cvt.len_cvt;
     g.sample.dpos = 0;
     SDL_UnlockAudio();
 
@@ -112,8 +113,9 @@ void mainloop(void) {
 }
 
 void mix(void* unused, Uint8* stream, int length) {
+    (void)unused;
     SDL_memset(stream, 0, (size_t)length);
-    Uint32 amount = min(g.sample.dlen - g.sample.dpos, length);
+    Uint32 amount = min(g.sample.dlen - g.sample.dpos, (Uint32)length);
     SDL_MixAudio(stream, &g.sample.data[g.sample.dpos], amount,
                  SDL_MIX_MAXVOLUME);
     g.sample.dpos += amount;

@@ -11,6 +11,7 @@ const char* help_string[] = {
     "  -d <FILE> dump frames to <FILE>_000.png",
     "  -l <FILE> run lua script <FILE>",
     "  -L <LUA>  run lua string <LUA>",
+    "  -A <ARG>  pass <ARG> to Lua; can be specified more than once",
     "  -f <FILE> run commands from <FILE>",
     "  -s <NUM>  skip <NUM> frames when dumping with -d",
     "  -t        output the results of tracing to stdout, implies -i",
@@ -21,6 +22,8 @@ const char* help_string[] = {
     " Long options:",
     "  --linear-fps use the old linear (self-correcting) fps limiter",
     "  --help       this message",
+    " Other stuff:",
+    "  --        everything following is sent to Lua (like -A)"
     "", NULL
 };
 
@@ -38,15 +41,23 @@ clargs* argparse(int argc, char** argv) {
     args->scriptstring = NULL;
     args->dumpfile = NULL;
     args->commandfile = NULL;
+    args->scriptargs = klist_new();
     args->frameskip = 0;
     args->dumptrace = FALSE;
     args->interactive = TRUE;
     args->absolute_fps = TRUE;
     args->quiet_audio = FALSE;
     args->stay_after_script = FALSE;
-    for (int argi = 1; argi < argc && argv[argi] && argv[argi][0]; ++argi) {
-        /* first non-argument argv element terminates processing */
-        if (argv[argi][0] != '-' || !strcmp(argv[argi], "--")) {
+    klist unrecognized = klist_new();
+    int argi;
+    for (argi = 1; argi < argc && argv[argi] && argv[argi][0]; ++argi) {
+        if (argv[argi][0] != '-') {
+            klist_append(unrecognized, argv[argi]);
+            continue;
+        } else if (!strcmp(argv[argi], "--")) {
+            for (++argi; argi < argc; ++argi) {
+                klist_append(args->scriptargs, argv[argi]);
+            }
             break;
         }
         switch (argv[argi][1]) {
@@ -69,6 +80,14 @@ clargs* argparse(int argc, char** argv) {
             case 'L':
                 if (argi+1 < argc) {
                     args->scriptstring = argv[++argi];
+                } else {
+                    EPRINTF("Argument -%s requires value", argv[argi][1]);
+                    mark_error(args, 1);
+                }
+                break;
+            case 'A':
+                if (argi+1 < argc) {
+                    klist_append(args->scriptargs, argv[++argi]);
                 } else {
                     EPRINTF("Argument -%s requires value", argv[argi][1]);
                     mark_error(args, 1);
@@ -128,6 +147,10 @@ clargs* argparse(int argc, char** argv) {
         }
     }
 
+    for (size_t i = 0; i < klist_length(unrecognized); ++i) {
+        EPRINTF("Unrecognized argument %s", klist_getn(unrecognized, i));
+    }
+
     if (args->frameskip < 0) {
         EPRINTF("Invalid negative frameskip %s", args->frameskip);
         mark_error(args, 1);
@@ -143,6 +166,8 @@ clargs* argparse(int argc, char** argv) {
                 args->commandfile);
         mark_error(args, 1);
     }
+
+    klist_free(unrecognized);
 
     return args;
 }
