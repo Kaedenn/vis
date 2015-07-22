@@ -110,6 +110,9 @@ for i = 1,16,2 do
     T4.set(T4.NextSchedule())
 end
 
+--[[ FIXME
+-- The circle design below really does look awful
+--]]
 -- M1P0.2
 e:ds(4, 2)
 for i = 1,32,2 do

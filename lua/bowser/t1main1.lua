@@ -8,6 +8,9 @@ e:life(SECOND/3, SECOND/6)
 e:color(0, .4, .8, 0, .2, 0)
 e:theta(math.pi, math.pi)
 
+--[[ FIXME
+-- The 2x2 design below really does look awful
+--]]
 local pos_tab_s1 = {
     {W_1_2 - W_1_2/10, H_1_2 - H_1_2/10},
     {W_1_2 + W_1_2/10, H_1_2 + H_1_2/10},

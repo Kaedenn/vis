@@ -1,0 +1,13 @@
+
+--[[
+--
+-- Track 6 has nothing for the entire score. This is due to the SNES
+-- supporting eight tracks of audio but the Bowser score only needing
+-- seven. I don't understand why track six, of all tracks, is the one
+-- that's empty (versus, like, track eight or something), but that's
+-- the way it is.
+--
+-- I have this file here so that the driver (bowser.lua) can treat all
+-- tracks the same without having to special-case the sixth track.
+--
+--]]

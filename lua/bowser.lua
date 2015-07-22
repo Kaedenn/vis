@@ -304,3 +304,9 @@ local exit_time = tonumber(Env['VIS_BOWSER_EXIT_MS']) or TrackEndTime
 Debug("Exiting at %d ms", exit_time)
 Vis.exit(Vis.flist, exit_time)
 
+--[[ FIXME!!
+--
+--  Track four has the emit-in-a-circle design which looks awful
+--  Track one has that 2x2 box design which looks awful
+--
+--]]
