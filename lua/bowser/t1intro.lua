@@ -17,6 +17,20 @@ function emit_circle(when, x, y, ds)
     end
 end
 
+local line = Emit:new()
+line:radius(2)
+line:ds(1)
+line:life(SECOND/3)
+line:color(0, 100.0/255.0, 200.0/255.0, 0, 50.0/255.0, 0)
+line:count(200)
+function emit_line(start, x)
+    line:center(x, 0, 0, Vis.HEIGHT)
+    line:theta(math.pi/2, 0.1)
+    line:emit_at(start)
+    line:theta(math.pi*3/2, 0.1)
+    line:emit_at(start)
+end
+
 -- INTRO: PART ONE
 emit_circle(T1.next(), W_1_4, H_5_6)
 emit_circle(T1.next(), -W_1_4, H_5_6)
@@ -54,7 +68,7 @@ for i = 1,3 do
     j = T1.next()
     k = T1.next()
     while j < k do
-        Emits.emit_line_v(j, W_1_2)
+        emit_line(j, W_1_2)
         j = j + Vis.frames2msec(1)
     end
 end

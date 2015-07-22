@@ -93,7 +93,6 @@ Vis = require("Vis")
 VisUtil = require("visutil")
 math = require("math")
 os = require("os")
-Emits = require("lua/bowser/emit_fns")
 Debug = VisUtil.Debug
 
 -- TRACK_n constants

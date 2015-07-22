@@ -24,7 +24,7 @@ function T3.make_emits_for_level(level)
                      {.9, 0, 0, .1, 0, 0}}
     e:count(200)
     e:radius(2)
-    e:ds(ds_tab[level] or ds_tab[#ds_tab], et.ds / 2 - et.ds / 5)
+    e:ds(ds_tab[level] or ds_tab[#ds_tab], e:get('ds') / 2 - e:get('ds') / 5)
     e:life(life_tab[level] or life_tab[#life_tab])
     e:color(rgb_tab[level] or rgb_tab[#rgb_tab])
 
