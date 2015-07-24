@@ -403,18 +403,20 @@ void prepare_stack(script_t s, klist args) {
     lua_getglobal(s->L, "debug");
     lua_getfield(s->L, -1, "traceback");
     s->debugidx = lua_gettop(s->L);
+    lua_pushglobaltable(s->L);
+    lua_pushstring(s->L, "Arguments");
     if (args != NULL) {
-        lua_pushglobaltable(s->L);
-        lua_pushstring(s->L, "Arguments");
         lua_createtable(s->L, (int)klist_length(args), 0);
         for (size_t i = 0; i < klist_length(args); ++i) {
             lua_pushinteger(s->L, (int)i+1);
             lua_pushstring(s->L, klist_getn(args, i));
             lua_settable(s->L, -3);
         }
-        lua_settable(s->L, -3);
-        lua_pop(s->L, 1); /* pushglobaltable(s->L) */
+    } else {
+        lua_createtable(s->L, 0, 0);
     }
+    lua_settable(s->L, -3);
+    lua_pop(s->L, 1); /* pushglobaltable(s->L) */
     VIS_ASSERT(lua_gettop(s->L) == 2);
 }
 

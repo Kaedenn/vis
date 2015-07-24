@@ -28,7 +28,7 @@ setmetatable(VisUtil.Debug, {
     __call = function(self, level, str, ...)
         if VisUtil.Debug.ENABLED ~= true then return end
 
-        varargs = {...}
+        local varargs = {...}
         if type(level) == "table" then
             table.insert(varargs, 1, str)
             str, level = VisUtil.strobject(level), 0
@@ -39,8 +39,8 @@ setmetatable(VisUtil.Debug, {
             str = VisUtil.strobject(str)
         end
 
-        ar = debug.getinfo(2)
-        wrap = ('Debug: %s:%s:%d: %%s'):format(
+        local ar = debug.getinfo(2)
+        local wrap = ('Debug: %s:%s:%d: %%s'):format(
             ar.name or '<top>', ar.short_src,
             ar.linedefined ~= 0 and ar.linedefined or ar.currentline)
         if bit32.band(level, VisUtil.Debug.L_INSPECT) > 0 then
@@ -90,7 +90,7 @@ VisUtil.Debug.QUOTE_CHARS["\\"] = "\\\\"
 VisUtil.Debug.QUOTE_CHARS['"'] = '\\"'
 
 VisUtil.Debug.QuoteString = function(str)
-    result = ''
+    local result = ''
     for i = 1,#str do
         b = str:byte(i)
         c = string.char(b)
@@ -103,6 +103,101 @@ VisUtil.Debug.QuoteString = function(str)
         end
     end
     return '"' .. result .. '"'
+end
+
+VisUtil.Args = {
+    ERRORS = {
+        E_NILVAL = "nil passed where a %s is expected",
+        E_NOTANUM = "%s passed where a number is expected",
+        E_NOTABOOL = "%s passed where a boolean is expected",
+        E_UNKVALTP = "unknown value type %s"
+    }
+}
+function VisUtil.Args:new()
+    local o = {}
+    o._args = {}
+    o._environ = {}
+    o._arg_env_link = {}
+    o._getenv = os.getenv
+    setmetatable(o, self)
+    self.__index = self
+    return o
+end
+function VisUtil.Args:add(arg, valuetype)
+    self._args[arg] = valuetype
+end
+function VisUtil.Args:add_env(arg, valuetype)
+    self._environ[arg] = valuetype
+end
+function VisUtil.Args:link_arg_env(arg, env)
+    self._arg_env_link[arg] = env
+end
+function VisUtil.Args:parse(args)
+    local errtab = VisUtil.Args.ERRORS
+    if args == nil then args = Arguments end
+    local parsed = {}
+    local parsedenv = {}
+    local function doerror(errstr, arg) return nil, errstr:format(arg) end
+    local function ensure(value, valuetype)
+        VisUtil.Debug(("ensure(%s, %s)"):format(tostring(value), tostring(valuetype)))
+        if valuetype == nil or valuetype == "nil" then
+            return 1
+        elseif value == nil then
+            return doerror(errtab.E_NILVAL, valuetype)
+        elseif valuetype == "string" then
+            return value
+        elseif valuetype == "number" then
+            if type(value) ~= "string" or value:match("^[0-9]*$") == nil then
+                return doerror(errtab.E_NOTANUM, value)
+            end
+            return tonumber(value)
+        elseif valuetype == "boolean" or valuetype == "bool" then
+            local strbool = {"false", "true"}
+            if value == "true" then return true end
+            if value == "false" then return false end
+            if value == "1" then return true end
+            if value == "0" then return false end
+            return doerror(errtab.E_NOTABOOL, value)
+        else
+            return doerror(errtab.E_UNKVALTP, valuetype)
+        end
+    end
+    for idx = 1,#args do
+        for arg,val in pairs(self._args) do
+            if args[idx] == arg then
+                if val == nil then
+                    parsed[arg] = 1
+                else
+                    local ensured, err = ensure(args[idx+1], val)
+                    if ensured == nil then
+                        return nil, nil, err
+                    end
+                    parsed[arg] = ensured
+                    idx = idx + 1
+                end
+                break
+            end
+        end
+    end
+    for env,envtype in pairs(self._environ) do
+        if self._getenv(env) ~= nil then
+            parsedenv[env] = ensure(self._getenv(env), envtype)
+        end
+    end
+    for arg,env in pairs(self._arg_env_link) do
+        if parsed[arg] ~= parsedenv[env] then
+            if parsed[arg] ~= nil and parsedenv[env] ~= nil then
+                parsed[arg] = parsedenv[env]
+            elseif parsed[arg] == nil and parsedenv[env] == nil then
+                -- wat
+            elseif parsed[arg] == nil then
+                parsed[arg] = parsedenv[env]
+            elseif parsedenv[env] == nil then
+                parsedenv[env] = parsed[arg]
+            end
+        end
+    end
+    return parsed, parsedenv, nil
 end
 
 function VisUtil.wrap_coord(x, y)
@@ -210,27 +305,42 @@ function VisUtil.stremit(e)
     return ("e = {\n%s}"):format(s)
 end
 
-function VisUtil.strobject(o, i, seen, whereami)
+function VisUtil.strobject(o, i, seen, whereami, maxi)
+    local i = i or 0
     local seen = seen or {}
     local whereami = whereami or {"_G"}
-    if type(o) ~= "table" then
-        if type(o) == "string" then
-            return string.format("%q", tostring(o))
+    local maxi = maxi or math.huge
+    local function indent(n) return string.rep(" ",n) end
+    if type(o) == "string" then
+        return VisUtil.Debug.QuoteString(o)
+    elseif type(o) == "number" then
+        return tostring(o)
+    elseif type(o) == "function" then
+        if seen[o] == nil then
+            seen[o] = table.concat(whereami, '.')
+            local ar = debug.getinfo(o)
+            if ar.short_src == '[C]' then
+                return tostring(o)
+            end
+            return VisUtil.strobject(ar, i, seen, whereami)
         else
-            return tostring(o)
+            return seen[o]
         end
+    elseif o == nil then
+        return "nil"
+    elseif type(o) == "boolean" then
+        return tostring(o)
+    elseif type(o) ~= "table" then
+        return ("%s --[[ %s --]]"):format(tostring(o), type(o))
+    elseif i >= maxi then
+        return "{ --[[ max depth exceeded --]] }"
     elseif seen[o] == nil then
         seen[o] = table.concat(whereami, ".")
-        local function indent(n)
-            return string.rep(" ",n)
-        end
         if next(o) == nil then
-            return "{empty}"
+            return "{ } --[[ empty --]]"
         end
-        local i = i or 0
         local s = "{"
         local f = true
-        local itemstr = ''
         local sorted = {}
         for k,v in pairs(o) do
             table.insert(sorted, k)
@@ -238,6 +348,7 @@ function VisUtil.strobject(o, i, seen, whereami)
         table.sort(sorted)
         for _,k in pairs(sorted) do
             local v = o[k]
+            local k_str = ''
             if f then
                 f = false
             else
@@ -247,23 +358,22 @@ function VisUtil.strobject(o, i, seen, whereami)
             --s = s.."\n"..table.concat(whereami, '.')
             s = s.."\n"..indent(i+2)
             if type(k) == "string" then
-                itemstr = VisUtil.Debug.QuoteString(k)
+                k_str = ("[%s]"):format(VisUtil.Debug.QuoteString(k))
                 whereami[#whereami+1] = tostring(k)
             elseif type(k) == "number" then
-                itemstr = ("[%d]"):format(k)
-                whereami[#whereami+1] = itemstr
+                k_str = ("[%d]"):format(k)
+                whereami[#whereami+1] = k_str
             else
-                itemstr = "["..VisUtil.strobject(k, 0, seen, whereami).."]"
-                whereami[#whereami+1] = itemstr
+                k_str = ("[%s]"):format(VisUtil.strobject(k, 0, seen, whereami, maxi))
+                whereami[#whereami+1] = k_str
             end
-            s = s..itemstr
-            s = s.." = "..VisUtil.strobject(v, i+2, seen, whereami)
+            s = s..k_str.." = "..VisUtil.strobject(v, i+2, seen, whereami, maxi)
             whereami[#whereami] = nil
         end
         s = s.."\n"..indent(i).."}"
         return s
     else
-        return "{ see "..seen[o].." }"
+        return seen[o]
     end
 end
 

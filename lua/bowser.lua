@@ -31,43 +31,45 @@ This driver works in several distinct phases:
 
 The program understands the following environment variables:
 
-VIS_BOWSER_NO_AUDIO     (boolean)
+|   Variable Name     |   Type             |   Argument (if any)          |
+|-------------------------------------------------------------------------|
+VIS_BOWSER_NO_AUDIO     (boolean)           -q
     If set to any value, do not load audio.
 
-VIS_BOWSER_ISOLATE      (track number)
+VIS_BOWSER_ISOLATE      (track number)      --isolate=num
     If set to a track number (1..8), only schedule that track. If possible,
     only play the audio for that track as well (unless VIS_BOWSER_NO_AUDIO
     is set).
 
-VIS_BOWSER_SKIP_INTRO   (boolean)
+VIS_BOWSER_SKIP_INTRO   (boolean)           --si
     If set to any value, seek to offset 18 seconds 87 milliseconds, which
     is the start of the main track.
 
-VIS_BOWSER_SKIP_TO      (milliseconds)
+VIS_BOWSER_SKIP_TO      (milliseconds)      --st=ms
     If set to a numeric value, seek both the visualization and the audio to
     that offset in milliseconds.
 
-VIS_BOWSER_FRAME_TWEAK  (frame number)
+VIS_BOWSER_FRAME_TWEAK  (frame number)      --ft=frame
     If set to a numeric value, seek only the visualization and not the
     audio to that offset in frames (running at Vis.FPS_LIMIT frames per
     second).
 
-VIS_BOWSER_MS_TWEAK     (milliseconds)
+VIS_BOWSER_MS_TWEAK     (milliseconds)      --mst=ms
     If set to a numeric value, seek only the visualization and not the
     audio to that offset in milliseconds.
 
-VIS_BOWSER_EXIT_MS      (milliseconds)
+VIS_BOWSER_EXIT_MS      (milliseconds)      --exit=ms
     If set to a numeric value, exit at precisely this time in milliseconds.
     If un-set, exit after the final scheduled emit has been emitted.
 
-VIS_BOWSER_DUMP_TRACKn  (boolean, n = track number)
+VIS_BOWSER_DUMP_TRACKn  (boolean)           --dump=n    (n = track number)
     If set to any value, print out the entire schedule of track n. The
     value n is an integer between 1 and 8, inclusive.
 
-VIS_DEBUG               (boolean/integer)
+VIS_DEBUG               (boolean/integer)   --debug
     If set to any value, enable debugging output.
 
-VIS_HELP                (boolean)
+VIS_HELP                (boolean)           --help
     If set to any value, print out the understood environment variables
     (this list) and some useful offsets in milliseconds to key positions
     in the visualization.
@@ -110,25 +112,33 @@ TrackEndTime = 0
 SECOND = 1000
 BOWSER_TIME_START_MAIN = 18087
 
--- Environment variables
-Env = {}
-Env['VIS_BOWSER_NO_AUDIO'] = '<bool>'
-Env['VIS_BOWSER_ISOLATE'] = '<track-number>'
-Env['VIS_BOWSER_SKIP_INTRO'] = '<bool>'
-Env['VIS_BOWSER_SKIP_TO'] = '<offset>'
-Env['VIS_BOWSER_FRAME_TWEAK'] = '<frame-offset>'
-Env['VIS_BOWSER_MS_TWEAK'] = '<offset>'
-Env['VIS_BOWSER_EXIT_MS'] = '<offset>'
-Env['VIS_DEBUG'] = '<bool>'
-Env['VIS_HELP'] = '<bool>'
-
-for t = TRACK_1,TRACK_8 do
-    Env['VIS_BOWSER_DUMP_TRACK'..t] = '<bool>'
+-- Configuration
+local function EstablishConfig()
+    Config = {
+        {'VIS_BOWSER_NO_AUDIO', '-q', 'nil'},
+        {'VIS_BOWSER_ISOLATE', '--isolate', 'number'},
+        {'VIS_BOWSER_SKIP_INTRO', '--si', 'nil'},
+        {'VIS_BOWSER_SKIP_TO', '--st', 'number'},
+        {'VIS_BOWSER_FRAME_TWEAK', '--ft', 'number'},
+        {'VIS_BOWSER_MS_TWEAK', '--mst', 'number'},
+        {'VIS_BOWSER_EXIT_MS', '--exit', 'number'},
+        {'VIS_DEBUG', '--debug', 'nil'},
+        {'LUA_DEBUG', '--debug', 'nil'},
+        {'DEBUG', '--debug', 'nil'},
+        {'VIS_HELP', '--help', 'nil'},
+    }
+    local parser = VisUtil.Args:new()
+    for _, argspec in pairs(Config) do
+        parser:add(argspec[2], argspec[3])
+        parser:add_env(argspec[1], argspec[3])
+        parser:link_arg_env(argspec[2], argspec[1])
+    end
+    local args, envs, err = parser:parse()
+    if err ~= nil then error(err) end
+    return args, envs
 end
 
-for k, _ in pairs(Env) do
-    Env[k] = os.getenv(k)
-end
+Arg, Env = EstablishConfig()
 
 -- Important timekeeping functions
 function now(track)
@@ -165,7 +175,7 @@ if Env['VIS_BOWSER_NO_AUDIO'] == nil then
 end
 
 -- Position helpers for placing emits at precise locations
-W = function(num, denom) return Vis.WIDTH * num / denom end
+function W(num, denom) return Vis.WIDTH * num / denom end
 W_1_2 = W(1,2) -- 400
 W_1_3 = W(1,3) -- 266.67
 W_2_3 = W(2,3) -- 533.33
@@ -179,7 +189,7 @@ W_1_6 = W(1,6) -- 133.33
 W_5_6 = W(5,6) -- 666.67
 W_1_8 = W(1,8) -- 100
 
-H = function(num, denom) return Vis.HEIGHT * num / denom end
+function H(num, denom) return Vis.HEIGHT * num / denom end
 H_1_2 = H(1,2) -- 300
 H_1_3 = H(1,3) -- 200
 H_2_3 = H(2,3) -- 400
@@ -245,7 +255,7 @@ for i = TRACK_1,TRACK_8 do
     -- This kind of function binding makes the functions lose their names. Try
     -- to find a way to preserve function names so debugging works better.
     Tn.NextSchedule = (function(track, track_num)
-        return function()
+        function Tn_NextSchedule()
             track.ScheduleIndex = track.ScheduleIndex + 1
             if track.ScheduleIndex > #track.SCHEDULE then
                 print(("SI %d > %d"):format(track.ScheduleIndex, #track.SCHEDULE))
@@ -254,6 +264,7 @@ for i = TRACK_1,TRACK_8 do
             end
             return track.SCHEDULE[track.ScheduleIndex]
         end
+        return Tn_NextSchedule
     end)(Tn, i)
     Tn.now = (function(n) return function() return now(i) end end)(i)
     Tn.adv = (function(n) return function(o) return adv(n, o) end end)(i)
@@ -275,7 +286,7 @@ end
 -- Actually load and calculate track schedules, all of them
 for i = TRACK_1,TRACK_8 do
     dotrack(i)
-    tn = _G['T'..i]
+    local tn = _G['T'..i]
     if Env['VIS_BOWSER_DUMP_TRACK'..i] ~= nil and tn.SCHEDULE ~= nil then
         local si = tn.ScheduleIndex
         print(("T%d.ScheduleIndex = %d"):format(i, si))

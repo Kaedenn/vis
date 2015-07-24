@@ -21,12 +21,12 @@ local function next_ey()
 end
 
 local function emit_pair(e, ds)
-    e2 = Emit:copy(e)
+    local e2 = Emit:copy(e)
     if ds ~= nil then e2:ds(ds) end
-    x1, x2 = next_ex()
-    y1, y2 = next_ey()
-    j = T1.next()
-    k = T1.next()
+    local x1, x2 = next_ex()
+    local y1, y2 = next_ey()
+    local j = T1.next()
+    local k = T1.next()
     for now = j,k,Vis.frames2msec(1) do
         e2:when(now)
         e2:center(x1, y1)
@@ -44,9 +44,9 @@ circle:color(0, .4, .8, 0, .2, 0)
 circle:count(100)
 circle:theta(math.pi, math.pi)
 
-ds = {2, 1.9, 1.7, 1.5, 1, 1, 1, 1}
+local ds = {2, 1.9, 1.7, 1.5, 1, 1, 1, 1}
 for dsi = 1,8 do
-    dsv = ds[dsi]
+    local dsv = ds[dsi]
     emit_pair(circle, dsv)
 end
 
