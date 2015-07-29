@@ -4,14 +4,18 @@ VisUtil = require('visutil')
 Emit = {}
 
 function Emit:new(obj)
-    local o = {}
+    local tagid = tostring(obj or math.random())
+    local o = {
+        _t = VisUtil.make_emit_table(),
+        _tagid = tagid,
+        _tag = ("Emit(%s)"):format(tagid)
+    }
     o._t = {}
+    o._t = VisUtil.make_emit_table()
     if obj ~= nil and obj._t ~= nil then
         for k,v in pairs(obj._t) do
             o._t[k] = v
         end
-    else
-        o._t = VisUtil.make_emit_table()
     end
     setmetatable(o, self)
     self.__index = self
@@ -20,7 +24,7 @@ end
 
 function Emit:copy() return Emit:new(self) end
 function Emit:clone() return self:copy() end
-function Emit:emit() return VisUtil.emit_table(self._t) end
+function Emit:emit() VisUtil.emit_table(self._t) end
 function Emit:emit_at(t) self:when(t); return self:emit() end
 function Emit:emit_now() return VisUtil.emit_table_now(self._t) end
 function Emit:set_trace() return VisUtil.set_trace_table(self._t) end
@@ -38,6 +42,13 @@ end
 
 function Emit:center(x, y, ux, uy)
     return VisUtil.center_emit_table(self._t, x, y, ux or 0, uy or 0)
+end
+
+function Emit:move(dx, dy, udx, udy)
+    self._t.x = self._t.x + dx
+    self._t.y = self._t.y + dy
+    self._t.ux = self._t.ux + udx or 0
+    self._t.uy = self._t.uy + udy or 0
 end
 
 function Emit:radius(radius, uradius)
@@ -60,9 +71,8 @@ function Emit:life(life, ulife)
     self._t.ulife = ulife or self._t.ulife or 0
 end
 
-function Emit:color(r, g, b, ur, ug, ub)
-    local rgb
-    local urgb
+function Emit:_parse_color(r, g, b, ur, ug, ub)
+    local rgb, urgb
     if type(r) == "table" then
         rgb = {r[1] or 1, r[2] or 1, r[3] or 1}
         if type(g) == "table" then
@@ -76,8 +86,29 @@ function Emit:color(r, g, b, ur, ug, ub)
         rgb = {r or 1, g or 1, b or 1}
         urgb = {ur or 0, ug or 0, ub or 0}
     end
-    return VisUtil.color_emit_table(self._t, rgb[1], rgb[2], rgb[3],
-                                    urgb[1], urgb[2], urgb[3])
+    assert(rgb[1] ~= nil and rgb[2] ~= nil and rgb[3] ~= nil)
+    assert(urgb[1] ~= nil and urgb[2] ~= nil and urgb[3] ~= nil)
+    return rgb, urgb
+end
+
+function Emit:color(r, g, b, ur, ug, ub)
+    local rgb, urgb = self:_parse_color(r, g, b, ur, ug, ub)
+    self._t.r = rgb[1]
+    self._t.g = rgb[2]
+    self._t.b = rgb[3]
+    self._t.ur = urgb[1]
+    self._t.ug = urgb[2]
+    self._t.ub = urgb[3]
+end
+
+function Emit:fadeto(r, g, b, ur, ug, ub)
+    local rgb, urgb = self:_parse_color(r, g, b, ur, ug, ub)
+    self._t.r = self._t.r + r
+    self._t.g = self._t.g + g
+    self._t.b = self._t.b + b
+    self._t.ur = self._t.ur + ur
+    self._t.ug = self._t.ug + ug
+    self._t.ub = self._t.ub + ub
 end
 
 function Emit:force(force)

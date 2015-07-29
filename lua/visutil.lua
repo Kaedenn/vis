@@ -25,31 +25,17 @@ VisUtil.Debug.ENABLED = (function()
 end)()
 setmetatable(VisUtil.Debug, {
     __tostring = function(self) return VisUtil.strobject(self) end,
-    __call = function(self, level, str, ...)
+    __call = function(self, obj, ...)
         if VisUtil.Debug.ENABLED ~= true then return end
 
         local varargs = {...}
-        if type(level) == "table" then
-            table.insert(varargs, 1, str)
-            str, level = VisUtil.strobject(level), 0
-        elseif type(level) == "string" then
-            table.insert(varargs, 1, str)
-            str, level = level, 0
-        elseif type(level) == "number" and type(str) ~= "string" then
-            str = VisUtil.strobject(str)
-        end
+        local str = VisUtil.strobject(obj)
 
         local ar = debug.getinfo(2)
         local wrap = ('Debug: %s:%s:%d: %%s'):format(
             ar.name or '<top>', ar.short_src,
             ar.linedefined ~= 0 and ar.linedefined or ar.currentline)
-        if bit32.band(level, VisUtil.Debug.L_INSPECT) > 0 then
-            -- L_INSPECT implies L_ESCAPE
-            wrap = ("Debug(%s, %s, %s)"):format(self, wrap, VisUtil.strobject(varargs))
-        elseif bit32.band(level, VisUtil.Debug.L_ESCAPE) > 0 then
-            wrap = ("Debug(%s, %s)"):format(VisUtil.strobject(self), wrap)
-        end
-        if bit32.band(level, VisUtil.Debug.L_TRACEBACK) > 0 then
+        if VisUtil.Debug.TRACEBACK ~= false then
             wrap = ("%s: %s"):format(wrap, debug.traceback())
         end
 
@@ -105,6 +91,15 @@ VisUtil.Debug.QuoteString = function(str)
     return '"' .. result .. '"'
 end
 
+--[[ Argument parsing
+--
+--  Please excuse the quality of code (or lack thereof) in the :help and
+--  :parse functions. After writing it in a hurry, I now realize it looks
+--  absolutely horrid and should be remade from scratch.
+--
+--  No guarantee I'll actually /do/ that, however.
+--
+--]]
 VisUtil.Args = {
     ERRORS = {
         E_NILVAL = "nil passed where a %s is expected",
@@ -116,25 +111,145 @@ VisUtil.Args = {
 function VisUtil.Args:new()
     local o = {}
     o._args = {}
-    o._environ = {}
-    o._arg_env_link = {}
-    o._getenv = os.getenv
+    o._envs = {}
+    o._links = {}
+    o._arglist = {}
+    o._envlist = {}
+    o._linklist = {}
+    o._arghelp = {}
+    o._envhelp = {}
+    o._helpstrs = {}
+    o._getenv = os.getenv -- for testing only
     setmetatable(o, self)
     self.__index = self
+    o:add("-h", "nil", "this message")
+    o:add("--help", "nil", "this message")
+    o:add_env("VIS_HELP", "nil", "this message")
+    o:link_arg_env("-h", "VIS_HELP")
+    o:link_arg_env("--help", "VIS_HELP")
     return o
 end
-function VisUtil.Args:add(arg, valuetype)
-    self._args[arg] = valuetype
+function VisUtil.Args:_ensure_self()
+    assert(type(self) == "table")
+    assert(type(self._args) == "table", VisUtil.strobject(self))
 end
-function VisUtil.Args:add_env(arg, valuetype)
-    self._environ[arg] = valuetype
+function VisUtil.Args:add(arg, valuetype, help)
+    self:_ensure_self()
+    self._args[arg] = valuetype
+    self._arghelp[arg] = help
+    table.insert(self._arglist, {[arg] = valuetype})
+end
+function VisUtil.Args:add_env(arg, valuetype, help)
+    self:_ensure_self()
+    self._envs[arg] = valuetype
+    self._envhelp[arg] = help
+    table.insert(self._envlist, {[arg] = valuetype})
 end
 function VisUtil.Args:link_arg_env(arg, env)
-    self._arg_env_link[arg] = env
+    self:_ensure_self()
+    self._links[arg] = env
+    table.insert(self._linklist, {[arg] = env})
+end
+function VisUtil.Args:add_help(helpstr)
+    self:_ensure_self()
+    self._helpstrs[#self._helpstrs+1] = helpstr
+end
+function VisUtil.Args:_get_max_arglen(args)
+    self:_ensure_self()
+    local maxw = 0
+    for arg,argtype in pairs(args or self._args) do
+        maxw = math.max(maxw, (#self:_strarg(arg, argtype)))
+    end
+    return maxw
+end
+function VisUtil.Args:_strarg(arg, argtype, maxw, help)
+    self:_ensure_self()
+    local s = ''
+    if argtype == "nil" then
+        s = ("  %s"):format(arg)
+    else
+        s = ("  %s <%s>"):format(arg, argtype)
+    end
+    if maxw ~= nil then
+        s = s .. (' '):rep(maxw - #s)
+    end
+    if help ~= nil then
+        s = s .. help
+    end
+    return s .. "\n"
+end
+function VisUtil.Args:help(execname)
+    self:_ensure_self()
+    execname = execname or "<program>"
+    local toplevel = "Usage: %s [arguments]\nArguments:\n%s\n"
+    local topenv = "Environment variables:\n%s\n"
+    local toplink = "Argument-to-Environment mapping:\n%s\n"
+    local arg_str = ""
+    local env_str = ""
+    local link_str = ""
+    local argsort, envsort, argsonly
+    local maxlen
+
+    argsort = {}
+    for arg, _ in pairs(self._args) do
+        if arg ~= '-h' and arg ~= '--help' then
+            argsort[#argsort+1] = arg
+        end
+    end
+    table.sort(argsort)
+    argsort[#argsort+1] = '--help'
+    argsort[#argsort+1] = '-h'
+
+    envsort = {}
+    for env, _ in pairs(self._envs) do
+        envsort[#envsort+1] = env
+    end
+    table.sort(envsort)
+
+    maxlen = self:_get_max_arglen(self._args)
+    for _, arg in pairs(argsort) do
+        argtype = self._args[arg]
+        arg_str = arg_str .. self:_strarg(arg, argtype, maxlen, self._arghelp[arg])
+    end
+
+    maxlen = self:_get_max_arglen(self._envs)
+    for _, env in pairs(envsort) do
+        envtype = self._envs[env]
+        env_str = env_str .. self:_strarg(env, envtype, maxlen, self._envhelp[env])
+    end
+
+    argsort = {}
+    argsonly = {}
+    for arg, _ in pairs(self._links) do
+        argsonly[arg] = "nil"
+        argsort[#argsort+1] = arg
+    end
+    table.sort(argsort)
+    maxlen = self:_get_max_arglen(argsonly)
+    for _, arg in pairs(argsort) do
+        env = self._links[arg]
+        if env ~= nil then
+            link_str = link_str .. ("  %s%s is equivalent to   %s\n"):format(
+                arg, string.rep(' ', maxlen-#arg), env)
+        end
+    end
+
+    toplevel = toplevel:format(execname, arg_str)
+    if #env_str > 0 then
+        topenv = topenv:format(env_str)
+        toplevel = toplevel .. topenv
+    end
+    if #link_str > 0 then
+        toplink = toplink:format(link_str)
+        toplevel = toplevel .. toplink
+    end
+
+    return toplevel
 end
 function VisUtil.Args:parse(args)
-    local errtab = VisUtil.Args.ERRORS
+    self:_ensure_self()
     if args == nil then args = Arguments end
+    local errtab = VisUtil.Args.ERRORS
     local parsed = {}
     local parsedenv = {}
     local function doerror(errstr, arg) return nil, errstr:format(arg) end
@@ -179,12 +294,12 @@ function VisUtil.Args:parse(args)
             end
         end
     end
-    for env,envtype in pairs(self._environ) do
+    for env,envtype in pairs(self._envs) do
         if self._getenv(env) ~= nil then
             parsedenv[env] = ensure(self._getenv(env), envtype)
         end
     end
-    for arg,env in pairs(self._arg_env_link) do
+    for arg,env in pairs(self._links) do
         if parsed[arg] ~= parsedenv[env] then
             if parsed[arg] ~= nil and parsedenv[env] ~= nil then
                 parsed[arg] = parsedenv[env]
@@ -196,6 +311,9 @@ function VisUtil.Args:parse(args)
                 parsedenv[env] = parsed[arg]
             end
         end
+    end
+    if parsed['-h'] or parsed['--help'] then
+        print(self:help())
     end
     return parsed, parsedenv, nil
 end
@@ -219,15 +337,6 @@ function VisUtil.make_emit_table()
         force = Vis.DEFAULT_FORCE, limit = Vis.DEFAULT_LIMIT,
         blender = Vis.BLEND_LINEAR
     }
-end
-
--- Performs a shallow copy, since emit tables are all shallow
-function VisUtil.copy_table(t)
-    local t2 = {}
-    for k,v in pairs(t) do
-        t2[k] = v
-    end
-    return t2
 end
 
 function VisUtil.center_emit_table(t, x, y, ux, uy)
