@@ -113,87 +113,95 @@ SECOND = 1000
 BOWSER_TIME_START_MAIN = 18087
 
 -- Configuration
+local function AddOption(options, option)
+    options[#options+1] = {
+        env = option[1],
+        opt = option[2],
+        typ = option[3],
+        str = option[4]
+    }
+end
+
 local function EstablishConfig()
     Config = {}
-    Config[#Config+1] = {
+    AddOption(Config, {
         'VIS_BOWSER_NO_AUDIO',
         '-q',
         'nil',
         "do not play music"
-    }
-    Config[#Config+1] = {
+    })
+    AddOption(Config, {
         'VIS_BOWSER_ISOLATE',
         '--isolate',
         'number',
         "play only this track"
-    }
-    Config[#Config+1] = {
+    })
+    AddOption(Config, {
         'VIS_BOWSER_SKIP_INTRO',
         '--si',
         'nil',
         "skip the intro"
-    }
-    Config[#Config+1] = {
+    })
+    AddOption(Config, {
         'VIS_BOWSER_SKIP_TO',
         '--st',
         'number',
         "skip to this offset in msec"
-    }
-    Config[#Config+1] = {
+    })
+    AddOption(Config, {
         'VIS_BOWSER_FRAME_TWEAK',
         '--ft',
         'number',
         "seek to this frame"
-    }
-    Config[#Config+1] = {
+    })
+    AddOption(Config, {
         'VIS_BOWSER_MS_TWEAK',
         '--mst',
         'number',
         "seek to this msec"
-    }
-    Config[#Config+1] = {
+    })
+    AddOption(Config, {
         'VIS_BOWSER_EXIT_MS',
         '--exit',
         'number',
         "exit after this number of msec"
-    }
+    })
     for i = TRACK_1, TRACK_8 do
-        Config[#Config+1] = {
+        AddOption(Config, {
             'VIS_BOWSER_DUMP_TRACK'..i,
             '--dump-'..i,
             'nil',
             'dump track '..i..'\'s schedule'
-        }
+        })
     end
-    Config[#Config+1] = {
+    AddOption(Config, {
         'VIS_DEBUG',
         '--debug',
         'nil',
         "enable debugging"
-    }
-    Config[#Config+1] = {
+    })
+    AddOption(Config, {
         'LUA_DEBUG',
         '--debug',
         'nil',
         "enable debugging"
-    }
-    Config[#Config+1] = {
+    })
+    AddOption(Config, {
         'DEBUG',
         '--debug',
         'nil',
         "enable debugging"
-    }
+    })
     local parser = VisUtil.Args:new()
     for _, argspec in pairs(Config) do
-        parser:add(argspec[2], argspec[3], argspec[4])
-        parser:add_env(argspec[1], argspec[3], argspec[4])
-        parser:link_arg_env(argspec[2], argspec[1])
+        parser:add(argspec.opt, argspec.typ, argspec.str)
+        parser:add_env(argspec.env, argspec.typ, argspec.str)
+        parser:link_arg_env(argspec.opt, argspec.env)
     end
     local args, envs, err = parser:parse()
-    if err ~= nil then error(err) end
-    --if envs['VIS_HELP'] ~= nil then
-    --    print(VIS_BOWSER_HELP_STRING)
-    --end
+    if err ~= nil then
+        error(err)
+    end
     return args, envs
 end
 

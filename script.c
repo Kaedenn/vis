@@ -671,7 +671,9 @@ int viscmd_bgcolor_fn(lua_State* L) {
     c[1] = (float)luaL_checknumber(L, 4);
     c[2] = (float)luaL_checknumber(L, 5);
     flist_insert_bgcolor(fl, when, c);
-    DBPRINTF("Vis.bgcolor(%p, %d, %g, %g, %g)", fl, when, c[0], c[1], c[2]);
+    if (DEBUG > DEBUG_DEBUG) {
+        DBPRINTF("Vis.bgcolor(%p, %d, %g, %g, %g)", fl, when, c[0], c[1], c[2]);
+    }
     return 0;
 }
 
