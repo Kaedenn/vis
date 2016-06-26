@@ -28,16 +28,19 @@ C_TESTS := $(wildcard $(DIR)/test/test_*.c)
 BIN_TESTS := $(patsubst %.c,%,$(C_TESTS))
 TESTS := $(LUA_TESTS) $(BIN_TESTS)
 
-CFLAGS = -Wno-unused-variable -Wall -Wextra -Wfloat-equal -Wwrite-strings \
-		 -Wshadow -Wpointer-arith -Wcast-qual -Wredundant-decls -Wtrigraphs \
-		 -Wswitch-enum -Wundef -Wconversion -ansi -pedantic -std=c99 \
-		 -fdiagnostics-show-option
-LDFLAGS = -lm
+CFLAGS ?= -Wno-unused-variable -Wall -Wextra -Wfloat-equal -Wwrite-strings \
+		  -Wshadow -Wpointer-arith -Wcast-qual -Wredundant-decls -Wtrigraphs \
+		  -Wswitch-enum -Wundef -Wconversion -ansi -pedantic -std=c99 \
+		  -fdiagnostics-show-option
+LDFLAGS ?= -lm
 
-CFLAGS_FAST = -O3 -fexpensive-optimizations
+CFLAGS_FAST = -O3 -fexpensive-optimizations -flto
 CFLAGS_DEBUG = -O0 -ggdb -DDEBUG=DEBUG_DEBUG
 CFLAGS_TRACE = -O0 -ggdb -DDEBUG=DEBUG_TRACE
 CFLAGS_PROF = -pg
+
+LDFLAGS_FAST = -O3 -flto
+LDFLAGS_PROF = -pg
 
 CFLAGS_LIBS = -I/usr/include/lua5.2 -I/usr/include/SDL2
 LDFLAGS_LIBS = -llua5.2 -lSDL2 -lSDL2_image -lSDL2_mixer
@@ -72,7 +75,7 @@ all: CFLAGS += $(CFLAGS_DEBUG)
 all: $(DEPFILES) $(VIS)
 
 fast: $(DEPFILES) $(SOURCES)
-	$(MAKE) "CFLAGS=$(CFLAGS) $(CFLAGS_FAST)" all
+	$(MAKE) "CFLAGS=$(CFLAGS) $(CFLAGS_FAST)" "LDFLAGS=$(LDFLAGS) $(LDFLAGS_FAST)" all
 
 debug: $(DEPFILES) $(SOURCES)
 	$(MAKE) "CFLAGS=$(CFLAGS) $(CFLAGS_DEBUG)" all
@@ -81,7 +84,7 @@ trace: $(DEPFILES) $(SOURCES)
 	$(MAKE) "CFLAGS=$(CFLAGS) $(CFLAGS_TRACE)" all
 
 profile: $(SOURCES)
-	$(MAKE) "CFLAGS=$(CFLAGS) $(CFLAGS_FAST) $(CFLAGS_PROF)" all
+	$(MAKE) "CFLAGS=$(CFLAGS) $(CFLAGS_FAST) $(CFLAGS_PROF)" "LDFLAGS=$(LDFLAGS) $(LDFLAGS_FAST) $(LDFLAGS_PROF)" all
 	$(VIS) -i -l $(DIR)/lua/demo_5_random.lua
 	gprof $(VIS)
 	- $(RM) $(DIR)/gmon.out 2>/dev/null

@@ -103,7 +103,8 @@ void drawer_free(drawer_t drawer) {
     DBPRINTF("%s", "fps analysis:");
     DBPRINTF("S=%g, S_ms=%g, F=%g, F/S=%g", runtime_sec, runtime, fc_have,
              drawer->fps.framecount / runtime_sec);
-    DBPRINTF("frame error:   (S*FPS-F) %g", fc_want - fc_have);
+    DBPRINTF("frame error:   (S*FPS-F) %g frames (%g seconds)",
+             fc_want - fc_have, (fc_want - fc_have) / VIS_FPS_LIMIT);
     DBPRINTF("error ratio: 1-(S*FPS/F) %g", 1 - fc_want / fc_have);
     DBFREE(drawer->rect_array);
     if (drawer->dump_file_fmt) {

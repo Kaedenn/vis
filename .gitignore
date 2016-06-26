@@ -39,6 +39,9 @@ test/test_audio
 test/test_kstring
 test/test_klist
 
+# Temporary files
+*.swp
+
 # Non-distributable assets
 scripts/makedep.awk
 media/programs

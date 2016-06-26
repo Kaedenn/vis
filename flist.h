@@ -6,12 +6,6 @@
 #include "mutator.h"
 #include "script.h"
 
-/* Frame List: an array of linked lists!
-    This structure has an array of VIS_NFRAMES pointers to flist_nodes.
-    
-    In the current setup, that's ~35kB for one array.
-*/
-
 typedef struct flist_node {
     ftype_id type; /* types.h, identifies which field to use below */
     union {

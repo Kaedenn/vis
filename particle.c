@@ -12,8 +12,7 @@
 #include <stdlib.h>
 #include <math.h>
 
-particle* particle_new(double x, double y, double r, int life,
-                              void* extra) {
+particle* particle_new(double x, double y, double r, int life, void* extra) {
     particle* p = DBMALLOC(sizeof(particle));
     p->x = x;
     p->y = y;
@@ -29,13 +28,13 @@ particle* particle_new(double x, double y, double r, int life,
 }
 
 particle* particle_new_full(double x, double y,
-                             double ux, double uy,
-                             double r, double ur,
-                             double ds, double uds,
-                             double theta, double utheta,
-                             int life, int ulife,
-                             force_id force, limit_id limit,
-                             void* extra) {
+                            double ux, double uy,
+                            double r, double ur,
+                            double ds, double uds,
+                            double theta, double utheta,
+                            int life, int ulife,
+                            force_id force, limit_id limit,
+                            void* extra) {
     particle* p = DBMALLOC(sizeof(particle));
     
     double t = randdouble(theta-utheta, theta+utheta);

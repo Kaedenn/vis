@@ -62,6 +62,6 @@ while i < 600 do
     i = i + 50
 end
 Vis.exit(Vis.flist, Vis.frames2msec(600))
-Vis.on_exit(function()
+Vis.on_quit(function()
     print("exiting now")
 end)
