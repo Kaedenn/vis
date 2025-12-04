@@ -34,11 +34,16 @@ void plist_foreach(plist_t plist, item_fn fn, void* userdefined) {
     while (i < plist->size) {
         plist_action_id action = (fn)(plist->particles[i], userdefined);
         if (action == ACTION_REMOVE) {
-            /* implement swap-to-back */
-            particle** last = &plist->particles[plist->size - 1];
-            particle_free(plist->particles[i]);
-            plist->particles[i] = *last;
-            *last = NULL;
+            if (i != plist->size - 1) {
+                /* implement swap-to-back */
+                particle** last = &plist->particles[plist->size - 1];
+                particle_free(plist->particles[i]);
+                plist->particles[i] = *last;
+                *last = NULL;
+            } else {
+                particle_free(plist->particles[i]);
+                plist->particles[i] = NULL;
+            }
             plist->size -= 1;
         } else if (action == ACTION_NEXT) {
             ++i;
