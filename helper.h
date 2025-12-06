@@ -23,7 +23,7 @@ void eprintf(const char* fmt, ...);
 void dbprintf(const char* fmt, ...);
 void do_assert(BOOL cond, const char* message, const char* file, int line);
 
-#define VIS_ASSERT(cond) \
+#define VIS_ASSERT(cond)                                                       \
     do_assert(((cond) ? 1 : 0), (#cond), __FILE__, __LINE__)
 
 #if DEBUG >= DEBUG_TRACE
@@ -35,19 +35,24 @@ void do_assert(BOOL cond, const char* message, const char* file, int line);
 #endif
 
 #if DEBUG > DEBUG_VERBOSE
-#define WHEREAMI_STDERR() \
+#define WHEREAMI_STDERR()                                                      \
     fprintf(stderr, "%s:%d:%s: ", __FILE__, __LINE__, __func__)
 #elif DEBUG > DEBUG_NONE
-#define WHEREAMI_STDERR() \
-    fprintf(stderr, "%s:%d: ", __FILE__, __LINE__)
+#define WHEREAMI_STDERR() fprintf(stderr, "%s:%d: ", __FILE__, __LINE__)
 #else
 #define WHEREAMI_STDERR()
 #endif
 
-#define EPRINTF(fmt, ...) \
-    do { WHEREAMI_STDERR(); eprintf(fmt, __VA_ARGS__); } while (0)
-#define DBPRINTF(fmt, ...) \
-    do { WHEREAMI_STDERR(); dbprintf(fmt, __VA_ARGS__); } while (0)
+#define EPRINTF(fmt, ...)                                                      \
+    do {                                                                       \
+        WHEREAMI_STDERR();                                                     \
+        eprintf(fmt, __VA_ARGS__);                                             \
+    } while (0)
+#define DBPRINTF(fmt, ...)                                                     \
+    do {                                                                       \
+        WHEREAMI_STDERR();                                                     \
+        dbprintf(fmt, __VA_ARGS__);                                            \
+    } while (0)
 
 #define ZEROINIT(p) memset(p, '\0', sizeof(*p))
 
@@ -69,5 +74,9 @@ char* strnulchr(char* str, int n);
 /* like strdup, but replace \n with \\n, etc */
 char* escape_string(const char* str);
 
+char* stralloc(size_t nchars);
+char* allocat(char* dest, const char* source, size_t* bufsize);
+
 #endif
 
+/* vim: set ts=4 sts=4 sw=4: */

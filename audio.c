@@ -14,6 +14,8 @@ struct audio {
 static struct audio* audio = NULL;
 
 BOOL audio_init(void) {
+    return FALSE;
+    /*
     if (audio != NULL) {
         eprintf("Attempt to call audio_init more than once!");
         return TRUE;
@@ -26,9 +28,12 @@ BOOL audio_init(void) {
 
     audio = DBMALLOC(sizeof(struct audio));
     return TRUE;
+    */
 }
 
 BOOL audio_open(const char* file) {
+    return FALSE;
+    /*
     if (!audio) {
         if (!audio_init()) {
             EPRINTF("Failed to play %s", file);
@@ -50,15 +55,19 @@ BOOL audio_open(const char* file) {
     audio->file = dupstr(file);
     Mix_PauseMusic();
     return TRUE;
+    */
 }
 
 void audio_free(UNUSED_PARAM(void* ptr)) {
+    /*
     audio_close();
     DBFREE(audio);
     audio = NULL;
+    */
 }
 
 void audio_close(void) {
+    /*
     Mix_FreeMusic(audio->music);
     audio->music = NULL;
     DBFREE(audio->file);
@@ -67,29 +76,38 @@ void audio_close(void) {
     while (Mix_Init(0)) {
         Mix_Quit();
     }
+    */
 }
 
 void audio_play(void) {
+    /*
     if (Mix_PausedMusic() == 1) {
         Mix_ResumeMusic();
     }
+    */
 }
 
 void audio_pause(void) {
+    /*
     if (Mix_PausedMusic() == 0) {
         Mix_PauseMusic();
     }
+    */
 }
 
 void audio_mute(void) {
+    /*
     Mix_VolumeMusic(0);
+    */
 }
 
 void audio_seek(unsigned where) {
+    /*
     DBPRINTF("Seeking to %u", where);
     Mix_RewindMusic();
     if (Mix_SetMusicPosition((double)where / 100) == -1) {
         EPRINTF("Codec does not support seeking: %s", Mix_GetError());
     }
+    */
 }
 

@@ -3,10 +3,10 @@
 
 #include <errno.h>
 #include <math.h>
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdarg.h>
 
 FILE* try_fopen(const char* path, const char* mode) {
     FILE* fp = fopen(path, mode);
@@ -14,6 +14,40 @@ FILE* try_fopen(const char* path, const char* mode) {
         fprintf(stderr, "unable to open `%s`: %s\n", path, strerror(errno));
     }
     return fp;
+}
+
+char* stralloc(size_t nchars) {
+    char* buffer = calloc(nchars, 1);
+    if (!buffer) {
+        fprintf(stderr, "alloc %ld failed: %d %s\n", (long)nchars, errno,
+                strerror(errno));
+        do_assert(buffer != NULL, "Allocation failed", __FILE__, __LINE__);
+    }
+    return buffer;
+}
+
+char* strrealloc(char* buffer, size_t newsize) {
+    char* newbuffer = realloc((void*)buffer, newsize);
+    if (!newbuffer) {
+        fprintf(stderr, "realloc %ld failed: %d %s\n", (long)newsize, errno,
+                strerror(errno));
+        do_assert(newbuffer != NULL, "Reallocation failed", __FILE__, __LINE__);
+    }
+    return newbuffer;
+}
+
+char* allocat(char* dest, const char* source, size_t* bufsize) {
+    do_assert(dest != NULL, "dest is NULL", __FILE__, __LINE__);
+    do_assert(source != NULL, "source is NULL", __FILE__, __LINE__);
+    do_assert(bufsize != NULL, "bufsize is NULL", __FILE__, __LINE__);
+    const size_t dsize = strlen(dest);
+    const size_t ssize = strlen(source);
+    if (dsize + ssize >= *bufsize) {
+        *bufsize = *bufsize * 2;
+        dest = strrealloc(dest, *bufsize);
+    }
+    strncat(dest, source, *bufsize - dsize);
+    return dest;
 }
 
 void* chmalloc(size_t nbytes) {
@@ -42,8 +76,8 @@ void eprintf(const char* fmt, ...) {
     fprintf(stderr, "\n");
 }
 
-static void do_assert_fail(const char* message, const char* file, int line)
-    NORETURN;
+static void do_assert_fail(const char* message, const char* file,
+        int line) NORETURN;
 
 static void do_assert_fail(const char* message, const char* file, int line) {
     eprintf("Assertion failure: %s:%d: %s", file, line, message);
@@ -117,32 +151,39 @@ static size_t escape_count_copy(char* dest, const char* src) {
     size_t i, j;
     for (i = 0, j = 0; src[i] != '\0'; ++i) {
         if (src[i] >= ' ' && src[i] <= '~') {
-            if (dest) dest[j++] = src[i];
+            if (dest)
+                dest[j++] = src[i];
             ++len;
         } else {
-            if (dest) dest[j++] = '\\';
+            if (dest)
+                dest[j++] = '\\';
             switch (src[i]) {
                 case '\r':
-                    if (dest) dest[j++] = 'r';
+                    if (dest)
+                        dest[j++] = 'r';
                     len += 2;
                     break;
                 case '\n':
-                    if (dest) dest[j++] = 'n';
+                    if (dest)
+                        dest[j++] = 'n';
                     len += 2;
                     break;
                 case '\v':
-                    if (dest) dest[j++] = 'v';
+                    if (dest)
+                        dest[j++] = 'v';
                     len += 2;
                     break;
                 case '\f':
-                    if (dest) dest[j++] = 'f';
+                    if (dest)
+                        dest[j++] = 'f';
                     len += 2;
                     break;
                 case '\t':
-                    if (dest) dest[j++] = 't';
+                    if (dest)
+                        dest[j++] = 't';
                     len += 2;
                     break;
-            default:
+                default:
                     dest[j++] = 'x';
                     dest[j++] = (char)((src[i] / 10) % 10 + '0');
                     dest[j++] = (char)(src[i] % 10 + '0');
@@ -152,7 +193,7 @@ static size_t escape_count_copy(char* dest, const char* src) {
         }
     }
     if (dest) {
-        dest[len-1] = '\0';
+        dest[len - 1] = '\0';
     }
     return len;
 }
@@ -166,3 +207,4 @@ char* escape_string(const char* str) {
     return result;
 }
 
+/* vim: set ts=4 sts=4 sw=4: */

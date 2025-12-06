@@ -51,10 +51,12 @@
 
 /* window pos */
 #ifndef VIS_WINDOW_X
-#define VIS_WINDOW_X SDL_WINDOWPOS_UNDEFINED
+/*#define VIS_WINDOW_X SDL_WINDOWPOS_UNDEFINED*/
+#define VIS_WINDOW_X 0
 #endif
 #ifndef VIS_WINDOW_Y
-#define VIS_WINDOW_Y SDL_WINDOWPOS_UNDEFINED
+/*#define VIS_WINDOW_Y SDL_WINDOWPOS_UNDEFINED*/
+#define VIS_WINDOW_Y 0
 #endif
 
 /* window size */

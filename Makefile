@@ -42,8 +42,13 @@ CFLAGS_PROF = -pg
 LDFLAGS_FAST = -O3 -flto
 LDFLAGS_PROF = -pg
 
+ifneq ($(VIS_USE_SDL),)
 CFLAGS_LIBS = -I/usr/include/lua5.2 -I/usr/include/SDL2
 LDFLAGS_LIBS = -llua5.2 -lSDL2 -lSDL2_image -lSDL2_mixer
+else
+CFLAGS_LIBS = -I/usr/include/lua5.2
+LDFLAGS_LIBS = -llua5.2 -lglfw -lGL -lGLEW
+endif
 
 CFLAGS := $(CFLAGS) $(CFLAGS_LIBS) $(EXTRA_CFLAGS)
 LDFLAGS := $(LDFLAGS) $(LDFLAGS_LIBS) $(EXTRA_LDFLAGS)
