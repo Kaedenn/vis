@@ -7,6 +7,7 @@
 
 const char* usage_string = "Usage: %s [-l path] [arguments...]";
 const char* help_string[] = {
+    /* clang-format off */
     " Short options:",
     "  -d <FILE> dump frames to <FILE>_000.png",
     "  -l <FILE> run lua script <FILE>",
@@ -27,7 +28,9 @@ const char* help_string[] = {
     " Other stuff:",
     "  --        everything following is sent to Lua (like -A)",
     "",
-    NULL};
+    NULL
+    /* clang-format on */
+};
 
 static void mark_error(clargs* args, int error) {
     args->must_exit = TRUE;

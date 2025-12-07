@@ -7,8 +7,6 @@
 #include "particle.h"
 #include "pextra.h"
 
-#include "forces.h"
-#include "plimits.h"
 #include "drawer.h"
 
 #include "random.h"
@@ -53,7 +51,7 @@ void emitter_schedule(flist* frames) {
     } else if (emitter.fl == frames) {
         flist_restart(emitter.fl);
     } else {
-        VIS_ASSERT(!"unreachable");
+        VIS_ASSERT(!(BOOL)(long)"unreachable");
     }
 }
 
@@ -67,35 +65,33 @@ void emitter_tick(void) {
     while (fn != NULL) {
         emitter.frame_counts[fn->type] += 1;
         switch (fn->type) {
-            case VIS_FTYPE_EMIT:
-                emit_frame(fn->data.frame);
-                break;
-            case VIS_FTYPE_EXIT:
-                command_str(emitter.commands, "exit");
-                break;
-            case VIS_FTYPE_PLAY:
-                audio_play();
-                break;
-            case VIS_FTYPE_CMD:
-                command_str(emitter.commands, fn->data.cmd);
-                break;
-            case VIS_FTYPE_BGCOLOR:
-                drawer_bgcolor(emitter.drawer, fn->data.color[0],
-                               fn->data.color[1], fn->data.color[2]);
-                break;
-            case VIS_FTYPE_MUTATE:
-                plist_foreach(emitter.particles, do_mutate_fn,
-                              fn->data.method);
-                break;
-            case VIS_FTYPE_SCRIPTCB:
-                script_run_cb(fn->data.scriptcb->owner, fn->data.scriptcb,
-                              NULL);
-                break;
-            case VIS_FTYPE_FRAMESEEK:
-                flist_goto_frame(emitter.fl, fn->data.frameseek);
-                break;
-            case VIS_MAX_FTYPE:
-                break;
+        case VIS_FTYPE_EMIT:
+            emit_frame(fn->data.frame);
+            break;
+        case VIS_FTYPE_EXIT:
+            command_str(emitter.commands, "exit");
+            break;
+        case VIS_FTYPE_PLAY:
+            audio_play();
+            break;
+        case VIS_FTYPE_CMD:
+            command_str(emitter.commands, fn->data.cmd);
+            break;
+        case VIS_FTYPE_BGCOLOR:
+            drawer_bgcolor(
+                emitter.drawer, fn->data.color[0], fn->data.color[1], fn->data.color[2]);
+            break;
+        case VIS_FTYPE_MUTATE:
+            plist_foreach(emitter.particles, do_mutate_fn, fn->data.method);
+            break;
+        case VIS_FTYPE_SCRIPTCB:
+            script_run_cb(fn->data.scriptcb->owner, fn->data.scriptcb, NULL);
+            break;
+        case VIS_FTYPE_FRAMESEEK:
+            flist_goto_frame(emitter.fl, fn->data.frameseek);
+            break;
+        case VIS_MAX_FTYPE:
+            break;
         }
         /* do not process next node if this is a frame seek */
         fn = fn->type != VIS_FTYPE_FRAMESEEK ? flist_node_next(fn) : NULL;
@@ -109,12 +105,9 @@ void emit_frame(emit_desc* frame) {
         float g = randfloat(frame->g - frame->ug, frame->g + frame->ug);
         float b = randfloat(frame->b - frame->ub, frame->b + frame->ub);
         pextra* pe = new_pextra(r, g, b, frame->blender);
-        p = particle_new_full(frame->x, frame->y, frame->ux, frame->uy,
-                              frame->rad, frame->urad, frame->ds, frame->uds,
-                              frame->theta, frame->utheta,
-                              frame->life, frame->ulife,
-                              frame->force, frame->limit, pe);
+        p = particle_new_full(frame->x, frame->y, frame->ux, frame->uy, frame->rad,
+            frame->urad, frame->ds, frame->uds, frame->theta, frame->utheta, frame->life,
+            frame->ulife, frame->force, frame->limit, pe);
         plist_add(emitter.particles, p);
     }
 }
-

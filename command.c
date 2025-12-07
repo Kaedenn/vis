@@ -45,6 +45,7 @@ static struct cmd_map {
     void (*func)(struct commands* cmds, const char* buffer);
     const char* synopsis;
 } commands[] = {
+    /* clang-format off */
     {"emit", cmd_emit, "instant emit: type \"help emit\" to see args"},
     {"kick", cmd_kick, "takes one arg: number of particles"},
     {"snare", cmd_snare, "takes one arg: number of particles"},
@@ -55,10 +56,12 @@ static struct cmd_map {
     {"audio", cmd_audio, "takes one arg: filename.wav path"},
     {"exit", cmd_exit, "exits simulation immediately"},
     {"help", cmd_help, "briefly describes commands"},
-    {NULL, NULL, NULL}};
+    {NULL, NULL, NULL}
+    /* clang-format on */
+};
 
-struct commands* command_setup(drawer_t drawer, plist_t plist, script_t script,
-                               BOOL interactive) {
+struct commands* command_setup(
+    drawer_t drawer, plist_t plist, script_t script, BOOL interactive) {
     struct commands* cmds = DBMALLOC(sizeof(struct commands));
     cmds->drawer = drawer;
     cmds->particles = plist;
@@ -142,8 +145,7 @@ void command_file(struct commands* cmds, const char* file) {
     FILE* fp = fopen(file, "r+");
     if (!fp) {
         int error = errno;
-        EPRINTF("Failed to open %s: error %s: %s", file, error,
-                strerror(error));
+        EPRINTF("Failed to open %s: error %s: %s", file, error, strerror(error));
         return;
     }
 
@@ -154,8 +156,7 @@ void command_file(struct commands* cmds, const char* file) {
         if (ret == NULL && feof(fp))
             break;
         if (ret == NULL && ferror(fp)) {
-            EPRINTF("Failed during read of %s: error %s: %s", file, error,
-                    strerror(error));
+            EPRINTF("Failed during read of %s: error %s: %s", file, error, strerror(error));
             break;
         }
         command_str(cmds, line_buffer);
@@ -177,13 +178,12 @@ static void cmd_emit(struct commands* cmds, const char* buffer) {
     int blender;
     int i = 0;
     if (sscanf(buffer,
-               "emit %d %lg %lg %lg %lg "
-               "%lg %lg %lg %lg %lg %lg "
-               "%d %d %g %g %g %g %g %g "
-               "%d %d %d",
-               &n, &x, &y, &ux, &uy, &rad, &urad, &ds, &uds, &theta, &utheta,
-               &life, &ulife, &r, &g, &b, &ur, &ug, &ub, &force, &limit,
-               &blender) == nargs) {
+            "emit %d %lg %lg %lg %lg "
+            "%lg %lg %lg %lg %lg %lg "
+            "%d %d %g %g %g %g %g %g "
+            "%d %d %d",
+            &n, &x, &y, &ux, &uy, &rad, &urad, &ds, &uds, &theta, &utheta, &life, &ulife,
+            &r, &g, &b, &ur, &ug, &ub, &force, &limit, &blender) == nargs) {
         for (i = 0; i < n; ++i) {
             pextra* pe = NULL;
             particle* p = NULL;
@@ -199,9 +199,8 @@ static void cmd_emit(struct commands* cmds, const char* buffer) {
                 limit = VIS_DEFAULT_LIMIT;
             }
 
-            p = particle_new_full(x, y, ux, uy, rad, urad, ds, uds, theta,
-                                  utheta, life, ulife, (force_id)force,
-                                  (limit_id)limit, pe);
+            p = particle_new_full(x, y, ux, uy, rad, urad, ds, uds, theta, utheta, life,
+                ulife, (force_id)force, (limit_id)limit, pe);
 
             plist_add(cmds->particles, p);
         }
@@ -376,8 +375,8 @@ static void cmd_audio(UNUSED_PARAM(struct commands* cmds), const char* buffer) {
     }
 }
 
-static void cmd_exit(UNUSED_PARAM(struct commands* cmds),
-                     UNUSED_PARAM(const char* buffer)) {
+static void cmd_exit(
+    UNUSED_PARAM(struct commands* cmds), UNUSED_PARAM(const char* buffer)) {
     /* depends on the gc freeing everything else */
     cmds->should_exit = TRUE;
     cmds->exit_status = CMD_ERROR_NONE;
@@ -386,8 +385,7 @@ static void cmd_exit(UNUSED_PARAM(struct commands* cmds),
 static void cmd_help(UNUSED_PARAM(struct commands* cmds), const char* buffer) {
     size_t i = 0;
     if (startswith(buffer, "help emit")) {
-        const char* help[] = {
-            "instantaneous emit command (please see README.md):\n",
+        const char* help[] = {"instantaneous emit command (please see README.md):\n",
             "emit n x y ux uy rad urad ds uds theta utheta life ulife r g b ur "
             "ug ub "
             "force limit blender\n",
@@ -409,8 +407,7 @@ static void cmd_help(UNUSED_PARAM(struct commands* cmds), const char* buffer) {
         }
     } else {
         for (i = 0; commands[i].cmd != NULL; ++i) {
-            printf("Command: \"%s\": %s\n", commands[i].cmd,
-                   commands[i].synopsis);
+            printf("Command: \"%s\": %s\n", commands[i].cmd, commands[i].synopsis);
         }
     }
 }

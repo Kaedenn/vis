@@ -1,10 +1,9 @@
 
-#include <stdlib.h>
-#include "defines.h"
 #include "emit.h"
 
 /* n x y ux uy rad urad ds uds theta utheta life ulife r g b ur ug ub
  * force limit blender */
+/* clang-format off */
 emit_desc* make_emit_frame(int n,
         double x, double y, double ux, double uy,
         double rad, double urad, double ds, double uds,
@@ -36,11 +35,18 @@ emit_desc* make_emit_frame(int n,
     emit->blender = blend;
     return emit;
 }
+/* clang-format on */
 
-emit_desc* emit_new(void) { return DBMALLOC(sizeof(struct emit)); }
-void emit_free(emit_desc* emit) { DBFREE(emit); }
+emit_desc* emit_new(void) {
+    return DBMALLOC(sizeof(struct emit));
+}
+void emit_free(emit_desc* emit) {
+    DBFREE(emit);
+}
 
-void emit_set_n(emit_desc* e, int n) { e->n = n; }
+void emit_set_n(emit_desc* e, int n) {
+    e->n = n;
+}
 void emit_set_pos(emit_desc* e, double x, double y, double ux, double uy) {
     e->x = x;
     e->y = y;
@@ -63,8 +69,7 @@ void emit_set_angle(emit_desc* e, double theta, double utheta) {
     e->theta = theta;
     e->utheta = utheta;
 }
-void emit_set_color(emit_desc* e, float r, float g, float b,
-                    float ur, float ug, float ub) {
+void emit_set_color(emit_desc* e, float r, float g, float b, float ur, float ug, float ub) {
     e->r = r;
     e->g = g;
     e->b = b;
@@ -72,19 +77,22 @@ void emit_set_color(emit_desc* e, float r, float g, float b,
     e->ug = ug;
     e->ub = ub;
 }
-void emit_set_force(emit_desc* e, force_id force) { e->force = force; }
-void emit_set_limit(emit_desc* e, limit_id limit) { e->limit = limit; }
-void emit_set_blender(emit_desc* e, blend_id blender) { e->blender = blender; }
+void emit_set_force(emit_desc* e, force_id force) {
+    e->force = force;
+}
+void emit_set_limit(emit_desc* e, limit_id limit) {
+    e->limit = limit;
+}
+void emit_set_blender(emit_desc* e, blend_id blender) {
+    e->blender = blender;
+}
 
 void dbprintf_emit_desc(emit_desc* e) {
-    DBPRINTF("struct *emit_desc* { n=%d, x=%g, y=%g, ux=%g, uy=%g, "
+    DBPRINTF("struct emit_desc { n=%d, x=%g, y=%g, ux=%g, uy=%g, "
              "rad=%g, urad=%g, life=%d, ulife=%d, ds=%g, uds=%g, "
              "theta=%g, utheta=%g, r=%g, g=%g, b=%g, "
              "ur=%g, ug=%g, ub=%g, force=%d, limit=%d, blender=%d };",
-             e->n, e->x, e->y, e->ux, e->uy, e->rad, e->urad,
-             e->life, e->ulife, e->ds, e->uds, e->theta, e->utheta,
-             (double)e->r, (double)e->g, (double)e->b,
-             (double)e->ur, (double)e->ug, (double)e->ub,
-             e->force, e->limit, e->blender);
+        e->n, e->x, e->y, e->ux, e->uy, e->rad, e->urad, e->life, e->ulife, e->ds, e->uds,
+        e->theta, e->utheta, (double)e->r, (double)e->g, (double)e->b, (double)e->ur,
+        (double)e->ug, (double)e->ub, e->force, e->limit, e->blender);
 }
-

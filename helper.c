@@ -2,7 +2,6 @@
 #include "helper.h"
 
 #include <errno.h>
-#include <math.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -19,8 +18,7 @@ FILE* try_fopen(const char* path, const char* mode) {
 char* stralloc(size_t nchars) {
     char* buffer = calloc(nchars, 1);
     if (!buffer) {
-        fprintf(stderr, "alloc %ld failed: %d %s\n", (long)nchars, errno,
-                strerror(errno));
+        fprintf(stderr, "alloc %ld failed: %d %s\n", (long)nchars, errno, strerror(errno));
         do_assert(buffer != NULL, "Allocation failed", __FILE__, __LINE__);
     }
     return buffer;
@@ -29,8 +27,8 @@ char* stralloc(size_t nchars) {
 char* strrealloc(char* buffer, size_t newsize) {
     char* newbuffer = realloc((void*)buffer, newsize);
     if (!newbuffer) {
-        fprintf(stderr, "realloc %ld failed: %d %s\n", (long)newsize, errno,
-                strerror(errno));
+        fprintf(
+            stderr, "realloc %ld failed: %d %s\n", (long)newsize, errno, strerror(errno));
         do_assert(newbuffer != NULL, "Reallocation failed", __FILE__, __LINE__);
     }
     return newbuffer;
@@ -76,8 +74,7 @@ void eprintf(const char* fmt, ...) {
     fprintf(stderr, "\n");
 }
 
-static void do_assert_fail(const char* message, const char* file,
-        int line) NORETURN;
+static void do_assert_fail(const char* message, const char* file, int line) NORETURN;
 
 static void do_assert_fail(const char* message, const char* file, int line) {
     eprintf("Assertion failure: %s:%d: %s", file, line, message);
@@ -96,8 +93,8 @@ void do_assert(BOOL cond, const char* message, const char* file, int line) {
 }
 
 void dbprintf(const char* fmt, ...) {
-    va_list args;
 #if DEBUG > DEBUG_NONE
+    va_list args;
     fprintf(stderr, "debug: ");
     va_start(args, fmt);
     vfprintf(stderr, fmt, args);
@@ -158,37 +155,37 @@ static size_t escape_count_copy(char* dest, const char* src) {
             if (dest)
                 dest[j++] = '\\';
             switch (src[i]) {
-                case '\r':
-                    if (dest)
-                        dest[j++] = 'r';
-                    len += 2;
-                    break;
-                case '\n':
-                    if (dest)
-                        dest[j++] = 'n';
-                    len += 2;
-                    break;
-                case '\v':
-                    if (dest)
-                        dest[j++] = 'v';
-                    len += 2;
-                    break;
-                case '\f':
-                    if (dest)
-                        dest[j++] = 'f';
-                    len += 2;
-                    break;
-                case '\t':
-                    if (dest)
-                        dest[j++] = 't';
-                    len += 2;
-                    break;
-                default:
-                    dest[j++] = 'x';
-                    dest[j++] = (char)((src[i] / 10) % 10 + '0');
-                    dest[j++] = (char)(src[i] % 10 + '0');
-                    len += 4; /* \xNN */
-                    break;
+            case '\r':
+                if (dest)
+                    dest[j++] = 'r';
+                len += 2;
+                break;
+            case '\n':
+                if (dest)
+                    dest[j++] = 'n';
+                len += 2;
+                break;
+            case '\v':
+                if (dest)
+                    dest[j++] = 'v';
+                len += 2;
+                break;
+            case '\f':
+                if (dest)
+                    dest[j++] = 'f';
+                len += 2;
+                break;
+            case '\t':
+                if (dest)
+                    dest[j++] = 't';
+                len += 2;
+                break;
+            default:
+                dest[j++] = 'x';
+                dest[j++] = (char)((src[i] / 10) % 10 + '0');
+                dest[j++] = (char)(src[i] % 10 + '0');
+                len += 4; /* \xNN */
+                break;
             }
         }
     }

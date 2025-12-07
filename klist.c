@@ -1,6 +1,6 @@
 
-#include "helper.h"
 #include "klist.h"
+#include "helper.h"
 
 struct klist_node {
     struct klist_node* prev;
@@ -142,4 +142,3 @@ BOOL klist_empty(klist l) {
     }
     return l->length == 0;
 }
-
