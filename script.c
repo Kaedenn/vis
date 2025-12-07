@@ -281,6 +281,7 @@ int initialize_vis_lib(lua_State* L) {
         {"emitnow", viscmd_emitnow_fn}, 
         {"get_debug", viscmd_get_debug_fn},
         {NULL, NULL}};
+    /* clang-format on */
 
     luaL_newlib(L, vis_lib);
 
