@@ -6,8 +6,8 @@
 #include <stdio.h>
 
 /* for M_PI and other stuff */
-#ifndef _BSD_SOURCE
-#define _BSD_SOURCE 1
+#ifndef _DEFAULT_SOURCE
+#define _DEFAULT_SOURCE 1
 #endif
 
 /* open or print the appropriate error */

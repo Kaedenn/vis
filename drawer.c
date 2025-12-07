@@ -1,5 +1,5 @@
 
-#define _BSD_SOURCE /* for setenv */
+#define _DEFAULT_SOURCE /* for setenv */
 
 #include "drawer.h"
 #include "emitter.h"
