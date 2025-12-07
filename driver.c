@@ -1,15 +1,12 @@
 
-#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <time.h>
 
 /* #include <SDL2/SDL.h> */
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
-#include "async.h"
 #include "audio.h"
 #include "clargs.h"
 #include "command.h"
@@ -19,8 +16,6 @@
 #include "emitter.h"
 #include "gc.h"
 #include "helper.h"
-#include "mutator.h"
-#include "pextra.h"
 #include "plist.h"
 #include "script.h"
 
@@ -81,10 +76,8 @@ const char* get_key_name(int key) {
     }
 }
 
-void key_callback(GLFWwindow* window, int key, int scancode, int action,
-                  int mods) {
-    struct global_ctx* ctx =
-        (struct global_ctx*)glfwGetWindowUserPointer(window);
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
+    struct global_ctx* ctx = (struct global_ctx*)glfwGetWindowUserPointer(window);
     UNUSED_VARIABLE(scancode);
 
     if (action == GLFW_PRESS) {
@@ -95,10 +88,8 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action,
     }
 }
 
-void mouse_button_callback(GLFWwindow* window, int button, int action,
-                           int mods) {
-    struct global_ctx* ctx =
-        (struct global_ctx*)glfwGetWindowUserPointer(window);
+void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
+    struct global_ctx* ctx = (struct global_ctx*)glfwGetWindowUserPointer(window);
     double x, y;
     glfwGetCursorPos(window, &x, &y);
     UNUSED_VARIABLE(mods);
@@ -114,8 +105,7 @@ void mouse_button_callback(GLFWwindow* window, int button, int action,
 }
 
 void cursor_position_callback(GLFWwindow* window, double x, double y) {
-    struct global_ctx* ctx =
-        (struct global_ctx*)glfwGetWindowUserPointer(window);
+    struct global_ctx* ctx = (struct global_ctx*)glfwGetWindowUserPointer(window);
     drawer_trace(ctx->drawer, (float)x, (float)y);
     script_mousemove(ctx->script, (int)x, (int)y);
 }
@@ -173,21 +163,21 @@ int main(int argc, char* argv[]) {
     script_set_drawer(g.script, g.drawer);
     gc_add((gc_func)script_free, g.script);
 
-    g.cmds =
-        command_setup(g.drawer, g.particles, g.script, g.args->interactive);
+    g.cmds = command_setup(g.drawer, g.particles, g.script, g.args->interactive);
     gc_add((gc_func)command_teardown, g.cmds);
 
     emitter_setup(g.cmds, g.particles, g.drawer);
     gc_add((gc_func)emitter_free, NULL);
 
-    /*if (!audio_init()) {
+    if (!audio_init()) {
         exit(1);
-    }*/
+    }
     if (g.args->quiet_audio) {
         audio_mute();
     }
     gc_add((gc_func)audio_free, NULL);
 
+    /* Configure particles drawn when the user clicks and drags */
     emit_desc* emit = emit_new();
     emit->n = 100;
     emit->rad = 1;
@@ -224,12 +214,12 @@ void onkeydown(int sym, struct global_ctx* ctx) {
         ctx->should_exit = TRUE;
         break;
     case GLFW_KEY_SPACE:
-        if (ctx->paused) {
-            audio_play();
-        } else {
-            audio_pause();
-        }
         ctx->paused = !ctx->paused;
+        if (ctx->paused) {
+            audio_pause();
+        } else {
+            audio_play();
+        }
         break;
     default:
         break;
@@ -252,8 +242,7 @@ void mainloop(struct global_ctx* ctx) {
         script_set_debug(ctx->script, SCRIPT_DEBUG_NUM_MUTATES,
                          emitter_get_frame_count(VIS_FTYPE_MUTATE));
         script_set_debug(ctx->script, SCRIPT_DEBUG_PARTICLES_EMITTED,
-                         dbg.particles_emitted +
-                             plist_get_size(ctx->particles));
+                         dbg.particles_emitted + plist_get_size(ctx->particles));
 #if DEBUG >= DEBUG_DEBUG
         script_set_debug(ctx->script, SCRIPT_DEBUG_PARTICLES_MUTATED,
                          mutate_debug_get_particles_mutated());

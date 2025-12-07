@@ -2,7 +2,7 @@
 #ifndef VIS_AUDIO_HEADER_INCLUDED_
 #define VIS_AUDIO_HEADER_INCLUDED_ 1
 
-#include "helper.h"
+#include "defines.h"
 
 BOOL audio_init(void);
 
@@ -16,4 +16,3 @@ void audio_mute(void);
 void audio_seek(unsigned where);
 
 #endif
-

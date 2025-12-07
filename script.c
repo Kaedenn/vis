@@ -1,22 +1,21 @@
 
-#define _BSD_SOURCE /* for setenv */
+#define _DEFAULT_SOURCE /* for setenv */
 
+#include "script.h"
 #include "audio.h"
+#include "emitter.h"
 #include "flist.h"
 #include "genlua.h"
 #include "helper.h"
-#include "script.h"
-#include "mutator.h"
 #include "kstring.h"
-#include "emitter.h"
+#include "mutator.h"
 
-#include <errno.h>
 #include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include <lua.h>
 #include <lauxlib.h>
+#include <lua.h>
 #include <lualib.h>
 
 static int initialize_vis_lib(lua_State* L);
@@ -72,43 +71,40 @@ script_t script_new(script_cfg_mask cfg) {
 
     /* adjust lua search path, include ./lua and ./test,
      * include default modules */
-    script_run_string(s,
-        "package = require('package')\n"
-        "package.path = '; ;./?.lua;./lua/?.lua;./test/?.lua'"
-        "Vis = require(\"Vis\")\n"
-        "VisUtil = require(\"visutil\")\n"
-        "Emit = require(\"emit\")\n");
+    script_run_string(s, "package = require('package')\n"
+                         "package.path = '; ;./?.lua;./lua/?.lua;./test/?.lua'"
+                         "Vis = require(\"Vis\")\n"
+                         "VisUtil = require(\"visutil\")\n"
+                         "Emit = require(\"emit\")\n");
     /* create tables for handling user input */
-    script_run_string(s,
-        "Vis._on_mousedowns = {}\n"
-        "Vis._on_mouseups = {}\n"
-        "Vis._on_mousemoves = {}\n"
-        "Vis._on_keydowns = {}\n"
-        "Vis._on_keyups = {}\n"
-        "Vis._on_quits = {}\n"
-        "Vis._do_on_event = function(tab, ...)\n"
-        "   for i,f in pairs(tab) do f(...) end\n"
-        "end\n");
+    script_run_string(s, "Vis._on_mousedowns = {}\n"
+                         "Vis._on_mouseups = {}\n"
+                         "Vis._on_mousemoves = {}\n"
+                         "Vis._on_keydowns = {}\n"
+                         "Vis._on_keyups = {}\n"
+                         "Vis._on_quits = {}\n"
+                         "Vis._do_on_event = function(tab, ...)\n"
+                         "   for i,f in pairs(tab) do f(...) end\n"
+                         "end\n");
     /* create functions for interfacing with said tables */
-    script_run_string(s,
-        "Vis.on_mousedown = function(f)\n"
-        "   table.insert(Vis._on_mousedowns, f)\n"
-        "end\n"
-        "Vis.on_mouseup = function(f)\n"
-        "   table.insert(Vis._on_mouseups, f)\n"
-        "end\n"
-        "Vis.on_mousemove = function(f)\n"
-        "   table.insert(Vis._on_mousemoves, f)\n"
-        "end\n"
-        "Vis.on_keydown = function(f)\n"
-        "   table.insert(Vis._on_keydowns, f)\n"
-        "end\n"
-        "Vis.on_keyup = function(f)\n"
-        "   table.insert(Vis._on_keyups, f)\n"
-        "end\n"
-        "Vis.on_quit = function(f)\n"
-        "   table.insert(Vis._on_quits, f)\n"
-        "end\n");
+    script_run_string(s, "Vis.on_mousedown = function(f)\n"
+                         "   table.insert(Vis._on_mousedowns, f)\n"
+                         "end\n"
+                         "Vis.on_mouseup = function(f)\n"
+                         "   table.insert(Vis._on_mouseups, f)\n"
+                         "end\n"
+                         "Vis.on_mousemove = function(f)\n"
+                         "   table.insert(Vis._on_mousemoves, f)\n"
+                         "end\n"
+                         "Vis.on_keydown = function(f)\n"
+                         "   table.insert(Vis._on_keydowns, f)\n"
+                         "end\n"
+                         "Vis.on_keyup = function(f)\n"
+                         "   table.insert(Vis._on_keyups, f)\n"
+                         "end\n"
+                         "Vis.on_quit = function(f)\n"
+                         "   table.insert(Vis._on_quits, f)\n"
+                         "end\n");
     VIS_ASSERT(s->errors == 0);
     if (fexists(LUA_STARTUP_FILE)) {
         DBPRINTF("Executing startup file: %s", LUA_STARTUP_FILE);
@@ -116,7 +112,7 @@ script_t script_new(script_cfg_mask cfg) {
     }
 
     lua_getglobal(s->L, "Vis");
-    
+
     flist** flbox = lua_newuserdata(s->L, sizeof(flist*));
     luaL_newmetatable(s->L, "flist**");
     lua_pop(s->L, 1);
@@ -144,9 +140,11 @@ script_t script_new(script_cfg_mask cfg) {
 }
 
 void script_free(script_t s) {
-    if (!s) return;
+    if (!s)
+        return;
     lua_close(s->L);
-    if (s->args) klist_free(s->args);
+    if (s->args)
+        klist_free(s->args);
     DBFREE(s->dbg);
     DBFREE(s);
 }
@@ -209,24 +207,24 @@ void script_clear_status(script_t s) {
 
 void script_set_debug(script_t s, enum script_debug_id what, uint64_t n) {
     switch (what) {
-        case SCRIPT_DEBUG_PARTICLES_EMITTED:
-            s->dbg->particles_emitted = n;
-            break;
-        case SCRIPT_DEBUG_TIME_NOW:
-            s->dbg->time_now = n;
-            break;
-        case SCRIPT_DEBUG_FRAMES_EMITTED:
-            s->dbg->frames_emitted = n;
-            break;
-        case SCRIPT_DEBUG_NUM_MUTATES:
-            s->dbg->num_mutates = n;
-            break;
-        case SCRIPT_DEBUG_PARTICLES_MUTATED:
-            s->dbg->particles_mutated = n;
-            break;
-        case SCRIPT_DEBUG_PARTICLE_TAGS_MODIFIED:
-            s->dbg->particle_tags_modified = n;
-            break;
+    case SCRIPT_DEBUG_PARTICLES_EMITTED:
+        s->dbg->particles_emitted = n;
+        break;
+    case SCRIPT_DEBUG_TIME_NOW:
+        s->dbg->time_now = n;
+        break;
+    case SCRIPT_DEBUG_FRAMES_EMITTED:
+        s->dbg->frames_emitted = n;
+        break;
+    case SCRIPT_DEBUG_NUM_MUTATES:
+        s->dbg->num_mutates = n;
+        break;
+    case SCRIPT_DEBUG_PARTICLES_MUTATED:
+        s->dbg->particles_mutated = n;
+        break;
+    case SCRIPT_DEBUG_PARTICLE_TAGS_MODIFIED:
+        s->dbg->particle_tags_modified = n;
+        break;
     }
 }
 
@@ -262,27 +260,16 @@ void script_on_quit(script_t s) {
 /* begin of private API */
 int initialize_vis_lib(lua_State* L) {
     static const struct luaL_Reg vis_lib[] = {
-        {"debug", viscmd_debug_fn},
-        {"command", viscmd_command_fn},
-        {"exit", viscmd_exit_fn},
-        {"emit", viscmd_emit_fn},
-        {"audio", viscmd_audio_fn},
-        {"play", viscmd_play_fn},
-        {"pause", viscmd_pause_fn},
-        {"seek", viscmd_seek_fn},
-        {"seekms", viscmd_seekms_fn},
-        {"seekframe", viscmd_seekframe_fn},
-        {"bgcolor", viscmd_bgcolor_fn},
-        {"mutate", viscmd_mutate_fn},
-        {"callback", viscmd_callback_fn},
-        {"fps", viscmd_fps_fn},
-        {"settrace", viscmd_settrace_fn},
-        {"frames2msec", viscmd_f2ms_fn},
-        {"msec2frames", viscmd_ms2f_fn},
-        {"emitnow", viscmd_emitnow_fn},
-        {"get_debug", viscmd_get_debug_fn},
-        {NULL, NULL}
-    };
+        {"debug", viscmd_debug_fn},         {"command", viscmd_command_fn},
+        {"exit", viscmd_exit_fn},           {"emit", viscmd_emit_fn},
+        {"audio", viscmd_audio_fn},         {"play", viscmd_play_fn},
+        {"pause", viscmd_pause_fn},         {"seek", viscmd_seek_fn},
+        {"seekms", viscmd_seekms_fn},       {"seekframe", viscmd_seekframe_fn},
+        {"bgcolor", viscmd_bgcolor_fn},     {"mutate", viscmd_mutate_fn},
+        {"callback", viscmd_callback_fn},   {"fps", viscmd_fps_fn},
+        {"settrace", viscmd_settrace_fn},   {"frames2msec", viscmd_f2ms_fn},
+        {"msec2frames", viscmd_ms2f_fn},    {"emitnow", viscmd_emitnow_fn},
+        {"get_debug", viscmd_get_debug_fn}, {NULL, NULL}};
 
     luaL_newlib(L, vis_lib);
 
@@ -408,7 +395,7 @@ void prepare_stack(script_t s, klist args) {
     if (args != NULL) {
         lua_createtable(s->L, (int)klist_length(args), 0);
         for (size_t i = 0; i < klist_length(args); ++i) {
-            lua_pushinteger(s->L, (int)i+1);
+            lua_pushinteger(s->L, (int)i + 1);
             lua_pushstring(s->L, klist_getn(args, i));
             lua_settable(s->L, -3);
         }
@@ -509,9 +496,9 @@ emit_desc* lua_args_to_emit_desc(lua_State* L, int arg, fnum* when) {
     emit->ur = (float)luaL_optnumber(L, arg++, 0.0);
     emit->ug = (float)luaL_optnumber(L, arg++, 0.0);
     emit->ub = (float)luaL_optnumber(L, arg++, 0.0);
-    emit->force = luaL_optint(L, arg++, VIS_DEFAULT_FORCE);
-    emit->limit = luaL_optint(L, arg++, VIS_DEFAULT_LIMIT);
-    emit->blender = luaL_optint(L, arg++, VIS_BLEND_LINEAR);
+    emit->force = (force_id)luaL_optint(L, arg++, VIS_DEFAULT_FORCE);
+    emit->limit = (limit_id)luaL_optint(L, arg++, VIS_DEFAULT_LIMIT);
+    emit->blender = (blend_id)luaL_optint(L, arg++, VIS_BLEND_LINEAR);
     return emit;
 }
 /* end of private API */
@@ -527,29 +514,29 @@ int viscmd_debug_fn(lua_State* L) {
     kstr s = kstring_newfromvf("%d", nargs);
     for (int i = 1; i <= nargs; ++i) {
         switch (lua_type(L, i)) {
-            case LUA_TNIL:
-                kstring_appendvf(s, ", %s", "nil");
-                break;
-            case LUA_TNUMBER:
-                kstring_appendvf(s, ", %g", luaL_checknumber(L, i));
-                break;
-            case LUA_TBOOLEAN:
-                kstring_appendvf(s, ", %s", SBOOL[luaL_checkint(L, i)>0]);
-                break;
-            case LUA_TSTRING: {
-                char* esc = escape_string(luaL_checkstring(L, i));
-                kstring_appendvf(s, ", \"%s\"", esc);
-                DBFREE(esc);
-            } break;
-            case LUA_TTABLE: /* TODO: dump a table */
-            case LUA_TFUNCTION:
-            case LUA_TUSERDATA:
-            case LUA_TTHREAD:
-            case LUA_TLIGHTUSERDATA:
-            default:
-                kstring_appendvf(s, ", <%s>", lua_typename(L, lua_type(L, i)));
-                break;
-         }
+        case LUA_TNIL:
+            kstring_appendvf(s, ", %s", "nil");
+            break;
+        case LUA_TNUMBER:
+            kstring_appendvf(s, ", %g", luaL_checknumber(L, i));
+            break;
+        case LUA_TBOOLEAN:
+            kstring_appendvf(s, ", %s", SBOOL[luaL_checkint(L, i) > 0]);
+            break;
+        case LUA_TSTRING: {
+            char* esc = escape_string(luaL_checkstring(L, i));
+            kstring_appendvf(s, ", \"%s\"", esc);
+            DBFREE(esc);
+        } break;
+        case LUA_TTABLE: /* TODO: dump a table */
+        case LUA_TFUNCTION:
+        case LUA_TUSERDATA:
+        case LUA_TTHREAD:
+        case LUA_TLIGHTUSERDATA:
+        default:
+            kstring_appendvf(s, ", <%s>", lua_typename(L, lua_type(L, i)));
+            break;
+        }
     }
 #if DEBUG >= DEBUG_DEBUG
     DBPRINTF("(function %s)[%s:%d]: Vis.debug(%s)", ar.name, ar.source,
@@ -564,7 +551,7 @@ int viscmd_debug_fn(lua_State* L) {
 
 /* Vis.command(Vis.flist, when, "command") */
 int viscmd_command_fn(lua_State* L) {
-    flist* fl = *(flist* *)luaL_checkudata(L, 1, "flist**");
+    flist* fl = *(flist**)luaL_checkudata(L, 1, "flist**");
     fnum when = (fnum)VIS_MSEC_TO_FRAMES(luaL_checkunsigned(L, 2));
     const char* cmd = luaL_checkstring(L, 3);
     /* DBPRINTF("command(%p, %d, \"%s\")", fl, when, cmd); */
@@ -805,4 +792,3 @@ int viscmd_get_debug_fn(lua_State* L) {
     return 1;
 }
 /* end of Lua API */
-

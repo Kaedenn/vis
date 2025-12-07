@@ -4,6 +4,8 @@
 
 #include "defines.h"
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 /* for M_PI and other stuff */
 #ifndef _DEFAULT_SOURCE

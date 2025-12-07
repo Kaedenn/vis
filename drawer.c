@@ -139,7 +139,8 @@ drawer_t drawer_new(void) {
 
     /* Buffer initial data (empty) */
     glBindBuffer(GL_ARRAY_BUFFER, drawer->vbo);
-    glBufferData(GL_ARRAY_BUFFER, drawer->vertex_count * sizeof(vertex_t), NULL,
+    glBufferData(GL_ARRAY_BUFFER,
+                 (GLsizeiptr)(drawer->vertex_count * sizeof(vertex_t)), NULL,
                  GL_DYNAMIC_DRAW);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
@@ -229,7 +230,8 @@ int drawer_draw_to_screen(drawer_t drawer) {
 
     /* Update VBO */
     glBindBuffer(GL_ARRAY_BUFFER, drawer->vbo);
-    glBufferSubData(GL_ARRAY_BUFFER, 0, drawer->vertex_curr * sizeof(vertex_t),
+    glBufferSubData(GL_ARRAY_BUFFER, 0,
+                    (GLsizeiptr)(drawer->vertex_curr * sizeof(vertex_t)),
                     drawer->vertex_array);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
@@ -271,7 +273,7 @@ void drawer_ensure_fps_linear(drawer_t drawer) {
         if (sleep_sec > 0) {
             struct timespec req;
             req.tv_sec = (time_t)sleep_sec;
-            req.tv_nsec = (long)((sleep_sec - req.tv_sec) * 1e9);
+            req.tv_nsec = (long)((sleep_sec - (double)req.tv_sec) * 1e9);
             nanosleep(&req, NULL);
         }
     }
@@ -286,7 +288,7 @@ void drawer_ensure_fps_absolute(drawer_t drawer) {
         if (sleep_sec > 0) {
             struct timespec req;
             req.tv_sec = (time_t)sleep_sec;
-            req.tv_nsec = (long)((sleep_sec - req.tv_sec) * 1e9);
+            req.tv_nsec = (long)((sleep_sec - (double)req.tv_sec) * 1e9);
             nanosleep(&req, NULL);
         }
     }

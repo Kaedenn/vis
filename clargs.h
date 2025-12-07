@@ -19,6 +19,8 @@ typedef struct clargs {
     BOOL stay_after_script;
     BOOL absolute_fps;
 
+    int debug_level;
+
     BOOL must_exit;
     int exit_status;
 } clargs;
@@ -27,4 +29,3 @@ clargs* argparse(int argc, char** argv);
 void clargs_free(clargs* args);
 
 #endif
-

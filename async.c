@@ -3,7 +3,6 @@
 #include <string.h>
 
 #include "async.h"
-#include "helper.h"
 
 int async_setup_stdin(void) {
     return fcntl(STDIN_FILENO, F_SETFL,
@@ -22,4 +21,3 @@ ssize_t async_read_stdin(char* buffer, size_t len) {
 ssize_t async_write_stdout(const char* buffer) {
     return write(STDOUT_FILENO, buffer, strlen(buffer));
 }
-

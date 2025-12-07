@@ -1,4 +1,5 @@
 BasedOnStyle: LLVM
+ColumnLimit: 92
 IndentWidth: 4
 TabWidth: 4
 UseTab: Never

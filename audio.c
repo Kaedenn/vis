@@ -14,7 +14,7 @@ struct audio {
 static struct audio* audio = NULL;
 
 BOOL audio_init(void) {
-    return FALSE;
+    return TRUE;
     /*
     if (audio != NULL) {
         eprintf("Attempt to call audio_init more than once!");
@@ -32,7 +32,7 @@ BOOL audio_init(void) {
 }
 
 BOOL audio_open(const char* file) {
-    return FALSE;
+    return TRUE;
     /*
     if (!audio) {
         if (!audio_init()) {

@@ -18,14 +18,16 @@ const char* help_string[] = {
     "  -i        disable interactive mode (commands on stdin)",
     "  -I        do not exit after a script finishes (if it calls Vis.exit)",
     "  -q        disables the playback of audio",
+    "  -v        enable verbose output",
+    "  -V        enable very verbose output",
     "  -h        this message",
     " Long options:",
     "  --linear-fps use the old linear (self-correcting) fps limiter",
     "  --help       this message",
     " Other stuff:",
-    "  --        everything following is sent to Lua (like -A)"
-    "", NULL
-};
+    "  --        everything following is sent to Lua (like -A)",
+    "",
+    NULL};
 
 static void mark_error(clargs* args, int error) {
     args->must_exit = TRUE;
@@ -48,6 +50,7 @@ clargs* argparse(int argc, char** argv) {
     args->absolute_fps = TRUE;
     args->quiet_audio = FALSE;
     args->stay_after_script = FALSE;
+    args->debug_level = 0;
     klist unrecognized = klist_new();
     int argi;
     for (argi = 1; argi < argc && argv[argi] && argv[argi][0]; ++argi) {
@@ -61,89 +64,95 @@ clargs* argparse(int argc, char** argv) {
             break;
         }
         switch (argv[argi][1]) {
-            case 'd':
-                if (argi+1 < argc) {
-                    args->dumpfile = argv[++argi];
-                } else {
-                    EPRINTF("Argument -%s requires value", argv[argi][1]);
-                    mark_error(args, 1);
-                }
-                break;
-            case 'l':
-                if (argi+1 < argc) {
-                    args->scriptfile = argv[++argi];
-                } else {
-                    EPRINTF("Argument -%s requires value", argv[argi][1]);
-                    mark_error(args, 1);
-                }
-                break;
-            case 'L':
-                if (argi+1 < argc) {
-                    args->scriptstring = argv[++argi];
-                } else {
-                    EPRINTF("Argument -%s requires value", argv[argi][1]);
-                    mark_error(args, 1);
-                }
-                break;
-            case 'A':
-                if (argi+1 < argc) {
-                    klist_append(args->scriptargs, argv[++argi]);
-                } else {
-                    EPRINTF("Argument -%s requires value", argv[argi][1]);
-                    mark_error(args, 1);
-                }
-                break;
-            case 'f':
-                if (argi+1 < argc) {
-                    args->commandfile = argv[++argi];
-                } else {
-                    EPRINTF("Argument -%s requires value", argv[argi][1]);
-                    mark_error(args, 1);
-                }
-                break;
-            case 's':
-                if (argi+1 < argc) {
-                    args->frameskip = strtoi(argv[++argi]);
-                } else {
-                    EPRINTF("Argument -%s requires value", argv[argi][1]);
-                    mark_error(args, 1);
-                }
-                break;
-            case 't':
-                args->dumptrace = TRUE;
-                break;
-            case 'i':
-                args->interactive = FALSE;
-                break;
-            case 'I':
-                args->stay_after_script = TRUE;
-                break;
-            case 'q':
-                args->quiet_audio = TRUE;
-                break;
-            case 'h': {
+        case 'd':
+            if (argi + 1 < argc) {
+                args->dumpfile = argv[++argi];
+            } else {
+                EPRINTF("Argument -%s requires value", argv[argi][1]);
+                mark_error(args, 1);
+            }
+            break;
+        case 'l':
+            if (argi + 1 < argc) {
+                args->scriptfile = argv[++argi];
+            } else {
+                EPRINTF("Argument -%s requires value", argv[argi][1]);
+                mark_error(args, 1);
+            }
+            break;
+        case 'L':
+            if (argi + 1 < argc) {
+                args->scriptstring = argv[++argi];
+            } else {
+                EPRINTF("Argument -%s requires value", argv[argi][1]);
+                mark_error(args, 1);
+            }
+            break;
+        case 'A':
+            if (argi + 1 < argc) {
+                klist_append(args->scriptargs, argv[++argi]);
+            } else {
+                EPRINTF("Argument -%s requires value", argv[argi][1]);
+                mark_error(args, 1);
+            }
+            break;
+        case 'f':
+            if (argi + 1 < argc) {
+                args->commandfile = argv[++argi];
+            } else {
+                EPRINTF("Argument -%s requires value", argv[argi][1]);
+                mark_error(args, 1);
+            }
+            break;
+        case 's':
+            if (argi + 1 < argc) {
+                args->frameskip = strtoi(argv[++argi]);
+            } else {
+                EPRINTF("Argument -%s requires value", argv[argi][1]);
+                mark_error(args, 1);
+            }
+            break;
+        case 't':
+            args->dumptrace = TRUE;
+            break;
+        case 'i':
+            args->interactive = FALSE;
+            break;
+        case 'I':
+            args->stay_after_script = TRUE;
+            break;
+        case 'q':
+            args->quiet_audio = TRUE;
+            break;
+        case 'v':
+            args->debug_level = 1;
+            break;
+        case 'V':
+            args->debug_level = 2;
+            break;
+        case 'h': {
+            printf(usage_string, argv[0]);
+            for (size_t i = 0; help_string[i] != NULL; ++i) {
+                printf("\n%s", help_string[i]);
+            }
+            mark_error(args, 0);
+        } break;
+        case '-': /* longopt */
+            if (!strcmp(argv[argi], "--linear-fps")) {
+                args->absolute_fps = FALSE;
+            } else if (!strcmp(argv[argi], "--help")) {
                 printf(usage_string, argv[0]);
                 for (size_t i = 0; help_string[i] != NULL; ++i) {
                     printf("\n%s", help_string[i]);
                 }
                 mark_error(args, 0);
-            } break;
-            case '-': /* longopt */
-                if (!strcmp(argv[argi], "--linear-fps")) {
-                    args->absolute_fps = FALSE;
-                } else if (!strcmp(argv[argi], "--help")) {
-                    printf(usage_string, argv[0]);
-                    for (size_t i = 0; help_string[i] != NULL; ++i) {
-                        printf("\n%s", help_string[i]);
-                    }
-                    mark_error(args, 0);
-                } else {
-                    EPRINTF("Invalid long option %s", argv[argi]);
-                }
-                break;
-            default:
-                EPRINTF("Invalid argument -%c", argv[argi][1]);
-                break;
+            } else {
+                EPRINTF("Invalid long option %s", argv[argi]);
+            }
+            break;
+        default:
+            EPRINTF("Invalid argument -%c", argv[argi][1]);
+            break;
         }
     }
 
@@ -162,8 +171,7 @@ clargs* argparse(int argc, char** argv) {
     }
 
     if (args->commandfile && !fexists(args->commandfile)) {
-        EPRINTF("Command file %s not found or not readable",
-                args->commandfile);
+        EPRINTF("Command file %s not found or not readable", args->commandfile);
         mark_error(args, 1);
     }
 
@@ -175,4 +183,3 @@ clargs* argparse(int argc, char** argv) {
 void clargs_free(clargs* args) {
     DBFREE(args);
 }
-
