@@ -2,13 +2,13 @@
 #include "audio.h"
 #include "helper.h"
 
-#include <SDL.h>
-#include <SDL_mixer.h>
+/*#include <SDL.h>
+#include <SDL_mixer.h>*/
 
 struct audio {
     char* file;
     BOOL muted;
-    Mix_Music* music;
+    /*Mix_Music* music;*/
 };
 
 static struct audio* audio = NULL;
@@ -110,4 +110,3 @@ void audio_seek(unsigned where) {
     }
     */
 }
-

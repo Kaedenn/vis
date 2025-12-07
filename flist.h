@@ -5,16 +5,17 @@
 #include "emit.h"
 #include "mutator.h"
 #include "script.h"
+#include "types.h"
 
 typedef struct flist_node {
     ftype_id type; /* types.h, identifies which field to use below */
     union {
-        emit_desc* frame; /* VIS_FTYPE_EMIT: emit frame */
-        const char* cmd; /* VIS_FTYPE_CMD: command frame */
-        float color[3]; /* VIS_FTYPE_BGCOLOR: bgcolor frame */
+        emit_desc* frame;      /* VIS_FTYPE_EMIT: emit frame */
+        const char* cmd;       /* VIS_FTYPE_CMD: command frame */
+        float color[3];        /* VIS_FTYPE_BGCOLOR: bgcolor frame */
         mutate_method* method; /* VIS_FTYPE_MUTATE: mutate frame */
-        script_cb* scriptcb; /* VIS_FTYPE_SCRIPTCB: lua invoke frame */
-        fnum frameseek; /* VIS_FTYPE_FRAMESEEK: go-to-frame-num frame */
+        script_cb* scriptcb;   /* VIS_FTYPE_SCRIPTCB: lua invoke frame */
+        fnum frameseek;        /* VIS_FTYPE_FRAMESEEK: go-to-frame-num frame */
     } data;
     struct flist_node* next;
 } flist_node;
@@ -46,4 +47,3 @@ void flist_insert_scriptcb(flist* fl, fnum when, script_cb* func);
 void flist_insert_seekframe(flist* fl, fnum when, fnum where);
 
 #endif
-

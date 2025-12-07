@@ -13,8 +13,6 @@
 #define NORETURN
 #endif
 
-#include "types.h"
-
 /* debugging levels */
 #define DEBUG_NONE 0
 #define DEBUG_VERBOSE 1
@@ -44,9 +42,9 @@
 /* constants for the frame array's length */
 /* use -DVIS_FRAMES=N to override */
 #ifndef VIS_NFRAMES
-# define VIS_FRAMES_NMINS 10
-# define VIS_FRAMES_NSECS 0
-# define VIS_NFRAMES ((VIS_FRAMES_NMINS*60+VIS_FRAMES_NSECS)*VIS_FPS_LIMIT)
+#define VIS_FRAMES_NMINS 10
+#define VIS_FRAMES_NSECS 0
+#define VIS_NFRAMES ((VIS_FRAMES_NMINS * 60 + VIS_FRAMES_NSECS) * VIS_FPS_LIMIT)
 #endif
 
 /* window pos */
@@ -80,8 +78,9 @@
 #define VIS_FPMS_LIMIT (VIS_FPS_LIMIT / 1000.0)
 
 /* converting from frames to msec */
-#define VIS_FRAMES_TO_MSEC(frames) ((int)((frames)*1000.0/VIS_FPS_LIMIT+0.5))
-#define VIS_MSEC_TO_FRAMES(ms) ((int)(VIS_FPS_LIMIT*(ms)/1000.0+0.5))
+#define VIS_FRAMES_TO_MSEC(frames)                                             \
+    ((int)((frames) * 1000.0 / VIS_FPS_LIMIT + 0.5))
+#define VIS_MSEC_TO_FRAMES(ms) ((int)(VIS_FPS_LIMIT * (ms) / 1000.0 + 0.5))
 
 /* timing constants */
 #define VIS_10MS (10)
@@ -97,7 +96,7 @@
 #define VIS_BUFFER_LEN 4096
 
 /* initial capacity for particles */
-#define VIS_PLIST_INITIAL_SIZE (1024*1024)
+#define VIS_PLIST_INITIAL_SIZE (1024 * 1024)
 
 /* (drawing) number of vertices needed per particle */
 #define VIS_VTX_PER_PARTICLE 2
@@ -117,4 +116,3 @@
 #endif
 
 #endif
-

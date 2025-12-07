@@ -2,6 +2,7 @@
 #include "random.h"
 #include "helper.h"
 
+#include <stdint.h>
 #include <stdlib.h>
 #include <time.h>
 
@@ -69,4 +70,3 @@ float randfloat(float low, float high) {
 int randint(int low, int high) {
     return (int)randdouble(low, high);
 }
-

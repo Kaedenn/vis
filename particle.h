@@ -3,6 +3,7 @@
 #define VIS_PARTICLE_HEADER_INCLUDED_ 1
 
 #include "defines.h"
+#include "types.h"
 #include <stdlib.h>
 
 struct particle;
@@ -23,10 +24,10 @@ typedef struct particle {
 
 /* constructors */
 particle* particle_new(double x, double y, double r, int life, void* extra);
-particle* particle_new_full(double x, double y, double ux, double uy,
-                            double r, double ur, double ds, double uds,
-                            double theta, double utheta, int life, int ulife,
-                            force_id force, limit_id limit, void* extra);
+particle* particle_new_full(double x, double y, double ux, double uy, double r,
+                            double ur, double ds, double uds, double theta,
+                            double utheta, int life, int ulife, force_id force,
+                            limit_id limit, void* extra);
 
 /* destructor */
 void particle_free(particle* p);

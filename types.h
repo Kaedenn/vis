@@ -9,8 +9,14 @@ typedef unsigned int fnum;
 union particle_tag {
     int64_t l;
     uint64_t ul;
-    struct { int32_t h; int32_t l; } i;
-    struct { uint32_t h; uint32_t l; } ui;
+    struct {
+        int32_t h;
+        int32_t l;
+    } i;
+    struct {
+        uint32_t h;
+        uint32_t l;
+    } ui;
 };
 
 /* force functions */

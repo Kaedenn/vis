@@ -1,14 +1,14 @@
 #define _POSIX_C_SOURCE 199309L
-#define _BSD_SOURCE /* for setenv */
+#define _DEFAULT_SOURCE /* for setenv */
 
 #include "drawer.h"
+#include "blender.h"
 #include "emitter.h"
 #include "genlua.h"
 #include "helper.h"
-#include "kstring.h"
 #include "pextra.h"
 #include "shader.h"
-#include <errno.h>
+#include "types.h"
 #include <math.h>
 #include <time.h>
 
@@ -18,7 +18,7 @@
 #define MAX(a, b) ((a) < (b) ? (b) : (a))
 #endif
 
-static double calculate_blend(particle *p);
+static double calculate_blend(particle* p);
 /* static int render_to_file(drawer_t drawer, const char *path); */
 
 void drawer_ensure_fps_linear(drawer_t drawer);
@@ -26,354 +26,351 @@ void drawer_ensure_fps_absolute(drawer_t drawer);
 
 /* Vertex structure for GPU */
 typedef struct {
-  GLfloat x, y;
-  GLfloat radius;
-  GLfloat r, g, b, a;
+    GLfloat x, y;
+    GLfloat radius;
+    GLfloat r, g, b, a;
 } vertex_t;
 
 /* used, obviously, for fps tracking and limiting */
 struct fps {
-  void (*limiter)(drawer_t drawer);
-  uint32_t framecount;
-  double start_time;
-  double framestart_time;
-  double last_fps;
+    void (*limiter)(drawer_t drawer);
+    uint32_t framecount;
+    double start_time;
+    double framestart_time;
+    double last_fps;
 };
 
 struct drawer {
-  GLFWwindow *window;
-  GLuint vao;
-  GLuint vbo;
-  shader_t *shader;
+    GLFWwindow* window;
+    GLuint vao;
+    GLuint vbo;
+    shader_t* shader;
 
-  vertex_t *vertex_array;
-  size_t vertex_curr;
-  size_t vertex_count;
+    vertex_t* vertex_array;
+    size_t vertex_curr;
+    size_t vertex_count;
 
-  float bgcolor[3];
-  uint32_t frame_skip;
-  struct fps fps;
-  BOOL tracing;
-  emit_desc *emit;
-  BOOL verbose_trace;
-  double scale_factor;
-  char *dump_file_fmt;
+    float bgcolor[3];
+    uint32_t frame_skip;
+    struct fps fps;
+    BOOL tracing;
+    emit_desc* emit;
+    BOOL verbose_trace;
+    double scale_factor;
+    char* dump_file_fmt;
 };
 
-const GLchar *VERT_SOURCE = "glsl/vert.glsl";
-const GLchar *FRAG_SOURCE = "glsl/frag.glsl";
-const GLchar *COMPUTE_SOURCE = "glsl/compute.glsl";
+const GLchar* VERT_SOURCE = "glsl/vert.glsl";
+const GLchar* FRAG_SOURCE = "glsl/frag.glsl";
+const GLchar* COMPUTE_SOURCE = "glsl/compute.glsl";
 
-void glfw_error_callback(int error, const char *description) {
-  EPRINTF("GLFW Error (%d): %s\n", error, description);
+void glfw_error_callback(int error, const char* description) {
+    EPRINTF("GLFW Error (%d): %s\n", error, description);
 }
 
 drawer_t drawer_new(void) {
-  drawer_t drawer = DBMALLOC(sizeof(struct drawer));
+    drawer_t drawer = DBMALLOC(sizeof(struct drawer));
 
-  glfwSetErrorCallback(glfw_error_callback);
+    glfwSetErrorCallback(glfw_error_callback);
 
-  if (!glfwInit()) {
-    EPRINTF("%s\n", "GLFW initialization failed");
-    return NULL;
-  }
+    if (!glfwInit()) {
+        EPRINTF("%s\n", "GLFW initialization failed");
+        return NULL;
+    }
 
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-  glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-  drawer->window = glfwCreateWindow(VIS_WIDTH, VIS_HEIGHT, "Vis", NULL, NULL);
-  if (!drawer->window) {
-    EPRINTF("%s\n", "Failed to create GLFW window");
-    glfwTerminate();
-    return NULL;
-  }
+    drawer->window = glfwCreateWindow(VIS_WIDTH, VIS_HEIGHT, "Vis", NULL, NULL);
+    if (!drawer->window) {
+        EPRINTF("%s\n", "Failed to create GLFW window");
+        glfwTerminate();
+        return NULL;
+    }
 
-  glfwMakeContextCurrent(drawer->window);
+    glfwMakeContextCurrent(drawer->window);
 
-  glewExperimental = GL_TRUE;
-  if (glewInit() != GLEW_OK) {
-    EPRINTF("%s\n", "Failed to initialize GLEW");
-    return NULL;
-  }
+    glewExperimental = GL_TRUE;
+    if (glewInit() != GLEW_OK) {
+        EPRINTF("%s\n", "Failed to initialize GLEW");
+        return NULL;
+    }
 
-  glEnable(GL_PROGRAM_POINT_SIZE);
-  glEnable(GL_BLEND);
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glEnable(GL_PROGRAM_POINT_SIZE);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-  /* Initialize shader */
-  drawer->shader = shader_create(VERT_SOURCE, FRAG_SOURCE, COMPUTE_SOURCE);
-  if (!drawer->shader) {
-    EPRINTF("%s\n", "Failed to compile shaders");
-    return NULL;
-  }
+    /* Initialize shader */
+    drawer->shader = shader_create(VERT_SOURCE, FRAG_SOURCE, COMPUTE_SOURCE);
+    if (!drawer->shader) {
+        EPRINTF("%s\n", "Failed to compile shaders");
+        return NULL;
+    }
 
-  /* Initialize VAO/VBO */
-  glGenVertexArrays(1, &drawer->vao);
-  glBindVertexArray(drawer->vao);
+    /* Initialize VAO/VBO */
+    glGenVertexArrays(1, &drawer->vao);
+    glBindVertexArray(drawer->vao);
 
-  glGenBuffers(1, &drawer->vbo);
-  glBindBuffer(GL_ARRAY_BUFFER, drawer->vbo);
+    glGenBuffers(1, &drawer->vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, drawer->vbo);
 
-  /* Define attributes */
-  /* 0: position (vec2) */
-  glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(vertex_t),
-                        (GLvoid *)offsetof(vertex_t, x));
-  glEnableVertexAttribArray(0);
-  /* 1: radius (float) */
-  glVertexAttribPointer(1, 1, GL_FLOAT, GL_FALSE, sizeof(vertex_t),
-                        (GLvoid *)offsetof(vertex_t, radius));
-  glEnableVertexAttribArray(1);
-  /* 2: color (vec4) */
-  glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(vertex_t),
-                        (GLvoid *)offsetof(vertex_t, r));
-  glEnableVertexAttribArray(2);
+    /* Define attributes */
+    /* 0: position (vec2) */
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(vertex_t),
+                          (GLvoid*)offsetof(vertex_t, x));
+    glEnableVertexAttribArray(0);
+    /* 1: radius (float) */
+    glVertexAttribPointer(1, 1, GL_FLOAT, GL_FALSE, sizeof(vertex_t),
+                          (GLvoid*)offsetof(vertex_t, radius));
+    glEnableVertexAttribArray(1);
+    /* 2: color (vec4) */
+    glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(vertex_t),
+                          (GLvoid*)offsetof(vertex_t, r));
+    glEnableVertexAttribArray(2);
 
-  glBindBuffer(GL_ARRAY_BUFFER, 0);
-  glBindVertexArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
 
-  /* initialize the vertex storage */
-  drawer->vertex_curr = 0;
-  drawer->vertex_count = VIS_PLIST_INITIAL_SIZE;
-  drawer->vertex_array = DBMALLOC(drawer->vertex_count * sizeof(vertex_t));
+    /* initialize the vertex storage */
+    drawer->vertex_curr = 0;
+    drawer->vertex_count = VIS_PLIST_INITIAL_SIZE;
+    drawer->vertex_array = DBMALLOC(drawer->vertex_count * sizeof(vertex_t));
 
-  /* Buffer initial data (empty) */
-  glBindBuffer(GL_ARRAY_BUFFER, drawer->vbo);
-  glBufferData(GL_ARRAY_BUFFER, drawer->vertex_count * sizeof(vertex_t), NULL,
-               GL_DYNAMIC_DRAW);
-  glBindBuffer(GL_ARRAY_BUFFER, 0);
+    /* Buffer initial data (empty) */
+    glBindBuffer(GL_ARRAY_BUFFER, drawer->vbo);
+    glBufferData(GL_ARRAY_BUFFER, drawer->vertex_count * sizeof(vertex_t), NULL,
+                 GL_DYNAMIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-  /* initialize default values */
-  drawer_bgcolor(drawer, 0, 0, 0);
-  drawer->scale_factor = 1.0;
-  /* initialize fps analysis */
-  drawer->fps.start_time = glfwGetTime();
-  drawer->fps.framestart_time = drawer->fps.start_time;
-  drawer->fps.limiter = drawer_ensure_fps_linear;
+    /* initialize default values */
+    drawer_bgcolor(drawer, 0, 0, 0);
+    drawer->scale_factor = 1.0;
+    /* initialize fps analysis */
+    drawer->fps.start_time = glfwGetTime();
+    drawer->fps.framestart_time = drawer->fps.start_time;
+    drawer->fps.limiter = drawer_ensure_fps_linear;
 
-  /* Store drawer in window user pointer for callbacks if needed */
-  glfwSetWindowUserPointer(drawer->window, drawer);
+    /* Store drawer in window user pointer for callbacks if needed */
+    glfwSetWindowUserPointer(drawer->window, drawer);
 
-  return drawer;
+    return drawer;
 }
 
 void drawer_free(drawer_t drawer) {
-  double runtime = glfwGetTime() - drawer->fps.start_time;
-  double fc_want = runtime * VIS_FPS_LIMIT;
-  double fc_have = (double)drawer->fps.framecount;
-  DBPRINTF("%s", "fps analysis:");
-  DBPRINTF("S=%g, F=%g, F/S=%g", runtime, fc_have, fc_have / runtime);
-  DBPRINTF("frame error:   (S*FPS-F) %g frames (%g seconds)", fc_want - fc_have,
-           (fc_want - fc_have) / VIS_FPS_LIMIT);
-  DBPRINTF("error ratio: 1-(S*FPS/F) %g", 1 - fc_want / fc_have);
+    double runtime = glfwGetTime() - drawer->fps.start_time;
+    double fc_want = runtime * VIS_FPS_LIMIT;
+    double fc_have = (double)drawer->fps.framecount;
+    DBPRINTF("%s", "fps analysis:");
+    DBPRINTF("S=%g, F=%g, F/S=%g", runtime, fc_have, fc_have / runtime);
+    DBPRINTF("frame error:   (S*FPS-F) %g frames (%g seconds)",
+             fc_want - fc_have, (fc_want - fc_have) / VIS_FPS_LIMIT);
+    DBPRINTF("error ratio: 1-(S*FPS/F) %g", 1 - fc_want / fc_have);
 
-  DBFREE(drawer->vertex_array);
-  if (drawer->dump_file_fmt) {
-    DBFREE(drawer->dump_file_fmt);
-  }
+    DBFREE(drawer->vertex_array);
+    if (drawer->dump_file_fmt) {
+        DBFREE(drawer->dump_file_fmt);
+    }
 
-  glDeleteVertexArrays(1, &drawer->vao);
-  glDeleteBuffers(1, &drawer->vbo);
-  shader_free(drawer->shader);
+    glDeleteVertexArrays(1, &drawer->vao);
+    glDeleteBuffers(1, &drawer->vbo);
+    shader_free(drawer->shader);
 
-  glfwDestroyWindow(drawer->window);
-  glfwTerminate();
+    glfwDestroyWindow(drawer->window);
+    glfwTerminate();
 
-  DBFREE(drawer->emit);
-  DBFREE(drawer);
+    DBFREE(drawer->emit);
+    DBFREE(drawer);
 }
 
-GLFWwindow *drawer_get_window(drawer_t drawer) { return drawer->window; }
+GLFWwindow* drawer_get_window(drawer_t drawer) {
+    return drawer->window;
+}
 
 void drawer_bgcolor(drawer_t drawer, float r, float g, float b) {
-  drawer->bgcolor[0] = r;
-  drawer->bgcolor[1] = g;
-  drawer->bgcolor[2] = b;
+    drawer->bgcolor[0] = r;
+    drawer->bgcolor[1] = g;
+    drawer->bgcolor[2] = b;
 }
 
-int drawer_add_particle(drawer_t drawer, particle *p) {
-  pextra *pe = (pextra *)p->extra;
-  if (drawer->vertex_curr < drawer->vertex_count) {
-    vertex_t *v = &drawer->vertex_array[drawer->vertex_curr];
+int drawer_add_particle(drawer_t drawer, particle* p) {
+    pextra* pe = (pextra*)p->extra;
+    if (drawer->vertex_curr < drawer->vertex_count) {
+        vertex_t* v = &drawer->vertex_array[drawer->vertex_curr];
 
-    v->x = (GLfloat)p->x;
-    v->y = (GLfloat)p->y;
-    v->radius = (GLfloat)(drawer->scale_factor * p->radius *
-                          8.0f); /* Scaling factor from main.c example */
+        v->x = 2 * ((GLfloat)p->x / VIS_WIDTH - 0.5f);
+        v->y = 2 * (0.5f - (GLfloat)p->y / VIS_HEIGHT);
+        v->radius = (GLfloat)(drawer->scale_factor * p->radius);
 
-    v->r = (GLfloat)pe->r;
-    v->g = (GLfloat)pe->g;
-    v->b = (GLfloat)pe->b;
-    v->a = (GLfloat)sqrt(calculate_blend(p));
+        v->r = (GLfloat)pe->r;
+        v->g = (GLfloat)pe->g;
+        v->b = (GLfloat)pe->b;
+        v->a = (GLfloat)sqrt(calculate_blend(p));
 
-    drawer->vertex_curr += 1;
-    return 0;
-  } else {
-    EPRINTF("can't add more than %lu particles, did you call "
-            "drawer_draw_to_screen?",
-            (unsigned long)drawer->vertex_count);
-    return 1;
-  }
+        drawer->vertex_curr += 1;
+        return 0;
+    } else {
+        EPRINTF("can't add more than %lu particles, did you call "
+                "drawer_draw_to_screen?",
+                (unsigned long)drawer->vertex_count);
+        return 1;
+    }
 }
 
 int drawer_draw_to_screen(drawer_t drawer) {
-  /* Handle dumping if needed (stubbed for now) */
+    /* Handle dumping if needed (stubbed for now) */
 
-  glClearColor(drawer->bgcolor[0], drawer->bgcolor[1], drawer->bgcolor[2],
-               1.0f);
-  glClear(GL_COLOR_BUFFER_BIT);
+    glClearColor(drawer->bgcolor[0], drawer->bgcolor[1], drawer->bgcolor[2],
+                 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT);
 
-  shader_use(drawer->shader);
-  glBindVertexArray(drawer->vao);
+    shader_use(drawer->shader);
+    glBindVertexArray(drawer->vao);
 
-  /* Update VBO */
-  glBindBuffer(GL_ARRAY_BUFFER, drawer->vbo);
-  glBufferSubData(GL_ARRAY_BUFFER, 0, drawer->vertex_curr * sizeof(vertex_t),
-                  drawer->vertex_array);
-  glBindBuffer(GL_ARRAY_BUFFER, 0);
+    /* Update VBO */
+    glBindBuffer(GL_ARRAY_BUFFER, drawer->vbo);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, drawer->vertex_curr * sizeof(vertex_t),
+                    drawer->vertex_array);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-  glDrawArrays(GL_POINTS, 0, (GLsizei)drawer->vertex_curr);
+    glDrawArrays(GL_POINTS, 0, (GLsizei)drawer->vertex_curr);
 
-  glBindVertexArray(0);
+    glBindVertexArray(0);
 
-  glfwSwapBuffers(drawer->window);
-  /* glfwPollEvents is called in driver.c */
+    glfwSwapBuffers(drawer->window);
+    /* glfwPollEvents is called in driver.c */
 
-  drawer->vertex_curr = 0;
+    drawer->vertex_curr = 0;
 
-  if (drawer->fps.framecount >= drawer->frame_skip) {
-    drawer->fps.limiter(drawer);
-  }
-  drawer->fps.framecount += 1;
-  drawer->fps.framestart_time = glfwGetTime();
-  return 0;
+    if (drawer->fps.framecount >= drawer->frame_skip) {
+        drawer->fps.limiter(drawer);
+    }
+    drawer->fps.framecount += 1;
+    drawer->fps.framestart_time = glfwGetTime();
+    return 0;
 }
 
 void drawer_preserve_screen(drawer_t drawer) {
-  glfwSwapBuffers(drawer->window);
-  if (!drawer->dump_file_fmt) {
-    if (drawer->fps.framecount >= drawer->frame_skip) {
-      drawer->fps.limiter(drawer);
+    glfwSwapBuffers(drawer->window);
+    if (!drawer->dump_file_fmt) {
+        if (drawer->fps.framecount >= drawer->frame_skip) {
+            drawer->fps.limiter(drawer);
+        }
     }
-  }
-  drawer->fps.framecount += 1;
-  drawer->fps.framestart_time = glfwGetTime();
+    drawer->fps.framecount += 1;
+    drawer->fps.framestart_time = glfwGetTime();
 }
 
 void drawer_ensure_fps_linear(drawer_t drawer) {
-  double frameend = glfwGetTime();
-  double framedelay = frameend - drawer->fps.framestart_time;
-  double target_delay = 1.0 / VIS_FPS_LIMIT;
+    double frameend = glfwGetTime();
+    double framedelay = frameend - drawer->fps.framestart_time;
+    double target_delay = 1.0 / VIS_FPS_LIMIT;
 
-  if (framedelay < target_delay) {
-    /* Busy wait or sleep? SDL_Delay was ms.
-       We can use a simple sleep or busy wait.
-       Since we want to remove SDL, we can't use SDL_Delay.
-       Standard sleep is usleep (microseconds).
-    */
-    double sleep_sec = target_delay - framedelay;
-    if (sleep_sec > 0) {
-      struct timespec req;
-      req.tv_sec = (time_t)sleep_sec;
-      req.tv_nsec = (long)((sleep_sec - req.tv_sec) * 1e9);
-      nanosleep(&req, NULL);
+    if (framedelay < target_delay) {
+        double sleep_sec = target_delay - framedelay;
+        if (sleep_sec > 0) {
+            struct timespec req;
+            req.tv_sec = (time_t)sleep_sec;
+            req.tv_nsec = (long)((sleep_sec - req.tv_sec) * 1e9);
+            nanosleep(&req, NULL);
+        }
     }
-  }
 }
 
 void drawer_ensure_fps_absolute(drawer_t drawer) {
-  double frametime =
-      drawer->fps.start_time + (double)drawer->fps.framecount / VIS_FPS_LIMIT;
-  double now = glfwGetTime();
-  if (now < frametime) {
-    double sleep_sec = frametime - now;
-    if (sleep_sec > 0) {
-      struct timespec req;
-      req.tv_sec = (time_t)sleep_sec;
-      req.tv_nsec = (long)((sleep_sec - req.tv_sec) * 1e9);
-      nanosleep(&req, NULL);
+    double frametime =
+        drawer->fps.start_time + (double)drawer->fps.framecount / VIS_FPS_LIMIT;
+    double now = glfwGetTime();
+    if (now < frametime) {
+        double sleep_sec = frametime - now;
+        if (sleep_sec > 0) {
+            struct timespec req;
+            req.tv_sec = (time_t)sleep_sec;
+            req.tv_nsec = (long)((sleep_sec - req.tv_sec) * 1e9);
+            nanosleep(&req, NULL);
+        }
     }
-  }
 }
 
 float drawer_get_fps(drawer_t drawer) {
-  return (float)((double)(drawer->fps.framecount - 1) /
-                 (glfwGetTime() - drawer->fps.start_time));
+    return (float)((double)(drawer->fps.framecount - 1) /
+                   (glfwGetTime() - drawer->fps.start_time));
 }
 
-void drawer_config(drawer_t drawer, clargs *args) {
-  drawer->frame_skip = (uint32_t)args->frameskip;
-  drawer->verbose_trace = args->dumptrace ? TRUE : FALSE;
-  drawer->scale_factor = 1.0;
-  if (args->dumpfile) {
-    /* Texture targets not relevant for OpenGL direct draw in this simple port,
-       unless we use FBOs. For now, disable dumping. */
-    EPRINTF("File dumping disabled in OpenGL port for now: %s", args->dumpfile);
-  }
-  if (args->absolute_fps) {
-    drawer->fps.limiter = drawer_ensure_fps_absolute;
-  }
-  if (drawer->frame_skip > 0) {
-    DBPRINTF("\tdrawer->frame_skip = %d", drawer->frame_skip);
-  }
-  if (drawer->verbose_trace) {
-    DBPRINTF("\t%s", "drawer->verbose_trace = TRUE");
-  }
+void drawer_config(drawer_t drawer, clargs* args) {
+    drawer->frame_skip = (uint32_t)args->frameskip;
+    drawer->verbose_trace = args->dumptrace ? TRUE : FALSE;
+    drawer->scale_factor = 1.0;
+    if (args->dumpfile) {
+        /* Texture targets not relevant for OpenGL direct draw in this simple
+           port, unless we use FBOs. For now, disable dumping. */
+        EPRINTF("File dumping disabled in OpenGL port for now: %s",
+                args->dumpfile);
+    }
+    if (args->absolute_fps) {
+        drawer->fps.limiter = drawer_ensure_fps_absolute;
+    }
+    if (drawer->frame_skip > 0) {
+        DBPRINTF("\tdrawer->frame_skip = %d", drawer->frame_skip);
+    }
+    if (drawer->verbose_trace) {
+        DBPRINTF("\t%s", "drawer->verbose_trace = TRUE");
+    }
 }
 
 void drawer_scale_particles(drawer_t drawer, double factor) {
-  drawer->scale_factor = factor;
+    drawer->scale_factor = factor;
 }
 
-void drawer_set_dumpfile_template(drawer_t drawer, const char *path) {
-  UNUSED_VARIABLE(drawer);
-  UNUSED_VARIABLE(path);
-  /* Stub */
+void drawer_set_dumpfile_template(drawer_t drawer, const char* path) {
+    UNUSED_VARIABLE(drawer);
+    UNUSED_VARIABLE(path);
+    /* Stub */
 }
 
 void drawer_set_trace_verbose(drawer_t drawer, BOOL verbose) {
-  drawer->verbose_trace = verbose;
+    drawer->verbose_trace = verbose;
 }
 
-void drawer_set_trace(drawer_t drawer, emit_desc *emit) { drawer->emit = emit; }
+void drawer_set_trace(drawer_t drawer, emit_desc* emit) {
+    drawer->emit = emit;
+}
 
-emit_desc *drawer_get_trace(drawer_t drawer) { return drawer->emit; }
+emit_desc* drawer_get_trace(drawer_t drawer) {
+    return drawer->emit;
+}
 
-void drawer_begin_trace(drawer_t drawer) { drawer->tracing = TRUE; }
+void drawer_begin_trace(drawer_t drawer) {
+    drawer->tracing = TRUE;
+}
 
 void drawer_trace(drawer_t drawer, float x, float y) {
-  if (!drawer->tracing || !drawer->emit)
-    return;
-  /* Coordinate conversion might be needed if window size changes or coordinate
-     system differs. vis-old uses 0..WIDTH, 0..HEIGHT. OpenGL uses -1..1. But
-     here we are just recording trace for emitter, which likely uses world
-     coordinates. If emitter expects screen coords, we are fine.
-  */
-  if (x < 0.0f || y < 0.0f || x > VIS_WIDTH * 1.0f || y > VIS_HEIGHT * 1.0f) {
-    return;
-  }
+    if (!drawer->tracing || !drawer->emit)
+        return;
 
-  drawer->emit->x = (double)x;
-  drawer->emit->y = (double)y;
-  emit_frame(drawer->emit);
-  if (drawer->verbose_trace) {
-    char *line = genlua_emit(drawer->emit, drawer->fps.framecount);
-    printf("%s\n", line);
-    DBFREE(line);
-  }
+    drawer->emit->x = (double)x;
+    drawer->emit->y = (double)y;
+    emit_frame(drawer->emit);
+    if (drawer->verbose_trace) {
+        char* line = genlua_emit(drawer->emit, drawer->fps.framecount);
+        printf("%s\n", line);
+        DBFREE(line);
+    }
 }
 
-void drawer_end_trace(drawer_t drawer) { drawer->tracing = FALSE; }
+void drawer_end_trace(drawer_t drawer) {
+    drawer->tracing = FALSE;
+}
 
-double calculate_blend(particle *p) {
-  pextra *pe = (pextra *)p->extra;
-  double alpha = pe->a;
-  double life = particle_get_life(p);
-  double lifetime = particle_get_lifetime(p);
-  if (pe->blender >= VIS_BLEND_NONE && pe->blender < VIS_NBLENDS) {
-    alpha *= blend_fns[pe->blender](life, lifetime);
-  }
-  return alpha;
+double calculate_blend(particle* p) {
+    pextra* pe = (pextra*)p->extra;
+    double alpha = pe->a;
+    double life = particle_get_life(p);
+    double lifetime = particle_get_lifetime(p);
+    if (pe->blender >= VIS_BLEND_NONE && pe->blender < VIS_NBLENDS) {
+        alpha *= blend_fns[pe->blender](life, lifetime);
+    }
+    return alpha;
 }
 
 /*
