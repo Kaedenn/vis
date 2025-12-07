@@ -78,8 +78,7 @@
 #define VIS_FPMS_LIMIT (VIS_FPS_LIMIT / 1000.0)
 
 /* converting from frames to msec */
-#define VIS_FRAMES_TO_MSEC(frames)                                             \
-    ((int)((frames) * 1000.0 / VIS_FPS_LIMIT + 0.5))
+#define VIS_FRAMES_TO_MSEC(frames) ((int)((frames) * 1000.0 / VIS_FPS_LIMIT + 0.5))
 #define VIS_MSEC_TO_FRAMES(ms) ((int)(VIS_FPS_LIMIT * (ms) / 1000.0 + 0.5))
 
 /* timing constants */
