@@ -236,18 +236,18 @@ void mainloop(struct global_ctx* ctx) {
         script_get_debug(ctx->script, &dbg);
 
         script_set_debug(ctx->script, SCRIPT_DEBUG_FRAMES_EMITTED,
-                         emitter_get_frame_count(VIS_FTYPE_EMIT));
-        script_set_debug(ctx->script, SCRIPT_DEBUG_TIME_NOW,
-                         (uint32_t)(glfwGetTime() * 1000.0));
+            emitter_get_frame_count(VIS_FTYPE_EMIT));
+        script_set_debug(
+            ctx->script, SCRIPT_DEBUG_TIME_NOW, (uint32_t)(glfwGetTime() * 1000.0));
         script_set_debug(ctx->script, SCRIPT_DEBUG_NUM_MUTATES,
-                         emitter_get_frame_count(VIS_FTYPE_MUTATE));
+            emitter_get_frame_count(VIS_FTYPE_MUTATE));
         script_set_debug(ctx->script, SCRIPT_DEBUG_PARTICLES_EMITTED,
-                         dbg.particles_emitted + plist_get_size(ctx->particles));
+            dbg.particles_emitted + plist_get_size(ctx->particles));
 #if DEBUG >= DEBUG_DEBUG
         script_set_debug(ctx->script, SCRIPT_DEBUG_PARTICLES_MUTATED,
-                         mutate_debug_get_particles_mutated());
+            mutate_debug_get_particles_mutated());
         script_set_debug(ctx->script, SCRIPT_DEBUG_PARTICLE_TAGS_MODIFIED,
-                         mutate_debug_get_particle_tags_modified());
+            mutate_debug_get_particle_tags_modified());
 #endif
 
         if ((ctx->exit_status = script_get_status(ctx->script)) != 0) {

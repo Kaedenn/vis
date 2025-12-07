@@ -259,17 +259,28 @@ void script_on_quit(script_t s) {
 
 /* begin of private API */
 int initialize_vis_lib(lua_State* L) {
+    /* clang-format off */
     static const struct luaL_Reg vis_lib[] = {
-        {"debug", viscmd_debug_fn},         {"command", viscmd_command_fn},
-        {"exit", viscmd_exit_fn},           {"emit", viscmd_emit_fn},
-        {"audio", viscmd_audio_fn},         {"play", viscmd_play_fn},
-        {"pause", viscmd_pause_fn},         {"seek", viscmd_seek_fn},
-        {"seekms", viscmd_seekms_fn},       {"seekframe", viscmd_seekframe_fn},
-        {"bgcolor", viscmd_bgcolor_fn},     {"mutate", viscmd_mutate_fn},
-        {"callback", viscmd_callback_fn},   {"fps", viscmd_fps_fn},
-        {"settrace", viscmd_settrace_fn},   {"frames2msec", viscmd_f2ms_fn},
-        {"msec2frames", viscmd_ms2f_fn},    {"emitnow", viscmd_emitnow_fn},
-        {"get_debug", viscmd_get_debug_fn}, {NULL, NULL}};
+        {"debug", viscmd_debug_fn},
+        {"command", viscmd_command_fn},
+        {"exit", viscmd_exit_fn},
+        {"emit", viscmd_emit_fn},
+        {"audio", viscmd_audio_fn},
+        {"play", viscmd_play_fn},
+        {"pause", viscmd_pause_fn},
+        {"seek", viscmd_seek_fn},
+        {"seekms", viscmd_seekms_fn},
+        {"seekframe", viscmd_seekframe_fn},
+        {"bgcolor", viscmd_bgcolor_fn},
+        {"mutate", viscmd_mutate_fn},
+        {"callback", viscmd_callback_fn},
+        {"fps", viscmd_fps_fn},
+        {"settrace", viscmd_settrace_fn},
+        {"frames2msec", viscmd_f2ms_fn},
+        {"msec2frames", viscmd_ms2f_fn},
+        {"emitnow", viscmd_emitnow_fn}, 
+        {"get_debug", viscmd_get_debug_fn},
+        {NULL, NULL}};
 
     luaL_newlib(L, vis_lib);
 
@@ -448,8 +459,8 @@ const char* util_get_error(lua_State* L) {
 
 int do_mouse_event(lua_State* L, const char* func, int x, int y, int button) {
     int nerror = 0;
-    kstr s = kstring_newfromvf("Vis._do_on_event(Vis._on_%ss, %d, %d, %d)",
-                               func, x, y, button);
+    kstr s =
+        kstring_newfromvf("Vis._do_on_event(Vis._on_%ss, %d, %d, %d)", func, x, y, button);
     if (luaL_dostring(L, kstring_content(s)) != LUA_OK) {
         EPRINTF("Error in %s: %s", kstring_content(s), util_get_error(L));
         nerror = 1;
@@ -461,8 +472,8 @@ int do_mouse_event(lua_State* L, const char* func, int x, int y, int button) {
 int do_kbd_event(lua_State* L, const char* func, const char* key, BOOL shift) {
     int nerror = 0;
     char* esc_key = escape_string(key);
-    kstr s = kstring_newfromvf("Vis._do_on_event(Vis._on_%ss, \"%s\", %d)",
-                               func, esc_key, (int)shift);
+    kstr s = kstring_newfromvf(
+        "Vis._do_on_event(Vis._on_%ss, \"%s\", %d)", func, esc_key, (int)shift);
     DBFREE(esc_key);
     if (luaL_dostring(L, kstring_content(s)) != LUA_OK) {
         EPRINTF("Error in %s: %s", kstring_content(s), util_get_error(L));
@@ -539,11 +550,10 @@ int viscmd_debug_fn(lua_State* L) {
         }
     }
 #if DEBUG >= DEBUG_DEBUG
-    DBPRINTF("(function %s)[%s:%d]: Vis.debug(%s)", ar.name, ar.source,
-             ar.currentline, kstring_content(s));
+    DBPRINTF("(function %s)[%s:%d]: Vis.debug(%s)", ar.name, ar.source, ar.currentline,
+        kstring_content(s));
 #else
-    fprintf(stderr, "%s:%d: Debug: %s", ar.source, ar.currentline,
-            kstring_content(s));
+    fprintf(stderr, "%s:%d: Debug: %s", ar.source, ar.currentline, kstring_content(s));
 #endif
     kstring_free(s);
     return 0;
@@ -678,15 +688,15 @@ int viscmd_mutate_fn(lua_State* L) {
         /* case 1: normal mutate */
         method->factor = luaL_checknumber(L, 4);
         method->factor2 = luaL_optnumber(L, 5, 0);
-        DBPRINTF("Vis.mutate(%p, %d, %s, %g, %g)", fl, (int)when,
-                 genlua_mutate(fnid), method->factor, method->factor2);
+        DBPRINTF("Vis.mutate(%p, %d, %s, %g, %g)", fl, (int)when, genlua_mutate(fnid),
+            method->factor, method->factor2);
     } else if (fnid >= VIS_MUTATE_TAG_SET && fnid < VIS_MUTATE_PUSH_IF) {
         /* case 2: tag modification */
         if (lua_type(L, 4) == LUA_TNUMBER) {
             method->tag.i.l = luaL_checkint(L, 4);
         }
-        DBPRINTF("Vis.mutate(%p, %d, %s, %d)", fl, (int)when,
-                 genlua_mutate(fnid), method->tag.i.l);
+        DBPRINTF("Vis.mutate(%p, %d, %s, %d)", fl, (int)when, genlua_mutate(fnid),
+            method->tag.i.l);
     } else if (fnid >= VIS_MUTATE_PUSH_IF && fnid < VIS_NMUTATES) {
         /* case 3: conditional mutate */
         method->factor = luaL_checknumber(L, 4);
@@ -696,9 +706,8 @@ int viscmd_mutate_fn(lua_State* L) {
         }
         method->factor2 = luaL_optnumber(L, 7, 0);
         DBPRINTF("Vis.mutate(%p, %d, %s, %g, %s, %d, %g)", fl, (int)when,
-                 genlua_mutate(fnid), method->factor,
-                 genlua_mutate_cond(method->cond), method->tag.i.l,
-                 method->factor2);
+            genlua_mutate(fnid), method->factor, genlua_mutate_cond(method->cond),
+            method->tag.i.l, method->factor2);
     } else {
         return luaL_error(L, "Invalid mutate ID %d", fnid);
     }
