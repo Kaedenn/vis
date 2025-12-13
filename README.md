@@ -547,12 +547,13 @@ both the particle's tag and the `<tag>` value given satisfy the
 will double all particles' velocities if and only if the particle's tag is
 equal to 1.
 
-## Credit where credit is due
+## Credits
 
-Thank you SNESmusic.org for the Bowser theme, retrieved at
-http://snesmusic.org/v2/profile.php?profile=set&selected=2757
-on the 8th of October 2011.
+This project makes use of the song "Royalty", published by NCS:
 
-Thank you Kainui from ##math at irc.freenode.net for helping me with the
-blending functions. It would seem my algebra skills are lacking since I left
-university.
+```
+Song: Egzod, Maestro Chives, Neoni - Royalty [NCS Release]
+Music provided by NoCopyrightSounds
+Free Download/Stream: http://ncs.io/Royalty
+Watch: http://ncs.lnk.to/RoyaltyAT/youtube
+```

@@ -56,7 +56,6 @@ struct drawer {
     BOOL tracing;
     emit_desc* emit;
     BOOL verbose_trace;
-    double scale_factor;
     char* dump_file_fmt;
 };
 
@@ -146,7 +145,6 @@ drawer_t drawer_new(void) {
 
     /* initialize default values */
     drawer_bgcolor(drawer, 0, 0, 0);
-    drawer->scale_factor = 1.0;
     /* initialize fps analysis */
     drawer->fps.start_time = glfwGetTime();
     drawer->fps.framestart_time = drawer->fps.start_time;
@@ -201,7 +199,7 @@ int drawer_add_particle(drawer_t drawer, particle* p) {
 
         v->x = 2 * ((GLfloat)p->x / VIS_WIDTH - 0.5f);
         v->y = 2 * (0.5f - (GLfloat)p->y / VIS_HEIGHT);
-        v->radius = (GLfloat)(drawer->scale_factor * p->radius);
+        v->radius = (GLfloat)p->radius;
 
         v->r = (GLfloat)pe->r;
         v->g = (GLfloat)pe->g;
@@ -302,7 +300,6 @@ float drawer_get_fps(drawer_t drawer) {
 void drawer_config(drawer_t drawer, clargs* args) {
     drawer->frame_skip = (uint32_t)args->frameskip;
     drawer->verbose_trace = args->dumptrace ? TRUE : FALSE;
-    drawer->scale_factor = 1.0;
     if (args->dumpfile) {
         /* Texture targets not relevant for OpenGL direct draw in this simple
            port, unless we use FBOs. For now, disable dumping. */
@@ -320,26 +317,14 @@ void drawer_config(drawer_t drawer, clargs* args) {
     }
 }
 
-void drawer_scale_particles(drawer_t drawer, double factor) {
-    drawer->scale_factor = factor;
-}
-
 void drawer_set_dumpfile_template(drawer_t drawer, const char* path) {
     UNUSED_VARIABLE(drawer);
     UNUSED_VARIABLE(path);
     /* Stub */
 }
 
-void drawer_set_trace_verbose(drawer_t drawer, BOOL verbose) {
-    drawer->verbose_trace = verbose;
-}
-
 void drawer_set_trace(drawer_t drawer, emit_desc* emit) {
     drawer->emit = emit;
-}
-
-emit_desc* drawer_get_trace(drawer_t drawer) {
-    return drawer->emit;
 }
 
 void drawer_begin_trace(drawer_t drawer) {

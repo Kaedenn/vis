@@ -14,9 +14,9 @@ OBJDIR = $(DIR)/.o
 DEPDIR = $(DIR)/.d
 
 SRCS = async.c audio.c clargs.c command.c drawer.c driver.c emit.c \
-	   emitter.c flist.c forces.c gc.c genlua.c helper.c klist.c \
-	   kstring.c mutator.c particle.c pextra.c plimits.c plist.c \
-	   random.c script.c shader.c
+	emitter.c flist.c forces.c gc.c genlua.c helper.c klist.c \
+	kstring.c mutator.c particle.c pextra.c plimits.c plist.c \
+	random.c script.c shader.c miniaudio.c
 SOURCES = $(patsubst %,$(DIR)/%,$(CSRC)) Makefile
 OBJECTS = $(patsubst %.c,$(OBJDIR)/%.o,$(SRCS))
 DEPFILES = $(patsubst %.c,$(DEPDIR)/%.d,$(SRCS))
@@ -29,10 +29,10 @@ BIN_TESTS := $(patsubst %.c,%,$(C_TESTS))
 TESTS := $(LUA_TESTS) $(BIN_TESTS)
 
 CFLAGS ?= -Wno-unused-variable -Wall -Wextra -Wfloat-equal -Wwrite-strings \
-		  -Wshadow -Wpointer-arith -Wcast-qual -Wredundant-decls -Wtrigraphs \
-		  -Wswitch-enum -Wundef -Wconversion -ansi -pedantic -std=c99 \
-		  -fdiagnostics-show-option
-LDFLAGS ?= -lm
+	  -Wshadow -Wpointer-arith -Wcast-qual -Wredundant-decls -Wtrigraphs \
+	  -Wswitch-enum -Wundef -Wconversion -ansi -pedantic -std=c99 \
+	  -fdiagnostics-show-option
+LDFLAGS ?= -lm -ldl -lpthread -pthread
 
 CFLAGS_FAST = -O3 -fexpensive-optimizations -flto
 CFLAGS_DEBUG = -O0 -ggdb -DDEBUG=DEBUG_DEBUG
@@ -98,6 +98,9 @@ $(OBJDIR):
 	- test -d $(OBJDIR) || mkdir $(OBJDIR) 2>/dev/null
 
 $(DEPFILES): $(DEPDIR)
+
+$(OBJDIR)/miniaudio.o: $(DIR)/miniaudio.c $(OBJDIR)
+	$(CC) -c -o $@ $< -msse2 $(CFLAGS) -Wno-sign-conversion -Wno-conversion -Wno-switch-enum -Wno-cast-qual -Wno-float-equal -Wno-shadow
 
 $(OBJDIR)/%.o: %.c $(OBJDIR)
 	$(CC) -c -o $@ $< $(CFLAGS)

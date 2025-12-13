@@ -8,7 +8,6 @@ BOOL audio_init(void);
 
 BOOL audio_open(const char* file);
 void audio_free(void* ptr);
-void audio_close(void);
 
 void audio_play(void);
 void audio_pause(void);
