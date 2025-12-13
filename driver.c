@@ -132,7 +132,7 @@ int main(int argc, char* argv[]) {
     }
     gc_add((gc_func)clargs_free, g.args);
 
-    g.drawer = drawer_new();
+    g.drawer = drawer_new(g.args);
     if (!g.drawer) {
         exit(1);
     }
@@ -153,7 +153,7 @@ int main(int argc, char* argv[]) {
     if (g.args->stay_after_script) {
         mask |= SCRIPT_NO_EXIT;
     }
-    g.script = script_new(mask);
+    g.script = script_new(mask, g.args);
     if (klist_length(g.args->scriptargs) > 0) {
         script_set_args(g.script, g.args->scriptargs);
     } else {

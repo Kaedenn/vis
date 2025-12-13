@@ -3,6 +3,7 @@
 
 #include "drawer.h"
 #include "blender.h"
+#include "defines.h"
 #include "emitter.h"
 #include "genlua.h"
 #include "helper.h"
@@ -12,14 +13,12 @@
 #include <math.h>
 #include <time.h>
 
-/* #include <SDL2/SDL_image.h> */
-
 #ifndef MAX
 #define MAX(a, b) ((a) < (b) ? (b) : (a))
 #endif
 
 static double calculate_blend(particle* p);
-/* static int render_to_file(drawer_t drawer, const char *path); */
+/* (TODO) static int render_to_file(drawer_t drawer, const char *path); */
 
 void drawer_ensure_fps_linear(drawer_t drawer);
 void drawer_ensure_fps_absolute(drawer_t drawer);
@@ -45,6 +44,7 @@ struct drawer {
     GLuint vao;
     GLuint vbo;
     shader_t* shader;
+    unsigned int window_size[2];
 
     vertex_t* vertex_array;
     size_t vertex_curr;
@@ -67,8 +67,9 @@ void glfw_error_callback(int error, const char* description) {
     EPRINTF("GLFW Error (%d): %s\n", error, description);
 }
 
-drawer_t drawer_new(void) {
+drawer_t drawer_new(const clargs* args) {
     drawer_t drawer = DBMALLOC(sizeof(struct drawer));
+    drawer_config(drawer, args);
 
     glfwSetErrorCallback(glfw_error_callback);
 
@@ -81,7 +82,8 @@ drawer_t drawer_new(void) {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    drawer->window = glfwCreateWindow(VIS_WIDTH, VIS_HEIGHT, "Vis", NULL, NULL);
+    drawer->window = glfwCreateWindow(
+        (int)drawer->window_size[0], (int)drawer->window_size[1], "Vis", NULL, NULL);
     if (!drawer->window) {
         EPRINTF("%s\n", "Failed to create GLFW window");
         glfwTerminate();
@@ -116,16 +118,16 @@ drawer_t drawer_new(void) {
 
     /* Define attributes */
     /* 0: position (vec2) */
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(vertex_t),
-                          (GLvoid*)offsetof(vertex_t, x));
+    glVertexAttribPointer(
+        0, 2, GL_FLOAT, GL_FALSE, sizeof(vertex_t), (GLvoid*)offsetof(vertex_t, x));
     glEnableVertexAttribArray(0);
     /* 1: radius (float) */
-    glVertexAttribPointer(1, 1, GL_FLOAT, GL_FALSE, sizeof(vertex_t),
-                          (GLvoid*)offsetof(vertex_t, radius));
+    glVertexAttribPointer(
+        1, 1, GL_FLOAT, GL_FALSE, sizeof(vertex_t), (GLvoid*)offsetof(vertex_t, radius));
     glEnableVertexAttribArray(1);
     /* 2: color (vec4) */
-    glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(vertex_t),
-                          (GLvoid*)offsetof(vertex_t, r));
+    glVertexAttribPointer(
+        2, 4, GL_FLOAT, GL_FALSE, sizeof(vertex_t), (GLvoid*)offsetof(vertex_t, r));
     glEnableVertexAttribArray(2);
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -138,9 +140,8 @@ drawer_t drawer_new(void) {
 
     /* Buffer initial data (empty) */
     glBindBuffer(GL_ARRAY_BUFFER, drawer->vbo);
-    glBufferData(GL_ARRAY_BUFFER,
-                 (GLsizeiptr)(drawer->vertex_count * sizeof(vertex_t)), NULL,
-                 GL_DYNAMIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)(drawer->vertex_count * sizeof(vertex_t)),
+        NULL, GL_DYNAMIC_DRAW);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
     /* initialize default values */
@@ -162,8 +163,8 @@ void drawer_free(drawer_t drawer) {
     double fc_have = (double)drawer->fps.framecount;
     DBPRINTF("%s", "fps analysis:");
     DBPRINTF("S=%g, F=%g, F/S=%g", runtime, fc_have, fc_have / runtime);
-    DBPRINTF("frame error:   (S*FPS-F) %g frames (%g seconds)",
-             fc_want - fc_have, (fc_want - fc_have) / VIS_FPS_LIMIT);
+    DBPRINTF("frame error:   (S*FPS-F) %g frames (%g seconds)", fc_want - fc_have,
+        (fc_want - fc_have) / VIS_FPS_LIMIT);
     DBPRINTF("error ratio: 1-(S*FPS/F) %g", 1 - fc_want / fc_have);
 
     DBFREE(drawer->vertex_array);
@@ -197,8 +198,8 @@ int drawer_add_particle(drawer_t drawer, particle* p) {
     if (drawer->vertex_curr < drawer->vertex_count) {
         vertex_t* v = &drawer->vertex_array[drawer->vertex_curr];
 
-        v->x = 2 * ((GLfloat)p->x / VIS_WIDTH - 0.5f);
-        v->y = 2 * (0.5f - (GLfloat)p->y / VIS_HEIGHT);
+        v->x = 2 * ((GLfloat)p->x / (GLfloat)drawer->window_size[0] - 0.5f);
+        v->y = 2 * (0.5f - (GLfloat)p->y / (GLfloat)drawer->window_size[1]);
         v->radius = (GLfloat)p->radius;
 
         v->r = (GLfloat)pe->r;
@@ -211,7 +212,7 @@ int drawer_add_particle(drawer_t drawer, particle* p) {
     } else {
         EPRINTF("can't add more than %lu particles, did you call "
                 "drawer_draw_to_screen?",
-                (unsigned long)drawer->vertex_count);
+            (unsigned long)drawer->vertex_count);
         return 1;
     }
 }
@@ -219,8 +220,7 @@ int drawer_add_particle(drawer_t drawer, particle* p) {
 int drawer_draw_to_screen(drawer_t drawer) {
     /* Handle dumping if needed (stubbed for now) */
 
-    glClearColor(drawer->bgcolor[0], drawer->bgcolor[1], drawer->bgcolor[2],
-                 1.0f);
+    glClearColor(drawer->bgcolor[0], drawer->bgcolor[1], drawer->bgcolor[2], 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
     shader_use(drawer->shader);
@@ -229,8 +229,7 @@ int drawer_draw_to_screen(drawer_t drawer) {
     /* Update VBO */
     glBindBuffer(GL_ARRAY_BUFFER, drawer->vbo);
     glBufferSubData(GL_ARRAY_BUFFER, 0,
-                    (GLsizeiptr)(drawer->vertex_curr * sizeof(vertex_t)),
-                    drawer->vertex_array);
+        (GLsizeiptr)(drawer->vertex_curr * sizeof(vertex_t)), drawer->vertex_array);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
     glDrawArrays(GL_POINTS, 0, (GLsizei)drawer->vertex_curr);
@@ -297,14 +296,13 @@ float drawer_get_fps(drawer_t drawer) {
                    (glfwGetTime() - drawer->fps.start_time));
 }
 
-void drawer_config(drawer_t drawer, clargs* args) {
+void drawer_config(drawer_t drawer, const clargs* args) {
     drawer->frame_skip = (uint32_t)args->frameskip;
     drawer->verbose_trace = args->dumptrace ? TRUE : FALSE;
     if (args->dumpfile) {
         /* Texture targets not relevant for OpenGL direct draw in this simple
            port, unless we use FBOs. For now, disable dumping. */
-        EPRINTF("File dumping disabled in OpenGL port for now: %s",
-                args->dumpfile);
+        EPRINTF("File dumping disabled in OpenGL port for now: %s", args->dumpfile);
     }
     if (args->absolute_fps) {
         drawer->fps.limiter = drawer_ensure_fps_absolute;
@@ -315,6 +313,8 @@ void drawer_config(drawer_t drawer, clargs* args) {
     if (drawer->verbose_trace) {
         DBPRINTF("\t%s", "drawer->verbose_trace = TRUE");
     }
+    drawer->window_size[0] = args->window_size[0];
+    drawer->window_size[1] = args->window_size[1];
 }
 
 void drawer_set_dumpfile_template(drawer_t drawer, const char* path) {

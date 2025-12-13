@@ -18,6 +18,7 @@ typedef struct clargs {
     BOOL quiet_audio;
     BOOL stay_after_script;
     BOOL absolute_fps;
+    unsigned int window_size[2];
 
     int debug_level;
 

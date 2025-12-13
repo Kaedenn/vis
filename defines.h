@@ -21,7 +21,7 @@
 #define DEBUG_TRACE 4
 
 #ifndef DEBUG
-#define DEBUG DEBUG_NONE
+#define DEBUG DEBUG_DEBUG
 #endif
 
 #if DEBUG >= DEBUG_DEBUG

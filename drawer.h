@@ -6,17 +6,16 @@
 #include <GLFW/glfw3.h>
 
 #include "clargs.h"
-#include "defines.h"
 #include "emit.h"
 #include "particle.h"
 
 typedef struct drawer* drawer_t;
 
-drawer_t drawer_new(void);
+drawer_t drawer_new(const clargs* args);
 void drawer_free(drawer_t drawer);
 GLFWwindow* drawer_get_window(drawer_t drawer);
 
-void drawer_config(drawer_t drawer, clargs* args);
+void drawer_config(drawer_t drawer, const clargs* args);
 void drawer_bgcolor(drawer_t drawer, float r, float g, float b);
 int drawer_add_particle(drawer_t drawer, particle* p);
 int drawer_draw_to_screen(drawer_t drawer);

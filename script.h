@@ -37,10 +37,10 @@ typedef struct script_debug {
 
 typedef unsigned int script_cfg_mask;
 static const script_cfg_mask SCRIPT_ALLOW_ALL = 0; /* allow all features */
-static const script_cfg_mask SCRIPT_NO_CB = 1; /* disable Vis.callback() */
-static const script_cfg_mask SCRIPT_NO_EXIT = 2; /* disable Vis.exit() */
+static const script_cfg_mask SCRIPT_NO_CB = 1;     /* disable Vis.callback() */
+static const script_cfg_mask SCRIPT_NO_EXIT = 2;   /* disable Vis.exit() */
 
-script_t script_new(script_cfg_mask cfg);
+script_t script_new(script_cfg_mask cfg, const clargs* args);
 void script_free(script_t s);
 void script_callback_free(script_cb* cb);
 
@@ -65,4 +65,3 @@ void script_keyup(script_t script, const char* keyname, BOOL shift);
 void script_on_quit(script_t script);
 
 #endif
-

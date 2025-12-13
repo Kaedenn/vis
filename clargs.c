@@ -51,6 +51,8 @@ clargs* argparse(int argc, char** argv) {
     args->dumptrace = FALSE;
     args->interactive = TRUE;
     args->absolute_fps = TRUE;
+    args->window_size[0] = VIS_WIDTH;
+    args->window_size[1] = VIS_HEIGHT;
     args->quiet_audio = FALSE;
     args->stay_after_script = FALSE;
     args->debug_level = 0;
@@ -70,6 +72,15 @@ clargs* argparse(int argc, char** argv) {
         case 'd':
             if (argi + 1 < argc) {
                 args->dumpfile = argv[++argi];
+            } else {
+                EPRINTF("Argument -%s requires value", argv[argi][1]);
+                mark_error(args, 1);
+            }
+            break;
+        case 'w':
+            if (argi + 1 < argc) {
+                parse_window_size(
+                    argv[++argi], &args->window_size[0], &args->window_size[1]);
             } else {
                 EPRINTF("Argument -%s requires value", argv[argi][1]);
                 mark_error(args, 1);

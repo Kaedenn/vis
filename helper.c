@@ -204,4 +204,12 @@ char* escape_string(const char* str) {
     return result;
 }
 
+BOOL parse_window_size(const char* arg, unsigned int* width, unsigned int* height) {
+    VIS_ASSERT(arg != NULL);
+    VIS_ASSERT(width != NULL);
+    VIS_ASSERT(height != NULL);
+    int result = sscanf(arg, "%ux%u", width, height);
+    return result == 2;
+}
+
 /* vim: set ts=4 sts=4 sw=4: */

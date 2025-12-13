@@ -60,7 +60,7 @@ struct script {
 };
 
 /* start of public API */
-script_t script_new(script_cfg_mask cfg) {
+script_t script_new(script_cfg_mask cfg, const clargs* args) {
     script_t s = DBMALLOC(sizeof(struct script));
     s->dbg = DBMALLOC(sizeof(struct script_debug));
     s->fl = flist_new();
@@ -105,6 +105,10 @@ script_t script_new(script_cfg_mask cfg) {
                          "Vis.on_quit = function(f)\n"
                          "   table.insert(Vis._on_quits, f)\n"
                          "end\n");
+    kstr wh_str = kstring_newfromvf(
+        "Vis.WIDTH = %d\nVis.HEIGHT = %d\n", args->window_size[0], args->window_size[1]);
+    script_run_string(s, kstring_content(wh_str));
+    kstring_free(wh_str);
     VIS_ASSERT(s->errors == 0);
     if (fexists(LUA_STARTUP_FILE)) {
         DBPRINTF("Executing startup file: %s", LUA_STARTUP_FILE);
@@ -290,8 +294,6 @@ int initialize_vis_lib(lua_State* L) {
 
     /* grant access to all of the enums and constants */
     NEW_VIS_CONST_INT(FPS_LIMIT);
-    NEW_VIS_CONST_INT(WIDTH);
-    NEW_VIS_CONST_INT(HEIGHT);
     /* frame types */
     NEW_VIS_CONST_INT(FTYPE_EMIT);
     NEW_VIS_CONST_INT(FTYPE_EXIT);
@@ -421,7 +423,6 @@ void prepare_stack(script_t s, klist args) {
 
 void cleanup_stack(script_t s) {
     int top = lua_gettop(s->L);
-    DBPRINTF("Cleaning up %d item%s", top, top == 1 ? "" : "s");
     lua_pop(s->L, top);
 }
 
@@ -433,7 +434,7 @@ void push_constant_num(lua_State* L, const char* k, double v, int idx) {
 
 void push_constant_int(lua_State* L, const char* k, int v, int idx) {
     lua_pushstring(L, k);
-    lua_pushnumber(L, v);
+    lua_pushinteger(L, v);
     lua_settable(L, idx - 2);
 }
 
