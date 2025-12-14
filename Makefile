@@ -77,10 +77,11 @@ FP_AVI ?= $(FP_DIR)/bowser.avi
 # Remove when releasing product
 all: CFLAGS += $(CFLAGS_DEBUG)
 
-all: $(DEPFILES) $(VIS)
+all: $(VIS)
 
 fast: $(DEPFILES) $(SOURCES)
-	$(MAKE) "CFLAGS=$(CFLAGS) $(CFLAGS_FAST)" "LDFLAGS=$(LDFLAGS) $(LDFLAGS_FAST)" all
+	$(MAKE) "CFLAGS=$(CFLAGS) $(CFLAGS_FAST)" \
+		"LDFLAGS=$(LDFLAGS) $(LDFLAGS_FAST)" all
 
 debug: $(DEPFILES) $(SOURCES)
 	$(MAKE) "CFLAGS=$(CFLAGS) $(CFLAGS_DEBUG)" all
@@ -89,7 +90,8 @@ trace: $(DEPFILES) $(SOURCES)
 	$(MAKE) "CFLAGS=$(CFLAGS) $(CFLAGS_TRACE)" all
 
 profile: $(SOURCES)
-	$(MAKE) "CFLAGS=$(CFLAGS) $(CFLAGS_FAST) $(CFLAGS_PROF)" "LDFLAGS=$(LDFLAGS) $(LDFLAGS_FAST) $(LDFLAGS_PROF)" all
+	$(MAKE) "CFLAGS=$(CFLAGS) $(CFLAGS_FAST) $(CFLAGS_PROF)" \
+		"LDFLAGS=$(LDFLAGS) $(LDFLAGS_FAST) $(LDFLAGS_PROF)" all
 	$(VIS) -i -l $(DIR)/lua/demo_5_random.lua
 	gprof $(VIS)
 	- $(RM) $(DIR)/gmon.out 2>/dev/null
@@ -97,17 +99,21 @@ profile: $(SOURCES)
 $(OBJDIR):
 	- test -d $(OBJDIR) || mkdir $(OBJDIR) 2>/dev/null
 
-$(DEPFILES): $(DEPDIR)
+$(DEPFILES): | $(DEPDIR)
+$(OBJECTS): | $(OBJDIR)
 
-$(OBJDIR)/miniaudio.o: $(DIR)/miniaudio.c $(OBJDIR)
-	$(CC) -c -o $@ $< -msse2 $(CFLAGS) -Wno-sign-conversion -Wno-conversion -Wno-switch-enum -Wno-cast-qual -Wno-float-equal -Wno-shadow
+$(OBJDIR)/miniaudio.o: $(DIR)/miniaudio.c | $(OBJDIR)
+	$(CC) -c -o $@ $< -msse2 $(CFLAGS) \
+		-Wno-sign-conversion -Wno-conversion -Wno-switch-enum -Wno-cast-qual \
+		-Wno-float-equal -Wno-shadow
 
-$(OBJDIR)/%.o: %.c $(OBJDIR)
+$(OBJDIR)/%.o: %.c | $(OBJDIR)
 	$(CC) -c -o $@ $< $(CFLAGS)
 
 $(DEPDIR): $(SOURCES) $(SCR_MAKEDEP)
 	- test -d $(DEPDIR) || mkdir $(DEPDIR) 2>/dev/null
 	$(BASH) $(SCR_MAKEDEP)
+	touch $(DEPDIR)
 
 $(VIS): $(OBJECTS)
 	$(CC) -o $@ $^ $(LDFLAGS)
