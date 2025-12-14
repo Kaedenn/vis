@@ -11,6 +11,7 @@ void audio_free(void* ptr);
 
 void audio_play(void);
 void audio_pause(void);
+BOOL audio_is_playing(void);
 void audio_mute(void);
 void audio_seek(unsigned where);
 

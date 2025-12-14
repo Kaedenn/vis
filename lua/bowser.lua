@@ -54,6 +54,10 @@ VIS_BOWSER_FRAME_TWEAK  (frame number)      --ft=frame
     audio to that offset in frames (running at Vis.FPS_LIMIT frames per
     second).
 
+VIS_BOWSER_INIT_DELAY   (frame number)      --delay=frame
+    If set to a numeric value, delay only the visualization and not the
+    audio for the specified number of frames.
+
 VIS_BOWSER_MS_TWEAK     (milliseconds)      --mst=ms
     If set to a numeric value, seek only the visualization and not the
     audio to that offset in milliseconds.
@@ -153,6 +157,12 @@ local function EstablishConfig()
         '--ft',
         'number',
         "seek to this frame"
+    })
+    AddOption(Config, {
+        'VIS_BOWSER_INIT_DELAY',
+        '--delay',
+        'number',
+        'delay this number of frames'
     })
     AddOption(Config, {
         'VIS_BOWSER_MS_TWEAK',
@@ -301,6 +311,11 @@ if Env['VIS_BOWSER_SKIP_TO'] ~= nil then
     VisUtil.seek_to(tonumber(Env['VIS_BOWSER_SKIP_TO']))
 elseif Env['VIS_BOWSER_SKIP_INTRO'] ~= nil then
     VisUtil.seek_to(BOWSER_TIME_START_MAIN)
+end
+
+VisUtil.Debug.Print(("delay(%s, %s)"):format(0, tonumber(Env['VIS_BOWSER_INIT_DELAY'])))
+if Env['VIS_BOWSER_INIT_DELAY'] ~= nil then
+    Vis.delay(Vis.flist, 0, tonumber(Env['VIS_BOWSER_INIT_DELAY']))
 end
 
 -- Frame offset adjustments; figure out where to start the frame list

@@ -39,6 +39,7 @@ static int viscmd_pause_fn(lua_State* L);
 static int viscmd_seek_fn(lua_State* L);
 static int viscmd_seekms_fn(lua_State* L);
 static int viscmd_seekframe_fn(lua_State* L);
+static int viscmd_delay_fn(lua_State* L);
 static int viscmd_bgcolor_fn(lua_State* L);
 static int viscmd_mutate_fn(lua_State* L);
 static int viscmd_callback_fn(lua_State* L);
@@ -275,6 +276,7 @@ int initialize_vis_lib(lua_State* L) {
         {"seek", viscmd_seek_fn},
         {"seekms", viscmd_seekms_fn},
         {"seekframe", viscmd_seekframe_fn},
+        {"delay", viscmd_delay_fn},
         {"bgcolor", viscmd_bgcolor_fn},
         {"mutate", viscmd_mutate_fn},
         {"callback", viscmd_callback_fn},
@@ -657,6 +659,16 @@ int viscmd_seekframe_fn(lua_State* L) {
     fnum whereto = (fnum)luaL_checkunsigned(L, 3);
     DBPRINTF("Vis.seekframe(%p, [frame]%d, [frame]%d)", fl, where, whereto);
     flist_insert_seekframe(fl, where, whereto);
+    return 0;
+}
+
+/* Vis.delay(Vis.flist, when, length) */
+static int viscmd_delay_fn(lua_State* L) {
+    flist* fl = *(flist**)luaL_checkudata(L, 1, "flist**");
+    fnum where = (fnum)luaL_checkunsigned(L, 2);
+    fnum length = (fnum)luaL_checkunsigned(L, 3);
+    DBPRINTF("Vis.delay(%p, [frame]%d, [frame]%d)", fl, where, length);
+    flist_insert_delay(fl, where, length);
     return 0;
 }
 

@@ -2,6 +2,8 @@
 #ifndef VIS_DEFINES_HEADER_INCLUDED_
 #define VIS_DEFINES_HEADER_INCLUDED_ 1
 
+#define _POSIX_C_SOURCE 200809L
+
 #ifdef __GNUC__
 /* GCC-specific extensions to make things a little easier */
 #define UNUSED_PARAM(param) param __attribute__((unused))
@@ -86,7 +88,6 @@
 #define VIS_MSEC_PER_FRAME (1000.0 / VIS_FPS_LIMIT)
 
 /* audio constants */
-/* old #define VIS_AUDIO_FREQ 22050 */
 #define VIS_AUDIO_FREQ 44100
 #define VIS_AUDIO_SAMPLES 512
 #define VIS_AUDIO_CHANNELS 2
@@ -97,6 +98,7 @@
 /* initial capacity for particles */
 #define VIS_PLIST_INITIAL_SIZE (1024 * 1024)
 
+/* FIXME: unused */
 /* (drawing) number of vertices needed per particle */
 #define VIS_VTX_PER_PARTICLE 2
 

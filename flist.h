@@ -16,6 +16,7 @@ typedef struct flist_node {
         mutate_method* method; /* VIS_FTYPE_MUTATE: mutate frame */
         script_cb* scriptcb;   /* VIS_FTYPE_SCRIPTCB: lua invoke frame */
         fnum frameseek;        /* VIS_FTYPE_FRAMESEEK: go-to-frame-num frame */
+        fnum delay;            /* VIS_FTYPE_DELAY: number of frames to wait */
     } data;
     struct flist_node* next;
 } flist_node;
@@ -45,5 +46,6 @@ void flist_insert_bgcolor(flist* fl, fnum when, float color[3]);
 void flist_insert_mutate(flist* fl, fnum when, mutate_method* method);
 void flist_insert_scriptcb(flist* fl, fnum when, script_cb* func);
 void flist_insert_seekframe(flist* fl, fnum when, fnum where);
+void flist_insert_delay(flist* fl, fnum when, fnum length);
 
 #endif

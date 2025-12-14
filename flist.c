@@ -140,6 +140,15 @@ void flist_insert_seekframe(flist* fl, fnum when, fnum where) {
     flist_insert(fl, when, fn);
 }
 
+void flist_insert_delay(flist* fl, fnum when, fnum length) {
+    flist_node* fn = NULL;
+    if (!fl || when >= VIS_NFRAMES) return;
+    fn = flist_node_new();
+    fn->type = VIS_FTYPE_DELAY;
+    fn->data.delay = length;
+    flist_insert(fl, when, fn);
+}
+
 void flist_clear(flist* fl) {
     int i = 0;
     if (!fl) return;

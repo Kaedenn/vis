@@ -1,17 +1,17 @@
 
+#include "defines.h"
+
 #include "emitter.h"
 
 #include "audio.h"
 #include "command.h"
+#include "drawer.h"
 #include "helper.h"
 #include "particle.h"
 #include "pextra.h"
-
-#include "drawer.h"
-
 #include "random.h"
 
-#include <string.h>
+#include <time.h>
 
 static struct emitter {
     struct commands* commands;
@@ -19,6 +19,7 @@ static struct emitter {
     flist* fl;
     drawer_t drawer;
     uint32_t frame_counts[VIS_MAX_FTYPE];
+    uint32_t delay_counter;
 } emitter;
 
 void emitter_setup(struct commands* cmds, plist_t plist, drawer_t drawer) {
@@ -29,12 +30,14 @@ void emitter_setup(struct commands* cmds, plist_t plist, drawer_t drawer) {
     for (ftype_id i = (ftype_id)0; i < VIS_MAX_FTYPE; ++i) {
         emitter.frame_counts[i] = 0;
     }
+    emitter.delay_counter = 0;
 }
 
 void emitter_free(UNUSED_PARAM(void* arg)) {
     if (emitter.fl) {
         flist_clear(emitter.fl);
         flist_free(emitter.fl);
+        emitter.fl = NULL;
     }
 }
 
@@ -61,6 +64,13 @@ static plist_action_id do_mutate_fn(particle* p, void* mutate) {
 }
 
 void emitter_tick(void) {
+    if (emitter.delay_counter > 0) {
+        DBPRINTF(
+            "Delaying for %d frame%s", emitter.delay_counter,
+            (emitter.delay_counter == 1 ? "" : "s"));
+        emitter.delay_counter -= 1;
+        return;
+    }
     flist_node* fn = flist_tick(emitter.fl);
     while (fn != NULL) {
         emitter.frame_counts[fn->type] += 1;
@@ -90,11 +100,14 @@ void emitter_tick(void) {
         case VIS_FTYPE_FRAMESEEK:
             flist_goto_frame(emitter.fl, fn->data.frameseek);
             break;
+        case VIS_FTYPE_DELAY:
+            emitter.delay_counter = fn->data.delay;
+            break;
         case VIS_MAX_FTYPE:
             break;
         }
         /* do not process next node if this is a frame seek */
-        fn = fn->type != VIS_FTYPE_FRAMESEEK ? flist_node_next(fn) : NULL;
+        fn = (fn->type == VIS_FTYPE_FRAMESEEK) ? NULL : flist_node_next(fn);
     }
 }
 

@@ -108,6 +108,7 @@ typedef enum {
     VIS_FTYPE_MUTATE,
     VIS_FTYPE_SCRIPTCB,
     VIS_FTYPE_FRAMESEEK,
+    VIS_FTYPE_DELAY,
     VIS_MAX_FTYPE,
 } ftype_id;
 

@@ -129,31 +129,37 @@ function VisUtil.Args:new()
     o:link_arg_env("--help", "VIS_HELP")
     return o
 end
+
 function VisUtil.Args:_ensure_self()
     assert(type(self) == "table")
     assert(type(self._args) == "table", VisUtil.strobject(self))
 end
+
 function VisUtil.Args:add(arg, valuetype, help)
     self:_ensure_self()
     self._args[arg] = valuetype
     self._arghelp[arg] = help
     table.insert(self._arglist, {[arg] = valuetype})
 end
+
 function VisUtil.Args:add_env(arg, valuetype, help)
     self:_ensure_self()
     self._envs[arg] = valuetype
     self._envhelp[arg] = help
     table.insert(self._envlist, {[arg] = valuetype})
 end
+
 function VisUtil.Args:link_arg_env(arg, env)
     self:_ensure_self()
     self._links[arg] = env
     table.insert(self._linklist, {[arg] = env})
 end
+
 function VisUtil.Args:add_help(helpstr)
     self:_ensure_self()
     self._helpstrs[#self._helpstrs+1] = helpstr
 end
+
 function VisUtil.Args:_get_max_arglen(args)
     self:_ensure_self()
     local maxw = 0
@@ -162,6 +168,7 @@ function VisUtil.Args:_get_max_arglen(args)
     end
     return maxw
 end
+
 function VisUtil.Args:_strarg(arg, argtype, maxw, help)
     self:_ensure_self()
     local s = ''
@@ -178,6 +185,7 @@ function VisUtil.Args:_strarg(arg, argtype, maxw, help)
     end
     return s .. "\n"
 end
+
 function VisUtil.Args:help(execname)
     self:_ensure_self()
     execname = execname or "<program>"
@@ -246,18 +254,24 @@ function VisUtil.Args:help(execname)
 
     return toplevel
 end
+
 function VisUtil.Args:parse(args)
     self:_ensure_self()
-    if args == nil then args = Arguments end
+    if args == nil then
+        args = Arguments
+    end
     local errtab = VisUtil.Args.ERRORS
     local parsed = {}
     local parsedenv = {}
-    local function doerror(errstr, arg) return nil, errstr:format(arg) end
+    local function doerror(errstr, arg)
+        return nil, nil, errstr:format(arg)
+    end
     local function ensure(value, valuetype)
-        VisUtil.Debug(("ensure(%s, %s)"):format(tostring(value), tostring(valuetype)))
         if valuetype == nil or valuetype == "nil" then
             return 1
-        elseif value == nil then
+        end
+        VisUtil.Debug(("ensure(%s, %s)"):format(tostring(value), tostring(valuetype)))
+        if value == nil then
             return doerror(errtab.E_NILVAL, valuetype)
         elseif valuetype == "string" then
             return value
@@ -267,7 +281,6 @@ function VisUtil.Args:parse(args)
             end
             return tonumber(value)
         elseif valuetype == "boolean" or valuetype == "bool" then
-            local strbool = {"false", "true"}
             if value == "true" then return true end
             if value == "false" then return false end
             if value == "1" then return true end
