@@ -12,6 +12,7 @@ typedef struct clargs {
     const char* dumpfile;
     const char* commandfile;
     int frameskip;
+    int frames_per_second;
     klist scriptargs;
     BOOL dumptrace;
     BOOL interactive;

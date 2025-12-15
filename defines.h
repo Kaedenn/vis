@@ -75,9 +75,6 @@
 
 /* frame rate */
 #define VIS_FPS_LIMIT 30
-#define VIS_FPDS_LIMIT (VIS_FPS_LIMIT / 10.0)
-#define VIS_FPCS_LIMIT (VIS_FPS_LIMIT / 100.0)
-#define VIS_FPMS_LIMIT (VIS_FPS_LIMIT / 1000.0)
 
 /* converting from frames to msec */
 #define VIS_FRAMES_TO_MSEC(frames) ((int)((frames) * 1000.0 / VIS_FPS_LIMIT + 0.5))

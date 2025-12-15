@@ -45,6 +45,7 @@ struct drawer {
     GLuint vbo;
     shader_t* shader;
     unsigned int window_size[2];
+    int frames_per_second;
 
     vertex_t* vertex_array;
     size_t vertex_curr;
@@ -159,12 +160,12 @@ drawer_t drawer_new(const clargs* args) {
 
 void drawer_free(drawer_t drawer) {
     double runtime = glfwGetTime() - drawer->fps.start_time;
-    double fc_want = runtime * VIS_FPS_LIMIT;
+    double fc_want = runtime * drawer->frames_per_second;
     double fc_have = (double)drawer->fps.framecount;
     DBPRINTF("%s", "fps analysis:");
     DBPRINTF("S=%g, F=%g, F/S=%g", runtime, fc_have, fc_have / runtime);
     DBPRINTF("frame error:   (S*FPS-F) %g frames (%g seconds)", fc_want - fc_have,
-        (fc_want - fc_have) / VIS_FPS_LIMIT);
+        (fc_want - fc_have) / drawer->frames_per_second);
     DBPRINTF("error ratio: 1-(S*FPS/F) %g", 1 - fc_want / fc_have);
 
     DBFREE(drawer->vertex_array);
@@ -263,7 +264,7 @@ void drawer_preserve_screen(drawer_t drawer) {
 void drawer_ensure_fps_linear(drawer_t drawer) {
     double frameend = glfwGetTime();
     double framedelay = frameend - drawer->fps.framestart_time;
-    double target_delay = 1.0 / VIS_FPS_LIMIT;
+    double target_delay = 1.0 / drawer->frames_per_second;
 
     if (framedelay < target_delay) {
         double sleep_sec = target_delay - framedelay;
@@ -278,7 +279,7 @@ void drawer_ensure_fps_linear(drawer_t drawer) {
 
 void drawer_ensure_fps_absolute(drawer_t drawer) {
     double frametime =
-        drawer->fps.start_time + (double)drawer->fps.framecount / VIS_FPS_LIMIT;
+        drawer->fps.start_time + (double)drawer->fps.framecount / drawer->frames_per_second;
     double now = glfwGetTime();
     if (now < frametime) {
         double sleep_sec = frametime - now;
@@ -291,12 +292,17 @@ void drawer_ensure_fps_absolute(drawer_t drawer) {
     }
 }
 
+int drawer_get_configured_fps(drawer_t drawer) {
+    return drawer->frames_per_second;
+}
+
 float drawer_get_fps(drawer_t drawer) {
     return (float)((double)(drawer->fps.framecount - 1) /
                    (glfwGetTime() - drawer->fps.start_time));
 }
 
 void drawer_config(drawer_t drawer, const clargs* args) {
+    drawer->frames_per_second = args->frames_per_second;
     drawer->frame_skip = (uint32_t)args->frameskip;
     drawer->verbose_trace = args->dumptrace ? TRUE : FALSE;
     if (args->dumpfile) {

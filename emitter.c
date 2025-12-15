@@ -65,8 +65,7 @@ static plist_action_id do_mutate_fn(particle* p, void* mutate) {
 
 void emitter_tick(void) {
     if (emitter.delay_counter > 0) {
-        DBPRINTF(
-            "Delaying for %d frame%s", emitter.delay_counter,
+        DBPRINTF("Delaying for %d frame%s", emitter.delay_counter,
             (emitter.delay_counter == 1 ? "" : "s"));
         emitter.delay_counter -= 1;
         return;

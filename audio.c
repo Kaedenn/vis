@@ -56,6 +56,7 @@ BOOL audio_open(const char* file) {
     }
     if (audio->sound) {
         ma_sound_uninit(audio->sound);
+        /* leave audio->sound allocated; we're going to reuise it */
     } else {
         audio->sound = DBMALLOC(sizeof(*audio->sound));
     }
@@ -112,8 +113,14 @@ void audio_mute(void) {
     }
 }
 
+void audio_set_volume(float volume) {
+    ma_device* device = ma_engine_get_device(audio->engine);
+    if (device != NULL) {
+        ma_device_set_master_volume(device, volume);
+    }
+}
+
 void audio_seek(unsigned where) {
-    DBPRINTF("Seeking to %u", where);
     BOOL restart = FALSE;
     if (ma_sound_is_playing(audio->sound)) {
         ma_sound_stop(audio->sound);

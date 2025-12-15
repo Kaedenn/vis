@@ -15,6 +15,7 @@ const char* help_string[] = {
     "  -A <ARG>     pass <ARG> to Lua; can be specified more than once",
     "  -f <FILE>    run commands from <FILE>",
     "  -s <NUM>     skip <NUM> frames when dumping with -d",
+    "  -F <NUM>     change the framerate to <NUM>",
     "  -w <W>x<H>   set window size to <W>x<H>",
     "  -t           output the results of tracing to stdout, implies -i",
     "  -i           disable interactive mode (commands on stdin)",
@@ -49,6 +50,7 @@ clargs* argparse(int argc, char** argv) {
     args->commandfile = NULL;
     args->scriptargs = klist_new();
     args->frameskip = 0;
+    args->frames_per_second = VIS_FPS_LIMIT;
     args->dumptrace = FALSE;
     args->interactive = TRUE;
     args->absolute_fps = TRUE;
@@ -73,6 +75,18 @@ clargs* argparse(int argc, char** argv) {
         case 'd':
             if (argi + 1 < argc) {
                 args->dumpfile = argv[++argi];
+            } else {
+                EPRINTF("Argument -%s requires value", argv[argi][1]);
+                mark_error(args, 1);
+            }
+            break;
+        case 'F':
+            if (argi + 1 < argc) {
+                args->frames_per_second = atoi(argv[++argi]);
+                if (args->frames_per_second <= 0) {
+                    EPRINTF("Value for -F must be positive; got %s", argv[argi]);
+                    mark_error(args, 1);
+                }
             } else {
                 EPRINTF("Argument -%s requires value", argv[argi][1]);
                 mark_error(args, 1);

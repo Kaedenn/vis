@@ -2,6 +2,13 @@
 #ifndef VIS_FLIST_HEADER_INCLUDED_
 #define VIS_FLIST_HEADER_INCLUDED_ 1
 
+/* The frame list consists of a static array of list nodes. Each node
+ * corresponds to a single frame of execution and can contain a pointer
+ * to a subsequent node to invoke on the same frame.
+ *
+ * It is therefore an array of (often singlar) linked lists.
+ */
+
 #include "emit.h"
 #include "mutator.h"
 #include "script.h"

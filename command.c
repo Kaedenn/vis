@@ -225,7 +225,7 @@ static void cmd_kick(struct commands* cmds, const char* buffer) {
         double ds, theta;
         while (i < arg) {
             radius = randint(1, 3);
-            life = randint(VIS_FPS_LIMIT, 2 * VIS_FPS_LIMIT);
+            life = randint(drawer_get_configured_fps(cmds->drawer), 2 * drawer_get_configured_fps(cmds->drawer));
             r = randfloat(1.0f, 2.0f);
             g = randfloat(0.0f, 0.7f);
             b = randfloat(0.0f, 0.4f);
@@ -258,7 +258,7 @@ static void cmd_snare(struct commands* cmds, const char* buffer) {
         double ds, theta;
         while (i < arg) {
             radius = randint(1, 3);
-            life = randint(VIS_FPS_LIMIT, 2 * VIS_FPS_LIMIT);
+            life = randint(drawer_get_configured_fps(cmds->drawer), 2 * drawer_get_configured_fps(cmds->drawer));
             r = randfloat(0.0f, 0.4f);
             g = randfloat(0.0f, 1.0f);
             b = randfloat(0.0f, 0.4f);
@@ -292,7 +292,7 @@ static void cmd_strum(struct commands* cmds, const char* buffer) {
         double ds, theta;
         while (i < arg) {
             radius = randdouble(1.0, 2.0);
-            life = randint(VIS_FPS_LIMIT, 2 * VIS_FPS_LIMIT);
+            life = randint(drawer_get_configured_fps(cmds->drawer), 2 * drawer_get_configured_fps(cmds->drawer));
             r = randfloat(0.0f, 0.4f);
             g = randfloat(0.0f, 0.7f);
             b = randfloat(0.0f, 1.0f);
@@ -327,7 +327,7 @@ static void cmd_rain(struct commands* cmds, const char* buffer) {
             x = randint(0, VIS_WIDTH);
             y = 0;
             radius = randdouble(0.5, 1.5);
-            life = randint(VIS_FPS_LIMIT * 5, VIS_FPS_LIMIT / 5);
+            life = randint(drawer_get_configured_fps(cmds->drawer) * 5, drawer_get_configured_fps(cmds->drawer) / 5);
             r = 0.0f;
             g = randfloat(0.1f, 0.3f);
             b = randfloat(0.4f, 1.0f);

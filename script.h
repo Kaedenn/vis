@@ -6,9 +6,9 @@
 #include "klist.h"
 #include <stdint.h>
 
-/* FIXME: circular dependency between flist.h and script.h */
 struct flist;
 
+/* callback function */
 typedef struct script_cb {
     struct script* owner;
     char* fn_name;
@@ -17,6 +17,7 @@ typedef struct script_cb {
 
 typedef struct script* script_t;
 
+/* available debug watches */
 enum script_debug_id {
     SCRIPT_DEBUG_PARTICLES_EMITTED,
     SCRIPT_DEBUG_TIME_NOW,
@@ -26,6 +27,7 @@ enum script_debug_id {
     SCRIPT_DEBUG_PARTICLE_TAGS_MODIFIED
 };
 
+/* debug watch values */
 typedef struct script_debug {
     uint64_t particles_emitted;
     uint64_t time_now;
@@ -35,6 +37,7 @@ typedef struct script_debug {
     uint64_t particle_tags_modified;
 } script_debug;
 
+/* script configuration */
 typedef unsigned int script_cfg_mask;
 static const script_cfg_mask SCRIPT_ALLOW_ALL = 0; /* allow all features */
 static const script_cfg_mask SCRIPT_NO_CB = 1;     /* disable Vis.callback() */
