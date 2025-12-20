@@ -2,7 +2,7 @@
 #include "audio.h"
 #include "helper.h"
 
-#include "miniaudio.h"
+#include "3rdparty/miniaudio.h"
 
 struct audio {
     char* file;
@@ -56,7 +56,7 @@ BOOL audio_open(const char* file) {
     }
     if (audio->sound) {
         ma_sound_uninit(audio->sound);
-        /* leave audio->sound allocated; we're going to reuise it */
+        /* leave audio->sound allocated; we're going to reuse it */
     } else {
         audio->sound = DBMALLOC(sizeof(*audio->sound));
     }

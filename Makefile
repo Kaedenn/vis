@@ -1,27 +1,33 @@
 
 # Makefile for the vis project
 #
-# Nice features:
+# Controlling directives:
+#   VIS_USE_SQL_MIXER	use SDL_mixer instead of miniaudio for audio processing
 #
-# make <target> EXEC_ARGS="arguments to pass to vis"
-# make <target> EXTRA_CFLAGS="extra cflags to pass to gcc"
-# make <target> EXTRA_LDFLAGS="extra ldflags to pass to gcc"
-# make <target> SCR_ARGS="extra args to pass to process.py"
+# Extra directives:
+#   EXEC_ARGS		arguments to pass to vis
+#   EXTRA_CFLAGS	additional compilation flags to pass to gcc
+#   EXTRA_LDFLAGS	additional linker flags to pass to ld
+#   SCR_ARGS		additional arguments to pass to process.py
 #
 
 DIR = .
 OBJDIR = $(DIR)/.o
 DEPDIR = $(DIR)/.d
 
-SRCS = async.c audio.c clargs.c command.c drawer.c driver.c emit.c \
+SRCS := async.c audio.c clargs.c command.c drawer.c driver.c emit.c \
 	emitter.c flist.c forces.c gc.c genlua.c helper.c klist.c \
 	kstring.c mutator.c particle.c pextra.c plimits.c plist.c \
-	random.c script.c shader.c miniaudio.c
+	random.c script.c shader.c
 SOURCES = $(patsubst %,$(DIR)/%,$(CSRC)) Makefile
 OBJECTS = $(patsubst %.c,$(OBJDIR)/%.o,$(SRCS))
 DEPFILES = $(patsubst %.c,$(DEPDIR)/%.d,$(SRCS))
 EXECBIN = vis
 VIS = $(DIR)/$(EXECBIN)
+
+ifeq ($(VIS_USE_SDL_MIXER),)
+SRCS := $(SRCS) 3rdparty/miniaudio.c
+endif
 
 LUA_TESTS := $(wildcard $(DIR)/test/test_*.lua)
 C_TESTS := $(wildcard $(DIR)/test/test_*.c)
@@ -42,16 +48,15 @@ CFLAGS_PROF = -pg
 LDFLAGS_FAST = -O3 -flto
 LDFLAGS_PROF = -pg
 
-ifneq ($(VIS_USE_SDL),)
 CFLAGS_LIBS = -I/usr/include/lua5.2 -I/usr/include/SDL2
-LDFLAGS_LIBS = -llua5.2 -lSDL2 -lSDL2_image -lSDL2_mixer
-else
-CFLAGS_LIBS = -I/usr/include/lua5.2
-LDFLAGS_LIBS = -llua5.2 -lglfw -lGL -lGLEW
-endif
+LDFLAGS_LIBS = -llua5.2 -lglfw -lGL -lGLEW -lSDL2 -lSDL2_mixer
 
 CFLAGS := $(CFLAGS) $(CFLAGS_LIBS) $(EXTRA_CFLAGS)
 LDFLAGS := $(LDFLAGS) $(LDFLAGS_LIBS) $(EXTRA_LDFLAGS)
+
+ifeq ($(VIS_USE_SDL_MIXER),)
+CFLAGS := $(CFLAGS) -DVIS_USE_MINIAUDIO
+endif
 
 EXEC_ARGS ?= -i -l $(DIR)/lua/demo_4_random.lua
 VG_SUPP = --suppressions=$(DIR)/valgrind.supp
@@ -99,10 +104,13 @@ profile: $(SOURCES)
 $(OBJDIR):
 	- test -d $(OBJDIR) || mkdir $(OBJDIR) 2>/dev/null
 
+$(OBJDIR)/3rdparty: | $(OBJDIR)
+	- test -d $(OBJDIR)/3rdparty || mkdir $(OBJDIR)/3rdparty 2>/dev/null
+
 $(DEPFILES): | $(DEPDIR)
 $(OBJECTS): | $(OBJDIR)
 
-$(OBJDIR)/miniaudio.o: $(DIR)/miniaudio.c | $(OBJDIR)
+$(OBJDIR)/3rdparty/miniaudio.o: $(DIR)/3rdparty/miniaudio.c | $(OBJDIR)/3rdparty
 	$(CC) -c -o $@ $< -msse2 $(CFLAGS) \
 		-Wno-sign-conversion -Wno-conversion -Wno-switch-enum -Wno-cast-qual \
 		-Wno-float-equal -Wno-shadow
