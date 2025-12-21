@@ -35,23 +35,32 @@ decided to abide by the following two rules:
 
 ## Compiling this thing
 
-This project depends on SDL, OpenGL, and Lua. There are several `$(MAKE)`
-targets, including `all`, `debug`, `valgrind`, etc. A simple `make all` should
-do the trick just fine.
+This project depends on OpenGL and Lua. There are several `$(MAKE)` targets,
+including `all`, `debug`, `valgrind`, etc. A simple `make all` should do the
+trick just fine.
 
 ## Running this thing
 
 This program has just one argument for intended usage: `-l <FILE>`. This
 argument loads the Lua script `<FILE>` and executes it. For information on
-writing scripts, see any of the Lua files in the `test` directory, the
-`lua` directory, or the section `Writing your own scripts` below.
+writing scripts, see any of the Lua files in the `test` directory, the `lua`
+directory, or the section `Writing your own scripts` below.
 
-### Running the final product
+### Controls
 
-To see the final product, run this program as the following:
-`$ ./vis -l lua/bowser.lua`
+In addition to anything the Lua scripts add, the following keyboard and mouse
+inputs are available while the program is running:
 
-Pressing `^D` (`Control+D`) or `ESC` will close the program.
+Pressing `^D` (`Control+D`) on the command-line will close the program.
+
+Pressing `ESC` will close the program.
+
+Pressing `Space` will pause the program. Pressing it again will resume the
+program.
+
+Clicking anywhere on the screen will trigger the default emit rule. Moving the
+cursor while holding down the left mouse button will repeatedly trigger the
+default emit rule. This rule can be changed via `Vis.settrace`.
 
 ### Other invocations
 
@@ -63,9 +72,9 @@ There are several ways to run this thing: <br/>
 #### Click-and-drag method
 
 First, run the program with no arguments. Then, click and hold with the left
-mouse button and move the mouse around the screen. This will cause small
-circles of particles to appear. It is possible to change the parameters of
-this emission, but that requires a script file (the second method)
+mouse button and move the mouse around the screen. This will cause small circles
+of particles to appear. It is possible to change the parameters of this
+emission, but that requires a script file (the second method)
 
 #### Script mode
 
@@ -590,6 +599,18 @@ both the particle's tag and the `<tag>` value given satisfy the
 `Vis.mutate(Vis.flist, 50, Vis.MUTATE_PUSH_IF, 2, Vis.MUTATE_IF_EQ, 1)`
 will double all particles' velocities if and only if the particle's tag is
 equal to 1.
+
+</details>
+
+<details>
+<summary>Planned Features</summary>
+
+I plan to add a way to adjust emit frames according to the song. This involves
+calculating a fast-Fourier transform (FFT) in addition to querying absolute
+volume (or envelope) information.
+
+Note that because the particle engine runs at a specific fame-rate (default 30),
+this reduces the resolution made available to the particles.
 
 </details>
 

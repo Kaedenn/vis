@@ -49,8 +49,9 @@ static plist_action_id animate_particle(struct particle* p, void* userdata);
 const char* get_key_name(int key) {
     static char buf[32];
     const char* name = glfwGetKeyName(key, 0);
-    if (name)
+    if (name) {
         return name;
+    }
 
     switch (key) {
     case GLFW_KEY_ESCAPE:
