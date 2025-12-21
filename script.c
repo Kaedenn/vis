@@ -1,6 +1,4 @@
 
-#define _DEFAULT_SOURCE /* for setenv */
-
 #include "script.h"
 #include "audio.h"
 #include "emitter.h"
@@ -18,6 +16,7 @@
 #include <lua.h>
 #include <lualib.h>
 
+/* Helper functions not exposed to Lua */
 static int initialize_vis_lib(lua_State* L);
 static void prepare_stack(script_t s, klist args);
 static void cleanup_stack(script_t s);
@@ -29,10 +28,10 @@ static void push_constant_int(lua_State* L, const char* k, int v, int idx);
 static int do_mouse_event(lua_State* L, const char* fn, int x, int y, int b);
 static int do_key_event(lua_State* L, const char* fn, const char* k, BOOL shft);
 static int get_configured_fps(lua_State* L);
-
 static int do_frames2msec(lua_State* L, fnum frame);
 static fnum do_msec2frames(lua_State* L, long msec);
 
+/* Functions exposed to Lua */
 static int viscmd_debug_fn(lua_State* L);
 static int viscmd_command_fn(lua_State* L);
 static int viscmd_exit_fn(lua_State* L);
