@@ -20,6 +20,7 @@ static struct emitter {
     drawer_t drawer;
     uint32_t frame_counts[VIS_MAX_FTYPE];
     uint32_t delay_counter;
+    BOOL do_sync;
 } emitter;
 
 void emitter_setup(struct commands* cmds, plist_t plist, drawer_t drawer) {
@@ -65,16 +66,25 @@ static plist_action_id do_mutate_fn(particle* p, void* mutate) {
 
 void emitter_tick(void) {
     if (emitter.delay_counter > 0) {
-        DBPRINTF("Delaying for %d frame%s", emitter.delay_counter,
-            (emitter.delay_counter == 1 ? "" : "s"));
+        DBPRINTF("Delaying for %d frame%s at %d", emitter.delay_counter,
+            (emitter.delay_counter == 1 ? "" : "s"), emitter.fl->curr_frame);
         emitter.delay_counter -= 1;
         return;
+    }
+    if (emitter.do_sync) {
+        emitter.do_sync = FALSE;
+        audio_seek(0U);
+        audio_unmute();
+        if (!audio_is_playing()) {
+            audio_play();
+        }
     }
     flist_node* fn = flist_tick(emitter.fl);
     while (fn != NULL) {
         emitter.frame_counts[fn->type] += 1;
         switch (fn->type) {
         case VIS_FTYPE_EMIT:
+            DBPRINTF("Ticking flist: emit at %d", emitter.fl->curr_frame);
             emit_frame(fn->data.frame);
             break;
         case VIS_FTYPE_EXIT:
@@ -84,6 +94,7 @@ void emitter_tick(void) {
             audio_play();
             break;
         case VIS_FTYPE_CMD:
+            DBPRINTF("%s", "Ticking flist: command");
             command_str(emitter.commands, fn->data.cmd);
             break;
         case VIS_FTYPE_BGCOLOR:
@@ -100,12 +111,23 @@ void emitter_tick(void) {
             flist_goto_frame(emitter.fl, fn->data.frameseek);
             break;
         case VIS_FTYPE_DELAY:
+            DBPRINTF("Ticking flist: delay %d at %d", fn->data.delay, emitter.fl->curr_frame);
             emitter.delay_counter = fn->data.delay;
+            emitter.do_sync = FALSE;
+            break;
+        case VIS_FTYPE_AUDIOSYNC:
+            DBPRINTF("Ticking flist: audiosync %d at %d", fn->data.delay, emitter.fl->curr_frame);
+            emitter.delay_counter = fn->data.delay;
+            emitter.do_sync = TRUE;
+            audio_mute();
+            if (audio_is_playing()) {
+                audio_pause();
+            }
             break;
         case VIS_MAX_FTYPE:
             break;
         }
-        /* do not process next node if this is a frame seek */
+        /* frame seeks are immediate; terminate processing accordingly */
         fn = (fn->type == VIS_FTYPE_FRAMESEEK) ? NULL : flist_node_next(fn);
     }
 }
@@ -123,3 +145,5 @@ void emit_frame(emit_desc* frame) {
         plist_add(emitter.particles, p);
     }
 }
+
+/* vim: set ts=4 sts=4 sw=4: */

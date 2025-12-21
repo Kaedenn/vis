@@ -1,34 +1,43 @@
 
-# Hand-Crafted Particle Visualization to Music, via SDL, OpenGL, and Lua
+# Hand-Crafted Particle Visualization to Music, via OpenGL and Lua
 
-### There's a demo! You want a demo? Sure you want a demo!
+## Background information
 
-Take a look in the output directory for a file named "bowser.avi". This file
-will, over time, become the final product for this project.
+This project was created to investigate the question, "can you simulate
+synesthesia for someone who does not have synesthesia?"
 
-## A little bit of background information
+Synesthesia, specifically chromesthesia, is the perception of shapes when
+listening to music. The exact shapes, their positions, colors, and behaviors
+are unique to the individual. Therefore, this project does not attempt to
+simulate synesthesia in general, but rather simulate a specific person's
+experience.
 
-This project is a glorified script-able particle engine intended for providing
-a complex visualization for songs. Because "trans-coding" audio to a MIDI
-format is practically impossible, all of the scheduling--that is, writing the
-script to emit the particles--must be done by hand. This is where a keen ear
-and substantial knowledge of music theory comes in, neither of which I claim to
-have.
+Chromesthesia has been described as "a fireworks display for the mind" and can
+be genuinely enjoyable. Unfortunately, I do not have chromesthesia. Therefore,
+I should be the perfect use case for this project.
 
-This leads to an interesting dichotomy: one one hand, simpler songs would be
-easier to schedule, but they would lead to a fairly boring visualization. On
-the other hand, however, complex songs require a lot of work to figure out
-what's going on. I hope I've hit an acceptable compromise in the song I've
-chosen: the Bowser theme from Super Mario World 2: Yoshi's Island. Being a
-theme from an old video game, the theme is not overly complex. It also has a
-repeat point, meaning I can drag on the visualization for as long as I please.
-In this specific project, I schedule two minutes and 43.69 seconds.
+Unfortunately, as the developer, this means I need to determine what someone
+with chromesthesia would experience.
+
+<details>
+<summary><strong>Rules of Chromesthesia</strong></summary>
+
+To ensure the experience I create closely matches real chromesthesia, I have
+decided to abide by the following two rules:
+
+1. Shape Duration: Shapes should only appear on-screen for the duration of the
+   note, instrument, or chord. Once the sound stops or changes, the shape should
+   cease or change.
+2. Shape Consistency: The same sound on the same instrument should give the same
+   shape regardless of when it's played.
+
+</details>
 
 ## Compiling this thing
 
-This project depends on SDL, OpenGL, and Lua. There are several $(MAKE)
-targets, including `all`, `debug`, `valgrind`, etc. A simple
-`make all` should do the trick just fine.
+This project depends on SDL, OpenGL, and Lua. There are several `$(MAKE)`
+targets, including `all`, `debug`, `valgrind`, etc. A simple `make all` should
+do the trick just fine.
 
 ## Running this thing
 
@@ -72,7 +81,8 @@ leaves out a good number of details.
 
 The full documentation of script mode is below, see *Writing your own scripts*
 
-#### Command mode
+<details>
+<summary><strong>Command Mode</strong></summary>
 
 This mode exists for historical reasons and really isn't intended to be used
 outside of debugging. That said, there are a number of commands supported:
@@ -103,11 +113,13 @@ supported yet.
 `command "exit"`: Terminates the application. Pressing either `^D` or
 `ESC` also terminates the application.
 
+</details>
+
 ### Writing your own scripts
 
-This is the fun part. There are two distinct APIs available: Vis and VisUtil.
+This is the fun part. There are three modules available: Vis, VisUtil, and Emit.
 
-### Uncertainty:
+### A note about uncertainty:
 
 The vast majority of values have an uncertainty counterpart, which is used to
 adjust the particle emission. For example, the uncertainty in horizontal
@@ -115,6 +127,9 @@ position `x` is denoted as `ux`, and every particle emitted by this
 table will be positioned at a random spot between `x - ux` and
 `x + ux`.  Position, radius, angle, life, and color all have uncertainty
 values which all follow this rule.
+
+<details>
+<summary><strong>The <code>Vis</code> Module</strong></summary>
 
 #### `module Vis = require("Vis")`
 
@@ -148,6 +163,8 @@ on emit tables.
 
 `function Vis.pause()`: Pauses the current audio file.
 
+`function Vis.volume(float)`: Adjust the volume; values are between 0 and 1.
+
 `function Vis.seek(hundreths-of-a-second)`: Seeks the current audio file
 to the offset given by `hundredths-of-a-second`.
 
@@ -159,6 +176,18 @@ have passed.
 position of the schedule to `frame_number` after `when` milliseconds
 have passed. See `Vis.frames2msec` and `Vis.msec2frames` to convert
 between frames and milliseconds.
+
+`function Vis.audiosync(Vis.flist, when, frame_count)`: At the specific frame,
+stop processing visual effects, mute the audio, pause the audio, delay for the
+specified number of frames, then unmute and restart the audio track at the
+beginning (0ms). This is needed when the audio track does not start playing
+immediately and ensures both the audio and visual effects have enough time to
+synchronize.
+
+`function Vis.delay(Vis.flist, when, frame_count)`: Delays the visual effects
+for the specified number of frames, while allowing the audio to continue. Use
+this if the audio takes longer to load or has "dead time" before the song
+begins.
 
 `function Vis.bgcolor(Vis.script, r, g, b)`: Sets the background color to
 the values given. Each value is between 0 and 1.
@@ -175,22 +204,24 @@ milliseconds have passed.
 `function Vis.fps()`: Returns the current derived frames per second, which
 should be fairly close to `Vis.FPS_LIMIT`.
 
-`function Vis.settrace(...)`: Not yet documented.
+`function Vis.settrace(Vis.script, emit_table)`: Change what happens when the
+user clicks and drags on the screen. The `emit_table` must be a native Lua
+`table` and not an `Emit` instance.
 
-`function Vis.frames2msec(frame_number)`: Converts argument
-`frame_number` to milliseconds.
+`function Vis.frames2msec(frame_number)`: Converts argument `frame_number` to
+milliseconds.
 
-`function Vis.msec2frames(milliseconds)`: Converts argument
-`milliseconds` to a frame number.
+`function Vis.msec2frames(milliseconds)`: Converts argument `milliseconds` to
+a frame number.
 
 `constant Vis.FPS_LIMIT`: The intended frames-per-second at which this
 program runs. At the time of writing, this is set to 30.
 
 `constant Vis.WIDTH`: The width of the program window. Currently set to 800
-but can be changed.
+but can be changed on the command-line.
 
 `constant Vis.HEIGHT`: The height of the program window. Currently set to
-600 but can be changed.
+600 but can be changed on the command-line.
 
 `constant Vis.DEFAULT_BLEND`: Equal to `Vis.BLEND_NONE`.
 
@@ -358,7 +389,12 @@ the following values:
 noise. This includes allocation and deallocation functions, for tracking down
 memory leaks.
 
-#### `module VisUtil = require("visutil")` and the emit table
+</details>
+
+<details>
+<summary><strong>The <code>VisUtil</code> Module</strong></summary>
+
+#### `module VisUtil = require("visutil")`
 
 This module is pure Lua and resides in `lua/visutil.lua`. Have a look there
 to see how everything is implemented.  The emit table granted by the
@@ -389,6 +425,11 @@ table given by `table`.
 `function VisUtil.set_trace_table(table)`: Invokes `Vis.settrace`,
 passing the table given. This is how you modify the click-and-drag emission
 parameters.
+
+</details>
+
+<details>
+<summary><strong>The Emit Table and <code>Emit</code> Module</strong></summary>
 
 #### The emit table
 
@@ -508,7 +549,10 @@ Value must be one of the `Vis.LIMIT_` constants.
 `e:blender(blend)` Configure the emit's alpha-blending method to the
 method given, which must be one of the `Vis.BLEND_` constants.
 
-### Mutation
+</details>
+
+<details>
+<summary><strong>Mutation</strong></summary>
 
 Mutates are a very powerful type of frame and provide a way to modify either
 all particles on screen or only a subset, using tag modification and
@@ -546,6 +590,8 @@ both the particle's tag and the `<tag>` value given satisfy the
 `Vis.mutate(Vis.flist, 50, Vis.MUTATE_PUSH_IF, 2, Vis.MUTATE_IF_EQ, 1)`
 will double all particles' velocities if and only if the particle's tag is
 equal to 1.
+
+</details>
 
 ## Credits
 

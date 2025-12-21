@@ -17,13 +17,13 @@
 typedef struct flist_node {
     ftype_id type; /* types.h, identifies which field to use below */
     union {
-        emit_desc* frame;      /* VIS_FTYPE_EMIT: emit frame */
-        const char* cmd;       /* VIS_FTYPE_CMD: command frame */
-        float color[3];        /* VIS_FTYPE_BGCOLOR: bgcolor frame */
-        mutate_method* method; /* VIS_FTYPE_MUTATE: mutate frame */
-        script_cb* scriptcb;   /* VIS_FTYPE_SCRIPTCB: lua invoke frame */
-        fnum frameseek;        /* VIS_FTYPE_FRAMESEEK: go-to-frame-num frame */
-        fnum delay;            /* VIS_FTYPE_DELAY: number of frames to wait */
+        emit_desc* frame;      /* EMIT: emit frame */
+        const char* cmd;       /* CMD: command frame */
+        float color[3];        /* BGCOLOR: bgcolor frame */
+        mutate_method* method; /* MUTATE: mutate frame */
+        script_cb* scriptcb;   /* SCRIPTCB: lua invoke frame */
+        fnum frameseek;        /* FRAMESEEK: go-to-frame-num frame */
+        fnum delay;            /* DELAY|AUDIOSYNC: number of frames to wait */
     } data;
     struct flist_node* next;
 } flist_node;
@@ -54,5 +54,6 @@ void flist_insert_mutate(flist* fl, fnum when, mutate_method* method);
 void flist_insert_scriptcb(flist* fl, fnum when, script_cb* func);
 void flist_insert_seekframe(flist* fl, fnum when, fnum where);
 void flist_insert_delay(flist* fl, fnum when, fnum length);
+void flist_insert_audiosync(flist* fl, fnum when, fnum length);
 
 #endif

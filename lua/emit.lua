@@ -31,6 +31,11 @@ function Emit:set_trace() return VisUtil.set_trace_table(self._t) end
 function Emit:str() return VisUtil.stremit(self) end
 function Emit:get(k) return self._t[k] end
 function Emit:set(k,v) self._t[k] = v end
+function Emit:update(t)
+  for k, v in pairs(t) do
+    self:set(k, v)
+  end
+end
 
 function Emit:count(n)
     self._t.count = n

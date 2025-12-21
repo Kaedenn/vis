@@ -40,9 +40,11 @@ static int viscmd_emit_fn(lua_State* L);
 static int viscmd_audio_fn(lua_State* L);
 static int viscmd_play_fn(lua_State* L);
 static int viscmd_pause_fn(lua_State* L);
+static int viscmd_volume_fn(lua_State* L);
 static int viscmd_seek_fn(lua_State* L);
 static int viscmd_seekms_fn(lua_State* L);
 static int viscmd_seekframe_fn(lua_State* L);
+static int viscmd_audiosync_fn(lua_State* L);
 static int viscmd_delay_fn(lua_State* L);
 static int viscmd_bgcolor_fn(lua_State* L);
 static int viscmd_mutate_fn(lua_State* L);
@@ -280,9 +282,11 @@ int initialize_vis_lib(lua_State* L) {
         {"audio", viscmd_audio_fn},
         {"play", viscmd_play_fn},
         {"pause", viscmd_pause_fn},
+        {"volume", viscmd_volume_fn},
         {"seek", viscmd_seek_fn},
         {"seekms", viscmd_seekms_fn},
         {"seekframe", viscmd_seekframe_fn},
+        {"audiosync", viscmd_audiosync_fn},
         {"delay", viscmd_delay_fn},
         {"bgcolor", viscmd_bgcolor_fn},
         {"mutate", viscmd_mutate_fn},
@@ -470,8 +474,8 @@ const char* util_get_error(lua_State* L) {
 
 int do_mouse_event(lua_State* L, const char* func, int x, int y, int button) {
     int nerror = 0;
-    kstr s =
-        kstring_newfromvf("Vis._do_on_event(Vis._on_%ss, %d, %d, %d)", func, x, y, button);
+    kstr s = kstring_newfromvf(
+            "Vis._do_on_event(Vis._on_%ss, %d, %d, %d)", func, x, y, button);
     if (luaL_dostring(L, kstring_content(s)) != LUA_OK) {
         EPRINTF("Error in %s: %s", kstring_content(s), util_get_error(L));
         nerror = 1;
@@ -658,6 +662,14 @@ int viscmd_pause_fn(UNUSED_PARAM(lua_State* L)) {
     return 0;
 }
 
+/* Vis.volume(level) */
+int viscmd_volume_fn(lua_State* L) {
+    float level = (float)luaL_checknumber(L, 1);
+    DBPRINTF("Vis.volume(%f)", level);
+    audio_set_volume(level);
+    return 0;
+}
+
 /* Vis.seek(offset),
  * @param offset is in 100ths of a second, NOT milliseconds */
 int viscmd_seek_fn(lua_State* L) {
@@ -684,6 +696,16 @@ int viscmd_seekframe_fn(lua_State* L) {
     fnum whereto = (fnum)luaL_checkunsigned(L, 3);
     DBPRINTF("Vis.seekframe(%p, [frame]%d, [frame]%d)", fl, where, whereto);
     flist_insert_seekframe(fl, where, whereto);
+    return 0;
+}
+
+/* Vis.audiosync(Vis.flist, Vis.script, when, nframes) */
+int viscmd_audiosync_fn(lua_State* L) {
+    flist* fl = *(flist**)luaL_checkudata(L, 1, "flist**");
+    fnum where = (fnum)luaL_checkunsigned(L, 2);
+    fnum nframes = (fnum)luaL_checkunsigned(L, 3);
+    DBPRINTF("Vis.audiosync(%p, [frame]%d, [frame]%d)", fl, where, nframes);
+    flist_insert_audiosync(fl, where, nframes);
     return 0;
 }
 
@@ -842,3 +864,5 @@ int viscmd_get_debug_fn(lua_State* L) {
     return 1;
 }
 /* end of Lua API */
+
+/* vim: set ts=4 sts=4 sw=4: */

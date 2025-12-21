@@ -7,6 +7,7 @@
 struct audio {
     char* file;
     BOOL muted;
+    float volume;
     ma_engine* engine;
     ma_sound* sound;
 };
@@ -23,6 +24,7 @@ BOOL audio_init(void) {
     audio = DBMALLOC(sizeof(struct audio));
     audio->file = NULL;
     audio->muted = FALSE;
+    audio->volume = 1.0f;
     audio->engine = DBMALLOC(sizeof(*audio->engine));
     audio->sound = NULL;
 
@@ -89,39 +91,62 @@ void audio_free(UNUSED_PARAM(void* ptr)) {
 }
 
 void audio_play(void) {
+    VIS_ASSERT(audio->sound);
     if (!ma_sound_is_playing(audio->sound)) {
         ma_sound_start(audio->sound);
     }
 }
 
 void audio_pause(void) {
+    VIS_ASSERT(audio->sound);
     if (ma_sound_is_playing(audio->sound)) {
         ma_sound_stop(audio->sound);
     }
 }
 
 BOOL audio_is_playing(void) {
+    VIS_ASSERT(audio->sound);
     return (BOOL)ma_sound_is_playing(audio->sound);
 }
 
 void audio_mute(void) {
-    audio->muted = !audio->muted;
-    if (audio->muted) {
+    DBPRINTF("Muting audio; volume was %g", audio->volume);
+    VIS_ASSERT(audio->sound);
+    if (!audio->muted) {
         ma_sound_set_volume(audio->sound, 0.0f);
-    } else {
-        ma_sound_set_volume(audio->sound, 1.0f);
+        audio->muted = TRUE;
     }
+}
+
+void audio_unmute(void) {
+    DBPRINTF("Unmuting audio; volume is %g", audio->volume);
+    VIS_ASSERT(audio->sound);
+    if (audio->muted) {
+        ma_sound_set_volume(audio->sound, audio->volume);
+        audio->muted = FALSE;
+    }
+}
+
+BOOL audio_is_muted(void) {
+    return audio->muted;
 }
 
 void audio_set_volume(float volume) {
-    ma_device* device = ma_engine_get_device(audio->engine);
+    DBPRINTF("Setting volume to %g", volume);
+    VIS_ASSERT(audio->sound);
+    /*ma_device* device = ma_engine_get_device(audio->engine);
     if (device != NULL) {
         ma_device_set_master_volume(device, volume);
-    }
+    }*/
+    ma_sound_set_volume(audio->sound, volume);
+    DBPRINTF("Set volume to %g, got %g", volume, ma_sound_get_volume(audio->sound));
+    audio->volume = volume;
 }
 
 void audio_seek(unsigned where) {
+    DBPRINTF("Seeking audio to %u", where);
     BOOL restart = FALSE;
+    VIS_ASSERT(audio->sound);
     if (ma_sound_is_playing(audio->sound)) {
         ma_sound_stop(audio->sound);
         restart = TRUE;
@@ -131,3 +156,5 @@ void audio_seek(unsigned where) {
         ma_sound_start(audio->sound);
     }
 }
+
+/* vim: set ts=4 sts=4 sw=4: */
