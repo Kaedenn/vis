@@ -699,7 +699,7 @@ int viscmd_seekframe_fn(lua_State* L) {
     return 0;
 }
 
-/* Vis.audiosync(Vis.flist, Vis.script, when, nframes) */
+/* Vis.audiosync(Vis.flist, when, nframes) */
 int viscmd_audiosync_fn(lua_State* L) {
     flist* fl = *(flist**)luaL_checkudata(L, 1, "flist**");
     fnum where = (fnum)luaL_checkunsigned(L, 2);
