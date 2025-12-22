@@ -156,7 +156,8 @@ void command_file(struct commands* cmds, const char* file) {
         if (ret == NULL && feof(fp))
             break;
         if (ret == NULL && ferror(fp)) {
-            EPRINTF("Failed during read of %s: error %s: %s", file, error, strerror(error));
+            EPRINTF("Failed during read of %s: error %s: %s",
+                file, error, strerror(error));
             break;
         }
         command_str(cmds, line_buffer);
@@ -182,7 +183,8 @@ static void cmd_emit(struct commands* cmds, const char* buffer) {
             "%lg %lg %lg %lg %lg %lg "
             "%d %d %g %g %g %g %g %g "
             "%d %d %d",
-            &n, &x, &y, &ux, &uy, &rad, &urad, &ds, &uds, &theta, &utheta, &life, &ulife,
+            &n, &x, &y, &ux, &uy, &rad, &urad,
+            &ds, &uds, &theta, &utheta, &life, &ulife,
             &r, &g, &b, &ur, &ug, &ub, &force, &limit, &blender) == nargs) {
         for (i = 0; i < n; ++i) {
             pextra* pe = NULL;
@@ -199,8 +201,9 @@ static void cmd_emit(struct commands* cmds, const char* buffer) {
                 limit = VIS_DEFAULT_LIMIT;
             }
 
-            p = particle_new_full(x, y, ux, uy, rad, urad, ds, uds, theta, utheta, life,
-                ulife, (force_id)force, (limit_id)limit, pe);
+            p = particle_new_full(x, y, ux, uy, rad, urad, ds, uds,
+                theta, utheta, life, ulife,
+                (force_id)force, (limit_id)limit, pe);
 
             plist_add(cmds->particles, p);
         }
@@ -225,7 +228,8 @@ static void cmd_kick(struct commands* cmds, const char* buffer) {
         double ds, theta;
         while (i < arg) {
             radius = randint(1, 3);
-            life = randint(drawer_get_configured_fps(cmds->drawer), 2 * drawer_get_configured_fps(cmds->drawer));
+            life = randint(drawer_get_configured_fps(cmds->drawer),
+                2 * drawer_get_configured_fps(cmds->drawer));
             r = randfloat(1.0f, 2.0f);
             g = randfloat(0.0f, 0.7f);
             b = randfloat(0.0f, 0.4f);
@@ -258,7 +262,8 @@ static void cmd_snare(struct commands* cmds, const char* buffer) {
         double ds, theta;
         while (i < arg) {
             radius = randint(1, 3);
-            life = randint(drawer_get_configured_fps(cmds->drawer), 2 * drawer_get_configured_fps(cmds->drawer));
+            life = randint(drawer_get_configured_fps(cmds->drawer),
+                2 * drawer_get_configured_fps(cmds->drawer));
             r = randfloat(0.0f, 0.4f);
             g = randfloat(0.0f, 1.0f);
             b = randfloat(0.0f, 0.4f);
@@ -292,7 +297,8 @@ static void cmd_strum(struct commands* cmds, const char* buffer) {
         double ds, theta;
         while (i < arg) {
             radius = randdouble(1.0, 2.0);
-            life = randint(drawer_get_configured_fps(cmds->drawer), 2 * drawer_get_configured_fps(cmds->drawer));
+            life = randint(drawer_get_configured_fps(cmds->drawer),
+                2 * drawer_get_configured_fps(cmds->drawer));
             r = randfloat(0.0f, 0.4f);
             g = randfloat(0.0f, 0.7f);
             b = randfloat(0.0f, 1.0f);
@@ -327,7 +333,8 @@ static void cmd_rain(struct commands* cmds, const char* buffer) {
             x = randint(0, VIS_WIDTH);
             y = 0;
             radius = randdouble(0.5, 1.5);
-            life = randint(drawer_get_configured_fps(cmds->drawer) * 5, drawer_get_configured_fps(cmds->drawer) / 5);
+            life = randint(drawer_get_configured_fps(cmds->drawer) * 5,
+                drawer_get_configured_fps(cmds->drawer) / 5);
             r = 0.0f;
             g = randfloat(0.1f, 0.3f);
             b = randfloat(0.4f, 1.0f);
@@ -377,7 +384,7 @@ static void cmd_audio(UNUSED_PARAM(struct commands* cmds), const char* buffer) {
 
 static void cmd_exit(
     UNUSED_PARAM(struct commands* cmds), UNUSED_PARAM(const char* buffer)) {
-    /* depends on the gc freeing everything else */
+    /* this depends on the gc freeing everything else */
     cmds->should_exit = TRUE;
     cmds->exit_status = CMD_ERROR_NONE;
 }
@@ -385,7 +392,8 @@ static void cmd_exit(
 static void cmd_help(UNUSED_PARAM(struct commands* cmds), const char* buffer) {
     size_t i = 0;
     if (startswith(buffer, "help emit")) {
-        const char* help[] = {"instantaneous emit command (please see README.md):\n",
+        const char* help[] = {
+            "instantaneous emit command (please see README.md):\n",
             "emit n x y ux uy rad urad ds uds theta utheta life ulife r g b ur "
             "ug ub "
             "force limit blender\n",

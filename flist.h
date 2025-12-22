@@ -34,6 +34,8 @@ typedef struct flist {
     flist_node* frames[VIS_NFRAMES]; /* with apologies to the hardware */
 } flist;
 
+const char* ftype_to_string(ftype_id ftype);
+
 flist* flist_new(void);
 void flist_free(flist* fl);
 void flist_clear(flist* fl);

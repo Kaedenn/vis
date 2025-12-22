@@ -3,9 +3,39 @@
 #include "helper.h"
 #include "script.h"
 
+const char* ftype_to_string(ftype_id ftype) {
+    switch (ftype) {
+    case VIS_FTYPE_EMIT:
+        return "VIS_FTYPE_EMIT";
+    case VIS_FTYPE_EXIT:
+        return "VIS_FTYPE_EXIT";
+    case VIS_FTYPE_PLAY:
+        return "VIS_FTYPE_PLAY";
+    case VIS_FTYPE_CMD:
+        return "VIS_FTYPE_CMD";
+    case VIS_FTYPE_BGCOLOR:
+        return "VIS_FTYPE_BGCOLOR";
+    case VIS_FTYPE_MUTATE:
+        return "VIS_FTYPE_MUTATE";
+    case VIS_FTYPE_SCRIPTCB:
+        return "VIS_FTYPE_SCRIPTCB";
+    case VIS_FTYPE_FRAMESEEK:
+        return "VIS_FTYPE_FRAMESEEK";
+    case VIS_FTYPE_DELAY:
+        return "VIS_FTYPE_DELAY";
+    case VIS_FTYPE_AUDIOSYNC:
+        return "VIS_FTYPE_AUDIOSYNC";
+    case VIS_MAX_FTYPE:
+        return "VIS_MAX_FTYPE";
+    default:
+        return "Invalid Frame Type";
+    }
+}
+
 static flist_node* flist_node_new(void) {
     flist_node* fn = DBMALLOC(sizeof(struct flist_node));
     if (!fn) return NULL;
+    ZEROINIT(fn);
     fn->type = VIS_FTYPE_EMIT;
     return fn;
 }
@@ -40,6 +70,7 @@ flist* flist_new(void) {
 }
 
 void flist_free(flist* fl) {
+    if (!fl) return;
     int i = 0;
     while (i < VIS_NFRAMES) {
         flist_node_free(fl->frames[i]);
@@ -49,6 +80,7 @@ void flist_free(flist* fl) {
 }
 
 void flist_insert(flist* fl, fnum when, flist_node* fn) {
+    VIS_ASSERT(fl);
     fl->total_frames += 1;
     if (fl->frames[when] == NULL) {
         fl->frames[when] = fn;
@@ -195,3 +227,4 @@ flist_node* flist_node_next(flist_node* n) {
     return n ? n->next : NULL;
 }
 
+/* vim: set ts=4 sts=4 sw=4: */

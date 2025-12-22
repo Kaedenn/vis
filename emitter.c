@@ -10,17 +10,18 @@
 #include "particle.h"
 #include "pextra.h"
 #include "random.h"
+#include "genlua.h"
 
 #include <time.h>
 
 static struct emitter {
-    struct commands* commands;
-    plist_t particles;
-    flist* fl;
-    drawer_t drawer;
-    uint32_t frame_counts[VIS_MAX_FTYPE];
-    uint32_t delay_counter;
-    BOOL do_sync;
+    struct commands* commands;              /* pointer to commands object */
+    plist_t particles;                      /* pointer to plist object */
+    flist* fl;                              /* pointer to flist object */
+    drawer_t drawer;                        /* pointer to drawer object */
+    uint32_t frame_counts[VIS_MAX_FTYPE];   /* frame type counts */
+    uint32_t delay_counter;                 /* delay frames counter */
+    BOOL do_sync;                           /* re-sync audio after delay */
 } emitter;
 
 void emitter_setup(struct commands* cmds, plist_t plist, drawer_t drawer) {
@@ -66,12 +67,13 @@ static plist_action_id do_mutate_fn(particle* p, void* mutate) {
 
 void emitter_tick(void) {
     if (emitter.delay_counter > 0) {
-        DBPRINTF("Delaying for %d frame%s at %d", emitter.delay_counter,
+        DBPRINTF("Delaying for %d frame%s at frame %d", emitter.delay_counter,
             (emitter.delay_counter == 1 ? "" : "s"), emitter.fl->curr_frame);
         emitter.delay_counter -= 1;
         return;
     }
     if (emitter.do_sync) {
+        DBPRINTF("%s", "Sync delay is over; restarting audio track");
         emitter.do_sync = FALSE;
         audio_seek(0U);
         audio_unmute();
@@ -81,42 +83,62 @@ void emitter_tick(void) {
     }
     flist_node* fn = flist_tick(emitter.fl);
     while (fn != NULL) {
+        const char* ftype_str = ftype_to_string(fn->type);
         emitter.frame_counts[fn->type] += 1;
         switch (fn->type) {
         case VIS_FTYPE_EMIT:
-            DBPRINTF("Ticking flist: emit at %d", emitter.fl->curr_frame);
+            DBPRINTF("Ticking flist: %s at frame %d",
+                    ftype_str, emitter.fl->curr_frame);
             emit_frame(fn->data.frame);
             break;
         case VIS_FTYPE_EXIT:
+            DBPRINTF("Ticking flist: %s at frame %d",
+                    ftype_str, emitter.fl->curr_frame);
             command_str(emitter.commands, "exit");
             break;
         case VIS_FTYPE_PLAY:
+            DBPRINTF("Ticking flist: %s at frame %d",
+                    ftype_str, emitter.fl->curr_frame);
             audio_play();
             break;
         case VIS_FTYPE_CMD:
-            DBPRINTF("%s", "Ticking flist: command");
+            DBPRINTF("Ticking flist: %s at frame %d",
+                    ftype_str, emitter.fl->curr_frame);
             command_str(emitter.commands, fn->data.cmd);
             break;
         case VIS_FTYPE_BGCOLOR:
-            drawer_bgcolor(
-                emitter.drawer, fn->data.color[0], fn->data.color[1], fn->data.color[2]);
+            DBPRINTF("Ticking flist: %s at frame %d",
+                    ftype_str, emitter.fl->curr_frame);
+            drawer_bgcolor(emitter.drawer,
+                    fn->data.color[0], fn->data.color[1], fn->data.color[2]);
             break;
         case VIS_FTYPE_MUTATE:
+            DBPRINTF("Ticking flist: %s at frame %d",
+                    ftype_str, emitter.fl->curr_frame);
             plist_foreach(emitter.particles, do_mutate_fn, fn->data.method);
             break;
         case VIS_FTYPE_SCRIPTCB:
+            DBPRINTF("Ticking flist: %s %s %s at frame %d",
+                    ftype_str,
+                    fn->data.scriptcb->fn_name,
+                    fn->data.scriptcb->fn_code,
+                    emitter.fl->curr_frame);
             script_run_cb(fn->data.scriptcb->owner, fn->data.scriptcb, NULL);
             break;
         case VIS_FTYPE_FRAMESEEK:
+            DBPRINTF("Ticking flist: %s to %d at %d",
+                    ftype_str, fn->data.frameseek, emitter.fl->curr_frame);
             flist_goto_frame(emitter.fl, fn->data.frameseek);
             break;
         case VIS_FTYPE_DELAY:
-            DBPRINTF("Ticking flist: delay %d at %d", fn->data.delay, emitter.fl->curr_frame);
+            DBPRINTF("Ticking flist: %s %d at frame %d",
+                    ftype_str, fn->data.delay, emitter.fl->curr_frame);
             emitter.delay_counter = fn->data.delay;
             emitter.do_sync = FALSE;
             break;
         case VIS_FTYPE_AUDIOSYNC:
-            DBPRINTF("Ticking flist: audiosync %d at %d", fn->data.delay, emitter.fl->curr_frame);
+            DBPRINTF("Ticking flist: %s %d at frame %d",
+                    ftype_str, fn->data.delay, emitter.fl->curr_frame);
             emitter.delay_counter = fn->data.delay;
             emitter.do_sync = TRUE;
             audio_mute();

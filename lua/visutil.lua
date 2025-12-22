@@ -163,7 +163,7 @@ end
 function VisUtil.Args:_get_max_arglen(args)
     self:_ensure_self()
     local maxw = 0
-    for arg,argtype in pairs(args or self._args) do
+    for arg, argtype in pairs(args or self._args) do
         maxw = math.max(maxw, (#self:_strarg(arg, argtype)))
     end
     return maxw
@@ -291,7 +291,7 @@ function VisUtil.Args:parse(args)
         end
     end
     for idx = 1,#args do
-        for arg,val in pairs(self._args) do
+        for arg, val in pairs(self._args) do
             if args[idx] == arg then
                 if val == nil then
                     parsed[arg] = 1
@@ -307,12 +307,12 @@ function VisUtil.Args:parse(args)
             end
         end
     end
-    for env,envtype in pairs(self._envs) do
+    for env, envtype in pairs(self._envs) do
         if self._getenv(env) ~= nil then
             parsedenv[env] = ensure(self._getenv(env), envtype)
         end
     end
-    for arg,env in pairs(self._links) do
+    for arg, env in pairs(self._links) do
         if parsed[arg] ~= parsedenv[env] then
             if parsed[arg] ~= nil and parsedenv[env] ~= nil then
                 parsed[arg] = parsedenv[env]
@@ -464,7 +464,7 @@ function VisUtil.strobject(o, i, seen, whereami, maxi)
         local s = "{"
         local f = true
         local sorted = {}
-        for k,v in pairs(o) do
+        for k, v in pairs(o) do
             table.insert(sorted, k)
         end
         table.sort(sorted)

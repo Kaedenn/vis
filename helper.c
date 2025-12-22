@@ -18,7 +18,8 @@ FILE* try_fopen(const char* path, const char* mode) {
 char* stralloc(size_t nchars) {
     char* buffer = calloc(nchars, 1);
     if (!buffer) {
-        fprintf(stderr, "alloc %ld failed: %d %s\n", (long)nchars, errno, strerror(errno));
+        fprintf(stderr, "alloc %ld failed: %d %s\n", (long)nchars, errno,
+                strerror(errno));
         do_assert(buffer != NULL, "Allocation failed", __FILE__, __LINE__);
     }
     return buffer;
@@ -28,7 +29,8 @@ char* strrealloc(char* buffer, size_t newsize) {
     char* newbuffer = realloc((void*)buffer, newsize);
     if (!newbuffer) {
         fprintf(
-            stderr, "realloc %ld failed: %d %s\n", (long)newsize, errno, strerror(errno));
+            stderr, "realloc %ld failed: %d %s\n", (long)newsize, errno,
+            strerror(errno));
         do_assert(newbuffer != NULL, "Reallocation failed", __FILE__, __LINE__);
     }
     return newbuffer;
@@ -74,7 +76,8 @@ void eprintf(const char* fmt, ...) {
     fprintf(stderr, "\n");
 }
 
-static void do_assert_fail(const char* message, const char* file, int line) NORETURN;
+static void do_assert_fail(const char* message, const char* file, int line)
+    NORETURN;
 
 static void do_assert_fail(const char* message, const char* file, int line) {
     eprintf("Assertion failure: %s:%d: %s", file, line, message);
@@ -95,7 +98,7 @@ void do_assert(BOOL cond, const char* message, const char* file, int line) {
 void dbprintf(const char* fmt, ...) {
 #if DEBUG > DEBUG_NONE
     va_list args;
-    fprintf(stderr, "debug: ");
+    fprintf(stderr, "DEBUG: ");
     va_start(args, fmt);
     vfprintf(stderr, fmt, args);
     va_end(args);
@@ -204,7 +207,7 @@ char* escape_string(const char* str) {
     return result;
 }
 
-BOOL parse_window_size(const char* arg, unsigned int* width, unsigned int* height) {
+BOOL parse_window_size(const char* arg, unsigned* width, unsigned* height) {
     VIS_ASSERT(arg != NULL);
     VIS_ASSERT(width != NULL);
     VIS_ASSERT(height != NULL);
