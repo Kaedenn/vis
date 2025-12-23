@@ -25,9 +25,7 @@ DEPFILES = $(patsubst %.c,$(DEPDIR)/%.d,$(SRCS))
 EXECBIN = vis
 VIS = $(DIR)/$(EXECBIN)
 
-ifeq ($(VIS_USE_SDL_MIXER),)
-SRCS := $(SRCS) 3rdparty/miniaudio.c
-endif
+SRCS := $(SRCS) 3rdparty/miniaudio.c 3rdparty/stb_image_write.c
 
 LUA_TESTS := $(wildcard $(DIR)/test/test_*.lua)
 C_TESTS := $(wildcard $(DIR)/test/test_*.c)
@@ -111,6 +109,11 @@ $(DEPFILES): | $(DEPDIR)
 $(OBJECTS): | $(OBJDIR)
 
 $(OBJDIR)/3rdparty/miniaudio.o: $(DIR)/3rdparty/miniaudio.c | $(OBJDIR)/3rdparty
+	$(CC) -c -o $@ $< -msse2 $(CFLAGS) \
+		-Wno-sign-conversion -Wno-conversion -Wno-switch-enum -Wno-cast-qual \
+		-Wno-float-equal -Wno-shadow
+
+$(OBJDIR)/3rdparty/stb_image_write.o: $(DIR)/3rdparty/stb_image_write.c | $(OBJDIR)/3rdparty
 	$(CC) -c -o $@ $< -msse2 $(CFLAGS) \
 		-Wno-sign-conversion -Wno-conversion -Wno-switch-enum -Wno-cast-qual \
 		-Wno-float-equal -Wno-shadow
