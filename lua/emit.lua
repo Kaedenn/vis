@@ -3,8 +3,18 @@ VisUtil = require('visutil')
 
 Emit = {}
 
+local function _deduce_tag_id(obj)
+    if obj then
+        if obj.tag then
+            return obj.tag
+        end
+        return tostring(obj)
+    end
+    return math.random()
+end
+
 function Emit:new(obj)
-    local tagid = tostring(obj or math.random())
+    local tagid = _deduce_tag_id(obj)
     local o = {
         _t = VisUtil.make_emit_table(),
         _tagid = tagid,
