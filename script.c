@@ -865,5 +865,3 @@ int viscmd_get_debug_fn(lua_State* L) {
     return 1;
 }
 /* end of Lua API */
-
-/* vim: set ts=4 sts=4 sw=4: */

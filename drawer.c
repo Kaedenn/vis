@@ -429,5 +429,3 @@ BOOL render_to_file(drawer_t drawer, const char *path) {
     DBFREE(buffer);
     return TRUE;
 }
-
-/* vim: set ts=4 sts=4 sw=4: */

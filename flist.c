@@ -226,5 +226,3 @@ flist_node* flist_tick(flist* fl) {
 flist_node* flist_node_next(flist_node* n) {
     return n ? n->next : NULL;
 }
-
-/* vim: set ts=4 sts=4 sw=4: */

@@ -165,5 +165,3 @@ void emit_frame(emit_desc* frame) {
                 new_pextra(r, g, b, frame->blender)));
     }
 }
-
-/* vim: set ts=4 sts=4 sw=4: */

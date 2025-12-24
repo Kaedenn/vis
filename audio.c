@@ -156,5 +156,3 @@ void audio_seek(unsigned where) {
         ma_sound_start(audio->sound);
     }
 }
-
-/* vim: set ts=4 sts=4 sw=4: */

@@ -313,5 +313,3 @@ void advance(struct global_ctx* ctx) {
         emitter_tick();
     }
 }
-
-/* vim: set ts=4 sts=4 sw=4: */

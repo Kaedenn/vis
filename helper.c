@@ -214,5 +214,3 @@ BOOL parse_window_size(const char* arg, unsigned* width, unsigned* height) {
     int result = sscanf(arg, "%ux%u", width, height);
     return result == 2;
 }
-
-/* vim: set ts=4 sts=4 sw=4: */
