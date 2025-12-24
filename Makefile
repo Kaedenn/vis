@@ -1,9 +1,6 @@
 
 # Makefile for the vis project
 #
-# Controlling directives:
-#   VIS_USE_SQL_MIXER	use SDL_mixer instead of miniaudio for audio processing
-#
 # Extra directives:
 #   EXEC_ARGS		arguments to pass to vis
 #   EXTRA_CFLAGS	additional compilation flags to pass to gcc
@@ -16,7 +13,7 @@ OBJDIR = $(DIR)/.o
 DEPDIR = $(DIR)/.d
 
 SRCS := async.c audio.c clargs.c command.c drawer.c driver.c emit.c \
-	emitter.c flist.c forces.c gc.c genlua.c helper.c klist.c \
+	emitter.c flist.c forces.c genlua.c helper.c klist.c kstring.c \
 	kstring.c mutator.c particle.c pextra.c plimits.c plist.c \
 	random.c script.c shader.c
 SOURCES = $(patsubst %,$(DIR)/%,$(CSRC)) Makefile
@@ -33,7 +30,7 @@ BIN_TESTS := $(patsubst %.c,%,$(C_TESTS))
 TESTS := $(LUA_TESTS) $(BIN_TESTS)
 
 CFLAGS ?= -Wno-unused-variable -Wall -Wextra -Wfloat-equal -Wwrite-strings \
-	  -Wshadow -Wpointer-arith -Wcast-qual -Wredundant-decls -Wtrigraphs \
+	  -Wshadow -Wpointer-arith -Wcast-qual -Wredundant-decls \
 	  -Wswitch-enum -Wundef -Wconversion -ansi -pedantic -std=c99 \
 	  -fdiagnostics-show-option
 LDFLAGS ?= -lm -ldl -lpthread -pthread
@@ -46,15 +43,11 @@ CFLAGS_PROF = -pg
 LDFLAGS_FAST = -O3 -flto
 LDFLAGS_PROF = -pg
 
-CFLAGS_LIBS = -I/usr/include/lua5.2 -I/usr/include/SDL2
-LDFLAGS_LIBS = -llua5.2 -lglfw -lGL -lGLEW -lSDL2 -lSDL2_mixer
+CFLAGS_LIBS = -I/usr/include/lua5.2
+LDFLAGS_LIBS = -llua5.2 -lglfw -lGL -lGLEW
 
 CFLAGS := $(CFLAGS) $(CFLAGS_LIBS) $(EXTRA_CFLAGS)
 LDFLAGS := $(LDFLAGS) $(LDFLAGS_LIBS) $(EXTRA_LDFLAGS)
-
-ifeq ($(VIS_USE_SDL_MIXER),)
-CFLAGS := $(CFLAGS) -DVIS_USE_MINIAUDIO
-endif
 
 EXEC_ARGS ?= -i -l $(DIR)/lua/demo_4_random.lua
 VG_SUPP = --suppressions=$(DIR)/valgrind.supp
@@ -99,6 +92,11 @@ profile: $(SOURCES)
 	gprof $(VIS)
 	- $(RM) $(DIR)/gmon.out 2>/dev/null
 
+$(DEPDIR): $(SOURCES) $(SCR_MAKEDEP)
+	- test -d $(DEPDIR) || mkdir $(DEPDIR) 2>/dev/null
+	$(BASH) $(SCR_MAKEDEP)
+	touch $(DEPDIR)
+
 $(OBJDIR):
 	- test -d $(OBJDIR) || mkdir $(OBJDIR) 2>/dev/null
 
@@ -108,23 +106,16 @@ $(OBJDIR)/3rdparty: | $(OBJDIR)
 $(DEPFILES): | $(DEPDIR)
 $(OBJECTS): | $(OBJDIR)
 
-$(OBJDIR)/3rdparty/miniaudio.o: $(DIR)/3rdparty/miniaudio.c | $(OBJDIR)/3rdparty
-	$(CC) -c -o $@ $< -msse2 $(CFLAGS) \
-		-Wno-sign-conversion -Wno-conversion -Wno-switch-enum -Wno-cast-qual \
-		-Wno-float-equal -Wno-shadow
+$(OBJDIR)/3rdparty/%.o: CFLAGS += -Wno-conversion -Wno-switch-enum \
+  -Wno-cast-qual -Wno-float-equal -Wno-shadow
 
-$(OBJDIR)/3rdparty/stb_image_write.o: $(DIR)/3rdparty/stb_image_write.c | $(OBJDIR)/3rdparty
-	$(CC) -c -o $@ $< -msse2 $(CFLAGS) \
-		-Wno-sign-conversion -Wno-conversion -Wno-switch-enum -Wno-cast-qual \
-		-Wno-float-equal -Wno-shadow
+$(OBJDIR)/3rdparty/%.o: $(DIR)/3rdparty/%.c | $(OBJDIR)/3rdparty
+	$(CC) -c -o $@ $< -msse2 $(CFLAGS)
+
+$(OBJDIR)/emitter.o: CFLAGS += -Wno-float-equal
 
 $(OBJDIR)/%.o: %.c | $(OBJDIR)
 	$(CC) -c -o $@ $< $(CFLAGS)
-
-$(DEPDIR): $(SOURCES) $(SCR_MAKEDEP)
-	- test -d $(DEPDIR) || mkdir $(DEPDIR) 2>/dev/null
-	$(BASH) $(SCR_MAKEDEP)
-	touch $(DEPDIR)
 
 $(VIS): $(OBJECTS)
 	$(CC) -o $@ $^ $(LDFLAGS)

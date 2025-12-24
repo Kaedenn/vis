@@ -1,20 +1,18 @@
+#include "defines.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
 
-/* #include <SDL2/SDL.h> */
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
 #include "audio.h"
 #include "clargs.h"
 #include "command.h"
-#include "defines.h"
 #include "drawer.h"
 #include "emit.h"
 #include "emitter.h"
-#include "gc.h"
 #include "helper.h"
 #include "plist.h"
 #include "script.h"
@@ -45,7 +43,6 @@ static void advance(struct global_ctx* ctx);
 static void onkeydown(int key, struct global_ctx* ctx);
 static plist_action_id animate_particle(struct particle* p, void* userdata);
 
-/* Helper to get key name */
 const char* get_key_name(int key) {
     static char buf[32];
     const char* name = glfwGetKeyName(key, 0);
@@ -79,7 +76,10 @@ const char* get_key_name(int key) {
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
     struct global_ctx* ctx = (struct global_ctx*)glfwGetWindowUserPointer(window);
-    UNUSED_VARIABLE(scancode);
+    if (ctx->args->debug_level > DEBUG_NONE) {
+        DBPRINTF("Key %d (%s) scancode %d action %d mods %d", key, get_key_name(key),
+                scancode, action, mods);
+    }
 
     if (action == GLFW_PRESS) {
         onkeydown(key, ctx);
@@ -95,6 +95,10 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
     glfwGetCursorPos(window, &x, &y);
     UNUSED_VARIABLE(mods);
 
+    if (ctx->args->debug_level > DEBUG_NONE) {
+        DBPRINTF("Mouse %d action %d mods %d at %g %g", button, action, mods, x, y);
+    }
+
     if (action == GLFW_PRESS) {
         drawer_begin_trace(ctx->drawer);
         drawer_trace(ctx->drawer, (float)x, (float)y);
@@ -107,8 +111,19 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 
 void cursor_position_callback(GLFWwindow* window, double x, double y) {
     struct global_ctx* ctx = (struct global_ctx*)glfwGetWindowUserPointer(window);
+    if (ctx->args->debug_level >= DEBUG_DEBUG) {
+        DBPRINTF("Mouse move x %g y %g", x, y);
+    }
     drawer_trace(ctx->drawer, (float)x, (float)y);
     script_mousemove(ctx->script, (int)x, (int)y);
+}
+
+void cursor_scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
+    struct global_ctx* ctx = (struct global_ctx*)glfwGetWindowUserPointer(window);
+    if (ctx->args->debug_level > DEBUG_NONE) {
+        DBPRINTF("Mouse scroll: xoffset %f yoffset %f", xoffset, yoffset);
+    }
+    drawer_trace_scroll(ctx->drawer, (float)xoffset, (float)yoffset);
 }
 
 int main(int argc, char* argv[]) {
@@ -121,8 +136,6 @@ int main(int argc, char* argv[]) {
     struct global_ctx g;
     ZEROINIT(&g);
 
-    gc_init();
-
     g.args = argparse(argc, argv);
     if (!g.args) {
         exit(1);
@@ -131,13 +144,11 @@ int main(int argc, char* argv[]) {
         clargs_free(g.args);
         exit(status);
     }
-    gc_add((gc_func)clargs_free, g.args);
 
     g.drawer = drawer_new(g.args);
     if (!g.drawer) {
         exit(1);
     }
-    gc_add((gc_func)drawer_free, g.drawer);
     drawer_config(g.drawer, g.args);
 
     /* Set window user pointer to global context and register callbacks */
@@ -146,9 +157,9 @@ int main(int argc, char* argv[]) {
     glfwSetKeyCallback(window, key_callback);
     glfwSetMouseButtonCallback(window, mouse_button_callback);
     glfwSetCursorPosCallback(window, cursor_position_callback);
+    glfwSetScrollCallback(window, cursor_scroll_callback);
 
     g.particles = plist_new(VIS_PLIST_INITIAL_SIZE);
-    gc_add((gc_func)plist_free, g.particles);
 
     script_cfg_mask mask = SCRIPT_ALLOW_ALL;
     if (g.args->stay_after_script) {
@@ -162,13 +173,10 @@ int main(int argc, char* argv[]) {
         g.args->scriptargs = NULL;
     }
     script_set_drawer(g.script, g.drawer);
-    gc_add((gc_func)script_free, g.script);
 
     g.cmds = command_setup(g.drawer, g.particles, g.script, g.args->interactive);
-    gc_add((gc_func)command_teardown, g.cmds);
 
     emitter_setup(g.cmds, g.particles, g.drawer);
-    gc_add((gc_func)emitter_free, NULL);
 
     if (!audio_init()) {
         exit(1);
@@ -176,7 +184,6 @@ int main(int argc, char* argv[]) {
     if (g.args->quiet_audio) {
         audio_mute();
     }
-    gc_add((gc_func)audio_free, NULL);
 
     /* Configure particles drawn when the user clicks and drags */
     emit_desc* emit = emit_new();
@@ -205,6 +212,14 @@ int main(int argc, char* argv[]) {
     if (g.exit_status < script_get_status(g.script)) {
         g.exit_status = script_get_status(g.script);
     }
+
+    clargs_free(g.args);
+    drawer_free(g.drawer);
+    plist_free(g.particles);
+    command_teardown(g.cmds);
+    emitter_free();
+    audio_free();
+    script_free(g.script);
 
     return g.exit_status;
 }
@@ -298,3 +313,5 @@ void advance(struct global_ctx* ctx) {
         emitter_tick();
     }
 }
+
+/* vim: set ts=4 sts=4 sw=4: */

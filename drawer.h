@@ -23,11 +23,22 @@ void drawer_preserve_screen(drawer_t drawer);
 int drawer_get_configured_fps(drawer_t drawer);
 float drawer_get_fps(drawer_t drawer);
 
+/* Configure the output file prefix.
+ * Frames are written to the file
+ *    <path>_%04d.png
+ * where the %04d is the current frame number. */
 void drawer_set_dumpfile_template(drawer_t drawer, const char* path);
 
+/* Configure the emit generated when clicking on the screen. Drawer
+ * object takes control of the emit pointer and is responsible for
+ * freeing it. Do not free the emit pointer after calling
+ * drawer_set_trace. */
 void drawer_set_trace(drawer_t drawer, emit_desc* emit);
+emit_desc* drawer_get_trace(drawer_t drawer);
 void drawer_begin_trace(drawer_t drawer);
 void drawer_trace(drawer_t drawer, float x, float y);
 void drawer_end_trace(drawer_t drawer);
+
+void drawer_trace_scroll(drawer_t drawer, float xoffset, float yoffset);
 
 #endif

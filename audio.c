@@ -72,7 +72,7 @@ BOOL audio_open(const char* file) {
     return TRUE;
 }
 
-void audio_free(UNUSED_PARAM(void* ptr)) {
+void audio_free(void) {
     if (audio) {
         if (audio->file) {
             DBFREE(audio->file);
@@ -91,27 +91,27 @@ void audio_free(UNUSED_PARAM(void* ptr)) {
 }
 
 void audio_play(void) {
-    VIS_ASSERT(audio->sound);
+    if (!audio->sound) { return; }
     if (!ma_sound_is_playing(audio->sound)) {
         ma_sound_start(audio->sound);
     }
 }
 
 void audio_pause(void) {
-    VIS_ASSERT(audio->sound);
+    if (!audio->sound) { return; }
     if (ma_sound_is_playing(audio->sound)) {
         ma_sound_stop(audio->sound);
     }
 }
 
 BOOL audio_is_playing(void) {
-    VIS_ASSERT(audio->sound);
+    if (!audio->sound) { return FALSE; }
     return (BOOL)ma_sound_is_playing(audio->sound);
 }
 
 void audio_mute(void) {
     DBPRINTF("Muting audio; volume was %g", audio->volume);
-    VIS_ASSERT(audio->sound);
+    if (!audio->sound) { return; }
     if (!audio->muted) {
         ma_sound_set_volume(audio->sound, 0.0f);
         audio->muted = TRUE;
@@ -120,7 +120,7 @@ void audio_mute(void) {
 
 void audio_unmute(void) {
     DBPRINTF("Unmuting audio; volume is %g", audio->volume);
-    VIS_ASSERT(audio->sound);
+    if (!audio->sound) { return; }
     if (audio->muted) {
         ma_sound_set_volume(audio->sound, audio->volume);
         audio->muted = FALSE;
@@ -133,7 +133,7 @@ BOOL audio_is_muted(void) {
 
 void audio_set_volume(float volume) {
     DBPRINTF("Setting volume to %g", volume);
-    VIS_ASSERT(audio->sound);
+    if (!audio->sound) { return; }
     /*ma_device* device = ma_engine_get_device(audio->engine);
     if (device != NULL) {
         ma_device_set_master_volume(device, volume);
@@ -146,7 +146,7 @@ void audio_set_volume(float volume) {
 void audio_seek(unsigned where) {
     DBPRINTF("Seeking audio to %u", where);
     BOOL restart = FALSE;
-    VIS_ASSERT(audio->sound);
+    if (!audio->sound) { return; }
     if (ma_sound_is_playing(audio->sound)) {
         ma_sound_stop(audio->sound);
         restart = TRUE;

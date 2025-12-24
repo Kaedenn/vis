@@ -8,7 +8,7 @@
 #include "plist.h"
 
 void emitter_setup(struct commands* cmds, plist_t plist, drawer_t drawer);
-void emitter_free(void* arg);
+void emitter_free(void);
 
 uint32_t emitter_get_frame_count(ftype_id ft);
 

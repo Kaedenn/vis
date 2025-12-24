@@ -7,18 +7,21 @@
 #include "emitter.h"
 #include "genlua.h"
 #include "helper.h"
+#include "kstring.h"
 #include "pextra.h"
 #include "shader.h"
 #include "types.h"
 #include <math.h>
 #include <time.h>
 
+#include "3rdparty/stb_image_write.h"
+
 #ifndef MAX
 #define MAX(a, b) ((a) < (b) ? (b) : (a))
 #endif
 
 static double calculate_blend(particle* p);
-/* (TODO) static int render_to_file(drawer_t drawer, const char *path); */
+static int render_to_file(drawer_t drawer, const char *path);
 
 void drawer_ensure_fps_linear(drawer_t drawer);
 void drawer_ensure_fps_absolute(drawer_t drawer);
@@ -70,6 +73,7 @@ void glfw_error_callback(int error, const char* description) {
 
 drawer_t drawer_new(const clargs* args) {
     drawer_t drawer = DBMALLOC(sizeof(struct drawer));
+    ZEROINIT(drawer);
     drawer_config(drawer, args);
 
     glfwSetErrorCallback(glfw_error_callback);
@@ -82,9 +86,11 @@ drawer_t drawer_new(const clargs* args) {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
-    drawer->window = glfwCreateWindow(
-        (int)drawer->window_size[0], (int)drawer->window_size[1], "Vis", NULL, NULL);
+    int winwidth = (int)drawer->window_size[0];
+    int winheight = (int)drawer->window_size[1];
+    drawer->window = glfwCreateWindow(winwidth, winheight, "Vis", NULL, NULL);
     if (!drawer->window) {
         EPRINTF("%s\n", "Failed to create GLFW window");
         glfwTerminate();
@@ -117,18 +123,18 @@ drawer_t drawer_new(const clargs* args) {
     glGenBuffers(1, &drawer->vbo);
     glBindBuffer(GL_ARRAY_BUFFER, drawer->vbo);
 
-    /* Define attributes */
+    /* Define VAO attributes */
     /* 0: position (vec2) */
-    glVertexAttribPointer(
-        0, 2, GL_FLOAT, GL_FALSE, sizeof(vertex_t), (GLvoid*)offsetof(vertex_t, x));
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(vertex_t),
+        (GLvoid*)offsetof(vertex_t, x));
     glEnableVertexAttribArray(0);
     /* 1: radius (float) */
-    glVertexAttribPointer(
-        1, 1, GL_FLOAT, GL_FALSE, sizeof(vertex_t), (GLvoid*)offsetof(vertex_t, radius));
+    glVertexAttribPointer(1, 1, GL_FLOAT, GL_FALSE, sizeof(vertex_t),
+        (GLvoid*)offsetof(vertex_t, radius));
     glEnableVertexAttribArray(1);
     /* 2: color (vec4) */
-    glVertexAttribPointer(
-        2, 4, GL_FLOAT, GL_FALSE, sizeof(vertex_t), (GLvoid*)offsetof(vertex_t, r));
+    glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(vertex_t),
+        (GLvoid*)offsetof(vertex_t, r));
     glEnableVertexAttribArray(2);
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -237,6 +243,17 @@ int drawer_draw_to_screen(drawer_t drawer) {
 
     glBindVertexArray(0);
 
+    if (drawer->dump_file_fmt) {
+        if (drawer->fps.framecount >= drawer->frame_skip) {
+            kstr s = kstring_newfromvf("%s_%04d.png", drawer->dump_file_fmt,
+                drawer->fps.framecount - drawer->frame_skip);
+            if (!render_to_file(drawer, kstring_content(s))) {
+                EPRINTF("Failed to dump frame %s", kstring_content(s));
+            }
+            DBFREE(s);
+        }
+    }
+
     glfwSwapBuffers(drawer->window);
     /* glfwPollEvents is called in driver.c */
 
@@ -306,9 +323,7 @@ void drawer_config(drawer_t drawer, const clargs* args) {
     drawer->frame_skip = (uint32_t)args->frameskip;
     drawer->verbose_trace = args->dumptrace ? TRUE : FALSE;
     if (args->dumpfile) {
-        /* Texture targets not relevant for OpenGL direct draw in this simple
-           port, unless we use FBOs. For now, disable dumping. */
-        EPRINTF("File dumping disabled in OpenGL port for now: %s", args->dumpfile);
+        drawer_set_dumpfile_template(drawer, args->dumpfile);
     }
     if (args->absolute_fps) {
         drawer->fps.limiter = drawer_ensure_fps_absolute;
@@ -324,13 +339,18 @@ void drawer_config(drawer_t drawer, const clargs* args) {
 }
 
 void drawer_set_dumpfile_template(drawer_t drawer, const char* path) {
-    UNUSED_VARIABLE(drawer);
-    UNUSED_VARIABLE(path);
-    /* Stub */
+    if (drawer->dump_file_fmt) {
+        DBFREE(drawer->dump_file_fmt);
+    }
+    drawer->dump_file_fmt = strdup(path);
 }
 
 void drawer_set_trace(drawer_t drawer, emit_desc* emit) {
     drawer->emit = emit;
+}
+
+emit_desc* drawer_get_trace(drawer_t drawer) {
+    return drawer->emit;
 }
 
 void drawer_begin_trace(drawer_t drawer) {
@@ -355,6 +375,22 @@ void drawer_end_trace(drawer_t drawer) {
     drawer->tracing = FALSE;
 }
 
+void drawer_trace_scroll(drawer_t drawer, UNUSED_PARAM(float xoffset), float yoffset) {
+    if (yoffset > 0) {
+        drawer->emit->rad += 1;
+        drawer->emit->ds *= 1.5f;
+    } else if (yoffset < 0) {
+        drawer->emit->rad -= 1;
+        if (drawer->emit->rad <= 0) {
+            drawer->emit->rad = 1;
+        }
+        drawer->emit->ds /= 1.5f;
+        if (drawer->emit->ds < 0.2f) {
+            drawer->emit->ds = 0.2f;
+        }
+    }
+}
+
 double calculate_blend(particle* p) {
     pextra* pe = (pextra*)p->extra;
     double alpha = pe->a;
@@ -366,9 +402,32 @@ double calculate_blend(particle* p) {
     return alpha;
 }
 
-/*
-static int render_to_file(drawer_t drawer, const char *path) {
-    // Stub or implement using glReadPixels and stb_image_write
-    return 0;
+BOOL render_to_file(drawer_t drawer, const char *path) {
+    int width = (int)drawer->window_size[0];
+    int height = (int)drawer->window_size[1];
+    int stride = width * 4;
+    /* allocate buffer for RGBA */
+    unsigned char* buffer = DBMALLOC((size_t)stride * (size_t)height);
+
+    if (!buffer) {
+        EPRINTF("Failed to allocate buffer to write %s", path);
+        return FALSE;
+    }
+
+    /* glReadPixels reads starting from bottom-left */
+    glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, buffer);
+
+    /* flip vertically because OpenGL origin is bottom-left, but image origin is top-left */
+    stbi_flip_vertically_on_write(1);
+    
+    if (!stbi_write_png(path, width, height, 4, buffer, stride)) {
+        EPRINTF("Failed to write image to %s", path);
+        DBFREE(buffer);
+        return FALSE;
+    }
+
+    DBFREE(buffer);
+    return TRUE;
 }
-*/
+
+/* vim: set ts=4 sts=4 sw=4: */

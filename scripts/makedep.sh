@@ -9,7 +9,9 @@ else
     SRCDIR="."
 fi
 
-cat <<'AWK_SCRIPT' > "$SRCDIR/scripts/makedep.awk"
+AWK_SCRIPT="$SRCDIR/scripts/makedep.awk"
+
+cat <<'AWK_SCRIPT' > "$AWK_SCRIPT"
 BEGIN {
     incs["audio.o"] = ""
 }
@@ -35,6 +37,8 @@ if [[ ! -d ".d" ]]; then
 fi
 grep -F '#include "' *.h *.c | \
     sed -e 's/\.[hc][^ ]*/.o/' -e 's/#include "/ /g' -e 's/"//g' | \
-    awk -f "$SRCDIR/scripts/makedep.awk" | \
+    awk -f "$AWK_SCRIPT" | \
     sort
 popd >/dev/null
+
+rm "$AWK_SCRIPT"

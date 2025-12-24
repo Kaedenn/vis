@@ -155,6 +155,7 @@ void script_free(script_t s) {
     lua_close(s->L);
     if (s->args)
         klist_free(s->args);
+    flist_free(s->fl);
     DBFREE(s->dbg);
     DBFREE(s);
 }
@@ -434,8 +435,7 @@ void prepare_stack(script_t s, klist args) {
 }
 
 void cleanup_stack(script_t s) {
-    int top = lua_gettop(s->L);
-    lua_pop(s->L, top);
+    lua_pop(s->L, lua_gettop(s->L));
 }
 
 void push_constant_num(lua_State* L, const char* k, double v, int idx) {
@@ -458,10 +458,12 @@ script_t util_checkscript(lua_State* L, int arg) {
     return NULL;
 }
 
-void util_checkdrawer(lua_State* L, script_t s) {
-    if (s->drawer == NULL) {
-        luaL_error(L, "Script has no drawer, function may be disabled");
+drawer_t util_checkdrawer(lua_State* L, script_t s) {
+    if (s->drawer) {
+        return s->drawer;
     }
+    luaL_error(L, "Script has no drawer, function may be disabled");
+    return NULL;
 }
 
 const char* util_get_error(lua_State* L) {
@@ -630,8 +632,7 @@ int viscmd_emit_fn(lua_State* L) {
     return 0;
 }
 
-/* Vis.audio(Vis.flist, when, path),
- * @param path must resolve to a .WAV file */
+/* Vis.audio(Vis.flist, when, path) */
 int viscmd_audio_fn(lua_State* L) {
     flist* fl = *(flist**)luaL_checkudata(L, 1, "flist**");
     fnum when = do_msec2frames(L, luaL_checkunsigned(L, 2));
@@ -769,6 +770,7 @@ int viscmd_mutate_fn(lua_State* L) {
             genlua_mutate(fnid), method->factor, genlua_mutate_cond(method->cond),
             method->tag.i.l, method->factor2);
     } else {
+        DBFREE(method);
         return luaL_error(L, "Invalid mutate ID %d", fnid);
     }
     method->func = MUTATE_MAP[fnid];
@@ -793,8 +795,8 @@ int viscmd_callback_fn(lua_State* L) {
 /* fps = Vis.fps(Vis.script) */
 int viscmd_fps_fn(lua_State* L) {
     script_t s = util_checkscript(L, 1);
-    util_checkdrawer(L, s);
-    lua_pushnumber(L, (lua_Number)drawer_get_fps(s->drawer));
+    drawer_t drawer = util_checkdrawer(L, s);
+    lua_pushnumber(L, (lua_Number)drawer_get_fps(drawer));
     return 1;
 }
 
@@ -804,8 +806,8 @@ int viscmd_fps_fn(lua_State* L) {
  *      @param when is omitted */
 int viscmd_settrace_fn(lua_State* L) {
     script_t s = util_checkscript(L, 1);
-    util_checkdrawer(L, s);
-    drawer_set_trace(s->drawer, lua_args_to_emit_desc(L, 2, NULL));
+    drawer_t drawer = util_checkdrawer(L, s);
+    drawer_set_trace(drawer, lua_args_to_emit_desc(L, 2, NULL));
     return 0;
 }
 

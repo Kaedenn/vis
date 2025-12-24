@@ -10,7 +10,6 @@
 #include "particle.h"
 #include "pextra.h"
 #include "random.h"
-#include "genlua.h"
 
 #include <time.h>
 
@@ -29,13 +28,9 @@ void emitter_setup(struct commands* cmds, plist_t plist, drawer_t drawer) {
     emitter.commands = cmds;
     emitter.particles = plist;
     emitter.drawer = drawer;
-    for (ftype_id i = (ftype_id)0; i < VIS_MAX_FTYPE; ++i) {
-        emitter.frame_counts[i] = 0;
-    }
-    emitter.delay_counter = 0;
 }
 
-void emitter_free(UNUSED_PARAM(void* arg)) {
+void emitter_free(void) {
     if (emitter.fl) {
         flist_clear(emitter.fl);
         flist_free(emitter.fl);
@@ -44,6 +39,7 @@ void emitter_free(UNUSED_PARAM(void* arg)) {
 }
 
 uint32_t emitter_get_frame_count(ftype_id ft) {
+    VIS_ASSERT(ft >= 0 && ft <= VIS_MAX_FTYPE);
     return emitter.frame_counts[ft];
 }
 
@@ -156,15 +152,17 @@ void emitter_tick(void) {
 
 void emit_frame(emit_desc* frame) {
     for (int i = 0; i < frame->n; ++i) {
-        particle* p = NULL;
-        float r = randfloat(frame->r - frame->ur, frame->r + frame->ur);
-        float g = randfloat(frame->g - frame->ug, frame->g + frame->ug);
-        float b = randfloat(frame->b - frame->ub, frame->b + frame->ub);
-        pextra* pe = new_pextra(r, g, b, frame->blender);
-        p = particle_new_full(frame->x, frame->y, frame->ux, frame->uy, frame->rad,
-            frame->urad, frame->ds, frame->uds, frame->theta, frame->utheta, frame->life,
-            frame->ulife, frame->force, frame->limit, pe);
-        plist_add(emitter.particles, p);
+        float r = frame->ur == 0.0f ? frame->r : randfloat(frame->r - frame->ur, frame->r + frame->ur);
+        float g = frame->ug == 0.0f ? frame->g : randfloat(frame->g - frame->ug, frame->g + frame->ug);
+        float b = frame->ub == 0.0f ? frame->b : randfloat(frame->b - frame->ub, frame->b + frame->ub);
+        plist_add(emitter.particles, particle_new_full(
+                frame->x, frame->y, frame->ux, frame->uy,
+                frame->rad, frame->urad,
+                frame->ds, frame->uds,
+                frame->theta, frame->utheta,
+                frame->life, frame->ulife,
+                frame->force, frame->limit,
+                new_pextra(r, g, b, frame->blender)));
     }
 }
 
