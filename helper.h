@@ -81,5 +81,3 @@ char* allocat(char* dest, const char* source, size_t* bufsize);
 BOOL parse_window_size(const char* arg, unsigned int* width, unsigned int* height);
 
 #endif
-
-/* vim: set ts=4 sts=4 sw=4: */
