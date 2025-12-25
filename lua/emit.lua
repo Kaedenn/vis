@@ -42,9 +42,9 @@ function Emit:str() return VisUtil.stremit(self) end
 function Emit:get(k) return self._t[k] end
 function Emit:set(k,v) self._t[k] = v end
 function Emit:update(t)
-  for k, v in pairs(t) do
-    self:set(k, v)
-  end
+    for k, v in pairs(t) do
+        self:set(k, v)
+    end
 end
 
 function Emit:count(n)
@@ -55,7 +55,9 @@ function Emit:when(t)
     self._t.when = t
 end
 
-function Emit:center(x, y, ux, uy)
+function Emit:center(x, y, ux, uy, s, us)
+    self._t.s = s or 0
+    self._t.us = us or 0
     return VisUtil.center_emit_table(self._t, x, y, ux or 0, uy or 0)
 end
 

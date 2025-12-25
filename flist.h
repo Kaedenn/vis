@@ -34,28 +34,30 @@ typedef struct flist {
     flist_node* frames[VIS_NFRAMES]; /* with apologies to the hardware */
 } flist;
 
+typedef flist* flist_t;
+
 const char* ftype_to_string(ftype_id ftype);
 
-flist* flist_new(void);
-void flist_free(flist* fl);
-void flist_clear(flist* fl);
-void flist_restart(flist* fl);
-void flist_goto_frame(flist* fl, fnum where);
-BOOL flist_at_end(flist* fl);
+flist_t flist_new(void);
+void flist_free(flist_t fl);
+void flist_clear(flist_t fl);
+void flist_restart(flist_t fl);
+void flist_goto_frame(flist_t fl, fnum where);
+BOOL flist_at_end(flist_t fl);
 
-flist_node* flist_tick(flist* fl);
+flist_node* flist_tick(flist_t fl);
 flist_node* flist_node_next(flist_node* n);
 
-void flist_insert(flist* fl, fnum when, flist_node* fn);
-void flist_insert_emit(flist* fl, fnum when, emit_desc* what);
-void flist_insert_exit(flist* fl, fnum when);
-void flist_insert_play(flist* fl, fnum when);
-void flist_insert_cmd(flist* fl, fnum when, const char* what);
-void flist_insert_bgcolor(flist* fl, fnum when, float color[3]);
-void flist_insert_mutate(flist* fl, fnum when, mutate_method* method);
-void flist_insert_scriptcb(flist* fl, fnum when, script_cb* func);
-void flist_insert_seekframe(flist* fl, fnum when, fnum where);
-void flist_insert_delay(flist* fl, fnum when, fnum length);
-void flist_insert_audiosync(flist* fl, fnum when, fnum length);
+void flist_insert(flist_t fl, fnum when, flist_node* fn);
+void flist_insert_emit(flist_t fl, fnum when, emit_desc* what);
+void flist_insert_exit(flist_t fl, fnum when);
+void flist_insert_play(flist_t fl, fnum when);
+void flist_insert_cmd(flist_t fl, fnum when, const char* what);
+void flist_insert_bgcolor(flist_t fl, fnum when, float color[3]);
+void flist_insert_mutate(flist_t fl, fnum when, mutate_method* method);
+void flist_insert_scriptcb(flist_t fl, fnum when, script_cb* func);
+void flist_insert_seekframe(flist_t fl, fnum when, fnum where);
+void flist_insert_delay(flist_t fl, fnum when, fnum length);
+void flist_insert_audiosync(flist_t fl, fnum when, fnum length);
 
 #endif

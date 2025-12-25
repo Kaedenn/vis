@@ -36,6 +36,7 @@ particle* particle_new_full(double x, double y,
                             force_id force, limit_id limit,
                             void* extra) {
     particle* p = DBMALLOC(sizeof(particle));
+    ZEROINIT(p);
     
     double t = randdouble(theta-utheta, theta+utheta);
     ds = randdouble(ds-uds, ds+uds);
@@ -54,6 +55,33 @@ particle* particle_new_full(double x, double y,
     
     p->extra = extra;
     
+    return p;
+}
+
+particle* particle_new_circle(double x, double y,
+                              double ux, double uy,
+                              double s, double us,
+                              double r, double ur,
+                              double ds, double uds,
+                              double theta, double utheta,
+                              int life, int ulife,
+                              force_id force, limit_id limit, void* extra) {
+    particle* p = DBMALLOC(sizeof(particle));
+    ZEROINIT(p);
+
+    double angle = randdouble(theta-utheta, theta+utheta);
+    double offset = randdouble(s-us, s+us);
+    p->x = randdouble(x-ux, x+ux) + offset * cos(angle);
+    p->y = randdouble(y-uy, y+uy) + offset * sin(angle);
+    double speed = randdouble(ds-uds, ds+uds);
+    p->dx = speed * cos(angle);
+    p->dy = speed * sin(angle);
+    p->radius = (int)randdouble(r-ur, r+ur);
+    p->force = force;
+    p->limit = limit;
+    p->lifetime = randint(life-ulife, life+ulife);
+    p->life = p->lifetime;
+    p->extra = extra;
     return p;
 }
 
@@ -85,6 +113,7 @@ void particle_tick(particle* p) {
     p->life -= 1;
 }
 
+#if DEBUG >= DEBUG_NONE
 inline int particle_is_alive(particle* p) { return p->life > 0; }
 inline double particle_get_x(particle* p) { return p->x; }
 inline double particle_get_y(particle* p) { return p->y; }
@@ -94,4 +123,5 @@ inline double particle_get_radius(particle* p) { return p->radius; }
 inline int particle_get_life(particle* p) { return p->life; }
 inline int particle_get_lifetime(particle* p) { return p->lifetime; }
 inline void* particle_get_extra(particle* p) { return p->extra; }
+#endif
 

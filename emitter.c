@@ -16,7 +16,7 @@
 static struct emitter {
     struct commands* commands;              /* pointer to commands object */
     plist_t particles;                      /* pointer to plist object */
-    flist* fl;                              /* pointer to flist object */
+    flist_t fl;                             /* pointer to flist object */
     drawer_t drawer;                        /* pointer to drawer object */
     uint32_t frame_counts[VIS_MAX_FTYPE];   /* frame type counts */
     uint32_t delay_counter;                 /* delay frames counter */
@@ -43,7 +43,7 @@ uint32_t emitter_get_frame_count(ftype_id ft) {
     return emitter.frame_counts[ft];
 }
 
-void emitter_schedule(flist* frames) {
+void emitter_schedule(flist_t frames) {
     if (emitter.fl == NULL) {
         emitter.fl = frames;
     } else if (emitter.fl && emitter.fl != frames) {
@@ -83,8 +83,8 @@ void emitter_tick(void) {
         emitter.frame_counts[fn->type] += 1;
         switch (fn->type) {
         case VIS_FTYPE_EMIT:
-            DBPRINTF("Ticking flist: %s at frame %d",
-                    ftype_str, emitter.fl->curr_frame);
+            /*DBPRINTF("Ticking flist: %s at frame %d",
+                    ftype_str, emitter.fl->curr_frame);*/
             emit_frame(fn->data.frame);
             break;
         case VIS_FTYPE_EXIT:
@@ -152,11 +152,21 @@ void emitter_tick(void) {
 
 void emit_frame(emit_desc* frame) {
     for (int i = 0; i < frame->n; ++i) {
-        float r = frame->ur == 0.0f ? frame->r : randfloat(frame->r - frame->ur, frame->r + frame->ur);
-        float g = frame->ug == 0.0f ? frame->g : randfloat(frame->g - frame->ug, frame->g + frame->ug);
-        float b = frame->ub == 0.0f ? frame->b : randfloat(frame->b - frame->ub, frame->b + frame->ub);
-        plist_add(emitter.particles, particle_new_full(
+        float r = frame->r;
+        float g = frame->g;
+        float b = frame->b;
+        if (frame->ur != 0.0f) {
+            r = randfloat(frame->r - frame->ur, frame->r + frame->ur);
+        }
+        if (frame->ug != 0.0f) {
+            g = randfloat(frame->g - frame->ug, frame->g + frame->ug);
+        }
+        if (frame->ub != 0.0f) {
+            b = randfloat(frame->b - frame->ub, frame->b + frame->ub);
+        }
+        plist_add(emitter.particles, particle_new_circle(
                 frame->x, frame->y, frame->ux, frame->uy,
+                frame->s, frame->us,
                 frame->rad, frame->urad,
                 frame->ds, frame->uds,
                 frame->theta, frame->utheta,

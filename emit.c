@@ -53,6 +53,10 @@ void emit_set_pos(emit_desc* e, double x, double y, double ux, double uy) {
     e->ux = ux;
     e->uy = uy;
 }
+void emit_set_rad_pos(emit_desc* e, double s, double us) {
+    e->s = s;
+    e->us = us;
+}
 void emit_set_rad(emit_desc* e, double rad, double urad) {
     e->rad = rad;
     e->urad = urad;
@@ -89,10 +93,12 @@ void emit_set_blender(emit_desc* e, blend_id blender) {
 
 void dbprintf_emit_desc(emit_desc* e) {
     DBPRINTF("struct emit_desc { n=%d, x=%g, y=%g, ux=%g, uy=%g, "
+             "s=%g us=%g, "
              "rad=%g, urad=%g, life=%d, ulife=%d, ds=%g, uds=%g, "
              "theta=%g, utheta=%g, r=%g, g=%g, b=%g, "
              "ur=%g, ug=%g, ub=%g, force=%d, limit=%d, blender=%d };",
-        e->n, e->x, e->y, e->ux, e->uy, e->rad, e->urad, e->life, e->ulife, e->ds, e->uds,
+        e->n, e->x, e->y, e->ux, e->uy, e->s, e->us, e->rad, e->urad,
+        e->life, e->ulife, e->ds, e->uds,
         e->theta, e->utheta, (double)e->r, (double)e->g, (double)e->b, (double)e->ur,
         (double)e->ug, (double)e->ub, e->force, e->limit, e->blender);
 }

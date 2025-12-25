@@ -380,9 +380,7 @@ function VisUtil.color_emit_table_v2(t, rgb, urgb)
 end
 
 function VisUtil.emit_table(t)
-    local x
-    local y
-    x, y = VisUtil.wrap_coord(t.x, t.y)
+    local x, y = VisUtil.wrap_coord(t.x, t.y)
     Vis.emit(Vis.flist, t.count, t.when, x, y, t.ux, t.uy,
              t.radius, t.uradius, t.ds, t.uds, t.theta, t.utheta,
              t.life, t.ulife, t.r, t.g, t.b, t.ur, t.ug, t.ub,
@@ -390,9 +388,7 @@ function VisUtil.emit_table(t)
 end
 
 function VisUtil.emit_table_now(t)
-    local x
-    local y
-    x, y = VisUtil.wrap_coord(t.x, t.y)
+    local x, y = VisUtil.wrap_coord(t.x, t.y)
     Vis.emitnow(Vis.script, t.count, x, y, t.ux, t.uy,
                 t.radius, t.uradius, t.ds, t.uds, t.theta, t.utheta,
                 t.life, t.ulife, t.r, t.g, t.b, t.ur, t.ug, t.ub,

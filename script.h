@@ -60,6 +60,7 @@ void script_run_string(script_t script, const char* torun);
 void script_run_cb(script_t state, script_cb* func, void* args);
 void script_set_drawer(script_t script, drawer_t drawer);
 
+void script_mousescroll(script_t script, int xoffset, int yoffset);
 void script_mousemove(script_t script, int x, int y);
 void script_mousedown(script_t script, int x, int y, int button);
 void script_mouseup(script_t script, int x, int y, int button);

@@ -15,6 +15,7 @@
 #include "emitter.h"
 #include "helper.h"
 #include "plist.h"
+#include "plimits.h"
 #include "script.h"
 
 /* dependencies
@@ -124,14 +125,11 @@ void cursor_scroll_callback(GLFWwindow* window, double xoffset, double yoffset) 
         DBPRINTF("Mouse scroll: xoffset %f yoffset %f", xoffset, yoffset);
     }
     drawer_trace_scroll(ctx->drawer, (float)xoffset, (float)yoffset);
+    script_mousescroll(ctx->script, (int)xoffset, (int)yoffset);
 }
 
 int main(int argc, char* argv[]) {
     srand((unsigned)time(NULL));
-
-#ifdef VIS_SELF_TEST
-    VIS_ASSERT(sizeof(MUTATE_MAP) / sizeof(mutate_fn) == VIS_NMUTATES + 1);
-#endif
 
     struct global_ctx g;
     ZEROINIT(&g);
@@ -144,6 +142,8 @@ int main(int argc, char* argv[]) {
         clargs_free(g.args);
         exit(status);
     }
+
+    plimits_update_screen_size(g.args->window_size[0], g.args->window_size[1]);
 
     g.drawer = drawer_new(g.args);
     if (!g.drawer) {

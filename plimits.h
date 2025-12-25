@@ -5,6 +5,8 @@
 #include "defines.h"
 #include "particle.h"
 
+void plimits_update_screen_size(unsigned int width, unsigned int height);
+
 /* default */
 void no_limit(particle* p);
 

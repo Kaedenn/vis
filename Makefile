@@ -7,6 +7,9 @@
 #   EXTRA_LDFLAGS	additional linker flags to pass to ld
 #   SCR_ARGS		additional arguments to pass to process.py
 #
+# Note that setting CFLAGS or LDFLAGS will override their default values.
+# Use EXTRA_CFLAGS or EXTRA_LDFLAGS instead.
+#
 
 DIR = .
 OBJDIR = $(DIR)/.o
@@ -29,16 +32,19 @@ C_TESTS := $(wildcard $(DIR)/test/test_*.c)
 BIN_TESTS := $(patsubst %.c,%,$(C_TESTS))
 TESTS := $(LUA_TESTS) $(BIN_TESTS)
 
-CFLAGS ?= -Wno-unused-variable -Wall -Wextra -Wfloat-equal -Wwrite-strings \
-	  -Wshadow -Wpointer-arith -Wcast-qual -Wredundant-decls \
-	  -Wswitch-enum -Wundef -Wconversion -ansi -pedantic -std=c99 \
-	  -fdiagnostics-show-option
+CFLAGS ?= -Wall -Wextra -Wfloat-equal -Wwrite-strings -Wshadow -Wpointer-arith \
+	-Wcast-qual -Wredundant-decls -Wswitch-enum -Wundef -Wconversion -ansi \
+	-pedantic -std=c99 -fdiagnostics-show-option
+
 LDFLAGS ?= -lm -ldl -lpthread -pthread
 
 CFLAGS_FAST = -O3 -fexpensive-optimizations -flto
 CFLAGS_DEBUG = -O0 -ggdb -DDEBUG=DEBUG_DEBUG
 CFLAGS_TRACE = -O0 -ggdb -DDEBUG=DEBUG_TRACE
 CFLAGS_PROF = -pg
+
+CFLAGS_3RDPARTY = -Wno-conversion -Wno-switch-enum -Wno-cast-qual \
+				  -Wno-float-equal -Wno-shadow
 
 LDFLAGS_FAST = -O3 -flto
 LDFLAGS_PROF = -pg
@@ -48,6 +54,10 @@ LDFLAGS_LIBS = -llua5.2 -lglfw -lGL -lGLEW
 
 CFLAGS := $(CFLAGS) $(CFLAGS_LIBS) $(EXTRA_CFLAGS)
 LDFLAGS := $(LDFLAGS) $(LDFLAGS_LIBS) $(EXTRA_LDFLAGS)
+
+ifneq ($(DEBUG),)
+all: CFLAGS += $(CFLAGS_DEBUG)
+endif
 
 EXEC_ARGS ?= -i -l $(DIR)/lua/demo_4_random.lua
 VG_SUPP = --suppressions=$(DIR)/valgrind.supp
@@ -70,24 +80,24 @@ FP_AVI ?= $(FP_DIR)/bowser.avi
 #	leakcheck-reachable clean distclean finalproduct fp-prep fp-makeframes \
 #	fp-flip fp-encode fp-cleanup test
 
-# Remove when releasing product
-all: CFLAGS += $(CFLAGS_DEBUG)
-
-all: $(VIS)
+all: debug
 
 fast: $(DEPFILES) $(SOURCES)
 	$(MAKE) "CFLAGS=$(CFLAGS) $(CFLAGS_FAST)" \
-		"LDFLAGS=$(LDFLAGS) $(LDFLAGS_FAST)" all
+		"LDFLAGS=$(LDFLAGS) $(LDFLAGS_FAST)" $(VIS)
+
+release: $(DEPFILES) $(SOURCES)
+	$(MAKE) "CFLAGS=$(CFLAGS)" $(VIS)
 
 debug: $(DEPFILES) $(SOURCES)
-	$(MAKE) "CFLAGS=$(CFLAGS) $(CFLAGS_DEBUG)" all
+	$(MAKE) "CFLAGS=$(CFLAGS) $(CFLAGS_DEBUG)" $(VIS)
 
 trace: $(DEPFILES) $(SOURCES)
-	$(MAKE) "CFLAGS=$(CFLAGS) $(CFLAGS_TRACE)" all
+	$(MAKE) "CFLAGS=$(CFLAGS) $(CFLAGS_TRACE)" $(VIS)
 
 profile: $(SOURCES)
 	$(MAKE) "CFLAGS=$(CFLAGS) $(CFLAGS_FAST) $(CFLAGS_PROF)" \
-		"LDFLAGS=$(LDFLAGS) $(LDFLAGS_FAST) $(LDFLAGS_PROF)" all
+		"LDFLAGS=$(LDFLAGS) $(LDFLAGS_FAST) $(LDFLAGS_PROF)" $(VIS)
 	$(VIS) -i -l $(DIR)/lua/demo_5_random.lua
 	gprof $(VIS)
 	- $(RM) $(DIR)/gmon.out 2>/dev/null
@@ -106,13 +116,11 @@ $(OBJDIR)/3rdparty: | $(OBJDIR)
 $(DEPFILES): | $(DEPDIR)
 $(OBJECTS): | $(OBJDIR)
 
-$(OBJDIR)/3rdparty/%.o: CFLAGS += -Wno-conversion -Wno-switch-enum \
-  -Wno-cast-qual -Wno-float-equal -Wno-shadow
-
 $(OBJDIR)/3rdparty/%.o: $(DIR)/3rdparty/%.c | $(OBJDIR)/3rdparty
-	$(CC) -c -o $@ $< -msse2 $(CFLAGS)
+	$(CC) -c -o $@ $< -msse2 $(CFLAGS) $(CFLAGS_3RDPARTY)
 
-$(OBJDIR)/emitter.o: CFLAGS += -Wno-float-equal
+$(OBJDIR)/emitter.o: emitter.c | $(OBJDIR)
+	$(CC) -c -o $@ $< $(CFLAGS) -Wno-float-equal
 
 $(OBJDIR)/%.o: %.c | $(OBJDIR)
 	$(CC) -c -o $@ $< $(CFLAGS)

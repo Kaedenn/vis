@@ -3,6 +3,7 @@ Vis = require("Vis")
 VisUtil = require("visutil")
 math = require("math")
 os = require("os")
+Letters = require("letters")
 Debug = VisUtil.Debug
 
 -- Argument Parsing
@@ -56,11 +57,12 @@ function EstablishConfig()
     return args, envs
 end
 
+INTRO_DELAY = 1000
+
 Arg, Env = EstablishConfig()
 if not Env["VIS_NO_AUDIO"] then
-    Vis.audio(Vis.flist, 0, "media/royalty.mp3")
-    Vis.audiosync(Vis.flist, 0, Env["VIS_SYNC_FRAMES"] or 12) -- 0.2 seconds
-    Vis.volume(0.5)
+    Vis.audio(Vis.flist, INTRO_DELAY, "media/royalty.mp3")
+    Vis.callback(Vis.flist, INTRO_DELAY, Vis.script, "Vis.volume(0.5)")
 else
     VisUtil.Debug("VIS_NO_AUDIO set; disabling audio playback entirely")
 end
@@ -70,25 +72,114 @@ function do_get_metrics()
     print(("FPS: %f of %d"):format(fps, Vis.FPS_LIMIT))
 end
 
-Vis.on_keydown(function(...)
-    VisUtil.Debug("Keydown:", ...)
+Vis.on_keydown(function(key)
+    VisUtil.Debug("Keydown: " .. key)
+    if key == "Left" then
+        Vis.gotoframe(Vis.flist, INTRO_DELAY-1)
+    end
 end)
 
-function main()
-    local e = Emit:new({tag=1})
-    e:count(100)
-    e:life(500, 0)
-    e:radius(2, 0)
-    e:ds(2, 0.5)
-    e:theta(math.pi, math.pi)
-    e:color(0, 1, 1, 0, 0, 0)
-    for i = 100, 10000, 300 do
-        e:emit_at(i)
+function emit_intro_message()
+    local zoom = 2
+    local e = Emit:new({tag="intro"})
+    e:count(zoom*2)
+    e:radius(1)
+    e:ds(0)
+    e:theta(0, math.pi)
+    e:life(INTRO_DELAY)
+    e:color(0, 0.8, 0.1, 0.2, .1, 0)
+    e:blender(Vis.BLEND_EASING)
+
+    local function emit_char(frame, c, x, y, lx, ly, zoom)
+        Letters.map_fn_xy(c:upper(), function(bx, by)
+            e:center(x + zoom*(bx+lx), y + zoom*(by+ly), zoom/2, zoom/2)
+            e:emit(frame)
+        end)
     end
 
-    Vis.callback(Vis.flist, 200, Vis.script, "do_get_metrics()")
+    local function emit_message(frame, msg, x, y, zoom)
+        for i, ord in ipairs(table.pack(msg:byte(1, #msg))) do
+            chr = string.char(ord)
+            emit_char(frame, chr, x, y, (i-1)*(Letters.LETTER_WIDTH + 1), 0, zoom)
+        end
+    end
+
+    local function emit_center_message(frame, msg, x, y, zoom)
+        local width, length = Letters.find_extents(msg)
+        emit_message(frame, msg, x - width*zoom/2, y - length*zoom/2, zoom)
+    end
+
+    local function emit_lines(frame, lines, x, y, zoom)
+        local line_height = 1.5 * Letters.LETTER_HEIGHT * zoom
+        for idx, line in ipairs(lines) do
+            emit_center_message(frame, line, x, y + (idx - 1)*line_height, zoom)
+        end
+    end
+
+    emit_lines(1, {
+        "Royalty",
+        "Ezgod, Maestro Chives, Neoni",
+        "NCS - No Copyright Sounds"
+    }, Vis.WIDTH/2, Vis.HEIGHT/2, zoom)
 end
 
+function main()
+    local dead_time = 340
+    local now = INTRO_DELAY + dead_time
+    local e = Emit:new({tag=1})
+    e:center(Vis.WIDTH/2, Vis.HEIGHT/2, Vis.WIDTH/10, Vis.HEIGHT/5)
+    e:count(10000)
+    e:life(600, 0)
+    e:radius(2, 0)
+    e:ds(0, 0.1)
+    e:theta(math.pi, math.pi)
+    e:color(0, 1, 1, 0, 0, 0)
+    e:emit_at(now)
+
+    now = now + 500
+    --Vis.mutate(Vis.flist, now, Vis.MUTATE_AGE, 200)
+
+    e:color(1, 1, 1, 0, 0, 0)
+    e:center(Vis.WIDTH/2, Vis.HEIGHT/2, Vis.WIDTH/8, Vis.HEIGHT/5)
+    e:ds(0.1, 0)
+    e:theta(math.pi/2, 0)
+    e:life(2000, 0)
+    e:emit_at(now)
+
+    now = now + 300
+    Vis.mutate(Vis.flist, now, Vis.MUTATE_SET_DY, 0.5, 0)
+
+    now = now + 1000
+    Vis.mutate(Vis.flist, now, Vis.MUTATE_SET_DY, -0.5, 0)
+end
+
+Vis.on_mousescroll(function(xoffset, yoffset)
+    VisUtil.Debug(("Scroll: %d %d"):format(xoffset, yoffset))
+end)
+
+emit_intro_message()
 main()
+for i = 0, 100 do
+Vis.emit(Vis.flist, 200, 1000 + 10*i, {
+    x = Vis.WIDTH/2,
+    y = Vis.HEIGHT/2,
+    ux = 0, uy = 0,
+    s = 200,
+    us = 100,
+    ds = 1,
+    uds = 0.5,
+    theta = math.pi,
+    utheta = math.pi,
+    r = 1,
+    g = 1,
+    b = 1,
+    ur = 0,
+    ug = 0,
+    ub = 0,
+    rad = 1,
+    life = 1000,
+    ulife = 100,
+})
+end
 
 -- vim: set ts=4 sts=4 sw=4:

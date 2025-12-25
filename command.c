@@ -355,7 +355,7 @@ static void cmd_rain(struct commands* cmds, const char* buffer) {
 
 static void cmd_load(struct commands* cmds, const char* buffer) {
     if (strlen(buffer) > strlen("load ")) {
-        flist* fl = script_run(cmds->script, buffer + strlen("load "));
+        flist_t fl = script_run(cmds->script, buffer + strlen("load "));
         if (fl != NULL) {
             emitter_schedule(fl);
         } else {

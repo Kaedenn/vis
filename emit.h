@@ -23,6 +23,8 @@ typedef struct emit {
     int n;              /* number of particles to emit */
     double x, y;        /* where to emit from */
     double ux, uy;      /* uncertainty in x and y */
+    double s;           /* radial position (added to x, y) */
+    double us;          /* uncertainty in radial position */
     double rad;         /* radius */
     double urad;        /* uncertainty in rad */
     int life;           /* particle lifetime */
@@ -49,6 +51,7 @@ emit_desc* emit_new(void);
 void emit_free(emit_desc* emit);
 
 void emit_set_n(emit_desc* e, int n);
+void emit_set_rad_pos(emit_desc* e, double s, double us);
 void emit_set_pos(emit_desc* e, double x, double y, double dx, double dy);
 void emit_set_rad(emit_desc* e, double rad, double urad);
 void emit_set_life(emit_desc* e, int life, int ulife);

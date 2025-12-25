@@ -164,7 +164,8 @@ passed.
 
 `function Vis.emit(...)`: Do not use; see `VisUtil.make_emit_table`,
 `VisUtil.emit_table`, the `Emit` class, as well as the documentation
-on emit tables.
+on emit tables. This function actually performs the particle logic and
+has upwards of 24 (yes, twenty-four) arguments.
 
 `function Vis.audio(path)`: Load the audio file given by `path`.
 
@@ -569,16 +570,45 @@ conditional mutates. Mutates only affect particles already on screen; they do
 not affect particles yet to be emitted. There are three kinds of mutates,
 each with their own parameter list.
 
+This function has multiple overloads:
+
+```lua
+Vis.mutate(Vis.flist, <when>, Vis.MUTATE_<op>, <num1>[, <num2>[, <num3>[, <num4>]]])
+
+Vis.mutate(Vis.flist, <when>, Vis.MUTATE_TAG_<op>, <num>)
+
+Vis.mutate(Vis.flist, <when>, Vis.MUTATE_<op>_IF, <num1>, Vis.MUTATE_IF_<cond>, <tag>, <num>)
+```
+
 #### Standard mutate
 
-`Vis.mutate(Vis.flist, <when>, <operation>, <factor-or-coefficient>)`
+```lua
+Vis.mutate(Vis.flist, <when>, Vis.MUTATE_<op>, <num1>[, <num2>[, <num3>[, <num4>]]])
+```
 
 This applies `<operation>`, one of the `Vis.MUTATE_` values, to all
-living particles currently on screen. Nearly all the operations require a
-double-precision number, `<factor-or-coefficient>`. For example, the
-operation `Vis.MUTATE_GROW` multiples all particles' radii by the
-coefficient given. Note that this excludes the `Vis.MUTATE_TAG_`
-operations and the `Vis.MUTATE_IF_` values as those are covered below.
+living particles currently on screen. Nearly all the operations require
+one or more double-precision numbers. For example, the operation
+`Vis.MUTATE_GROW` multiples all particles' radii by the coefficient
+given. Note that this excludes the `Vis.MUTATE_TAG_` operations and the
+`Vis.MUTATE_IF_` values as those are covered below.
+
+Up to four numbers can be given. Most operations only need one or two
+numbers, but some may require all four.
+
+Operations:
+
+1. `VIS_MUTATE_PUSH` - `p->dx *= num1; p->dy *= num1`
+2. `VIS_MUTATE_PUSH_DX` - `p->dx *= num1`
+3. `VIS_MUTATE_PUSH_DY` - `p->dy *= num1`
+4. `VIS_MUTATE_SLOW` - `p->dx /= num1; p->dy /= num1`
+5. `VIS_MUTATE_SHRINK` - `p->radius /= num1`
+6. `VIS_MUTATE_GROW` - `p->radius *= num1`
+7. `VIS_MUTATE_AGE` - `p->life = num1 * p->lifetime`
+8. `VIS_MUTATE_OPACITY` - `p->alpha = num1`
+9. `VIS_MUTATE_SET_DX` - `p->dx = randdouble(num1-num2, num1+num2)`
+10. `VIS_MUTATE_SET_DY` - `p->dy = randdouble(num1-num2, num1+num2)`
+11. `VIS_MUTATE_SET_RADIUS` - `p->radius = randdouble(num1-num2, num1+num2)`
 
 #### Tag modification
 
@@ -589,16 +619,88 @@ This modifies all active particles currently on screen, adjusting their tag
 by the operation and value given. For example, `Vis.MUTATE_TAG_SET` with a
 value of `5` will set all active particles' tags to the number 5.
 
+Operations:
+
+1.
+
 #### Conditional mutate
 
-`Vis.mutate(Vis.flist, <when>, <operation>_IF, <factor-or-coefficient>, <condition>, <tag>)`
+```lua
+Vis.mutate(Vis.flist, <when>,
+    Vis.MUTATE_<op>_IF, <num1>,
+    Vis.MUTATE_IF_<cond>[, <tag>[, <num2>[, <num3>[, <num4>]]]])
+```
 
-This applies `<operation>` to all particles on screen if (and only if)
+This applies `MUTATE_<op>` to all particles on screen if (and only if)
 both the particle's tag and the `<tag>` value given satisfy the
-`<condition>` given. For example,
+`MUTATE_IF_<cond>` given. For example,
 `Vis.mutate(Vis.flist, 50, Vis.MUTATE_PUSH_IF, 2, Vis.MUTATE_IF_EQ, 1)`
-will double all particles' velocities if and only if the particle's tag is
-equal to 1.
+will double the velocities of all particles having a tag of 1.
+
+Conditions:
+
+1. `VIS_MUTATE_IF_TRUE` - Default condition; always true
+2. `VIS_MUTATE_IF_EQ` - Mutate if the particle's tag is equal to `<tag>`
+3. `VIS_MUTATE_IF_NE` - Mutate if the particle's tag is not `<tag>`
+4. `VIS_MUTATE_IF_LT` - Mutate if the particle's tag is less than `<tag>`
+5. `VIS_MUTATE_IF_LE` - Mutate if the particle's tag is less than or equal to `<tag>`
+6. `VIS_MUTATE_IF_GT` - Mutate if the particle's tag is greater than `<tag>`
+7. `VIS_MUTATE_IF_GE` - Mutate if the particle's tag is greater than or equal to `<tag>`
+8. `VIS_MUTATE_IF_EVEN` - Mutate if the paticle's tag is an even number
+9. `VIS_MUTATE_IF_ODD` - Mutate if the particle's tag is an odd number
+
+Operations are the same as the ordinary mutate, but with `_IF` appended:
+
+1. `VIS_MUTATE_PUSH_IF` - `p->dx *= num1; p->dy *= num1`
+2. `VIS_MUTATE_PUSH_DX_IF` - `p->dx *= num1`
+3. `VIS_MUTATE_PUSH_DY_IF` - `p->dy *= num1`
+4. `VIS_MUTATE_SLOW_IF` - `p->dx /= num1; p->dy /= num1`
+5. `VIS_MUTATE_SHRINK_IF` - `p->radius /= num1`
+6. `VIS_MUTATE_GROW_IF` - `p->radius *= num1`
+7. `VIS_MUTATE_AGE_IF` - `p->life = num1 * p->lifetime`
+8. `VIS_MUTATE_OPACITY_IF` - `p->alpha = num1`
+9. `VIS_MUTATE_SET_DX_IF` - `p->dx = randdouble(num1-num2, num1+num2)`
+10. `VIS_MUTATE_SET_DY_IF` - `p->dy = randdouble(num1-num2, num1+num2)`
+11. `VIS_MUTATE_SET_RADIUS_IF` - `p->radius = randdouble(num1-num2, num1+num2)`
+
+</details>
+
+<details>
+<summary><code>Vis.emit</code>: Implementation Details</summary>
+
+#### The emit function (implementation details)
+
+Old method:
+
+```lua
+Vis.emit(Vis.flist, count, when,
+    x, y[, ux, uy, rad, urad, ds, uds, theta, utheta, life, ulife,
+    r, g, b, ur, ug, ub, force, limit, blender])
+```
+
+New method:
+
+```lua
+Vis.emit(Vis.flist, count, when, {
+    x = number, y = number,                 -- position, 0,0 is upper left corner
+    ux = number, uy = number,
+    s = number,                             -- radial position along theta
+    us = number,
+    ds = number,                            -- radial speed along theta
+    uds = number,
+    rad = number,                           -- direction (affects s and ds)
+    urad = number,
+    theta = number,                         -- 0 <= theta <= 2*math.pi
+    utheta = number,                        -- 0 <= utheta <= 2*math.pi
+    life = unsigned,                        -- in milliseconds
+    ulife = unsigned,                       -- in milliseconds
+    r = number, g = number, b = number,     -- 0 <= rgb <= 1
+    ur = number, ug = number, ub = number,
+    force = number (force_id),
+    limit = number (limit_id),
+    blender = number (blend_id)
+})
+```
 
 </details>
 
