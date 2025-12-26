@@ -34,8 +34,6 @@ const char* ftype_to_string(ftype_id ftype) {
 
 static flist_node* flist_node_new(void) {
     flist_node* fn = DBMALLOC(sizeof(struct flist_node));
-    if (!fn) return NULL;
-    ZEROINIT(fn);
     fn->type = VIS_FTYPE_EMIT;
     return fn;
 }
@@ -60,7 +58,6 @@ static void flist_node_free(flist_node* fn) {
 flist_t flist_new(void) {
     int i = 0;
     flist_t fl = DBMALLOC(sizeof(struct flist));
-    if (!fl) return NULL;
     while (i < VIS_NFRAMES) {
         fl->frames[i] = NULL;
         ++i;

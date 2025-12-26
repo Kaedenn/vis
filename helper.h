@@ -35,6 +35,8 @@ void do_assert(BOOL cond, const char* message, const char* file, int line);
 #define DBFREE(ptr) free((ptr))
 #endif
 
+#define DZFREE(ptr) do { DBFREE(ptr); ptr = NULL; } while (0)
+
 #if DEBUG > DEBUG_VERBOSE
 #define WHEREAMI_STDERR() fprintf(stderr, "%s:%d:%s: ", __FILE__, __LINE__, __func__)
 #elif DEBUG > DEBUG_NONE
@@ -74,7 +76,10 @@ char* strnulchr(char* str, int n);
 /* like strdup, but replace \n with \\n, etc */
 char* escape_string(const char* str);
 
+/* allocate a character buffer of exactly nchars bytes */
 char* stralloc(size_t nchars);
+
+/* concatenate two strings, ensuring the result is large enough */
 char* allocat(char* dest, const char* source, size_t* bufsize);
 
 /* parse a window size like 1280x720 */

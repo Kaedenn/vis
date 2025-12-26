@@ -531,7 +531,6 @@ kstr lua_inspect_value(lua_State* L, int arg) {
 
 emit_desc* lua_args_to_emit_desc(lua_State* L, int arg, fnum* when) {
     emit_desc* emit = emit_new();
-    ZEROINIT(emit);
 
     emit->n = luaL_checkint(L, arg++);
     if (when != NULL) {
@@ -541,6 +540,7 @@ emit_desc* lua_args_to_emit_desc(lua_State* L, int arg, fnum* when) {
     /* behavior depends on the type of the next argument */
     int arg_type = lua_type(L, arg);
     if (arg_type == LUA_TNUMBER) {
+        /* old 24-argument layout */
         emit->x = luaL_checknumber(L, arg++);
         emit->y = luaL_checknumber(L, arg++);
         emit->ux = luaL_optnumber(L, arg++, 0);
@@ -565,7 +565,8 @@ emit_desc* lua_args_to_emit_desc(lua_State* L, int arg, fnum* when) {
         emit->limit = (limit_id)luaL_optint(L, arg++, VIS_DEFAULT_LIMIT);
         emit->blender = (blend_id)luaL_optint(L, arg++, VIS_BLEND_LINEAR);
     } else if (arg_type == LUA_TTABLE) {
-#if DEBUG > DEBUG_DEBUG
+        /* new table layout */
+#if DEBUG >= DEBUG_DEBUG
         int nargs = lua_gettop(L);
         kstr s = kstring_newfromvf("args[%d]: ", nargs);
         for (int argi = 1; argi <= nargs; ++argi) {
@@ -577,6 +578,7 @@ emit_desc* lua_args_to_emit_desc(lua_State* L, int arg, fnum* when) {
         kstring_free(s);
 #endif
 
+        /* defaults: circle, 100 msec, 1 pixel, white */
         emit->theta = emit->utheta = M_PI;
         emit->life = (int)do_msec2frames(L, 100);
         emit->r = emit->g = emit->b = 1.0f;
@@ -590,6 +592,8 @@ emit_desc* lua_args_to_emit_desc(lua_State* L, int arg, fnum* when) {
         while (lua_next(L, argi) != 0) {
             const char* key = lua_tostring(L, -2);
             int valtype = lua_type(L, -1);
+
+            /* avert ye eyes, ye sensitive of constitution */
 
             if (!strcmp(key, "x")) {
                 emit->x = luaL_checknumber(L, -1);
@@ -637,6 +641,15 @@ emit_desc* lua_args_to_emit_desc(lua_State* L, int arg, fnum* when) {
                 emit->limit = (limit_id)luaL_checknumber(L, -1);
             } else if (!strcmp(key, "blender")) {
                 emit->blender = (blend_id)luaL_checknumber(L, -1);
+            } else if (!strcmp(key, "tag")) {
+                arg_type = lua_type(L, -1);
+                if (arg_type == LUA_TNUMBER) {
+                    emit->tag.ul = luaL_checkunsigned(L, -1);
+                } else if (arg_type == LUA_TSTRING) {
+                    const char* value = luaL_checkstring(L, -1);
+                    emit->tag.ul = pextra_hash_string(value);
+                    DBPRINTF("Hashed string \"%s\" to %llx", value, emit->tag.ul);
+                }
             } else {
                 EPRINTF("Unknown key in emit table %s (type %s)",
                         key, lua_typename(L, valtype));
@@ -837,7 +850,6 @@ int viscmd_bgcolor_fn(lua_State* L) {
  * @param cond is a valid Vis.MUTATE_IF_* */
 int viscmd_mutate_fn(lua_State* L) {
     mutate_method* method = DBMALLOC(sizeof(struct mutate_method));
-    ZEROINIT(method);
     flist_t fl = *(flist**)luaL_checkudata(L, 1, "flist**");
     fnum when = do_msec2frames(L, luaL_checkunsigned(L, 2));
     mutate_id fnid = (mutate_id)luaL_checkint(L, 3);

@@ -36,7 +36,6 @@ particle* particle_new_full(double x, double y,
                             force_id force, limit_id limit,
                             void* extra) {
     particle* p = DBMALLOC(sizeof(particle));
-    ZEROINIT(p);
     
     double t = randdouble(theta-utheta, theta+utheta);
     ds = randdouble(ds-uds, ds+uds);
@@ -67,7 +66,6 @@ particle* particle_new_circle(double x, double y,
                               int life, int ulife,
                               force_id force, limit_id limit, void* extra) {
     particle* p = DBMALLOC(sizeof(particle));
-    ZEROINIT(p);
 
     double angle = randdouble(theta-utheta, theta+utheta);
     double offset = randdouble(s-us, s+us);

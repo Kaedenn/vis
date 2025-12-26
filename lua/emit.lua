@@ -22,6 +22,7 @@ function Emit:new(obj)
     }
     o._t = {}
     o._t = VisUtil.make_emit_table()
+    o._t.tag = tagid
     if obj ~= nil and obj._t ~= nil then
         for k,v in pairs(obj._t) do
             o._t[k] = v

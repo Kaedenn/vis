@@ -17,3 +17,11 @@ void free_pextra(pextra* extra) {
     DBFREE(extra);
 }
 
+uint64_t pextra_hash_string(const char* string) {
+    uint64_t result = 0;
+    for (unsigned i = 0; string[i] != '\0'; ++i) {
+        result = (result << 8) | (unsigned char)string[i];
+    }
+    return result;
+}
+

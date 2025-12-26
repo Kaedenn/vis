@@ -12,7 +12,9 @@ void emitter_free(void);
 
 uint32_t emitter_get_frame_count(ftype_id ft);
 
+/* Emitter takes ownership of the frame list; the caller must not free() it */
 void emitter_schedule(flist_t frames);
+
 void emitter_schedule_frame(emit_desc* frame, unsigned int when);
 void emitter_tick(void);
 

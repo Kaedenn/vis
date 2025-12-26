@@ -73,7 +73,6 @@ void glfw_error_callback(int error, const char* description) {
 
 drawer_t drawer_new(const clargs* args) {
     drawer_t drawer = DBMALLOC(sizeof(struct drawer));
-    ZEROINIT(drawer);
     drawer_config(drawer, args);
 
     glfwSetErrorCallback(glfw_error_callback);
