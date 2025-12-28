@@ -2,10 +2,11 @@
 #include "random.h"
 #include "helper.h"
 
+#include <stdint.h>
 #include <stdlib.h>
 #include <time.h>
 
-/* implementation: Lehmer RNG */
+/* implementation: Lehmer PRNG */
 static const uint64_t COEFFICIENT = 279470273UL;
 static const uint64_t MODULUS = 4294967291UL;
 static uint64_t random_next(uint64_t current) {
@@ -24,7 +25,7 @@ prng* random_new(int seed) {
 }
 
 void random_free(prng* rng) {
-    DBFREE(rng);
+    DZFREE(rng);
 }
 
 int random_reseed(prng* rng, int newseed) {
@@ -48,8 +49,6 @@ int random_range_int(prng* rng, int low, int high) {
     return ((int)(rng->current >> 32) * (high - low) + low);
 }
 
-/* TODO: implement a cache of random numbers */
-
 void seed(void) {
     srand((unsigned)time(NULL));
 }
@@ -69,4 +68,3 @@ float randfloat(float low, float high) {
 int randint(int low, int high) {
     return (int)randdouble(low, high);
 }
-

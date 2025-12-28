@@ -2,6 +2,8 @@
 #ifndef VIS_DEFINES_HEADER_INCLUDED_
 #define VIS_DEFINES_HEADER_INCLUDED_ 1
 
+#define _POSIX_C_SOURCE 200809L
+
 #ifdef __GNUC__
 /* GCC-specific extensions to make things a little easier */
 #define UNUSED_PARAM(param) param __attribute__((unused))
@@ -13,8 +15,6 @@
 #define NORETURN
 #endif
 
-#include "types.h"
-
 /* debugging levels */
 #define DEBUG_NONE 0
 #define DEBUG_VERBOSE 1
@@ -23,7 +23,7 @@
 #define DEBUG_TRACE 4
 
 #ifndef DEBUG
-#define DEBUG DEBUG_NONE
+#define DEBUG DEBUG_DEBUG
 #endif
 
 #if DEBUG >= DEBUG_DEBUG
@@ -44,17 +44,19 @@
 /* constants for the frame array's length */
 /* use -DVIS_FRAMES=N to override */
 #ifndef VIS_NFRAMES
-# define VIS_FRAMES_NMINS 10
-# define VIS_FRAMES_NSECS 0
-# define VIS_NFRAMES ((VIS_FRAMES_NMINS*60+VIS_FRAMES_NSECS)*VIS_FPS_LIMIT)
+#define VIS_FRAMES_NMINS 10
+#define VIS_FRAMES_NSECS 0
+#define VIS_NFRAMES ((VIS_FRAMES_NMINS * 60 + VIS_FRAMES_NSECS) * VIS_FPS_LIMIT)
 #endif
 
 /* window pos */
 #ifndef VIS_WINDOW_X
-#define VIS_WINDOW_X SDL_WINDOWPOS_UNDEFINED
+/*#define VIS_WINDOW_X SDL_WINDOWPOS_UNDEFINED*/
+#define VIS_WINDOW_X 0
 #endif
 #ifndef VIS_WINDOW_Y
-#define VIS_WINDOW_Y SDL_WINDOWPOS_UNDEFINED
+/*#define VIS_WINDOW_Y SDL_WINDOWPOS_UNDEFINED*/
+#define VIS_WINDOW_Y 0
 #endif
 
 /* window size */
@@ -73,20 +75,16 @@
 
 /* frame rate */
 #define VIS_FPS_LIMIT 30
-#define VIS_FPDS_LIMIT (VIS_FPS_LIMIT / 10.0)
-#define VIS_FPCS_LIMIT (VIS_FPS_LIMIT / 100.0)
-#define VIS_FPMS_LIMIT (VIS_FPS_LIMIT / 1000.0)
 
 /* converting from frames to msec */
-#define VIS_FRAMES_TO_MSEC(frames) ((int)((frames)*1000.0/VIS_FPS_LIMIT+0.5))
-#define VIS_MSEC_TO_FRAMES(ms) ((int)(VIS_FPS_LIMIT*(ms)/1000.0+0.5))
+#define VIS_FRAMES_TO_MSEC(frames) ((int)((frames) * 1000.0 / VIS_FPS_LIMIT + 0.5))
+#define VIS_MSEC_TO_FRAMES(ms) ((int)(VIS_FPS_LIMIT * (ms) / 1000.0 + 0.5))
 
 /* timing constants */
 #define VIS_10MS (10)
 #define VIS_MSEC_PER_FRAME (1000.0 / VIS_FPS_LIMIT)
 
 /* audio constants */
-/* old #define VIS_AUDIO_FREQ 22050 */
 #define VIS_AUDIO_FREQ 44100
 #define VIS_AUDIO_SAMPLES 512
 #define VIS_AUDIO_CHANNELS 2
@@ -95,8 +93,9 @@
 #define VIS_BUFFER_LEN 4096
 
 /* initial capacity for particles */
-#define VIS_PLIST_INITIAL_SIZE (1024*1024)
+#define VIS_PLIST_INITIAL_SIZE (1024 * 1024)
 
+/* FIXME: unused */
 /* (drawing) number of vertices needed per particle */
 #define VIS_VTX_PER_PARTICLE 2
 
@@ -115,4 +114,3 @@
 #endif
 
 #endif
-

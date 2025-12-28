@@ -1,52 +1,63 @@
 
 # Makefile for the vis project
 #
-# Nice features:
+# Extra directives:
+#   EXEC_ARGS		arguments to pass to vis
+#   EXTRA_CFLAGS	additional compilation flags to pass to gcc
+#   EXTRA_LDFLAGS	additional linker flags to pass to ld
+#   SCR_ARGS		additional arguments to pass to process.py
 #
-# make <target> EXEC_ARGS="arguments to pass to vis"
-# make <target> EXTRA_CFLAGS="extra cflags to pass to gcc"
-# make <target> EXTRA_LDFLAGS="extra ldflags to pass to gcc"
-# make <target> SCR_ARGS="extra args to pass to process.py"
+# Note that setting CFLAGS or LDFLAGS will override their default values.
+# Use EXTRA_CFLAGS or EXTRA_LDFLAGS instead.
 #
 
 DIR = .
 OBJDIR = $(DIR)/.o
 DEPDIR = $(DIR)/.d
 
-SRCS = async.c audio.c clargs.c command.c drawer.c driver.c emit.c \
-	   emitter.c flist.c forces.c gc.c genlua.c helper.c klist.c \
-	   kstring.c mutator.c particle.c pextra.c plimits.c plist.c \
-	   random.c script.c
+SRCS := async.c audio.c clargs.c command.c drawer.c driver.c emit.c \
+	emitter.c flist.c forces.c genlua.c helper.c klist.c kstring.c \
+	kstring.c mutator.c particle.c pextra.c plimits.c plist.c \
+	random.c script.c shader.c
 SOURCES = $(patsubst %,$(DIR)/%,$(CSRC)) Makefile
 OBJECTS = $(patsubst %.c,$(OBJDIR)/%.o,$(SRCS))
 DEPFILES = $(patsubst %.c,$(DEPDIR)/%.d,$(SRCS))
 EXECBIN = vis
 VIS = $(DIR)/$(EXECBIN)
 
+SRCS := $(SRCS) 3rdparty/miniaudio.c 3rdparty/stb_image_write.c
+
 LUA_TESTS := $(wildcard $(DIR)/test/test_*.lua)
 C_TESTS := $(wildcard $(DIR)/test/test_*.c)
 BIN_TESTS := $(patsubst %.c,%,$(C_TESTS))
 TESTS := $(LUA_TESTS) $(BIN_TESTS)
 
-CFLAGS ?= -Wno-unused-variable -Wall -Wextra -Wfloat-equal -Wwrite-strings \
-		  -Wshadow -Wpointer-arith -Wcast-qual -Wredundant-decls -Wtrigraphs \
-		  -Wswitch-enum -Wundef -Wconversion -ansi -pedantic -std=c99 \
-		  -fdiagnostics-show-option
-LDFLAGS ?= -lm
+CFLAGS ?= -Wall -Wextra -Wfloat-equal -Wwrite-strings -Wshadow -Wpointer-arith \
+	-Wcast-qual -Wredundant-decls -Wswitch-enum -Wundef -Wconversion -ansi \
+	-pedantic -std=c99 -fdiagnostics-show-option
+
+LDFLAGS ?= -lm -ldl -lpthread -pthread
 
 CFLAGS_FAST = -O3 -fexpensive-optimizations -flto
 CFLAGS_DEBUG = -O0 -ggdb -DDEBUG=DEBUG_DEBUG
 CFLAGS_TRACE = -O0 -ggdb -DDEBUG=DEBUG_TRACE
 CFLAGS_PROF = -pg
 
+CFLAGS_3RDPARTY = -Wno-conversion -Wno-switch-enum -Wno-cast-qual \
+				  -Wno-float-equal -Wno-shadow
+
 LDFLAGS_FAST = -O3 -flto
 LDFLAGS_PROF = -pg
 
-CFLAGS_LIBS = -I/usr/include/lua5.2 -I/usr/include/SDL2
-LDFLAGS_LIBS = -llua5.2 -lSDL2 -lSDL2_image -lSDL2_mixer
+CFLAGS_LIBS = -I/usr/include/lua5.2
+LDFLAGS_LIBS = -llua5.2 -lglfw -lGL -lGLEW
 
 CFLAGS := $(CFLAGS) $(CFLAGS_LIBS) $(EXTRA_CFLAGS)
 LDFLAGS := $(LDFLAGS) $(LDFLAGS_LIBS) $(EXTRA_LDFLAGS)
+
+ifneq ($(DEBUG),)
+all: CFLAGS += $(CFLAGS_DEBUG)
+endif
 
 EXEC_ARGS ?= -i -l $(DIR)/lua/demo_4_random.lua
 VG_SUPP = --suppressions=$(DIR)/valgrind.supp
@@ -69,37 +80,50 @@ FP_AVI ?= $(FP_DIR)/bowser.avi
 #	leakcheck-reachable clean distclean finalproduct fp-prep fp-makeframes \
 #	fp-flip fp-encode fp-cleanup test
 
-# Remove when releasing product
-all: CFLAGS += $(CFLAGS_DEBUG)
-
-all: $(DEPFILES) $(VIS)
+all: debug
 
 fast: $(DEPFILES) $(SOURCES)
-	$(MAKE) "CFLAGS=$(CFLAGS) $(CFLAGS_FAST)" "LDFLAGS=$(LDFLAGS) $(LDFLAGS_FAST)" all
+	$(MAKE) "CFLAGS=$(CFLAGS) $(CFLAGS_FAST)" \
+		"LDFLAGS=$(LDFLAGS) $(LDFLAGS_FAST)" $(VIS)
+
+release: $(DEPFILES) $(SOURCES)
+	$(MAKE) "CFLAGS=$(CFLAGS)" $(VIS)
 
 debug: $(DEPFILES) $(SOURCES)
-	$(MAKE) "CFLAGS=$(CFLAGS) $(CFLAGS_DEBUG)" all
+	$(MAKE) "CFLAGS=$(CFLAGS) $(CFLAGS_DEBUG)" $(VIS)
 
 trace: $(DEPFILES) $(SOURCES)
-	$(MAKE) "CFLAGS=$(CFLAGS) $(CFLAGS_TRACE)" all
+	$(MAKE) "CFLAGS=$(CFLAGS) $(CFLAGS_TRACE)" $(VIS)
 
 profile: $(SOURCES)
-	$(MAKE) "CFLAGS=$(CFLAGS) $(CFLAGS_FAST) $(CFLAGS_PROF)" "LDFLAGS=$(LDFLAGS) $(LDFLAGS_FAST) $(LDFLAGS_PROF)" all
+	$(MAKE) "CFLAGS=$(CFLAGS) $(CFLAGS_FAST) $(CFLAGS_PROF)" \
+		"LDFLAGS=$(LDFLAGS) $(LDFLAGS_FAST) $(LDFLAGS_PROF)" $(VIS)
 	$(VIS) -i -l $(DIR)/lua/demo_5_random.lua
 	gprof $(VIS)
 	- $(RM) $(DIR)/gmon.out 2>/dev/null
 
-$(OBJDIR):
-	- test -d $(OBJDIR) || mkdir $(OBJDIR) 2>/dev/null
-
-$(DEPFILES): $(DEPDIR)
-
-$(OBJDIR)/%.o: %.c $(OBJDIR)
-	$(CC) -c -o $@ $< $(CFLAGS)
-
 $(DEPDIR): $(SOURCES) $(SCR_MAKEDEP)
 	- test -d $(DEPDIR) || mkdir $(DEPDIR) 2>/dev/null
 	$(BASH) $(SCR_MAKEDEP)
+	touch $(DEPDIR)
+
+$(OBJDIR):
+	- test -d $(OBJDIR) || mkdir $(OBJDIR) 2>/dev/null
+
+$(OBJDIR)/3rdparty: | $(OBJDIR)
+	- test -d $(OBJDIR)/3rdparty || mkdir $(OBJDIR)/3rdparty 2>/dev/null
+
+$(DEPFILES): | $(DEPDIR)
+$(OBJECTS): | $(OBJDIR)
+
+$(OBJDIR)/3rdparty/%.o: $(DIR)/3rdparty/%.c | $(OBJDIR)/3rdparty
+	$(CC) -c -o $@ $< -msse2 $(CFLAGS) $(CFLAGS_3RDPARTY)
+
+$(OBJDIR)/emitter.o: emitter.c | $(OBJDIR)
+	$(CC) -c -o $@ $< $(CFLAGS) -Wno-float-equal
+
+$(OBJDIR)/%.o: %.c | $(OBJDIR)
+	$(CC) -c -o $@ $< $(CFLAGS)
 
 $(VIS): $(OBJECTS)
 	$(CC) -o $@ $^ $(LDFLAGS)

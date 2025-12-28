@@ -12,12 +12,16 @@ typedef struct clargs {
     const char* dumpfile;
     const char* commandfile;
     int frameskip;
+    int frames_per_second;
     klist scriptargs;
     BOOL dumptrace;
     BOOL interactive;
     BOOL quiet_audio;
     BOOL stay_after_script;
     BOOL absolute_fps;
+    unsigned int wsize[2];
+
+    int debug_level;
 
     BOOL must_exit;
     int exit_status;
@@ -27,4 +31,3 @@ clargs* argparse(int argc, char** argv);
 void clargs_free(clargs* args);
 
 #endif
-

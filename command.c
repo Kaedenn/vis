@@ -6,11 +6,9 @@
 #include "defines.h"
 #include "drawer.h"
 #include "emitter.h"
-#include "forces.h"
 #include "helper.h"
 #include "particle.h"
 #include "pextra.h"
-#include "plimits.h"
 #include "random.h"
 #include "script.h"
 
@@ -47,6 +45,7 @@ static struct cmd_map {
     void (*func)(struct commands* cmds, const char* buffer);
     const char* synopsis;
 } commands[] = {
+    /* clang-format off */
     {"emit", cmd_emit, "instant emit: type \"help emit\" to see args"},
     {"kick", cmd_kick, "takes one arg: number of particles"},
     {"snare", cmd_snare, "takes one arg: number of particles"},
@@ -58,10 +57,11 @@ static struct cmd_map {
     {"exit", cmd_exit, "exits simulation immediately"},
     {"help", cmd_help, "briefly describes commands"},
     {NULL, NULL, NULL}
+    /* clang-format on */
 };
 
-struct commands* command_setup(drawer_t drawer, plist_t plist,
-                               script_t script, BOOL interactive) {
+struct commands* command_setup(
+    drawer_t drawer, plist_t plist, script_t script, BOOL interactive) {
     struct commands* cmds = DBMALLOC(sizeof(struct commands));
     cmds->drawer = drawer;
     cmds->particles = plist;
@@ -79,7 +79,7 @@ void command_teardown(struct commands* cmds) {
     if (cmds->interactive) {
         async_write_stdout("\n");
     }
-    DBFREE(cmds);
+    DZFREE(cmds);
 }
 
 BOOL command_should_exit(struct commands* cmds) {
@@ -89,7 +89,6 @@ BOOL command_should_exit(struct commands* cmds) {
 cmd_error_id command_get_error(struct commands* cmds) {
     return cmds->exit_status;
 }
-
 
 /*
 nice strums:
@@ -104,14 +103,13 @@ void command_async(struct commands* cmds) {
     if (bytes == -1 && errno != EAGAIN) {
         int err = errno;
         const char* errstr = strerror(errno);
-        EPRINTF("received error %d: %s from async_read_stdin",
-                err, errstr);
+        EPRINTF("received error %d: %s from async_read_stdin", err, errstr);
         cmds->should_exit = TRUE;
         cmds->exit_status = CMD_ERROR_FATAL;
     } else if (bytes == 0) {
         command_str(cmds, "exit");
     } else if (buffer[0] != '\0') { /* something was read */
-        if (buffer[0] != '\n') { /* and the line wasn't empty */
+        if (buffer[0] != '\n') {    /* and the line wasn't empty */
             command_str(cmds, buffer);
         }
         async_write_stdout(">>> ");
@@ -147,8 +145,7 @@ void command_file(struct commands* cmds, const char* file) {
     FILE* fp = fopen(file, "r+");
     if (!fp) {
         int error = errno;
-        EPRINTF("Failed to open %s: error %s: %s", file, error,
-                strerror(error));
+        EPRINTF("Failed to open %s: error %s: %s", file, error, strerror(error));
         return;
     }
 
@@ -156,10 +153,11 @@ void command_file(struct commands* cmds, const char* file) {
     while (1) {
         const char* ret = fgets(line_buffer, 1024, fp);
         int error = errno;
-        if (ret == NULL && feof(fp)) break;
+        if (ret == NULL && feof(fp))
+            break;
         if (ret == NULL && ferror(fp)) {
-            EPRINTF("Failed during read of %s: error %s: %s", file, error,
-                    strerror(error));
+            EPRINTF("Failed during read of %s: error %s: %s",
+                file, error, strerror(error));
             break;
         }
         command_str(cmds, line_buffer);
@@ -180,47 +178,46 @@ static void cmd_emit(struct commands* cmds, const char* buffer) {
     int limit;
     int blender;
     int i = 0;
-    if (sscanf(buffer, "emit %d %lg %lg %lg %lg "
-               "%lg %lg %lg %lg %lg %lg "
-               "%d %d %g %g %g %g %g %g "
-               "%d %d %d",
-               &n,     &x,     &y,  &ux,  &uy,
-               &rad,   &urad,  &ds, &uds, &theta, &utheta,
-               &life,  &ulife, &r, &g, &b, &ur, &ug, &ub,
-               &force, &limit, &blender) == nargs) {
+    if (sscanf(buffer,
+            "emit %d %lg %lg %lg %lg "
+            "%lg %lg %lg %lg %lg %lg "
+            "%d %d %g %g %g %g %g %g "
+            "%d %d %d",
+            &n, &x, &y, &ux, &uy, &rad, &urad,
+            &ds, &uds, &theta, &utheta, &life, &ulife,
+            &r, &g, &b, &ur, &ug, &ub, &force, &limit, &blender) == nargs) {
         for (i = 0; i < n; ++i) {
             pextra* pe = NULL;
             particle* p = NULL;
-            ar = randfloat(r-ur, r+ur);
-            ag = randfloat(g-ug, g+ug);
-            ab = randfloat(b-ub, b+ub);
-            pe = new_pextra(ar, ag, ab, blender);
-            
+            ar = randfloat(r - ur, r + ur);
+            ag = randfloat(g - ug, g + ug);
+            ab = randfloat(b - ub, b + ub);
+            pe = new_pextra(ar, ag, ab, (blend_id)blender);
+
             if (force < 0 || force >= VIS_NFORCES) {
                 force = VIS_DEFAULT_FORCE;
             }
             if (limit < 0 || limit >= VIS_NLIMITS) {
                 limit = VIS_DEFAULT_LIMIT;
             }
-            
+
             p = particle_new_full(x, y, ux, uy, rad, urad, ds, uds,
-                                  theta, utheta, life, ulife,
-                                  force, limit, pe);
-            
+                theta, utheta, life, ulife,
+                (force_id)force, (limit_id)limit, pe);
+
             plist_add(cmds->particles, p);
         }
     } else {
-        EPRINTF("%s",
-                "usage: emit n x y ux uy rad urad ds uds theta utheta "
-                "life ulife r g b ur ug ub force limit blender");
+        EPRINTF("%s", "usage: emit n x y ux uy rad urad ds uds theta utheta "
+                      "life ulife r g b ur ug ub force limit blender");
         EPRINTF("%s", "(type 'help emit' for explanation)");
     }
 }
 
 static void cmd_kick(struct commands* cmds, const char* buffer) {
     static const int nargs = 1;
-    static const double x = VIS_WIDTH / 2;
-    static const double y = VIS_HEIGHT / 2;
+    static const double x = VIS_WIDTH / 2.0;
+    static const double y = VIS_HEIGHT / 2.0;
     int i = 0;
     int arg = 0;
     if (sscanf(buffer, "kick %d", &arg) == nargs) {
@@ -231,15 +228,16 @@ static void cmd_kick(struct commands* cmds, const char* buffer) {
         double ds, theta;
         while (i < arg) {
             radius = randint(1, 3);
-            life = randint(VIS_FPS_LIMIT, 2 * VIS_FPS_LIMIT);
+            life = randint(drawer_get_configured_fps(cmds->drawer),
+                2 * drawer_get_configured_fps(cmds->drawer));
             r = randfloat(1.0f, 2.0f);
             g = randfloat(0.0f, 0.7f);
             b = randfloat(0.0f, 0.4f);
             pe = new_pextra(r, g, b, VIS_BLEND_LINEAR);
             p = particle_new(x, y, radius, life, pe);
             ds = randdouble(0.1, 3.0);
-            theta = randdouble(0.0, 2*M_PI);
-            particle_push(p, ds*cos(theta), ds*sin(theta));
+            theta = randdouble(0.0, 2 * M_PI);
+            particle_push(p, ds * cos(theta), ds * sin(theta));
             particle_set_force(p, VIS_FORCE_FRICTION);
             particle_set_limit(p, VIS_LIMIT_SPRINGBOX);
             plist_add(cmds->particles, p);
@@ -252,8 +250,8 @@ static void cmd_kick(struct commands* cmds, const char* buffer) {
 
 static void cmd_snare(struct commands* cmds, const char* buffer) {
     static const int nargs = 1;
-    static const double x = VIS_WIDTH / 2;
-    static const double y = VIS_HEIGHT / 2;
+    static const double x = VIS_WIDTH / 2.0;
+    static const double y = VIS_HEIGHT / 2.0;
     int i = 0;
     int arg = 0;
     if (sscanf(buffer, "snare %d", &arg) == nargs) {
@@ -264,15 +262,16 @@ static void cmd_snare(struct commands* cmds, const char* buffer) {
         double ds, theta;
         while (i < arg) {
             radius = randint(1, 3);
-            life = randint(VIS_FPS_LIMIT, 2 * VIS_FPS_LIMIT);
+            life = randint(drawer_get_configured_fps(cmds->drawer),
+                2 * drawer_get_configured_fps(cmds->drawer));
             r = randfloat(0.0f, 0.4f);
             g = randfloat(0.0f, 1.0f);
             b = randfloat(0.0f, 0.4f);
             pe = new_pextra(r, g, b, VIS_BLEND_LINEAR);
             p = particle_new(x, y, radius, life, pe);
             ds = randdouble(0.1, 2.0);
-            theta = randdouble(0.0, 2*M_PI);
-            particle_push(p, ds*cos(theta), ds*sin(theta));
+            theta = randdouble(0.0, 2 * M_PI);
+            particle_push(p, ds * cos(theta), ds * sin(theta));
             particle_set_force(p, VIS_FORCE_GRAVITY);
             particle_set_limit(p, VIS_LIMIT_SPRINGBOX);
             plist_add(cmds->particles, p);
@@ -285,7 +284,7 @@ static void cmd_snare(struct commands* cmds, const char* buffer) {
 
 static void cmd_strum(struct commands* cmds, const char* buffer) {
     static const int nargs = 1;
-    static const double x = VIS_WIDTH / 2;
+    static const double x = VIS_WIDTH / 2.0;
     static const double y = VIS_HEIGHT;
     int i = 0;
     int arg = 0;
@@ -298,15 +297,16 @@ static void cmd_strum(struct commands* cmds, const char* buffer) {
         double ds, theta;
         while (i < arg) {
             radius = randdouble(1.0, 2.0);
-            life = randint(VIS_FPS_LIMIT, 2 * VIS_FPS_LIMIT);
+            life = randint(drawer_get_configured_fps(cmds->drawer),
+                2 * drawer_get_configured_fps(cmds->drawer));
             r = randfloat(0.0f, 0.4f);
             g = randfloat(0.0f, 0.7f);
             b = randfloat(0.0f, 1.0f);
             pe = new_pextra(r, g, b, VIS_BLEND_LINEAR);
             p = particle_new(x, y, radius, life, pe);
             ds = randdouble(0.1, 3.0);
-            theta = randdouble(0.0, 2*M_PI);
-            particle_push(p, ds*cos(theta), ds*sin(theta));
+            theta = randdouble(0.0, 2 * M_PI);
+            particle_push(p, ds * cos(theta), ds * sin(theta));
             particle_set_force(p, VIS_FORCE_FRICTION);
             particle_set_limit(p, VIS_LIMIT_SPRINGBOX);
             plist_add(cmds->particles, p);
@@ -333,7 +333,8 @@ static void cmd_rain(struct commands* cmds, const char* buffer) {
             x = randint(0, VIS_WIDTH);
             y = 0;
             radius = randdouble(0.5, 1.5);
-            life = randint(VIS_FPS_LIMIT * 5, VIS_FPS_LIMIT / 5);
+            life = randint(drawer_get_configured_fps(cmds->drawer) * 5,
+                drawer_get_configured_fps(cmds->drawer) / 5);
             r = 0.0f;
             g = randfloat(0.1f, 0.3f);
             b = randfloat(0.4f, 1.0f);
@@ -341,7 +342,7 @@ static void cmd_rain(struct commands* cmds, const char* buffer) {
             p = particle_new(x, y, radius, life, pe);
             ds = randdouble(0.0, 1.0);
             theta = M_PI * 3 / 2;
-            particle_push(p, ds*cos(theta), ds*sin(theta));
+            particle_push(p, ds * cos(theta), ds * sin(theta));
             particle_set_force(p, VIS_FORCE_GRAVITY);
             particle_set_limit(p, VIS_DEFAULT_LIMIT);
             plist_add(cmds->particles, p);
@@ -354,7 +355,7 @@ static void cmd_rain(struct commands* cmds, const char* buffer) {
 
 static void cmd_load(struct commands* cmds, const char* buffer) {
     if (strlen(buffer) > strlen("load ")) {
-        flist* fl = script_run(cmds->script, buffer + strlen("load "));
+        flist_t fl = script_run(cmds->script, buffer + strlen("load "));
         if (fl != NULL) {
             emitter_schedule(fl);
         } else {
@@ -373,8 +374,7 @@ static void cmd_lua(struct commands* cmds, const char* buffer) {
     }
 }
 
-static void cmd_audio(UNUSED_PARAM(struct commands* cmds),
-                      const char* buffer) {
+static void cmd_audio(UNUSED_PARAM(struct commands* cmds), const char* buffer) {
     if (strlen(buffer) > strlen("audio ")) {
         audio_open(buffer + strlen("audio "));
     } else {
@@ -382,9 +382,9 @@ static void cmd_audio(UNUSED_PARAM(struct commands* cmds),
     }
 }
 
-static void cmd_exit(UNUSED_PARAM(struct commands* cmds),
-                     UNUSED_PARAM(const char* buffer)) {
-    /* depends on the gc freeing everything else */
+static void cmd_exit(
+    UNUSED_PARAM(struct commands* cmds), UNUSED_PARAM(const char* buffer)) {
+    /* this depends on the gc freeing everything else */
     cmds->should_exit = TRUE;
     cmds->exit_status = CMD_ERROR_NONE;
 }
@@ -393,27 +393,29 @@ static void cmd_help(UNUSED_PARAM(struct commands* cmds), const char* buffer) {
     size_t i = 0;
     if (startswith(buffer, "help emit")) {
         const char* help[] = {
-"instantaneous emit command (please see README.md):\n",
-"emit n x y ux uy rad urad ds uds theta utheta life ulife r g b ur ug ub "
-    "force limit blender\n",
-"\tx = random(x-ux, x+ux); u<val> is \"uncertainty\" or variance for <val>\n",
-"\tn, life, ulife, force, limit, and blender are all integers\n",
-"\ttheta is between 0 and 2*PI\n",
-"\tlife is measured in frames (30 per second), so 60 is two seconds\n",
-"\tr, g, b are between 0 and 255\n",
-"\tforces: 0=nothing, 1=friction 2=gravity\n",
-"\tlimits: 0=nothing, 1=box (stop at edge), 2=springbox (bounce off edge)\n",
-"\tblender: 0=nothing, 1=linear (fade to black), 2=quadratic, 3=ease-out\n",
-NULL
-        };
+            "instantaneous emit command (please see README.md):\n",
+            "emit n x y ux uy rad urad ds uds theta utheta life ulife r g b ur "
+            "ug ub "
+            "force limit blender\n",
+            "\tx = random(x-ux, x+ux); u<val> is \"uncertainty\" or variance "
+            "for <val>\n",
+            "\tn, life, ulife, force, limit, and blender are all integers\n",
+            "\ttheta is between 0 and 2*PI\n",
+            "\tlife is measured in frames (30 per second), so 60 is two "
+            "seconds\n",
+            "\tr, g, b are between 0 and 255\n",
+            "\tforces: 0=nothing, 1=friction 2=gravity\n",
+            "\tlimits: 0=nothing, 1=box (stop at edge), 2=springbox (bounce "
+            "off edge)\n",
+            "\tblender: 0=nothing, 1=linear (fade to black), 2=quadratic, "
+            "3=ease-out\n",
+            NULL};
         for (i = 0; help[i]; ++i) {
             printf("%s", help[i]);
         }
     } else {
         for (i = 0; commands[i].cmd != NULL; ++i) {
-            printf("Command: \"%s\": %s\n", commands[i].cmd,
-                   commands[i].synopsis);
+            printf("Command: \"%s\": %s\n", commands[i].cmd, commands[i].synopsis);
         }
     }
 }
-

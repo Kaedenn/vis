@@ -1,0 +1,6 @@
+This directory contains files I downloaded from 3rdparty sources. I do not
+claim to own license or copyright on any source code in this directory.
+
+miniaudio - https://github.com/mackron/miniaudio
+
+stb_image_write - https://github.com/nothings/stb

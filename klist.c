@@ -1,6 +1,6 @@
 
-#include "helper.h"
 #include "klist.h"
+#include "helper.h"
 
 struct klist_node {
     struct klist_node* prev;
@@ -22,9 +22,9 @@ static struct klist_node* klist_node_new(const char* str) {
 
 static void klist_node_free(struct klist_node* node) {
     if (node && node->str) {
-        DBFREE(node->str);
+        DZFREE(node->str);
     }
-    DBFREE(node);
+    DZFREE(node);
 }
 
 klist klist_new(void) {
@@ -35,7 +35,7 @@ void klist_free(klist l) {
     while (!klist_empty(l)) {
         DBFREE(klist_shift(l));
     }
-    DBFREE(l);
+    DZFREE(l);
 }
 
 char* klist_shift(klist l) {
@@ -142,4 +142,3 @@ BOOL klist_empty(klist l) {
     }
     return l->length == 0;
 }
-

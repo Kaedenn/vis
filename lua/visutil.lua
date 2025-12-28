@@ -3,10 +3,21 @@ bit32 = require('bit32')
 
 VisUtil = {}
 
+--[[ FIXME
+-- Argument parsing
+--
+-- Change the many-objects paradigm to a list-of-objects paradigm.
+--  -> Create VisUtil.Arg.Argument object
+--
+-- Multi-arg arguments (eg. -V,--volume) aren't always grouped together
+-- in --help.
+--]]
+
 VisUtil.EMIT_FIELDS = {
-    "count", "when", "x", "y", "ux", "uy", "radius", "uradius",
-    "ds", "uds", "theta", "utheta", "life", "ulife", "r", "g", "b",
-    "ur", "ug", "ub", "force", "limit", "blender"
+    "count", "when", "x", "y", "ux", "uy", "s", "us",
+    "radius", "uradius", "ds", "uds", "theta", "utheta",
+    "life", "ulife", "r", "g", "b", "ur", "ug", "ub",
+    "force", "limit", "blender", "tag"
 }
 
 VisUtil.COLOR = {}
@@ -119,6 +130,7 @@ function VisUtil.Args:new()
     o._arghelp = {}
     o._envhelp = {}
     o._helpstrs = {}
+    o._defaults = {}
     o._getenv = os.getenv -- for testing only
     setmetatable(o, self)
     self.__index = self
@@ -129,40 +141,52 @@ function VisUtil.Args:new()
     o:link_arg_env("--help", "VIS_HELP")
     return o
 end
+
 function VisUtil.Args:_ensure_self()
     assert(type(self) == "table")
     assert(type(self._args) == "table", VisUtil.strobject(self))
 end
+
 function VisUtil.Args:add(arg, valuetype, help)
     self:_ensure_self()
     self._args[arg] = valuetype
     self._arghelp[arg] = help
     table.insert(self._arglist, {[arg] = valuetype})
 end
+
 function VisUtil.Args:add_env(arg, valuetype, help)
     self:_ensure_self()
     self._envs[arg] = valuetype
     self._envhelp[arg] = help
     table.insert(self._envlist, {[arg] = valuetype})
 end
+
 function VisUtil.Args:link_arg_env(arg, env)
     self:_ensure_self()
     self._links[arg] = env
     table.insert(self._linklist, {[arg] = env})
 end
+
+function VisUtil.Args:set_default(arg, value)
+    self:_ensure_self()
+    self._defaults[arg] = value
+end
+
 function VisUtil.Args:add_help(helpstr)
     self:_ensure_self()
     self._helpstrs[#self._helpstrs+1] = helpstr
 end
+
 function VisUtil.Args:_get_max_arglen(args)
     self:_ensure_self()
     local maxw = 0
-    for arg,argtype in pairs(args or self._args) do
+    for arg, argtype in pairs(args or self._args) do
         maxw = math.max(maxw, (#self:_strarg(arg, argtype)))
     end
     return maxw
 end
-function VisUtil.Args:_strarg(arg, argtype, maxw, help)
+
+function VisUtil.Args:_strarg(arg, argtype, maxw, help, default)
     self:_ensure_self()
     local s = ''
     if argtype == "nil" then
@@ -176,8 +200,12 @@ function VisUtil.Args:_strarg(arg, argtype, maxw, help)
     if help ~= nil then
         s = s .. help
     end
+    if default ~= nil then
+        s = s .. (" (default %s)"):format(default)
+    end
     return s .. "\n"
 end
+
 function VisUtil.Args:help(execname)
     self:_ensure_self()
     execname = execname or "<program>"
@@ -209,13 +237,15 @@ function VisUtil.Args:help(execname)
     maxlen = self:_get_max_arglen(self._args)
     for _, arg in pairs(argsort) do
         argtype = self._args[arg]
-        arg_str = arg_str .. self:_strarg(arg, argtype, maxlen, self._arghelp[arg])
+        arg_str = arg_str .. self:_strarg(arg, argtype, maxlen,
+                self._arghelp[arg], self._defaults[arg])
     end
 
     maxlen = self:_get_max_arglen(self._envs)
     for _, env in pairs(envsort) do
         envtype = self._envs[env]
-        env_str = env_str .. self:_strarg(env, envtype, maxlen, self._envhelp[env])
+        env_str = env_str .. self:_strarg(env, envtype, maxlen,
+                self._envhelp[env])
     end
 
     argsort = {}
@@ -246,18 +276,24 @@ function VisUtil.Args:help(execname)
 
     return toplevel
 end
+
 function VisUtil.Args:parse(args)
     self:_ensure_self()
-    if args == nil then args = Arguments end
+    if args == nil then
+        args = Arguments
+    end
     local errtab = VisUtil.Args.ERRORS
     local parsed = {}
     local parsedenv = {}
-    local function doerror(errstr, arg) return nil, errstr:format(arg) end
+    local function doerror(errstr, arg)
+        return nil, nil, errstr:format(arg)
+    end
     local function ensure(value, valuetype)
-        VisUtil.Debug(("ensure(%s, %s)"):format(tostring(value), tostring(valuetype)))
         if valuetype == nil or valuetype == "nil" then
             return 1
-        elseif value == nil then
+        end
+        VisUtil.Debug(("ensure(%s, %s)"):format(tostring(value), tostring(valuetype)))
+        if value == nil then
             return doerror(errtab.E_NILVAL, valuetype)
         elseif valuetype == "string" then
             return value
@@ -267,7 +303,6 @@ function VisUtil.Args:parse(args)
             end
             return tonumber(value)
         elseif valuetype == "boolean" or valuetype == "bool" then
-            local strbool = {"false", "true"}
             if value == "true" then return true end
             if value == "false" then return false end
             if value == "1" then return true end
@@ -277,8 +312,11 @@ function VisUtil.Args:parse(args)
             return doerror(errtab.E_UNKVALTP, valuetype)
         end
     end
+    for arg, val in pairs(self._defaults) do
+        parsed[arg] = val
+    end
     for idx = 1,#args do
-        for arg,val in pairs(self._args) do
+        for arg, val in pairs(self._args) do
             if args[idx] == arg then
                 if val == nil then
                     parsed[arg] = 1
@@ -294,12 +332,12 @@ function VisUtil.Args:parse(args)
             end
         end
     end
-    for env,envtype in pairs(self._envs) do
+    for env, envtype in pairs(self._envs) do
         if self._getenv(env) ~= nil then
             parsedenv[env] = ensure(self._getenv(env), envtype)
         end
     end
-    for arg,env in pairs(self._links) do
+    for arg, env in pairs(self._links) do
         if parsed[arg] ~= parsedenv[env] then
             if parsed[arg] ~= nil and parsedenv[env] ~= nil then
                 parsed[arg] = parsedenv[env]
@@ -314,6 +352,7 @@ function VisUtil.Args:parse(args)
     end
     if parsed['-h'] or parsed['--help'] then
         print(self:help())
+        os.exit()
     end
     return parsed, parsedenv, nil
 end
@@ -367,23 +406,41 @@ function VisUtil.color_emit_table_v2(t, rgb, urgb)
 end
 
 function VisUtil.emit_table(t)
-    local x
-    local y
-    x, y = VisUtil.wrap_coord(t.x, t.y)
-    Vis.emit(Vis.flist, t.count, t.when, x, y, t.ux, t.uy,
-             t.radius, t.uradius, t.ds, t.uds, t.theta, t.utheta,
-             t.life, t.ulife, t.r, t.g, t.b, t.ur, t.ug, t.ub,
-             t.force, t.limit, t.blender)
+    local x, y = VisUtil.wrap_coord(t.x, t.y)
+    Vis.emit(Vis.flist, t.count, t.when, {
+        x = x, y = y,
+        ux = t.ux, uy = t.uy,
+        s = t.s, us = t.us,
+        rad = t.radius, urad = t.uradius,
+        ds = t.ds, uds = t.uds,
+        theta = t.theta, utheta = t.utheta,
+        life = t.life, ulife = t.ulife,
+        r = t.r, g = t.g, b = t.b,
+        ur = t.ur, ug = t.ug, ub = t.ub,
+        force = t.force,
+        limit = t.limit,
+        blender = t.blender,
+        tag = t.tag
+    })
 end
 
 function VisUtil.emit_table_now(t)
-    local x
-    local y
-    x, y = VisUtil.wrap_coord(t.x, t.y)
-    Vis.emitnow(Vis.script, t.count, x, y, t.ux, t.uy,
-                t.radius, t.uradius, t.ds, t.uds, t.theta, t.utheta,
-                t.life, t.ulife, t.r, t.g, t.b, t.ur, t.ug, t.ub,
-                t.force, t.limit, t.blender)
+    local x, y = VisUtil.wrap_coord(t.x, t.y)
+    Vis.emitnow(Vis.script, t.count, {
+        x = x, y = y,
+        ux = t.ux, uy = t.uy,
+        s = t.s, us = t.us,
+        rad = t.radius, urad = t.uradius,
+        ds = t.ds, uds = t.uds,
+        theta = t.theta, utheta = t.utheta,
+        life = t.life, ulife = t.ulife,
+        r = t.r, g = t.g, b = t.b,
+        ur = t.ur, ug = t.ug, ub = t.ub,
+        force = t.force,
+        limit = t.limit,
+        blender = t.blender,
+        tag = t.tag,
+    })
 end
 
 function VisUtil.seek_to(t)
@@ -451,7 +508,7 @@ function VisUtil.strobject(o, i, seen, whereami, maxi)
         local s = "{"
         local f = true
         local sorted = {}
-        for k,v in pairs(o) do
+        for k, v in pairs(o) do
             table.insert(sorted, k)
         end
         table.sort(sorted)

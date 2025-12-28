@@ -1,25 +1,21 @@
+#include "defines.h"
 
-#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <time.h>
 
-#include <SDL.h>
+#include <GL/glew.h>
+#include <GLFW/glfw3.h>
 
-#include "async.h"
 #include "audio.h"
 #include "clargs.h"
 #include "command.h"
-#include "defines.h"
 #include "drawer.h"
 #include "emit.h"
 #include "emitter.h"
-#include "gc.h"
 #include "helper.h"
-#include "mutator.h"
-#include "pextra.h"
 #include "plist.h"
+#include "plimits.h"
 #include "script.h"
 
 /* dependencies
@@ -41,7 +37,6 @@ struct global_ctx {
     int exit_status;
 };
 
-static void doevents(struct global_ctx* ctx);
 static void mainloop(struct global_ctx* ctx);
 static void animate(struct global_ctx* ctx);
 static void display(struct global_ctx* ctx);
@@ -49,18 +44,96 @@ static void advance(struct global_ctx* ctx);
 static void onkeydown(int key, struct global_ctx* ctx);
 static plist_action_id animate_particle(struct particle* p, void* userdata);
 
+const char* get_key_name(int key) {
+    static char buf[32];
+    const char* name = glfwGetKeyName(key, 0);
+    if (name) {
+        return name;
+    }
+
+    switch (key) {
+    case GLFW_KEY_ESCAPE:
+        return "Escape";
+    case GLFW_KEY_SPACE:
+        return "Space";
+    case GLFW_KEY_ENTER:
+        return "Return";
+    case GLFW_KEY_BACKSPACE:
+        return "Backspace";
+    case GLFW_KEY_UP:
+        return "Up";
+    case GLFW_KEY_DOWN:
+        return "Down";
+    case GLFW_KEY_LEFT:
+        return "Left";
+    case GLFW_KEY_RIGHT:
+        return "Right";
+    /* Add more as needed */
+    default:
+        snprintf(buf, sizeof(buf), "Key_%d", key);
+        return buf;
+    }
+}
+
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
+    struct global_ctx* ctx = (struct global_ctx*)glfwGetWindowUserPointer(window);
+    if (ctx->args->debug_level > DEBUG_NONE) {
+        DBPRINTF("Key %d (%s) scancode %d action %d mods %d", key, get_key_name(key),
+                scancode, action, mods);
+    }
+
+    if (action == GLFW_PRESS) {
+        onkeydown(key, ctx);
+        script_keydown(ctx->script, get_key_name(key), mods & GLFW_MOD_SHIFT);
+    } else if (action == GLFW_RELEASE) {
+        script_keyup(ctx->script, get_key_name(key), mods & GLFW_MOD_SHIFT);
+    }
+}
+
+void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
+    struct global_ctx* ctx = (struct global_ctx*)glfwGetWindowUserPointer(window);
+    double x, y;
+    glfwGetCursorPos(window, &x, &y);
+    UNUSED_VARIABLE(mods);
+
+    if (ctx->args->debug_level > DEBUG_NONE) {
+        DBPRINTF("Mouse %d action %d mods %d at %g %g", button, action, mods, x, y);
+    }
+
+    if (action == GLFW_PRESS) {
+        drawer_begin_trace(ctx->drawer);
+        drawer_trace(ctx->drawer, (float)x, (float)y);
+        script_mousedown(ctx->script, (int)x, (int)y, button);
+    } else if (action == GLFW_RELEASE) {
+        drawer_end_trace(ctx->drawer);
+        script_mouseup(ctx->script, (int)x, (int)y, button);
+    }
+}
+
+void cursor_position_callback(GLFWwindow* window, double x, double y) {
+    struct global_ctx* ctx = (struct global_ctx*)glfwGetWindowUserPointer(window);
+    if (ctx->args->debug_level >= DEBUG_DEBUG) {
+        DBPRINTF("Mouse move x %g y %g", x, y);
+    }
+    drawer_trace(ctx->drawer, (float)x, (float)y);
+    script_mousemove(ctx->script, (int)x, (int)y);
+}
+
+void cursor_scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
+    struct global_ctx* ctx = (struct global_ctx*)glfwGetWindowUserPointer(window);
+    if (ctx->args->debug_level > DEBUG_NONE) {
+        DBPRINTF("Mouse scroll: xoffset %f yoffset %f", xoffset, yoffset);
+    }
+    drawer_trace_scroll(ctx->drawer, (float)xoffset, (float)yoffset);
+    script_mousescroll(ctx->script, (int)xoffset, (int)yoffset);
+}
+
 int main(int argc, char* argv[]) {
     srand((unsigned)time(NULL));
-
-#ifdef VIS_SELF_TEST
-    VIS_ASSERT(sizeof(MUTATE_MAP)/sizeof(mutate_fn) == VIS_NMUTATES + 1);
-#endif
 
     struct global_ctx g;
     ZEROINIT(&g);
 
-    gc_init();
-    
     g.args = argparse(argc, argv);
     if (!g.args) {
         exit(1);
@@ -69,23 +142,30 @@ int main(int argc, char* argv[]) {
         clargs_free(g.args);
         exit(status);
     }
-    gc_add((gc_func)clargs_free, g.args);
 
-    g.drawer = drawer_new();
+    plimits_update_screen_size(g.args->wsize[0], g.args->wsize[1]);
+
+    g.drawer = drawer_new(g.args);
     if (!g.drawer) {
         exit(1);
     }
-    gc_add((gc_func)drawer_free, g.drawer);
     drawer_config(g.drawer, g.args);
-    
+
+    /* Set window user pointer to global context and register callbacks */
+    GLFWwindow* window = drawer_get_window(g.drawer);
+    glfwSetWindowUserPointer(window, &g);
+    glfwSetKeyCallback(window, key_callback);
+    glfwSetMouseButtonCallback(window, mouse_button_callback);
+    glfwSetCursorPosCallback(window, cursor_position_callback);
+    glfwSetScrollCallback(window, cursor_scroll_callback);
+
     g.particles = plist_new(VIS_PLIST_INITIAL_SIZE);
-    gc_add((gc_func)plist_free, g.particles);
-    
+
     script_cfg_mask mask = SCRIPT_ALLOW_ALL;
     if (g.args->stay_after_script) {
         mask |= SCRIPT_NO_EXIT;
     }
-    g.script = script_new(mask);
+    g.script = script_new(mask, g.args);
     if (klist_length(g.args->scriptargs) > 0) {
         script_set_args(g.script, g.args->scriptargs);
     } else {
@@ -93,29 +173,25 @@ int main(int argc, char* argv[]) {
         g.args->scriptargs = NULL;
     }
     script_set_drawer(g.script, g.drawer);
-    gc_add((gc_func)script_free, g.script);
 
-    g.cmds = command_setup(g.drawer, g.particles, g.script,
-                           g.args->interactive);
-    gc_add((gc_func)command_teardown, g.cmds);
-    
+    g.cmds = command_setup(g.drawer, g.particles, g.script, g.args->interactive);
+
     emitter_setup(g.cmds, g.particles, g.drawer);
-    gc_add((gc_func)emitter_free, NULL);
-    
+
     if (!audio_init()) {
         exit(1);
     }
     if (g.args->quiet_audio) {
         audio_mute();
     }
-    gc_add((gc_func)audio_free, NULL);
-    
+
+    /* Configure particles drawn when the user clicks and drags */
     emit_desc* emit = emit_new();
     emit->n = 100;
     emit->rad = 1;
     emit_set_life(emit, 100, 200);
     emit_set_ds(emit, 0.2, 0.2);
-    emit_set_angle(emit, 0, 2*M_PI);
+    emit_set_angle(emit, 0, 2 * M_PI);
     emit_set_color(emit, 0, 0, 0, 0.2f, 1, 1);
     emit->limit = VIS_LIMIT_SPRINGBOX;
     emit->blender = VIS_BLEND_QUADRATIC;
@@ -137,88 +213,57 @@ int main(int argc, char* argv[]) {
         g.exit_status = script_get_status(g.script);
     }
 
+    clargs_free(g.args);
+    drawer_free(g.drawer);
+    plist_free(g.particles);
+    command_teardown(g.cmds);
+    emitter_free();
+    audio_free();
+    script_free(g.script);
+
     return g.exit_status;
 }
 
 void onkeydown(int sym, struct global_ctx* ctx) {
     switch (sym) {
-        case SDLK_ESCAPE:
-            ctx->should_exit = TRUE;
-            break;
-        case SDLK_SPACE:
-            if (ctx->paused) {
-                audio_play();
-            } else {
-                audio_pause();
-            }
-            ctx->paused = !ctx->paused;
-            break;
-        default:
-            break;
-    }
-}
-
-void doevents(struct global_ctx* ctx) {
-    SDL_Event e;
-    SDL_zero(e);
-    while (SDL_PollEvent(&e)) {
-        switch (e.type) {
-            case SDL_MOUSEBUTTONDOWN:
-                drawer_begin_trace(ctx->drawer);
-                drawer_trace(ctx->drawer, (float)e.button.x,
-                             (float)e.button.y);
-                script_mousedown(ctx->script, e.button.x, e.button.y,
-                                 e.button.button);
-                break;
-            case SDL_MOUSEMOTION:
-                drawer_trace(ctx->drawer, (float)e.motion.x,
-                             (float)e.motion.y);
-                script_mousemove(ctx->script, e.motion.x, e.motion.y);
-                break;
-            case SDL_MOUSEBUTTONUP:
-                drawer_end_trace(ctx->drawer);
-                script_mouseup(ctx->script, e.button.x, e.button.y,
-                               e.button.button);
-                break;
-            case SDL_KEYDOWN:
-                onkeydown(e.key.keysym.sym, ctx);
-                script_keydown(ctx->script, SDL_GetKeyName(e.key.keysym.sym),
-                               e.key.keysym.mod & KMOD_SHIFT);
-                break;
-            case SDL_KEYUP:
-                script_keyup(ctx->script, SDL_GetKeyName(e.key.keysym.sym),
-                             e.key.keysym.mod & KMOD_SHIFT);
-                break;
-            case SDL_QUIT:
-                ctx->should_exit = TRUE;
-                break;
-            default: { } break;
+    case GLFW_KEY_ESCAPE:
+        ctx->should_exit = TRUE;
+        break;
+    case GLFW_KEY_SPACE:
+        ctx->paused = !ctx->paused;
+        if (ctx->paused) {
+            audio_pause();
+        } else {
+            audio_play();
         }
+        break;
+    default:
+        break;
     }
 }
 
 void mainloop(struct global_ctx* ctx) {
-    SDL_Event e;
-    while (!ctx->should_exit) {
-        doevents(ctx);
+    GLFWwindow* window = drawer_get_window(ctx->drawer);
+
+    while (!ctx->should_exit && !glfwWindowShouldClose(window)) {
+        glfwPollEvents();
 
         struct script_debug dbg;
         script_get_debug(ctx->script, &dbg);
 
         script_set_debug(ctx->script, SCRIPT_DEBUG_FRAMES_EMITTED,
-                         emitter_get_frame_count(VIS_FTYPE_EMIT));
-        script_set_debug(ctx->script, SCRIPT_DEBUG_TIME_NOW,
-                         SDL_GetTicks());
+            emitter_get_frame_count(VIS_FTYPE_EMIT));
+        script_set_debug(
+            ctx->script, SCRIPT_DEBUG_TIME_NOW, (uint32_t)(glfwGetTime() * 1000.0));
         script_set_debug(ctx->script, SCRIPT_DEBUG_NUM_MUTATES,
-                         emitter_get_frame_count(VIS_FTYPE_MUTATE));
+            emitter_get_frame_count(VIS_FTYPE_MUTATE));
         script_set_debug(ctx->script, SCRIPT_DEBUG_PARTICLES_EMITTED,
-                         dbg.particles_emitted +
-                            plist_get_size(ctx->particles));
+            dbg.particles_emitted + plist_get_size(ctx->particles));
 #if DEBUG >= DEBUG_DEBUG
         script_set_debug(ctx->script, SCRIPT_DEBUG_PARTICLES_MUTATED,
-                        mutate_debug_get_particles_mutated());
+            mutate_debug_get_particles_mutated());
         script_set_debug(ctx->script, SCRIPT_DEBUG_PARTICLE_TAGS_MODIFIED,
-                        mutate_debug_get_particle_tags_modified());
+            mutate_debug_get_particle_tags_modified());
 #endif
 
         if ((ctx->exit_status = script_get_status(ctx->script)) != 0) {
@@ -230,7 +275,7 @@ void mainloop(struct global_ctx* ctx) {
         }
     }
 }
- 
+
 plist_action_id animate_particle(struct particle* p, void* userdata) {
     drawer_add_particle(((struct global_ctx*)userdata)->drawer, p);
     particle_tick(p);
@@ -262,10 +307,9 @@ void advance(struct global_ctx* ctx) {
     }
     if (command_should_exit(ctx->cmds)) {
         ctx->should_exit = TRUE;
-        ctx->exit_status = command_get_error(ctx->cmds);
+        ctx->exit_status = (int)command_get_error(ctx->cmds);
     }
     if (!ctx->paused) {
         emitter_tick();
     }
 }
-

@@ -3,8 +3,18 @@ VisUtil = require('visutil')
 
 Emit = {}
 
+local function _deduce_tag_id(obj)
+    if obj then
+        if obj.tag then
+            return obj.tag
+        end
+        return tostring(obj)
+    end
+    return math.random()
+end
+
 function Emit:new(obj)
-    local tagid = tostring(obj or math.random())
+    local tagid = _deduce_tag_id(obj)
     local o = {
         _t = VisUtil.make_emit_table(),
         _tagid = tagid,
@@ -12,6 +22,7 @@ function Emit:new(obj)
     }
     o._t = {}
     o._t = VisUtil.make_emit_table()
+    o._t.tag = tagid
     if obj ~= nil and obj._t ~= nil then
         for k,v in pairs(obj._t) do
             o._t[k] = v
@@ -31,6 +42,11 @@ function Emit:set_trace() return VisUtil.set_trace_table(self._t) end
 function Emit:str() return VisUtil.stremit(self) end
 function Emit:get(k) return self._t[k] end
 function Emit:set(k,v) self._t[k] = v end
+function Emit:update(t)
+    for k, v in pairs(t) do
+        self:set(k, v)
+    end
+end
 
 function Emit:count(n)
     self._t.count = n
@@ -40,7 +56,9 @@ function Emit:when(t)
     self._t.when = t
 end
 
-function Emit:center(x, y, ux, uy)
+function Emit:center(x, y, ux, uy, s, us)
+    self._t.s = s or 0
+    self._t.us = us or 0
     return VisUtil.center_emit_table(self._t, x, y, ux or 0, uy or 0)
 end
 

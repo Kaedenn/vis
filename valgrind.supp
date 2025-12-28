@@ -7,15 +7,6 @@
     fun:pa_mainloop_iterate
 }
 {
-    # Needed because I can't figure out how to get SDL to free everything
-    # SDL_Quit, SDL_QuitSubSystem, all with no avail
-    libsdl-so
-    Memcheck:Leak
-    match-leak-kinds: all
-    ...
-    obj:/usr/lib/x86_64-linux-gnu/libSDL2-2.0.so.0.2.0
-}
-{
     # Stack frames broken, so leak ignored
     libgl-so
     Memcheck:Leak
@@ -34,15 +25,6 @@
     libnvidia-cond
     Memcheck:Cond
     obj:/usr/lib/nvidia-331-updates/libnvidia-glcore.so.331.113
-}
-{
-    libsdl-audio-overlap
-    Memcheck:Overlap
-    fun:memcpy@@GLIBC_2.14
-    fun:open_audio_device
-    fun:SDL_OpenAudio_REAL
-    fun:audio_init
-    fun:main
 }
 {
     libpa-do-call

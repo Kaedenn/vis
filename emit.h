@@ -3,6 +3,7 @@
 
 #include "helper.h"
 #include "types.h"
+#include "pextra.h"
 
 /** main emit frame structure
  *
@@ -16,39 +17,30 @@
  * required. Direct access to struct emit members is encouraged.
  *
  * Setting force, limit, or blender fields to improper values may cause
- * abnormal program termination.
+ * crashes.
  */
 
 typedef struct emit {
-    int n;              /* number of particles to emit */
-    double x, y;        /* where to emit from */
-    double ux, uy;      /* uncertainty in x and y */
-    double rad;         /* radius */
-    double urad;        /* uncertainty in rad */
-    int life;           /* particle lifetime */
-    int ulife;          /* uncertainty in life (ha) */
-    double ds;          /* initial velocity */
-    double uds;         /* uncertainty in ds */
-    double theta;       /* initial angle */
-    double utheta;      /* uncertainty in theta */
-    float r, g, b;      /* color */
-    float ur, ug, ub;   /* uncertainty in r, g and b */
-    force_id force;     /* force function */
-    limit_id limit;     /* limit function */
-    blend_id blender;   /* blending function */
+    int n;                  /* number of particles to emit */
+    double x, y, ux, uy;    /* where to emit from (in pixel coords) */
+    double s, us;           /* radial position (added to x, y) */
+    double rad, urad;       /* radius (size) */
+    int life, ulife;        /* particle lifetime (in frames) */
+    double ds, uds;         /* initial velocity along theta */
+    double theta, utheta;   /* initial facing angle */
+    float r, g, b;          /* color */
+    float ur, ug, ub;       /* uncertainty in r, g and b */
+    force_id force;         /* force function */
+    limit_id limit;         /* limit function */
+    blend_id blender;       /* blending function */
+    union particle_tag tag; /* initial particle tag */
 } emit_desc;
-
-emit_desc* make_emit_frame(int n,
-        double x, double y, double ux, double uy,
-        double rad, double urad, double ds, double uds,
-        double theta, double utheta, int life, int ulife,
-        float r, float g, float b, float ur, float ub, float ug,
-        force_id force, limit_id limit, blend_id blend); /* sorry */
 
 emit_desc* emit_new(void);
 void emit_free(emit_desc* emit);
 
 void emit_set_n(emit_desc* e, int n);
+void emit_set_rad_pos(emit_desc* e, double s, double us);
 void emit_set_pos(emit_desc* e, double x, double y, double dx, double dy);
 void emit_set_rad(emit_desc* e, double rad, double urad);
 void emit_set_life(emit_desc* e, int life, int ulife);
@@ -59,6 +51,8 @@ void emit_set_color(emit_desc* e, float r, float g, float b,
 void emit_set_force(emit_desc* e, force_id force);
 void emit_set_limit(emit_desc* e, limit_id limit);
 void emit_set_blender(emit_desc* e, blend_id blender);
+
+void emit_set_tag(emit_desc* e, uint64_t tag);
 
 void dbprintf_emit_desc(emit_desc* e);
 

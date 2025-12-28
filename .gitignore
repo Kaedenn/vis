@@ -1,4 +1,7 @@
 
+# Reference material
+ref
+
 # Dependency files
 *.d
 .d
@@ -48,7 +51,7 @@ media/programs
 media/raw
 media/copyrighted
 docs/lua-5.2.3*
-output/*
+output
 media/bowser-intro.mp3
 media/bowser-main.mp3
 media/bowser-track-*.mp3

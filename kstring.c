@@ -43,15 +43,15 @@ kstr kstring_newfromvf(const char* fmt, ...) {
     }
 
     kstr s = kstring_newfrom(out);
-    DBFREE(out);
+    DZFREE(out);
 
     return s;
 }
 
 void kstring_free(kstr s) {
     VIS_ASSERT(s);
-    DBFREE(s->content);
-    DBFREE(s);
+    DZFREE(s->content);
+    DZFREE(s);
 }
 
 void kstring_strip(kstr s) {
@@ -97,7 +97,7 @@ void kstring_append(kstr s, const char* news) {
     char* newstr = DBMALLOC(newcap);
     strcat(newstr, s->content);
     strcat(newstr, news);
-    DBFREE(s->content);
+    DZFREE(s->content);
     s->len = newlen;
     s->capacity = newcap;
     s->content = newstr;
