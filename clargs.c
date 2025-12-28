@@ -76,7 +76,7 @@ clargs* argparse(int argc, char** argv) {
             if (argi + 1 < argc) {
                 args->dumpfile = argv[++argi];
             } else {
-                EPRINTF("Argument -%s requires value", argv[argi][1]);
+                EPRINTF("Argument -%c requires value", argv[argi][1]);
                 mark_error(args, 1);
             }
             break;
@@ -88,7 +88,7 @@ clargs* argparse(int argc, char** argv) {
                     mark_error(args, 1);
                 }
             } else {
-                EPRINTF("Argument -%s requires value", argv[argi][1]);
+                EPRINTF("Argument -%c requires value", argv[argi][1]);
                 mark_error(args, 1);
             }
             break;
@@ -97,7 +97,7 @@ clargs* argparse(int argc, char** argv) {
                 parse_wsize(
                     argv[++argi], &args->wsize[0], &args->wsize[1]);
             } else {
-                EPRINTF("Argument -%s requires value", argv[argi][1]);
+                EPRINTF("Argument -%c requires value", argv[argi][1]);
                 mark_error(args, 1);
             }
             break;
@@ -105,7 +105,7 @@ clargs* argparse(int argc, char** argv) {
             if (argi + 1 < argc) {
                 args->scriptfile = argv[++argi];
             } else {
-                EPRINTF("Argument -%s requires value", argv[argi][1]);
+                EPRINTF("Argument -%c requires value", argv[argi][1]);
                 mark_error(args, 1);
             }
             break;
@@ -113,7 +113,7 @@ clargs* argparse(int argc, char** argv) {
             if (argi + 1 < argc) {
                 args->scriptstring = argv[++argi];
             } else {
-                EPRINTF("Argument -%s requires value", argv[argi][1]);
+                EPRINTF("Argument -%c requires value", argv[argi][1]);
                 mark_error(args, 1);
             }
             break;
@@ -121,7 +121,7 @@ clargs* argparse(int argc, char** argv) {
             if (argi + 1 < argc) {
                 klist_append(args->scriptargs, argv[++argi]);
             } else {
-                EPRINTF("Argument -%s requires value", argv[argi][1]);
+                EPRINTF("Argument -%c requires value", argv[argi][1]);
                 mark_error(args, 1);
             }
             break;
@@ -129,7 +129,7 @@ clargs* argparse(int argc, char** argv) {
             if (argi + 1 < argc) {
                 args->commandfile = argv[++argi];
             } else {
-                EPRINTF("Argument -%s requires value", argv[argi][1]);
+                EPRINTF("Argument -%c requires value", argv[argi][1]);
                 mark_error(args, 1);
             }
             break;
@@ -137,7 +137,7 @@ clargs* argparse(int argc, char** argv) {
             if (argi + 1 < argc) {
                 args->frameskip = strtoi(argv[++argi]);
             } else {
-                EPRINTF("Argument -%s requires value", argv[argi][1]);
+                EPRINTF("Argument -%c requires value", argv[argi][1]);
                 mark_error(args, 1);
             }
             break;
