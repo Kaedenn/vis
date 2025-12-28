@@ -32,6 +32,7 @@ Letters.find_extents = function(s)
     return width - 1, height
 end
 
+-- Call func(x, y) for each "on pixel" in the given letter
 Letters.map_fn_xy = function(letter, func)
     if Letters[letter] == nil then letter = '?' end
     for i,bit in ipairs(Letters[letter]) do

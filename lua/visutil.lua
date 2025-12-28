@@ -312,6 +312,9 @@ function VisUtil.Args:parse(args)
             return doerror(errtab.E_UNKVALTP, valuetype)
         end
     end
+    for arg, val in pairs(self._defaults) do
+        parsed[arg] = val
+    end
     for idx = 1,#args do
         for arg, val in pairs(self._args) do
             if args[idx] == arg then
@@ -327,11 +330,6 @@ function VisUtil.Args:parse(args)
                 end
                 break
             end
-        end
-    end
-    for arg, val in pairs(self._defaults) do
-        if parsed[arg] == nil then
-            parsed[arg] = val
         end
     end
     for env, envtype in pairs(self._envs) do
