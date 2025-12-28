@@ -25,7 +25,7 @@ prng* random_new(int seed) {
 }
 
 void random_free(prng* rng) {
-    DBFREE(rng);
+    DZFREE(rng);
 }
 
 int random_reseed(prng* rng, int newseed) {

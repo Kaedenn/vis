@@ -79,7 +79,7 @@ void command_teardown(struct commands* cmds) {
     if (cmds->interactive) {
         async_write_stdout("\n");
     }
-    DBFREE(cmds);
+    DZFREE(cmds);
 }
 
 BOOL command_should_exit(struct commands* cmds) {

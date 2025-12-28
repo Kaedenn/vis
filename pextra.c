@@ -14,7 +14,7 @@ pextra* new_pextra(float red, float green, float blue, blend_id blender) {
 }
 
 void free_pextra(pextra* extra) {
-    DBFREE(extra);
+    DZFREE(extra);
 }
 
 uint64_t pextra_hash_string(const char* string) {

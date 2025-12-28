@@ -83,6 +83,6 @@ char* stralloc(size_t nchars);
 char* allocat(char* dest, const char* source, size_t* bufsize);
 
 /* parse a window size like 1280x720 */
-BOOL parse_window_size(const char* arg, unsigned int* width, unsigned int* height);
+BOOL parse_wsize(const char* arg, unsigned int* width, unsigned int* height);
 
 #endif

@@ -6,7 +6,7 @@ emit_desc* emit_new(void) {
 }
 
 void emit_free(emit_desc* emit) {
-    DBFREE(emit);
+    DZFREE(emit);
 }
 
 void emit_set_n(emit_desc* e, int n) {

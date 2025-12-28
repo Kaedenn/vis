@@ -47,7 +47,7 @@ struct drawer {
     GLuint vao;
     GLuint vbo;
     shader_t* shader;
-    unsigned int window_size[2];
+    unsigned int wsize[2];
     int frames_per_second;
 
     vertex_t* vertex_array;
@@ -87,8 +87,8 @@ drawer_t drawer_new(const clargs* args) {
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
-    int winwidth = (int)drawer->window_size[0];
-    int winheight = (int)drawer->window_size[1];
+    int winwidth = (int)drawer->wsize[0];
+    int winheight = (int)drawer->wsize[1];
     drawer->window = glfwCreateWindow(winwidth, winheight, "Vis", NULL, NULL);
     if (!drawer->window) {
         EPRINTF("%s\n", "Failed to create GLFW window");
@@ -173,9 +173,9 @@ void drawer_free(drawer_t drawer) {
         (fc_want - fc_have) / drawer->frames_per_second);
     DBPRINTF("error ratio: 1-(S*FPS/F) %g", 1 - fc_want / fc_have);
 
-    DBFREE(drawer->vertex_array);
+    DZFREE(drawer->vertex_array);
     if (drawer->dump_file_fmt) {
-        DBFREE(drawer->dump_file_fmt);
+        DZFREE(drawer->dump_file_fmt);
     }
 
     glDeleteVertexArrays(1, &drawer->vao);
@@ -185,8 +185,8 @@ void drawer_free(drawer_t drawer) {
     glfwDestroyWindow(drawer->window);
     glfwTerminate();
 
-    DBFREE(drawer->emit);
-    DBFREE(drawer);
+    DZFREE(drawer->emit);
+    DZFREE(drawer);
 }
 
 GLFWwindow* drawer_get_window(drawer_t drawer) {
@@ -204,8 +204,8 @@ int drawer_add_particle(drawer_t drawer, particle* p) {
     if (drawer->vertex_curr < drawer->vertex_count) {
         vertex_t* v = &drawer->vertex_array[drawer->vertex_curr];
 
-        v->x = 2 * ((GLfloat)p->x / (GLfloat)drawer->window_size[0] - 0.5f);
-        v->y = 2 * (0.5f - (GLfloat)p->y / (GLfloat)drawer->window_size[1]);
+        v->x = 2 * ((GLfloat)p->x / (GLfloat)drawer->wsize[0] - 0.5f);
+        v->y = 2 * (0.5f - (GLfloat)p->y / (GLfloat)drawer->wsize[1]);
         v->radius = (GLfloat)p->radius;
 
         v->r = (GLfloat)pe->r;
@@ -249,7 +249,7 @@ int drawer_draw_to_screen(drawer_t drawer) {
             if (!render_to_file(drawer, kstring_content(s))) {
                 EPRINTF("Failed to dump frame %s", kstring_content(s));
             }
-            DBFREE(s);
+            DZFREE(s);
         }
     }
 
@@ -333,13 +333,13 @@ void drawer_config(drawer_t drawer, const clargs* args) {
     if (drawer->verbose_trace) {
         DBPRINTF("\t%s", "drawer->verbose_trace = TRUE");
     }
-    drawer->window_size[0] = args->window_size[0];
-    drawer->window_size[1] = args->window_size[1];
+    drawer->wsize[0] = args->wsize[0];
+    drawer->wsize[1] = args->wsize[1];
 }
 
 void drawer_set_dumpfile_template(drawer_t drawer, const char* path) {
     if (drawer->dump_file_fmt) {
-        DBFREE(drawer->dump_file_fmt);
+        DZFREE(drawer->dump_file_fmt);
     }
     drawer->dump_file_fmt = strdup(path);
 }
@@ -366,7 +366,7 @@ void drawer_trace(drawer_t drawer, float x, float y) {
     if (drawer->verbose_trace) {
         char* line = genlua_emit(drawer->emit, drawer->fps.framecount);
         printf("%s\n", line);
-        DBFREE(line);
+        DZFREE(line);
     }
 }
 
@@ -402,8 +402,8 @@ double calculate_blend(particle* p) {
 }
 
 BOOL render_to_file(drawer_t drawer, const char *path) {
-    int width = (int)drawer->window_size[0];
-    int height = (int)drawer->window_size[1];
+    int width = (int)drawer->wsize[0];
+    int height = (int)drawer->wsize[1];
     int stride = width * 4;
     /* allocate buffer for RGBA */
     unsigned char* buffer = DBMALLOC((size_t)stride * (size_t)height);
@@ -421,10 +421,10 @@ BOOL render_to_file(drawer_t drawer, const char *path) {
     
     if (!stbi_write_png(path, width, height, 4, buffer, stride)) {
         EPRINTF("Failed to write image to %s", path);
-        DBFREE(buffer);
+        DZFREE(buffer);
         return FALSE;
     }
 
-    DBFREE(buffer);
+    DZFREE(buffer);
     return TRUE;
 }

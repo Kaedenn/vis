@@ -207,7 +207,7 @@ char* escape_string(const char* str) {
     return result;
 }
 
-BOOL parse_window_size(const char* arg, unsigned* width, unsigned* height) {
+BOOL parse_wsize(const char* arg, unsigned* width, unsigned* height) {
     VIS_ASSERT(arg != NULL);
     VIS_ASSERT(width != NULL);
     VIS_ASSERT(height != NULL);

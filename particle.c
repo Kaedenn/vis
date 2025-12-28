@@ -85,7 +85,7 @@ particle* particle_new_circle(double x, double y,
 
 void particle_free(particle* p) {
     free_pextra(p->extra);
-    DBFREE(p);
+    DZFREE(p);
 }
 
 void particle_push(particle* p, double dx, double dy) {

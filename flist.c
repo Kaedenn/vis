@@ -44,14 +44,14 @@ static void flist_node_free(flist_node* fn) {
         if (fn->type == VIS_FTYPE_EMIT) {
             emit_free(fn->data.frame);
         } else if (fn->type == VIS_FTYPE_CMD) {
-            DBFREE(fn->data.frame);
+            DZFREE(fn->data.frame);
         } else if (fn->type == VIS_FTYPE_BGCOLOR) {
         } else if (fn->type == VIS_FTYPE_MUTATE) {
-            DBFREE(fn->data.method);
+            DZFREE(fn->data.method);
         } else if (fn->type == VIS_FTYPE_SCRIPTCB) {
             script_callback_free(fn->data.scriptcb);
         }
-        DBFREE(fn);
+        DZFREE(fn);
     }
 }
 
@@ -73,7 +73,7 @@ void flist_free(flist_t fl) {
         flist_node_free(fl->frames[i]);
         ++i;
     }
-    DBFREE(fl);
+    DZFREE(fl);
 }
 
 void flist_insert(flist_t fl, fnum when, flist_node* fn) {

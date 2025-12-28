@@ -17,8 +17,8 @@ void plist_free(plist_t plist) {
     for (i = 0; i < plist->size; ++i) {
         particle_free((plist->particles)[i]);
     }
-    DBFREE(plist->particles);
-    DBFREE(plist);
+    DZFREE(plist->particles);
+    DZFREE(plist);
 }
 
 size_t plist_get_capacity(plist_t plist) {

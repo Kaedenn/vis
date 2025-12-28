@@ -143,7 +143,7 @@ int main(int argc, char* argv[]) {
         exit(status);
     }
 
-    plimits_update_screen_size(g.args->window_size[0], g.args->window_size[1]);
+    plimits_update_screen_size(g.args->wsize[0], g.args->wsize[1]);
 
     g.drawer = drawer_new(g.args);
     if (!g.drawer) {
