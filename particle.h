@@ -3,6 +3,7 @@
 #define VIS_PARTICLE_HEADER_INCLUDED_ 1
 
 #include "defines.h"
+#include "pextra.h"
 #include "types.h"
 #include <stdlib.h>
 
@@ -19,17 +20,17 @@ typedef struct particle {
     int life;
     force_id force;
     limit_id limit;
-    void* extra;
+    pextra* extra;
 } particle;
 
 /* create a simple particle with default values */
-particle* particle_new(double x, double y, double r, int life, void* extra);
+particle* particle_new(double x, double y, double r, int life, pextra* extra);
 
 /* create a particle with an X/Y position */
 particle* particle_new_full(double x, double y, double ux, double uy,
                             double r, double ur, double ds, double uds,
                             double theta, double utheta, int life, int ulife,
-                            force_id force, limit_id limit, void* extra);
+                            force_id force, limit_id limit, pextra* extra);
 
 /* create a particle with both X/Y position and circle offset */
 particle* particle_new_circle(double x, double y, double ux, double uy,
@@ -37,7 +38,7 @@ particle* particle_new_circle(double x, double y, double ux, double uy,
                               double ds, double uds,
                               double theta, double utheta,
                               int life, int ulife,
-                              force_id force, limit_id limit, void* extra);
+                              force_id force, limit_id limit, pextra* extra);
 
 /* destructor */
 void particle_free(particle* p);
@@ -46,6 +47,9 @@ void particle_free(particle* p);
 void particle_push(particle* p, double dx, double dy);
 void particle_set_force(particle* p, force_id force);
 void particle_set_limit(particle* p, limit_id limit);
+
+/* values less than 0 preserve color; values are clamped to 0..1 */
+void particle_set_color(particle* p, float r, float g, float b, float a);
 
 /* special function for a particle's life to continue */
 void particle_tick(particle* p);
@@ -60,7 +64,7 @@ double particle_get_dy(particle* p);
 double particle_get_radius(particle* p);
 int particle_get_lifetime(particle* p);
 int particle_get_life(particle* p);
-void* particle_get_extra(particle* p);
+pextra* particle_get_extra(particle* p);
 #else
 #define particle_is_alive(p) ((p)->life > 0)
 #define particle_get_x(p) ((p)->x)

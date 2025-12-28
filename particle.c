@@ -12,7 +12,7 @@
 #include <stdlib.h>
 #include <math.h>
 
-particle* particle_new(double x, double y, double r, int life, void* extra) {
+particle* particle_new(double x, double y, double r, int life, pextra* extra) {
     particle* p = DBMALLOC(sizeof(particle));
     p->x = x;
     p->y = y;
@@ -34,7 +34,7 @@ particle* particle_new_full(double x, double y,
                             double theta, double utheta,
                             int life, int ulife,
                             force_id force, limit_id limit,
-                            void* extra) {
+                            pextra* extra) {
     particle* p = DBMALLOC(sizeof(particle));
     
     double t = randdouble(theta-utheta, theta+utheta);
@@ -64,7 +64,7 @@ particle* particle_new_circle(double x, double y,
                               double ds, double uds,
                               double theta, double utheta,
                               int life, int ulife,
-                              force_id force, limit_id limit, void* extra) {
+                              force_id force, limit_id limit, pextra* extra) {
     particle* p = DBMALLOC(sizeof(particle));
 
     double angle = randdouble(theta-utheta, theta+utheta);
@@ -101,6 +101,17 @@ void particle_set_limit(particle* p, limit_id limit) {
     p->limit = limit;
 }
 
+void particle_set_color(particle* p, float r, float g, float b, float a) {
+    if (p->extra) {
+        if (r >= 0) p->extra->r = clampf(r, 0, 1);
+        if (g >= 0) p->extra->g = clampf(g, 0, 1);
+        if (b >= 0) p->extra->b = clampf(b, 0, 1);
+        if (a >= 0) p->extra->a = clampf(a, 0, 1);
+    } else {
+        DBPRINTF("Ignoring particle_set_color; no pextra on particle");
+    }
+}
+
 void particle_tick(particle* p) {
     p->x += p->dx;
     p->y += p->dy;
@@ -120,6 +131,6 @@ inline double particle_get_dy(particle* p) { return p->dy; }
 inline double particle_get_radius(particle* p) { return p->radius; }
 inline int particle_get_life(particle* p) { return p->life; }
 inline int particle_get_lifetime(particle* p) { return p->lifetime; }
-inline void* particle_get_extra(particle* p) { return p->extra; }
+inline pextra* particle_get_extra(particle* p) { return p->extra; }
 #endif
 

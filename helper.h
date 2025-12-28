@@ -7,11 +7,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-/* for M_PI and other stuff */
-#ifndef _DEFAULT_SOURCE
-#define _DEFAULT_SOURCE 1
-#endif
-
 /* open or print the appropriate error */
 FILE* try_fopen(const char* path, const char* mode);
 
@@ -35,6 +30,7 @@ void do_assert(BOOL cond, const char* message, const char* file, int line);
 #define DBFREE(ptr) free((ptr))
 #endif
 
+/* protect against use-after-free mistakes */
 #define DZFREE(ptr) do { DBFREE(ptr); ptr = NULL; } while (0)
 
 #if DEBUG > DEBUG_VERBOSE
@@ -45,16 +41,8 @@ void do_assert(BOOL cond, const char* message, const char* file, int line);
 #define WHEREAMI_STDERR()
 #endif
 
-#define EPRINTF(fmt, ...) \
-    do { \
-        WHEREAMI_STDERR(); \
-        eprintf(fmt, __VA_ARGS__); \
-    } while (0)
-#define DBPRINTF(fmt, ...) \
-    do { \
-        WHEREAMI_STDERR(); \
-        dbprintf(fmt, __VA_ARGS__); \
-    } while (0)
+#define EPRINTF(...) do { WHEREAMI_STDERR(); eprintf(__VA_ARGS__); } while (0)
+#define DBPRINTF(...) do { WHEREAMI_STDERR(); dbprintf(__VA_ARGS__); } while (0)
 
 #define ZEROINIT(p) memset(p, '\0', sizeof(*p))
 
@@ -84,5 +72,13 @@ char* allocat(char* dest, const char* source, size_t* bufsize);
 
 /* parse a window size like 1280x720 */
 BOOL parse_wsize(const char* arg, unsigned int* width, unsigned int* height);
+
+/* helpful math functions */
+int clampi(int value, int low, int high);
+float clampf(float value, float low, float high);
+double clampd(double value, double low, double high);
+
+float lerpf(float v0, float v1, float t);
+double lerpd(double v0, double v1, double t);
 
 #endif

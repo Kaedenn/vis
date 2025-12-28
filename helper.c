@@ -214,3 +214,25 @@ BOOL parse_wsize(const char* arg, unsigned* width, unsigned* height) {
     int result = sscanf(arg, "%ux%u", width, height);
     return result == 2;
 }
+
+int clampi(int value, int low, int high) {
+    return value < low ? low : (value > high ? high : value);
+}
+
+float clampf(float value, float low, float high) {
+    return value < low ? low : (value > high ? high : value);
+}
+
+double clampd(double value, double low, double high) {
+    return value < low ? low : (value > high ? high : value);
+}
+
+float lerpf(float v0, float v1, float t) {
+    return v0 + t * (v1 - v0);
+}
+
+double lerpd(double v0, double v1, double t) {
+    return v0 + t * (v1 - v0);
+}
+
+
