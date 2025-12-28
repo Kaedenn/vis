@@ -32,7 +32,7 @@
 #define DEBUG_EXPRESSION(x)
 #endif
 
-/* lua startup file */
+/* file ran after Vis module construction and before all other code */
 #ifndef LUA_STARTUP_FILE
 #define LUA_STARTUP_FILE "lua/startup.lua"
 #endif
@@ -44,7 +44,7 @@
 /* constants for the frame array's length */
 /* use -DVIS_FRAMES=N to override */
 #ifndef VIS_NFRAMES
-#define VIS_FRAMES_NMINS 10
+#define VIS_FRAMES_NMINS 15
 #define VIS_FRAMES_NSECS 0
 #define VIS_NFRAMES ((VIS_FRAMES_NMINS * 60 + VIS_FRAMES_NSECS) * VIS_FPS_LIMIT)
 #endif
