@@ -2,8 +2,8 @@
 Vis = require("Vis")
 VisUtil = require("visutil")
 math = require("math")
-os = require("os")
 Letters = require("letters")
+Message = require("message")
 Debug = VisUtil.Debug
 
 -- Argument Parsing
@@ -24,6 +24,13 @@ function EstablishConfig()
         {"-q", "--quiet"},
         "nil",
         "do not play music"
+    })
+    AddOption(Config, {
+        "VIS_AUDIO_DELAY",
+        {"-d", "--delay"},
+        "number",
+        "millisecond delay for latency compensation",
+        0,
     })
     AddOption(Config, {
         "VIS_SYNC_FRAMES",
@@ -69,19 +76,25 @@ function EstablishConfig()
     return args, envs
 end
 
-INTRO_DELAY = 1000
+-- Intro delay appears for 3 seconds
+INTRO_DELAY = 3000
 
 Arg, Env = EstablishConfig()
 if Env["DEBUG"] then
-    print(require("inspect").inspect(Arg))
+    local inspect = require("inspect")
+    print(inspect.inspect(Arg))
+    print(inspect.inspect(Env))
 end
 
 if not Env["VIS_NO_AUDIO"] then
-    Vis.audio(Vis.flist, INTRO_DELAY, "media/royalty.mp3")
+    local audio_file = "media/royalty.mp3"
+    local volume = Env["VIS_VOLUME"] or 50
+    Debug(("Playing file %s at %d%% volume"):format(audio_file, volume))
+    Vis.audio(Vis.flist, INTRO_DELAY, audio_file)
     Vis.callback(Vis.flist, INTRO_DELAY, Vis.script,
-        ("Vis.volume(%f)"):format((Env["VIS_VOLUME"] or 50) / 100))
+        ("Vis.volume(%f)"):format(volume / 100))
 else
-    VisUtil.Debug("VIS_NO_AUDIO set; disabling audio playback entirely")
+    Debug("VIS_NO_AUDIO set; disabling audio playback entirely")
 end
 
 function do_get_metrics()
@@ -90,11 +103,11 @@ function do_get_metrics()
 end
 
 Vis.on_keydown(function(key)
-    VisUtil.Debug("Keydown: " .. key)
+    Debug("Keydown: " .. key)
     if key == "Left" then
         Vis.gotoframe(Vis.flist, INTRO_DELAY)
         Vis.seek(0)
-        VisUtil.Debug("Received LEFT input; reverting to beginning of song")
+        Debug("Received LEFT input; reverting to beginning of song")
     end
 end)
 
@@ -103,7 +116,7 @@ W, H = Vis.WIDTH, Vis.HEIGHT
 function emit_intro_message()
     local zoom = 4  -- letter size
     local e = Emit:new({tag="intro"})
-    e:count(zoom*2)
+    e:count(zoom*4)
     e:radius(1)
     e:ds(0)
     e:theta(0, math.pi)
@@ -111,41 +124,21 @@ function emit_intro_message()
     e:color(0, 0.8, 0.4, 0.2, .1, 0)
     e:blender(Vis.BLEND_EASING)
 
-    local function emit_char(frame, c, x, y, lx, ly, zoom)
-        Letters.map_fn_xy(c:upper(), function(bx, by)
-            e:center(x + zoom*(bx+lx), y + zoom*(by+ly), zoom/2, zoom/2)
-            e:emit(frame)
-        end)
-    end
+    local m = Message:new{emit=e}
+    m:set_line_spacing(1.5)
+    m:set_zoom(zoom)
 
-    local function emit_message(frame, msg, x, y, zoom)
-        for idx, ord in ipairs(table.pack(msg:byte(1, #msg))) do
-            chr = string.char(ord)
-            emit_char(frame, chr, x, y, (idx-1)*(Letters.LETTER_WIDTH+1), 0, zoom)
-        end
-    end
-
-    local function emit_center_message(frame, msg, x, y, zoom)
-        local width, length = Letters.find_extents(msg)
-        emit_message(frame, msg, x - width*zoom/2, y - length*zoom/2, zoom)
-    end
-
-    local function emit_lines(frame, lines, x, y, zoom)
-        local line_height = 1.5 * Letters.LETTER_HEIGHT * zoom
-        for idx, line in ipairs(lines) do
-            emit_center_message(frame, line, x, y + (idx-1)*line_height, zoom)
-        end
-    end
-
-    emit_lines(1, {
+    m:emit_lines(1, {
         "Royalty",
         "Ezgod, Maestro Chives, Neoni",
         "NCS - No Copyright Sounds"
-    }, W/2, H/2, zoom)
+    }, W/2, H/2)
+
 end
 
 function main()
-    local dead_time = 0
+    local dead_time = Env["VIS_AUDIO_DELAY"] or 0
+    Debug(("Adding %d milliseconds for audio delay"):format(Env["VIS_AUDIO_DELAY"] or 0))
     local now = INTRO_DELAY + dead_time
     local emit = Emit:new({tag=1})
     emit:center(W/2, H/2, 0, 0)
@@ -177,7 +170,7 @@ function main()
 end
 
 Vis.on_mousescroll(function(xoffset, yoffset)
-    VisUtil.Debug(("Scroll: %d %d"):format(xoffset, yoffset))
+    Debug(("Scroll: %d %d"):format(xoffset, yoffset))
 end)
 
 emit_intro_message()
