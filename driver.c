@@ -33,6 +33,7 @@ struct global_ctx {
     struct commands* cmds;
     script_t script;
     BOOL paused;
+    BOOL steponce;
     BOOL should_exit;
     int exit_status;
 };
@@ -237,6 +238,9 @@ void onkeydown(int sym, struct global_ctx* ctx) {
             audio_play();
         }
         break;
+    case GLFW_KEY_N:
+        ctx->steponce = TRUE;
+        break;
     default:
         break;
     }
@@ -269,9 +273,16 @@ void mainloop(struct global_ctx* ctx) {
         if ((ctx->exit_status = script_get_status(ctx->script)) != 0) {
             ctx->should_exit = TRUE;
         } else {
+            if (ctx->steponce && ctx->paused) {
+                ctx->paused = FALSE;
+            }
             animate(ctx);
             display(ctx); /* fps limiting done here */
             advance(ctx);
+            if (ctx->steponce) {
+                ctx->paused = TRUE;
+                ctx->steponce = FALSE;
+            }
         }
     }
 }
