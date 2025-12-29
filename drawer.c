@@ -31,6 +31,7 @@ typedef struct {
     GLfloat x, y;
     GLfloat radius;
     GLfloat r, g, b, a;
+    GLuint depth;
 } vertex_t;
 
 /* used, obviously, for fps tracking and limiting */
@@ -135,6 +136,10 @@ drawer_t drawer_new(const clargs* args) {
     glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(vertex_t),
         (GLvoid*)offsetof(vertex_t, r));
     glEnableVertexAttribArray(2);
+    /* 3: depth (uint) */
+    glVertexAttribPointer(3, 1, GL_UNSIGNED_INT, GL_FALSE, sizeof(vertex_t),
+        (GLvoid*)offsetof(vertex_t, depth));
+    glEnableVertexAttribArray(3);
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
@@ -212,6 +217,7 @@ int drawer_add_particle(drawer_t drawer, particle* p) {
         v->g = (GLfloat)pe->g;
         v->b = (GLfloat)pe->b;
         v->a = (GLfloat)sqrt(calculate_blend(p));
+        v->depth = pe->tag.ui.l;
 
         drawer->vertex_curr += 1;
         return 0;
