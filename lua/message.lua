@@ -54,7 +54,6 @@ function Message:emit_char(when, char, anchorx, anchory, letterx, lettery)
     local e = self:get("emit"):copy() -- we're gonna modify it, so copy it first
     local zoom = self:get("zoom")
     Letters.map_fn_xy(char:upper(), function(basex, basey)
-        print(char, char:upper())
         local charx = anchorx + zoom*(basex+letterx)
         local chary = anchory + zoom*(basey+lettery)
         local adjy = #Letters[char:upper()] - Letters.LETTER_HEIGHT
@@ -70,10 +69,12 @@ end
 --[[ Emit a sequence of letters starting at the given location ]]
 function Message:emit_message(when, message, anchorx, anchory)
     self:_ensure_emit()
-    for idx, ord in utf8.codes(message) do
+    local idx = 1
+    for _, ord in utf8.codes(message) do
         local char = string.char(ord)
         local letterx = (idx-1)*(Letters.LETTER_WIDTH+1)
         self:emit_char(when, char, anchorx, anchory, letterx, 0, zoom)
+        idx = idx + 1
     end
 end
 
