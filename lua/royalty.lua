@@ -8,71 +8,31 @@ Debug = VisUtil.Debug
 
 -- Argument Parsing
 function EstablishConfig()
-    local function AddOption(options, option)
-        options[#options+1] = {
-            env = option[1],
-            opt = option[2],
-            typ = option[3],
-            str = option[4],
-            def = option[5]
-        }
-    end
+    local parser = VisUtil.Args:new({
+        epilog=
+"The -d,--delay argument exists to compensate for audio delay in Bluetooth\n" ..
+"or other wireless headsets. For Bluetooth specifically, a value near 250\n" ..
+"should work well."})
+    parser:add_argument{"-q", "--quiet",
+        help="do not play music",
+        env="VIS_NO_AUDIO"}
+    parser:add_argument{"-d", "--delay",
+        help="millisecond delay for latency compensation",
+        env="VIS_AUDIO_DELAY",
+        default=0,
+        metavar="ms",
+        argtype="number"}
+    parser:add_argument{"-V", "--volume",
+        help="volume percentage",
+        env="VIS_VOLUME",
+        metavar="percent",
+        argtype="number",
+        default=50}
+    parser:add_argument{"-v", "--verbose",
+        help="enable verbose diagnostics",
+        envs={"VIS_DEBUG", "DEBUG", "LUA_DEBUG"}}
 
-    Config = {}
-    AddOption(Config, {
-        "VIS_NO_AUDIO",
-        {"-q", "--quiet"},
-        "nil",
-        "do not play music"
-    })
-    AddOption(Config, {
-        "VIS_AUDIO_DELAY",
-        {"-d", "--delay"},
-        "number",
-        "millisecond delay for latency compensation",
-        0,
-    })
-    AddOption(Config, {
-        "VIS_SYNC_FRAMES",
-        {"-s", "--sync"},
-        "number",
-        "number of frames to allow for audio sync",
-        12
-    })
-    AddOption(Config, {
-        {"VIS_DEBUG", "LUA_DEBUG", "DEBUG"},
-        {"-v", "--debug"},
-        "nil",
-        "enable debugging"
-    })
-    AddOption(Config, {
-        "VIS_VOLUME",
-        {"-V", "--volume"},
-        "number",
-        "volume percentage",
-        50
-    })
-    local parser = VisUtil.Args:new()
-    for _, argspec in pairs(Config) do
-        local opts = argspec.opt
-        if type(opts) == "string" then opts = {opts} end
-        local envs = argspec.env
-        if type(envs) == "string" then envs = {envs} end
-        for _, opt in ipairs(opts) do
-            parser:add(opt, argspec.typ, argspec.str)
-            if argspec.def then
-                parser:set_default(opt, argspec.def)
-            end
-            for _, env in ipairs(envs) do
-                parser:add_env(env, argspec.typ, argspec.str)
-                parser:link_arg_env(opt, env)
-            end
-        end
-    end
-    local args, envs, err = parser:parse()
-    if err ~= nil then
-        error(err)
-    end
+    local args, envs = parser:parse_args()
     return args, envs
 end
 
