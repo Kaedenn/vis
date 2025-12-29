@@ -553,9 +553,9 @@ kstr lua_inspect_value(lua_State* L, int arg) {
 emit_desc* lua_args_to_emit_desc(lua_State* L, int arg, fnum* when) {
     emit_desc* emit = emit_new();
 
-    emit->n = luaL_checkint(L, arg++);
+    emit->n = (int)luaL_checkinteger(L, arg++);
     if (when != NULL) {
-        *when = do_msec2frames(L, luaL_checkunsigned(L, arg++));
+        *when = do_msec2frames(L, (unsigned)luaL_checkinteger(L, arg++));
     }
 
     /* behavior depends on the type of the next argument */
@@ -620,9 +620,9 @@ emit_desc* lua_args_to_emit_desc(lua_State* L, int arg, fnum* when) {
         } else if (!strcmp(key, "utheta")) {
             emit->utheta = luaL_checknumber(L, -1);
         } else if (!strcmp(key, "life")) {
-            emit->life = (int)do_msec2frames(L, luaL_checkunsigned(L, -1));
+            emit->life = (int)do_msec2frames(L, (unsigned)luaL_checkinteger(L, -1));
         } else if (!strcmp(key, "ulife")) {
-            emit->ulife = (int)do_msec2frames(L, luaL_checkunsigned(L, -1));
+            emit->ulife = (int)do_msec2frames(L, (unsigned)luaL_checkinteger(L, -1));
         } else if (!strcmp(key, "r")) {
             emit->r = (float)luaL_checknumber(L, -1);
         } else if (!strcmp(key, "g")) {
@@ -644,7 +644,7 @@ emit_desc* lua_args_to_emit_desc(lua_State* L, int arg, fnum* when) {
         } else if (!strcmp(key, "tag")) {
             arg_type = lua_type(L, -1);
             if (arg_type == LUA_TNUMBER) {
-                emit->tag.ul = luaL_checkunsigned(L, -1);
+                emit->tag.ul = (unsigned)luaL_checkinteger(L, -1);
             } else if (arg_type == LUA_TSTRING) {
                 const char* value = luaL_checkstring(L, -1);
                 emit->tag.ul = pextra_hash_string(value);
@@ -693,7 +693,7 @@ int viscmd_debug_fn(lua_State* L) {
 /* Vis.command(Vis.flist, when, "command") */
 int viscmd_command_fn(lua_State* L) {
     flist_t fl = *(flist_t*)luaL_checkudata(L, 1, "flist**");
-    fnum when = do_msec2frames(L, luaL_checkunsigned(L, 2));
+    fnum when = do_msec2frames(L, (unsigned)luaL_checkinteger(L, 2));
     const char* cmd = luaL_checkstring(L, 3);
     /* DBPRINTF("command(%p, %d, \"%s\")", fl, when, cmd); */
     flist_insert_cmd(fl, when, cmd);
@@ -703,7 +703,7 @@ int viscmd_command_fn(lua_State* L) {
 /* Vis.exit(Vis.flist, when) */
 int viscmd_exit_fn(lua_State* L) {
     flist_t fl = *(flist**)luaL_checkudata(L, 1, "flist**");
-    fnum when = do_msec2frames(L, luaL_checkunsigned(L, 2));
+    fnum when = do_msec2frames(L, (unsigned)luaL_checkinteger(L, 2));
     flist_insert_exit(fl, when);
     return 0;
 }
@@ -732,7 +732,7 @@ int viscmd_emit_fn(lua_State* L) {
 /* Vis.audio(Vis.flist, when, path) */
 int viscmd_audio_fn(lua_State* L) {
     flist_t fl = *(flist**)luaL_checkudata(L, 1, "flist**");
-    fnum when = do_msec2frames(L, luaL_checkunsigned(L, 2));
+    fnum when = do_msec2frames(L, (unsigned)luaL_checkinteger(L, 2));
     const char* file = luaL_checkstring(L, 3);
     if (!audio_open(file)) {
         DBPRINTF("Vis.audio(%s) failed", file);
@@ -770,7 +770,7 @@ int viscmd_volume_fn(lua_State* L) {
 /* Vis.seek(offset),
  * @param offset is in 100ths of a second, NOT milliseconds */
 int viscmd_seek_fn(lua_State* L) {
-    unsigned offset = luaL_checkunsigned(L, 1);
+    unsigned offset = (unsigned)luaL_checkinteger(L, 1);
     DBPRINTF("Vis.seek(%d)", (int)offset);
     audio_seek(offset);
     return 0;
@@ -779,8 +779,8 @@ int viscmd_seek_fn(lua_State* L) {
 /* Vis.seekms(Vis.flist, when, whereto) */
 int viscmd_seekms_fn(lua_State* L) {
     flist_t fl = *(flist**)luaL_checkudata(L, 1, "flist**");
-    fnum where = do_msec2frames(L, luaL_checkunsigned(L, 2));
-    fnum whereto = do_msec2frames(L, luaL_checkunsigned(L, 3));
+    fnum where = do_msec2frames(L, (unsigned)luaL_checkinteger(L, 2));
+    fnum whereto = do_msec2frames(L, (unsigned)luaL_checkinteger(L, 3));
     DBPRINTF("Vis.seekms(%p, [frame]%d, [frame]%d)", fl, where, whereto);
     flist_insert_seekframe(fl, where, whereto);
     return 0;
@@ -789,8 +789,8 @@ int viscmd_seekms_fn(lua_State* L) {
 /* Vis.seekframe(Vis.flist, when, whereto) */
 int viscmd_seekframe_fn(lua_State* L) {
     flist_t fl = *(flist**)luaL_checkudata(L, 1, "flist**");
-    fnum where = (fnum)luaL_checkunsigned(L, 2);
-    fnum whereto = (fnum)luaL_checkunsigned(L, 3);
+    fnum where = (fnum)(unsigned)luaL_checkinteger(L, 2);
+    fnum whereto = (fnum)(unsigned)luaL_checkinteger(L, 3);
     DBPRINTF("Vis.seekframe(%p, [frame]%d, [frame]%d)", fl, where, whereto);
     flist_insert_seekframe(fl, where, whereto);
     return 0;
@@ -799,7 +799,7 @@ int viscmd_seekframe_fn(lua_State* L) {
 /* Vis.gotoframe(Vis.flist, whereto) */
 int viscmd_gotoframe_fn(lua_State* L) {
     flist_t fl = *(flist**)luaL_checkudata(L, 1, "flist**");
-    fnum whereto = (fnum)luaL_checkunsigned(L, 2);
+    fnum whereto = (fnum)(unsigned)luaL_checkinteger(L, 2);
     DBPRINTF("Vis.gotoframe(%p, [frame]%d)", fl, whereto);
     flist_goto_frame(fl, whereto);
     return 0;
@@ -808,8 +808,8 @@ int viscmd_gotoframe_fn(lua_State* L) {
 /* Vis.audiosync(Vis.flist, when, nframes) */
 int viscmd_audiosync_fn(lua_State* L) {
     flist_t fl = *(flist**)luaL_checkudata(L, 1, "flist**");
-    fnum where = (fnum)luaL_checkunsigned(L, 2);
-    fnum nframes = (fnum)luaL_checkunsigned(L, 3);
+    fnum where = (fnum)(unsigned)luaL_checkinteger(L, 2);
+    fnum nframes = (fnum)(unsigned)luaL_checkinteger(L, 3);
     DBPRINTF("Vis.audiosync(%p, [frame]%d, [frame]%d)", fl, where, nframes);
     flist_insert_audiosync(fl, where, nframes);
     return 0;
@@ -818,8 +818,8 @@ int viscmd_audiosync_fn(lua_State* L) {
 /* Vis.delay(Vis.flist, when, length) */
 static int viscmd_delay_fn(lua_State* L) {
     flist_t fl = *(flist**)luaL_checkudata(L, 1, "flist**");
-    fnum where = (fnum)luaL_checkunsigned(L, 2);
-    fnum length = (fnum)luaL_checkunsigned(L, 3);
+    fnum where = (fnum)(unsigned)luaL_checkinteger(L, 2);
+    fnum length = (fnum)(unsigned)luaL_checkinteger(L, 3);
     DBPRINTF("Vis.delay(%p, [frame]%d, [frame]%d)", fl, where, length);
     flist_insert_delay(fl, where, length);
     return 0;
@@ -829,7 +829,7 @@ static int viscmd_delay_fn(lua_State* L) {
  * 0 <= @param rgb <= 1 */
 int viscmd_bgcolor_fn(lua_State* L) {
     flist_t fl = *(flist**)luaL_checkudata(L, 1, "flist**");
-    fnum when = do_msec2frames(L, luaL_checkunsigned(L, 2));
+    fnum when = do_msec2frames(L, (unsigned)luaL_checkinteger(L, 2));
     float c[3] = {
         (float)luaL_checknumber(L, 3),
         (float)luaL_checknumber(L, 4),
@@ -852,8 +852,8 @@ int viscmd_bgcolor_fn(lua_State* L) {
 int viscmd_mutate_fn(lua_State* L) {
     mutate_method* method = DBMALLOC(sizeof(struct mutate_method));
     flist_t fl = *(flist**)luaL_checkudata(L, 1, "flist**");
-    fnum when = do_msec2frames(L, luaL_checkunsigned(L, 2));
-    mutate_id fnid = (mutate_id)luaL_checkint(L, 3);
+    fnum when = do_msec2frames(L, (unsigned)luaL_checkinteger(L, 2));
+    mutate_id fnid = (mutate_id)(int)luaL_checkinteger(L, 3);
     method->id = fnid;
     if (fnid >= VIS_MUTATE_PUSH && fnid < VIS_MUTATE_TAG_SET) {
         /* case 1: normal mutate */
@@ -868,16 +868,16 @@ int viscmd_mutate_fn(lua_State* L) {
     } else if (fnid >= VIS_MUTATE_TAG_SET && fnid < VIS_MUTATE_PUSH_IF) {
         /* case 2: tag modification */
         if (lua_type(L, 4) == LUA_TNUMBER) {
-            method->tag.i.l = luaL_checkint(L, 4);
+            method->tag.i.l = (int)luaL_checkinteger(L, 4);
         }
         DBPRINTF("Vis.mutate(%p, %d, %s, %d)",
                 fl, (int)when, genlua_mutate(fnid), method->tag.i.l);
     } else if (fnid >= VIS_MUTATE_PUSH_IF && fnid < VIS_NMUTATES) {
         /* case 3: conditional mutate */
         method->factor[0] = luaL_checknumber(L, 4);
-        method->cond = (mutate_cond_id)luaL_checkint(L, 5);
+        method->cond = (mutate_cond_id)(int)luaL_checkinteger(L, 5);
         if (lua_type(L, 6) == LUA_TNUMBER) {
-            method->tag.i.l = luaL_checkint(L, 6);
+            method->tag.i.l = (int)luaL_checkinteger(L, 6);
         }
         method->factor[1] = luaL_optnumber(L, 7, 0);
         method->offset[0] = luaL_optnumber(L, 8, 0);
@@ -899,7 +899,7 @@ int viscmd_mutate_fn(lua_State* L) {
 /* Vis.callback(Vis.flist, when, Vis.script, "lua") */
 int viscmd_callback_fn(lua_State* L) {
     flist_t fl = *(flist**)luaL_checkudata(L, 1, "flist**");
-    fnum when = do_msec2frames(L, luaL_checkunsigned(L, 2));
+    fnum when = do_msec2frames(L, (unsigned)luaL_checkinteger(L, 2));
     script_t s = util_checkscript(L, 3);
     script_cb* scb = DBMALLOC(sizeof(struct script_cb));
     scb->owner = s;
@@ -958,22 +958,22 @@ int viscmd_get_debug_fn(lua_State* L) {
     script_t s = util_checkscript(L, 1);
     const char* what = luaL_checkstring(L, 2);
     if (!strcmp(what, "PARTICLES-EMITTED")) {
-        lua_pushunsigned(L, (uint32_t)s->dbg->particles_emitted);
+        lua_pushinteger(L, (uint32_t)s->dbg->particles_emitted);
     } else if (!strcmp(what, "TIME-NOW")) {
-        lua_pushunsigned(L, (uint32_t)s->dbg->time_now);
+        lua_pushinteger(L, (uint32_t)s->dbg->time_now);
     } else if (!strcmp(what, "FRAMES-EMITTED")) {
-        lua_pushunsigned(L, (uint32_t)s->dbg->frames_emitted);
+        lua_pushinteger(L, (uint32_t)s->dbg->frames_emitted);
     } else if (!strcmp(what, "NUM-MUTATES")) {
-        lua_pushunsigned(L, (uint32_t)s->dbg->num_mutates);
+        lua_pushinteger(L, (uint32_t)s->dbg->num_mutates);
     } else if (!strcmp(what, "PARTICLES-MUTATED")) {
-        lua_pushunsigned(L, (uint32_t)s->dbg->particles_mutated);
+        lua_pushinteger(L, (uint32_t)s->dbg->particles_mutated);
     } else if (!strcmp(what, "PARTICLE-TAGS-MODIFIED")) {
-        lua_pushunsigned(L, (uint32_t)s->dbg->particle_tags_modified);
+        lua_pushinteger(L, (uint32_t)s->dbg->particle_tags_modified);
     } else if (!strcmp(what, "FRAME-EMIT-COUNTS")) {
         lua_createtable(L, VIS_MAX_FTYPE, 0);
         for (ftype_id i = (ftype_id)0; i < VIS_MAX_FTYPE; ++i) {
-            lua_pushunsigned(L, i);
-            lua_pushunsigned(L, emitter_get_frame_count(i));
+            lua_pushinteger(L, i);
+            lua_pushinteger(L, emitter_get_frame_count(i));
             lua_settable(L, -3);
         }
     } else {

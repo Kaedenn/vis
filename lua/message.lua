@@ -1,5 +1,6 @@
 Letters = require("letters")
 Emit = require("emit")
+utf8 = require("utf8")
 
 --[[
 -- Multi-character emit object
@@ -53,9 +54,11 @@ function Message:emit_char(when, char, anchorx, anchory, letterx, lettery)
     local e = self:get("emit"):copy() -- we're gonna modify it, so copy it first
     local zoom = self:get("zoom")
     Letters.map_fn_xy(char:upper(), function(basex, basey)
+        print(char, char:upper())
         local charx = anchorx + zoom*(basex+letterx)
         local chary = anchory + zoom*(basey+lettery)
-        e:center(charx, chary, zoom/2, zoom/2)
+        local adjy = #Letters[char:upper()] - Letters.LETTER_HEIGHT
+        e:center(charx, chary - adjy, zoom/2, zoom/2)
         if when then
             e:emit(when)
         else
@@ -67,7 +70,7 @@ end
 --[[ Emit a sequence of letters starting at the given location ]]
 function Message:emit_message(when, message, anchorx, anchory)
     self:_ensure_emit()
-    for idx, ord in ipairs(table.pack(message:byte(1, #message))) do
+    for idx, ord in utf8.codes(message) do
         local char = string.char(ord)
         local letterx = (idx-1)*(Letters.LETTER_WIDTH+1)
         self:emit_char(when, char, anchorx, anchory, letterx, 0, zoom)

@@ -1,11 +1,12 @@
 math = require("math")
+utf8 = require("utf8")
 
 Letters = {}
 Letters.LETTER_WIDTH = 5
 Letters.LETTER_HEIGHT = 7
 
 -- Since everything starts at index 1 in Lua, do some magic to abide
-Letters.idx_to_xy = function(idx)
+function Letters.idx_to_xy(idx)
     idx = idx - 1
     local x = idx % Letters.LETTER_WIDTH
     local y = math.floor(idx / Letters.LETTER_WIDTH)
@@ -13,11 +14,11 @@ Letters.idx_to_xy = function(idx)
 end
 
 -- Assumes a spacing between letters of 1 pixel
-Letters.find_extents = function(s)
+function Letters.find_extents(s)
     local width = 0
     local height = Letters.LETTER_HEIGHT
     local line_width = 0
-    for i,c in ipairs(table.pack(s:byte(1, #s))) do
+    for i, c in utf8.codes(s) do
         if c == string.byte("\n") then
             width = line_width > width and line_width or width
             line_width = 0
@@ -33,7 +34,7 @@ Letters.find_extents = function(s)
 end
 
 -- Call func(x, y) for each "on pixel" in the given letter
-Letters.map_fn_xy = function(letter, func)
+function Letters.map_fn_xy(letter, func)
     if Letters[letter] == nil then letter = '?' end
     for i,bit in ipairs(Letters[letter]) do
         lx, ly = Letters.idx_to_xy(i)
@@ -42,6 +43,16 @@ Letters.map_fn_xy = function(letter, func)
         end
     end
 end
+
+Letters["'"] = {
+    0, 0, 0, 0, 0,
+    0, 0, 1, 0, 0,
+    0, 0, 1, 0, 0,
+    0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0
+}
 
 Letters['0'] = {
     0, 1, 1, 1, 0,
@@ -491,6 +502,19 @@ Letters['Z'] = {
     0, 1, 0, 0, 0,
     1, 0, 0, 0, 0,
     1, 1, 1, 1, 1,
+}
+
+-- LATIN CAPITAL LETTER A WITH GRAVE
+Letters['\xc0'] = {
+    0, 1, 0, 0, 0,
+    0, 0, 1, 0, 0,
+    0, 0, 1, 0, 0,
+    0, 1, 0, 1, 0,
+    1, 0, 0, 0, 1,
+    1, 0, 0, 0, 1,
+    1, 1, 1, 1, 1,
+    1, 0, 0, 0, 1,
+    1, 0, 0, 0, 1,
 }
 
 return Letters

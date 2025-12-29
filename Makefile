@@ -49,8 +49,8 @@ CFLAGS_3RDPARTY = -Wno-conversion -Wno-switch-enum -Wno-cast-qual \
 LDFLAGS_FAST = -O3 -flto
 LDFLAGS_PROF = -pg
 
-CFLAGS_LIBS = -I/usr/include/lua5.2
-LDFLAGS_LIBS = -llua5.2 -lglfw -lGL -lGLEW
+CFLAGS_LIBS = -I/usr/include/lua5.3
+LDFLAGS_LIBS = -llua5.3 -lglfw -lGL -lGLEW
 
 CFLAGS := $(CFLAGS) $(CFLAGS_LIBS) $(EXTRA_CFLAGS)
 LDFLAGS := $(LDFLAGS) $(LDFLAGS_LIBS) $(EXTRA_LDFLAGS)
