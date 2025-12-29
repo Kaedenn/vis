@@ -1,4 +1,4 @@
-Vis = require('Vis')
+Vis = require("Vis")
 bit32 = require('bit32')
 
 VisUtil = {}
@@ -104,12 +104,12 @@ end
 
 --[[ Argument parsing
 --
---  Please excuse the quality of code (or lack thereof) in the :help and
---  :parse functions. After writing it in a hurry, I now realize it looks
---  absolutely horrid and should be remade from scratch.
+-- Please use the new API:
+--  parser = VisUtil.Args:new()
+--  parser:add_argument{...}
+--  args, envs = parser:parse_args{...}
 --
---  No guarantee I'll actually /do/ that, however.
---
+-- Old API exists for backwards compatibility, but will be removed.
 --]]
 VisUtil.Args = {
     ERRORS = {
@@ -119,8 +119,20 @@ VisUtil.Args = {
         E_UNKVALTP = "unknown value type %s"
     }
 }
-function VisUtil.Args:new()
+function VisUtil.Args:new(config)
     local o = {}
+    o._config = {}
+    if type(config) == "table" then
+        o._config = config
+    end
+    setmetatable(o, self)
+    self.__index = self
+
+    -- New API
+    o._arg_defs = {}
+    o:add_argument{"-h", "--help", help="print this message and exit", env="VIS_HELP"}
+
+    -- Old API
     o._args = {}
     o._envs = {}
     o._links = {}
@@ -132,8 +144,6 @@ function VisUtil.Args:new()
     o._helpstrs = {}
     o._defaults = {}
     o._getenv = os.getenv -- for testing only
-    setmetatable(o, self)
-    self.__index = self
     o:add("-h", "nil", "this message")
     o:add("--help", "nil", "this message")
     o:add_env("VIS_HELP", "nil", "this message")
@@ -146,6 +156,258 @@ function VisUtil.Args:_ensure_self()
     assert(type(self) == "table")
     assert(type(self._args) == "table", VisUtil.strobject(self))
 end
+
+--[[ Add an argument
+--
+-- Table must contain either one or two indexed values: short and long option
+-- Table may contain any (or all) of the following keys:
+--  env: string         Environment variable linked to this arg
+--  envs: table         Table of environment variables to link to this arg
+--  help: string        Help text if -h or --help given
+--  metavar: string     Label to use for the argument's value, instead of type
+--  argtype: string     Type of argument (see below)
+--  default: any        Argument value if none given
+--
+-- argtype can be one of the following strings:
+--  "flag"      Argument is a flag (no value); value will be true or false
+--  "number"    Argument requires a (possibly floating-point) number
+--  "string"    Argument requires a value of any length
+-- If argtype is nil, then "flag" is assumed.
+--
+-- If multiple environment variables are set for a given argument, then only
+-- the last one (first env, then envs) is used. Later environment variables
+-- overwrite earlier ones.
+--]]
+function VisUtil.Args:add_argument(argdef)
+    local arg = {}
+    if #argdef == 0 then error("argdef missing required argument(s)") end
+    if #argdef == 1 then
+        if argdef[1]:match("^--") ~= "" then
+            arg.short = nil
+            arg.long = argdef[1]
+        elseif argdef[1]:match("^-") ~= "" then
+            arg.short = argdef[1]
+            arg.long = nil
+        else
+            error(("argument %s missing hyphen"):format(argdef[1]))
+        end
+    else
+        arg.short = argdef[1]
+        arg.long = argdef[2]
+    end
+    arg.env = argdef.env
+    arg.envs = argdef.envs or {}
+    arg.help = argdef.help
+    arg.argtype = argdef.argtype or "flag"
+    arg.metavar = argdef.metavar or arg.argtype
+    arg.default = argdef.default
+
+    -- Ensure the argument doesn't already exist
+    for _, existing in ipairs(self._arg_defs) do
+        if arg.short == existing.short or arg.long == existing.long then
+            error(("Argument %s duplicates existing argument"):format(argdef[1]))
+        end
+    end
+    table.insert(self._arg_defs, arg)
+end
+
+--[[ Helper: print a debug message ]]
+function VisUtil.Args:_debug(...)
+    if os.getenv("VIS_ARG_DEBUG") then
+        print("DEBUG: ", ...)
+    end
+end
+
+--[[ Helper: does the given argument match the argument definition? ]]
+function VisUtil.Args:_check_match(argdef, argval)
+    if argdef.short and argval == argdef.short then return true end
+    if argdef.long and argval == argdef.long then return true end
+    return false
+end
+
+function VisUtil.Args:parse_args(args)
+    if not args then args = Arguments end
+    if type(args) ~= "table" then
+        error("Attempt to parse arguments that aren't a table")
+    end
+
+    -- Ensure the argument value matches the given type
+    local function ensure(argval, argtype)
+        self:_debug(("ensure(%s, %s)"):format(argval, argtype))
+        if argtype == "flag" then return true, nil end
+        if argtype == "number" then
+            local ensured = tonumber(argval)
+            if ensured == nil then
+                return nil, ("argument %s not a number"):format(argval)
+            end
+            return ensured, nil
+        end
+        if argtype == "string" then return argval, nil end
+        return nil, ("unknown argument type %s"):format(tostring(argtype))
+    end
+
+    local arg, env = {}, {}
+    -- Pre-populate default values
+    for _, argdef in ipairs(self._arg_defs) do
+        local default_value = argdef.default
+        local argenvs = {}
+        if argdef.envs then argenvs = argdef.envs end
+        if argdef.env then table.insert(argenvs, argdef.env) end
+        for _, argenv in ipairs(argenvs) do
+            local env_value = os.getenv(argenv)
+            if env_value ~= nil then
+                local ensured, err = ensure(env_value, argdef.argtype)
+                if err ~= nil then
+                    error(("Env %s requires value of type %s; got %s"):format(
+                        argenv, argdef.argtype, env_value))
+                end
+                default_value = env_value
+            end
+        end
+        if default_value ~= nil then
+            if argdef.short then arg[argdef.short] = default_value end
+            if argdef.long then arg[argdef.long] = default_value end
+            for _, argenv in ipairs(argenvs) do
+                env[argenv] = default_value
+            end
+        end
+    end
+
+    for argname, value in pairs(arg) do
+        self:_debug(("arg %s has value %s"):format(argname, value))
+    end
+    for argname, value in pairs(env) do
+        self:_debug(("env %s has value %s"):format(argname, value))
+    end
+
+    local idx = 1
+    while idx <= #args do
+        local matched = false
+        local argv = args[idx]
+        self:_debug(("Parsing argument %d: %s"):format(idx, argv))
+        for _, argdef in ipairs(self._arg_defs) do
+            if self:_check_match(argdef, argv) then
+                matched = true
+                local arg_value = true
+
+                self:_debug(("%s matches argdef %s"):format(argv,
+                    self:_arg_to_string(argdef)))
+
+                if argdef.argtype ~= "flag" then
+                    self:_debug(("%s requires value of type %s"):format(
+                        argv, argdef.argtype))
+
+                    local ensured, err = ensure(args[idx+1], argdef.argtype)
+                    if err ~= nil then
+                        error(("Argument %s requires value of type %s; got %s"):format(
+                            argv, argdef.argtype, err))
+                    end
+                    arg_value = ensured
+                    idx = idx + 1
+                end
+                if argdef.short then arg[argdef.short] = arg_value end
+                if argdef.long then arg[argdef.long] = arg_value end
+                if argdef.env then env[argdef.env] = arg_value end
+                if argdef.envs then
+                    for _, argenv in ipairs(argdef.envs) do
+                        env[argenv] = arg_value
+                    end
+                end
+                break
+            end
+        end
+        if not matched then
+            error(("Unknown argument %s"):format(args[idx]))
+        end
+        idx = idx + 1
+    end
+
+    if arg["-h"] then
+        self:print_help(Vis.SCRIPT_NAME)
+        os.exit()
+    end
+
+    return arg, env
+end
+
+--[[ Helper: convert the arg's short and long values to a single string ]]
+function VisUtil.Args:_arg_to_string(argdef)
+    local arg_str = argdef.short or argdef.long
+    if argdef.short and argdef.long then
+        arg_str = ("%s, %s"):format(argdef.short, argdef.long)
+    end
+    if argdef.argtype and argdef.argtype ~= "flag" then
+        arg_str = arg_str .. " [" .. argdef.metavar .. "]"
+    end
+    return arg_str
+end
+
+--[[ Helper: convert an arg to a string (for help display) ]]
+function VisUtil.Args:_arg_format_help(argdef, maxwidth)
+    local result = self:_arg_to_string(argdef)
+    if maxwidth ~= nil then
+        result = result .. (" "):rep(maxwidth - #result)
+    end
+    result = result .. "  "
+    if argdef.help then
+        result = result .. " " .. argdef.help
+    end
+    if argdef.env then
+        result = result .. (" (env %s)"):format(argdef.env)
+    end
+    if argdef.default then
+        result = result .. (" (default: %s)"):format(tostring(argdef.default))
+    end
+    return result
+end
+
+--[[ Format the help text for all arguments ]]
+function VisUtil.Args:format_help(execname)
+    local arg_maxlen = 0
+    for _, entry in ipairs(self._arg_defs) do
+        local arg_str = self:_arg_to_string(entry)
+        arg_maxlen = math.max(arg_maxlen, #arg_str)
+    end
+
+    local arg_lines = {
+        ("Usage: %s [arguments]"):format(execname or "<program>"),
+        ""
+    }
+    if self._config.prolog then
+        for line in self._config.prolog:gmatch("[^\n]*[\n]?") do
+            local line_clean = line:gsub("\n", "")
+            if line_clean ~= "" then
+                table.insert(arg_lines, line_clean)
+            end
+        end
+        table.insert(arg_lines, "")
+    end
+
+    table.insert(arg_lines, "Arguments:")
+    for _, entry in pairs(self._arg_defs) do
+        local arg_str = self:_arg_format_help(entry, arg_maxlen)
+        table.insert(arg_lines, "    " .. arg_str)
+    end
+
+    if self._config.epilog then
+        table.insert(arg_lines, "")
+        for line in self._config.epilog:gmatch("[^\n]*[\n]?") do
+            local line_clean = line:gsub("\n", "")
+            if line_clean ~= "" then
+                table.insert(arg_lines, line_clean)
+            end
+        end
+    end
+
+    return table.concat(arg_lines, "\n")
+end
+
+--[[ Print the help text for all arguments ]]
+function VisUtil.Args:print_help(execname)
+    print(self:format_help(execname))
+end
+
+--[[ OLD API ]]
 
 function VisUtil.Args:add(arg, valuetype, help)
     self:_ensure_self()
