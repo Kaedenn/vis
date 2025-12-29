@@ -67,6 +67,7 @@ static const char* util_get_error(lua_State* L);
 static emit_desc* lua_args_to_emit_desc(lua_State* L, int arg, fnum* when);
 static void push_constant_num(lua_State* L, const char* k, double v, int idx);
 static void push_constant_int(lua_State* L, const char* k, int v, int idx);
+static void push_constant_string(lua_State* L, const char* k, const char* v, int idx);
 static int do_mouse_event(lua_State* L, const char* fn, int x, int y, int b);
 static int do_key_event(lua_State* L, const char* fn, const char* k, BOOL shft);
 static int get_configured_fps(lua_State* L);
@@ -185,6 +186,9 @@ flist_t script_run(script_t s, const char* filename) {
     /* s->fl already bound to script in script_new */
     /* DBPRINTF("Running %s to build %p", filename, s->fl); */
     prepare_stack(s, s->args);
+    lua_getglobal(s->L, "Vis");
+    push_constant_string(s->L, "SCRIPT_NAME", filename, -1);
+    lua_pop(s->L, 1); /* getglobal("Vis") */
     if (luaL_loadfile(s->L, filename) != LUA_OK) {
         s->errors += 1;
         EPRINTF("Error in script %s: %s", filename, util_get_error(s->L));
@@ -457,6 +461,12 @@ void push_constant_num(lua_State* L, const char* k, double v, int idx) {
 void push_constant_int(lua_State* L, const char* k, int v, int idx) {
     lua_pushstring(L, k);
     lua_pushinteger(L, v);
+    lua_settable(L, idx - 2);
+}
+
+void push_constant_string(lua_State* L, const char* k, const char* v, int idx) {
+    lua_pushstring(L, k);
+    lua_pushstring(L, v);
     lua_settable(L, idx - 2);
 }
 
