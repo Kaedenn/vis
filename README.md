@@ -39,6 +39,11 @@ This project depends on OpenGL and Lua. There are several `$(MAKE)` targets,
 including `all`, `debug`, `valgrind`, etc. A simple `make all` should do the
 trick just fine.
 
+### Dependencies:
+
+* Lua 5.3 (with development libraries)
+* OpenGL 4.3, GLFW, GLEW
+
 ## Running this thing
 
 This program has just one argument for intended usage: `-l <FILE>`. This
