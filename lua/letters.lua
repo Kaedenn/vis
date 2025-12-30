@@ -658,7 +658,6 @@ local function map_lcase_latin1()
         local lchar = string.char(i)
         local uchar = string.char(i-0x20)
         if Letters[uchar] then
-            print(("-- 0x%02x %s maps to %s"):format(i, utf8.char(i), utf8.char(i-0x20)))
             Letters[lchar] = Letters[uchar]
         end
     end
