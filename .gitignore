@@ -1,4 +1,8 @@
 
+# Protected objects
+.envrc
+.python-version
+
 # Reference material
 ref
 
