@@ -202,13 +202,13 @@ int main(int argc, char* argv[]) {
         emitter_schedule(script_run(g.script, g.args->scriptfile));
     }
 
-    mainloop(&g);
-
-    script_on_quit(g.script);
-
     if (g.args->scriptstring) {
         script_run_string(g.script, g.args->scriptstring);
     }
+
+    mainloop(&g);
+
+    script_on_quit(g.script);
 
     if (g.exit_status < script_get_status(g.script)) {
         g.exit_status = script_get_status(g.script);
@@ -277,12 +277,16 @@ void mainloop(struct global_ctx* ctx) {
                 ctx->paused = FALSE;
             }
             animate(ctx);
-            display(ctx); /* fps limiting done here */
+            display(ctx); /* fps limiting done in drawer */
             advance(ctx);
             if (ctx->steponce) {
                 ctx->paused = TRUE;
                 ctx->steponce = FALSE;
             }
+        }
+
+        if (audio_has_ended()) {
+            script_on_audio_ended(ctx->script);
         }
     }
 }
@@ -300,7 +304,6 @@ void animate(struct global_ctx* ctx) {
 }
 
 void display(struct global_ctx* ctx) {
-    /* fps limiting done in the drawer */
     if (!ctx->paused) {
         drawer_draw_to_screen(ctx->drawer);
     } else {

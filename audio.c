@@ -7,6 +7,7 @@
 struct audio {
     char* file;
     BOOL muted;
+    BOOL atend;
     float volume;
     ma_context context;
     ma_engine engine;
@@ -14,6 +15,8 @@ struct audio {
 };
 
 static struct audio* audio = NULL;
+
+static void cb_end_callback(void* pUserData, ma_sound* pSound);
 
 BOOL audio_init(void) {
     ma_result result;
@@ -25,6 +28,7 @@ BOOL audio_init(void) {
     audio = DBMALLOC(sizeof(struct audio));
     audio->file = NULL;
     audio->muted = FALSE;
+    audio->atend = FALSE;
     audio->volume = 1.0f;
     audio->sound = NULL;
 
@@ -71,12 +75,19 @@ BOOL audio_open(const char* file) {
         audio->sound = DBMALLOC(sizeof(*audio->sound));
     }
     result = ma_sound_init_from_file(
-        &audio->engine, file, MA_SOUND_FLAG_NO_SPATIALIZATION, NULL, NULL, audio->sound);
+        &audio->engine,
+        file,
+        MA_SOUND_FLAG_NO_SPATIALIZATION,
+        NULL, NULL,
+        audio->sound);
     if (result != MA_SUCCESS) {
         EPRINTF("ma_sound_init_from_file failed with code %d", result);
         return FALSE;
     }
     audio->file = dupstr(file);
+
+    ma_sound_set_end_callback(audio->sound, cb_end_callback, NULL);
+
     return TRUE;
 }
 
@@ -95,14 +106,14 @@ void audio_free(void) {
 }
 
 void audio_play(void) {
-    if (!audio->sound) { return; }
+    if (!audio->sound) return;
     if (!ma_sound_is_playing(audio->sound)) {
         ma_sound_start(audio->sound);
     }
 }
 
 void audio_pause(void) {
-    if (!audio->sound) { return; }
+    if (!audio->sound) return;
     if (ma_sound_is_playing(audio->sound)) {
         ma_sound_stop(audio->sound);
     }
@@ -114,8 +125,8 @@ BOOL audio_is_playing(void) {
 }
 
 void audio_mute(void) {
+    if (!audio->sound) return;
     DBPRINTF("Muting audio; volume was %g", audio->volume);
-    if (!audio->sound) { return; }
     if (!audio->muted) {
         ma_sound_set_volume(audio->sound, 0.0f);
         audio->muted = TRUE;
@@ -123,8 +134,8 @@ void audio_mute(void) {
 }
 
 void audio_unmute(void) {
+    if (!audio->sound) return;
     DBPRINTF("Unmuting audio; volume is %g", audio->volume);
-    if (!audio->sound) { return; }
     if (audio->muted) {
         ma_sound_set_volume(audio->sound, audio->volume);
         audio->muted = FALSE;
@@ -136,27 +147,44 @@ BOOL audio_is_muted(void) {
 }
 
 void audio_set_volume(float volume) {
+    if (!audio->sound) return;
     DBPRINTF("Setting volume to %g", volume);
-    if (!audio->sound) { return; }
-    /*ma_device* device = ma_engine_get_device(audio->engine);
-    if (device != NULL) {
-        ma_device_set_master_volume(device, volume);
-    }*/
     ma_sound_set_volume(audio->sound, volume);
-    DBPRINTF("Set volume to %g, got %g", volume, ma_sound_get_volume(audio->sound));
     audio->volume = volume;
 }
 
 void audio_seek(unsigned where) {
-    DBPRINTF("Seeking audio to %u", where);
     BOOL restart = FALSE;
-    if (!audio->sound) { return; }
+    if (!audio->sound) return;
+    DBPRINTF("Seeking audio to %u", where);
     if (ma_sound_is_playing(audio->sound)) {
         ma_sound_stop(audio->sound);
         restart = TRUE;
     }
-    ma_sound_set_start_time_in_milliseconds(audio->sound, where);
+    ma_sound_seek_to_second(audio->sound, (float)where / 1000.0f);
     if (restart) {
         ma_sound_start(audio->sound);
     }
+}
+
+BOOL audio_has_ended(void) {
+    return audio->atend;
+}
+
+float audio_get_length(void) {
+    if (!audio->sound) return 0;
+    float length = 0;
+    ma_result result = ma_sound_get_length_in_seconds(audio->sound, &length);
+    if (result != MA_SUCCESS) {
+        EPRINTF("Getting length of track \"%s\" failed: %d", audio->file, result);
+        return 0;
+    }
+    return length;
+}
+
+static void cb_end_callback(
+        UNUSED_PARAM(void* pUserData),
+        UNUSED_PARAM(ma_sound* pSound)) {
+    DBPRINTF("Song has ended");
+    audio->atend = TRUE;
 }

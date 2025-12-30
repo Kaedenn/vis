@@ -67,5 +67,6 @@ void script_mouseup(script_t script, int x, int y, int button);
 void script_keydown(script_t script, const char* keyname, BOOL shift);
 void script_keyup(script_t script, const char* keyname, BOOL shift);
 void script_on_quit(script_t script);
+void script_on_audio_ended(script_t script);
 
 #endif

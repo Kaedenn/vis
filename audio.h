@@ -24,4 +24,10 @@ void audio_set_volume(float volume);
 /* seek offset is in milliseconds */
 void audio_seek(unsigned where);
 
+/* true if the song has ended */
+BOOL audio_has_ended(void);
+
+/* obtain the length of the track in seconds */
+float audio_get_length(void);
+
 #endif

@@ -32,6 +32,7 @@ static const char* const LUA_INIT_SCRIPT =
     "Vis._on_keydowns = {}\n"
     "Vis._on_keyups = {}\n"
     "Vis._on_quits = {}\n"
+    "Vis._on_songends = {}\n"
     /* Create functions for interacting with said tables */
     "Vis._do_on_event = function(tab, ...)\n"
     "   for i,f in pairs(tab) do f(...) end\n"
@@ -56,6 +57,9 @@ static const char* const LUA_INIT_SCRIPT =
     "end\n"
     "Vis.on_quit = function(f)\n"
     "   table.insert(Vis._on_quits, f)\n"
+    "end\n"
+    "Vis.on_songend = function(f)\n"
+    "   table.insert(Vis._on_songends, f)\n"
     "end\n";
 
 /* Helper functions not exposed to Lua */
@@ -294,6 +298,10 @@ void script_keyup(script_t s, const char* keyname, BOOL shift) {
 void script_on_quit(script_t s) {
     script_run_string(s, "Vis._do_on_event(Vis._on_quits)");
 }
+
+void script_on_audio_ended(script_t s) {
+    script_run_string(s, "Vis._do_on_event(Vis._on_songends)");
+}
 /* end of public API */
 
 /* begin of private API */
@@ -419,10 +427,17 @@ int initialize_vis_lib(lua_State* L) {
     push_constant_int(L, "DEBUG_DEBUG", DEBUG_DEBUG, -1);
     push_constant_int(L, "DEBUG_INFO", DEBUG_INFO, -1);
     push_constant_int(L, "DEBUG_TRACE", DEBUG_TRACE, -1);
+
     /* helpful non-numeric constants */
     lua_pushstring(L, "LUA_STARTUP_FILE");
     lua_pushstring(L, LUA_STARTUP_FILE);
     lua_settable(L, -3);
+
+    lua_pushstring(L, "AUDIO_FILE_PATH");
+    lua_pushnil(L);
+    lua_settable(L, -3);
+
+    push_constant_num(L, "AUDIO_LENGTH", 0, -1);
 
     return 1;
 }
@@ -708,18 +723,7 @@ int viscmd_exit_fn(lua_State* L) {
     return 0;
 }
 
-/* Vis.emit(Vis.flist, n, when, x, y, [ux, uy, radius, uradius, ds, uds,
- *          theta, utheta, life, ulife, r, g, b, ur, ug, ub, force, limit,
- *          blender]),
- * particle.x = x + random(-ux, ux)
- * particle.y = y + random(-uy, uy)
- * and so on for all <arg>, u<arg> pairs.
- * 0 <= r, g, b, ur, ug, ub <= 1
- * @param radius defaults to 1
- * color (r, g, b) defaults to 1
- * @param force defaults to no passive force
- * @param limit defaults to no limit fn
- * @param blender defaults to linear blend (fade to black) */
+/* Vis.emit(Vis.flist, n, when, emit_table) */
 int viscmd_emit_fn(lua_State* L) {
     int arg = 1;
     fnum when;
@@ -741,6 +745,15 @@ int viscmd_audio_fn(lua_State* L) {
         DBPRINTF("Vis.audio(%s) loaded", file);
         flist_insert_play(fl, when);
         lua_pushboolean(L, TRUE);
+
+        lua_getglobal(L, "Vis");
+        lua_pushstring(L, "AUDIO_PATH");
+        lua_pushstring(L, file);
+        lua_settable(L, -3);
+        lua_pushstring(L, "AUDIO_LENGTH");
+        lua_pushnumber(L, audio_get_length());
+        lua_settable(L, -3);
+        lua_pop(L, 1); /* getglobal("Vis") */
     }
     return 1;
 }
@@ -767,8 +780,7 @@ int viscmd_volume_fn(lua_State* L) {
     return 0;
 }
 
-/* Vis.seek(offset),
- * @param offset is in 100ths of a second, NOT milliseconds */
+/* Vis.seek(offset) */
 int viscmd_seek_fn(lua_State* L) {
     unsigned offset = (unsigned)luaL_checkinteger(L, 1);
     DBPRINTF("Vis.seek(%d)", (int)offset);

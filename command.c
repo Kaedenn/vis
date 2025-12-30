@@ -12,9 +12,6 @@
 #include "random.h"
 #include "script.h"
 
-/* for M_PI */
-#define __USE_BSD
-
 #include <errno.h>
 #include <math.h>
 #include <stdio.h>
