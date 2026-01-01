@@ -1,15 +1,14 @@
 #!/usr/bin/env python3
-from __future__ import annotations
 
+import csv
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
+import argparse
 
 import mido
 
-
 DEFAULT_TEMPO = 500_000  # 120 BPM in microseconds/beat
-
 
 @dataclass(frozen=True)
 class NoteEvent:
@@ -24,20 +23,28 @@ class NoteEvent:
     duration_ticks: Optional[int] = None
     duration_seconds: Optional[float] = None
 
+    @property
+    def start_msec(self):
+        return int(self.start_seconds * 1000)
+
+    @property
+    def duration_msec(self):
+        return int(self.duration_seconds * 1000)
 
 NOTE_NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
 
-
 def note_to_name(n: int) -> str:
+    """
+    Convert a MIDI note to a standard note-octave pair.
+    """
     octave = (n // 12) - 1
     name = NOTE_NAMES[n % 12]
     return f"{name}{octave}"
 
-
 def build_tempo_segments(mid: mido.MidiFile) -> List[Tuple[int, int]]:
     """
-    Returns a list of (abs_tick, tempo_us_per_beat) sorted by abs_tick for the *whole song*,
-    based on merged tracks (so you get global timing changes).
+    Returns a list of (abs_tick, tempo_us_per_beat) sorted by abs_tick for the
+    *whole song*, based on merged tracks (so you get global timing changes).
     """
     tempo_changes: List[Tuple[int, int]] = [(0, DEFAULT_TEMPO)]
     abs_tick = 0
@@ -56,7 +63,6 @@ def build_tempo_segments(mid: mido.MidiFile) -> List[Tuple[int, int]]:
         else:
             collapsed.append((t, tempo))
     return collapsed
-
 
 def ticks_to_seconds(ticks: int, ticks_per_beat: int, tempo_segments: List[Tuple[int, int]]) -> float:
     """
@@ -82,9 +88,7 @@ def ticks_to_seconds(ticks: int, ticks_per_beat: int, tempo_segments: List[Tuple
 
     return total_seconds
 
-
-def extract_first_notes(mid_path: Path, limit: int = 32) -> List[NoteEvent]:
-    mid = mido.MidiFile(str(mid_path))
+def extract_notes(mid: mido.MidiFile, limit: int = 32) -> List[NoteEvent]:
     tpb = mid.ticks_per_beat
     tempo_segments = build_tempo_segments(mid)
 
@@ -122,10 +126,11 @@ def extract_first_notes(mid_path: Path, limit: int = 32) -> List[NoteEvent]:
                     )
                 )
 
-                if len(results) >= limit:
-                    # We still might want to compute durations for these first notes,
-                    # so we do NOT break early here; we'll fill durations as note-offs appear.
-                    pass
+                if limit is not None:
+                    if len(results) >= limit:
+                        # We still might want to compute durations for these first notes,
+                        # so we do NOT break early here; we'll fill durations as note-offs appear.
+                        pass
 
             elif is_note_off:
                 key = (ti, msg.channel, msg.note)
@@ -147,45 +152,57 @@ def extract_first_notes(mid_path: Path, limit: int = 32) -> List[NoteEvent]:
 
             # If we already have enough results and all their durations are filled (optional),
             # we could stop. For simplicity, stop once we have 'limit' note-ons and we're past them a bit.
-            if len(results) >= limit and abs_tick > results[-1].start_ticks:
-                # If you don't care about durations, you can break earlier.
-                # We'll keep scanning a little to fill some durations naturally.
-                pass
+            if limit is not None:
+                if len(results) >= limit and abs_tick > results[-1].start_ticks:
+                    # If you don't care about durations, you can break earlier.
+                    # We'll keep scanning a little to fill some durations naturally.
+                    pass
 
-        if len(results) >= limit:
-            # continue scanning other tracks only if you need cross-track earliest notes.
-            # Many MIDI files store melody in one track; but not always.
-            # We'll keep going to collect earliest per-track note-ons; you can change this behavior.
-            pass
+        if limit is not None:
+            if len(results) >= limit:
+                # continue scanning other tracks only if you need cross-track earliest notes.
+                # Many MIDI files store melody in one track; but not always.
+                # We'll keep going to collect earliest per-track note-ons; you can change this behavior.
+                pass
 
     # If the file has multiple tracks, the "first notes of the song" are usually by global time.
     # Sort by absolute time (ticks), then by track to stabilize ordering.
     results.sort(key=lambda e: (e.start_ticks, e.track, e.channel, e.note))
-    return results[:limit]
-
+    if limit is not None:
+        return results[:limit]
+    return results
 
 def main() -> None:
-    import argparse
-
     p = argparse.ArgumentParser(description="Print first N note-on events with absolute timestamps.")
     p.add_argument("midi_file", type=Path)
-    p.add_argument("-n", "--num", type=int, default=32)
+    p.add_argument("-n", "--num", type=int)
+    p.add_argument("-o", "--output", type=Path, help="write to csv")
     args = p.parse_args()
 
-    events = extract_first_notes(args.midi_file, args.num)
+    mid = mido.MidiFile(str(args.midi_file))
+    events = extract_notes(mid, args.num)
 
-    print(f"ticks_per_beat: {mido.MidiFile(str(args.midi_file)).ticks_per_beat}")
-    print()
-    print("idx  t(sec)      t(ticks)  dur(sec)    dur(ticks)  trk ch note name  vel")
-    print("---  ----------- --------  ----------  ---------  --- -- ---- ----  ---")
-    for ev in events:
-        dur_s = f"{ev.duration_seconds:0.6f}" if ev.duration_seconds is not None else "-"
-        dur_t = f"{ev.duration_ticks}" if ev.duration_ticks is not None else "-"
-        print(
-            f"{ev.index:>3}  {ev.start_seconds:>11.6f} {ev.start_ticks:>8}  "
-            f"{dur_s:>10}  {dur_t:>9}  "
-            f"{ev.track:>3} {ev.channel:>2} {ev.note:>4} {ev.note_name:>4}  {ev.velocity:>3}"
-        )
+    if args.output:
+        with open(args.output, "wt") as fobj:
+            csvw = csv.writer(fobj)
+            csvw.writerow(("idx", "t(msec)", "t(ticks)", "dur(msec)", "dur(ticks)", "trk", "ch", "note", "name", "vel"))
+            for ev in events:
+                csvw.writerow((ev.index, ev.start_msec, ev.start_ticks, ev.duration_msec, ev.duration_ticks,
+                    ev.track, ev.channel, ev.note, ev.note_name, ev.velocity))
+        print(f"wrote {len(events)} notes to {args.output}")
+    else:
+        print(f"ticks_per_beat: {mid.ticks_per_beat}")
+        print()
+        print(" idx  t(msec) t(ticks)  dur(msec) dur(ticks)  trk ch note name  vel")
+        print("----  ------- --------  --------  ---------   --- -- ---- ----  ---")
+        for ev in events:
+            dur_s = f"{ev.duration_msec:d}" if ev.duration_seconds is not None else "-"
+            dur_t = f"{ev.duration_ticks}" if ev.duration_ticks is not None else "-"
+            print(
+                f"{ev.index:>4}  {ev.start_msec:>7d} {ev.start_ticks:>8}  "
+                f"{dur_s:>8}  {dur_t:>9}  "
+                f"{ev.track:>3} {ev.channel:>2} {ev.note:>4} {ev.note_name:>4}  {ev.velocity:>3}"
+            )
 
 
 if __name__ == "__main__":
