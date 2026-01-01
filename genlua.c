@@ -4,7 +4,7 @@
 #include "kstring.h"
 #include "types.h"
 
-char* genlua_emit(emit_desc* emit, fnum when) {
+char* genlua_emit(emit_desc* emit, fnum_t when) {
     char* result;
     kstr s = kstring_newfrom("Vis.emit(");
     kstring_append(s, "Vis.flist, ");

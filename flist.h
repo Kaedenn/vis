@@ -22,17 +22,17 @@ typedef struct flist_node {
         float color[3];        /* BGCOLOR: bgcolor frame */
         mutate_method* method; /* MUTATE: mutate frame */
         script_cb* scriptcb;   /* SCRIPTCB: lua invoke frame */
-        unsigned audioseek;    /* AUDIOSEEK: audio seek milliseconds */
-        fnum frameseek;        /* FRAMESEEK: go-to-frame-num frame */
+        msec_t audioseek;      /* AUDIOSEEK: audio seek milliseconds */
+        fnum_t frameseek;      /* FRAMESEEK: go-to-frame-num frame */
         float volume;          /* VOLUME: set volume frame */
-        fnum delay;            /* DELAY|AUDIOSYNC: number of frames to wait */
+        fnum_t delay;          /* DELAY|AUDIOSYNC: number of frames to wait */
     } data;
     struct flist_node* next;
 } flist_node;
 
 typedef struct flist {
-    fnum total_frames;
-    fnum curr_frame;
+    fnum_t total_frames;
+    fnum_t curr_frame;
     flist_node* frames[VIS_NFRAMES]; /* with apologies to the hardware */
 } flist;
 
@@ -44,25 +44,25 @@ flist_t flist_new(void);
 void flist_free(flist_t fl);
 void flist_clear(flist_t fl);
 void flist_restart(flist_t fl);
-void flist_goto_frame(flist_t fl, fnum where);
+void flist_goto_frame(flist_t fl, fnum_t where);
 BOOL flist_at_end(flist_t fl);
 
 flist_node* flist_tick(flist_t fl);
 flist_node* flist_node_next(flist_node* n);
 
-void flist_insert(flist_t fl, fnum when, flist_node* fn);
-void flist_insert_emit(flist_t fl, fnum when, emit_desc* what);
-void flist_insert_exit(flist_t fl, fnum when);
-void flist_insert_play(flist_t fl, fnum when);
-void flist_insert_pause(flist_t fl, fnum when);
-void flist_insert_volume(flist_t fl, fnum when, float volume);
-void flist_insert_audioseek(flist_t fl, fnum when, unsigned msec);
-void flist_insert_cmd(flist_t fl, fnum when, const char* what);
-void flist_insert_bgcolor(flist_t fl, fnum when, float color[3]);
-void flist_insert_mutate(flist_t fl, fnum when, mutate_method* method);
-void flist_insert_scriptcb(flist_t fl, fnum when, script_cb* func);
-void flist_insert_seekframe(flist_t fl, fnum when, fnum where);
-void flist_insert_delay(flist_t fl, fnum when, fnum length);
-void flist_insert_audiosync(flist_t fl, fnum when, fnum length);
+void flist_insert(flist_t fl, fnum_t when, flist_node* fn);
+void flist_insert_emit(flist_t fl, fnum_t when, emit_desc* what);
+void flist_insert_exit(flist_t fl, fnum_t when);
+void flist_insert_play(flist_t fl, fnum_t when);
+void flist_insert_pause(flist_t fl, fnum_t when);
+void flist_insert_volume(flist_t fl, fnum_t when, float volume);
+void flist_insert_audioseek(flist_t fl, fnum_t when, msec_t msec);
+void flist_insert_cmd(flist_t fl, fnum_t when, const char* what);
+void flist_insert_bgcolor(flist_t fl, fnum_t when, float color[3]);
+void flist_insert_mutate(flist_t fl, fnum_t when, mutate_method* method);
+void flist_insert_scriptcb(flist_t fl, fnum_t when, script_cb* func);
+void flist_insert_seekframe(flist_t fl, fnum_t when, fnum_t where);
+void flist_insert_delay(flist_t fl, fnum_t when, fnum_t length);
+void flist_insert_audiosync(flist_t fl, fnum_t when, fnum_t length);
 
 #endif

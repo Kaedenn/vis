@@ -77,7 +77,7 @@ void emitter_tick(void) {
             audio_play();
         }
     }
-    fnum curr_frame = emitter.fl->curr_frame;
+    fnum_t curr_frame = emitter.fl->curr_frame;
     flist_node* fn = flist_tick(emitter.fl);
     while (fn != NULL) {
         const char* ftype_str = ftype_to_string(fn->type);

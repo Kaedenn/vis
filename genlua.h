@@ -5,7 +5,7 @@
 #include "types.h"
 #include "emit.h"
 
-char* genlua_emit(emit_desc* emit, fnum when);
+char* genlua_emit(emit_desc* emit, fnum_t when);
 const char* genlua_force(force_id force);
 const char* genlua_limit(limit_id limit);
 const char* genlua_blender(blend_id blender);

@@ -5,7 +5,10 @@
 #include <stdint.h>
 
 /* Frame number */
-typedef unsigned int fnum;
+typedef unsigned int fnum_t;
+
+/* Milliseconds */
+typedef unsigned int msec_t;
 
 union particle_tag {
     int64_t l;

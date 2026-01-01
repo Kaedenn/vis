@@ -68,15 +68,15 @@ static void prepare_stack(script_t s, klist args);
 static void cleanup_stack(script_t s);
 static script_t util_checkscript(lua_State* L, int pos);
 static const char* util_get_error(lua_State* L);
-static emit_desc* lua_args_to_emit_desc(lua_State* L, int arg, fnum* when);
+static emit_desc* lua_args_to_emit_desc(lua_State* L, int arg, fnum_t* when);
 static void push_constant_num(lua_State* L, const char* k, double v, int idx);
 static void push_constant_int(lua_State* L, const char* k, int v, int idx);
 static void push_constant_string(lua_State* L, const char* k, const char* v, int idx);
 static int do_mouse_event(lua_State* L, const char* fn, int x, int y, int b);
 static int do_key_event(lua_State* L, const char* fn, const char* k, BOOL shft);
 static int get_configured_fps(lua_State* L);
-static int do_frames2msec(lua_State* L, fnum frame);
-static fnum do_msec2frames(lua_State* L, long msec);
+static int do_frames2msec(lua_State* L, fnum_t frame);
+static fnum_t do_msec2frames(lua_State* L, long msec);
 static kstr lua_inspect_value(lua_State* L, int arg);
 
 /* Functions exposed to Lua */
@@ -542,14 +542,14 @@ int get_configured_fps(lua_State* L) {
     return result;
 }
 
-int do_frames2msec(lua_State* L, fnum frame) {
+int do_frames2msec(lua_State* L, fnum_t frame) {
     int fps = get_configured_fps(L);
     return (int)(frame * 1000.0 / fps + 0.5);
 }
 
-fnum do_msec2frames(lua_State* L, long msec) {
+fnum_t do_msec2frames(lua_State* L, long msec) {
     int fps = get_configured_fps(L);
-    return (fnum)(fps * (double)msec / 1000.0 + 0.5);
+    return (fnum_t)(fps * (double)msec / 1000.0 + 0.5);
 }
 
 kstr lua_inspect_value(lua_State* L, int arg) {
@@ -565,12 +565,12 @@ kstr lua_inspect_value(lua_State* L, int arg) {
     return s;
 }
 
-emit_desc* lua_args_to_emit_desc(lua_State* L, int arg, fnum* when) {
+emit_desc* lua_args_to_emit_desc(lua_State* L, int arg, fnum_t* when) {
     emit_desc* emit = emit_new();
 
     emit->n = (int)luaL_checkinteger(L, arg++);
     if (when != NULL) {
-        *when = do_msec2frames(L, (unsigned)luaL_checkinteger(L, arg++));
+        *when = do_msec2frames(L, (msec_t)luaL_checkinteger(L, arg++));
     }
 
     /* behavior depends on the type of the next argument */
@@ -635,9 +635,9 @@ emit_desc* lua_args_to_emit_desc(lua_State* L, int arg, fnum* when) {
         } else if (!strcmp(key, "utheta")) {
             emit->utheta = luaL_checknumber(L, -1);
         } else if (!strcmp(key, "life")) {
-            emit->life = (int)do_msec2frames(L, (unsigned)luaL_checkinteger(L, -1));
+            emit->life = (int)do_msec2frames(L, (msec_t)luaL_checkinteger(L, -1));
         } else if (!strcmp(key, "ulife")) {
-            emit->ulife = (int)do_msec2frames(L, (unsigned)luaL_checkinteger(L, -1));
+            emit->ulife = (int)do_msec2frames(L, (msec_t)luaL_checkinteger(L, -1));
         } else if (!strcmp(key, "r")) {
             emit->r = (float)luaL_checknumber(L, -1);
         } else if (!strcmp(key, "g")) {
@@ -709,7 +709,7 @@ int viscmd_debug_fn(lua_State* L) {
 /* Vis.command(Vis.flist, when, "command") */
 int viscmd_command_fn(lua_State* L) {
     flist_t fl = *(flist_t*)luaL_checkudata(L, 1, "flist**");
-    fnum when = do_msec2frames(L, (unsigned)luaL_checkinteger(L, 2));
+    fnum_t when = do_msec2frames(L, (msec_t)luaL_checkinteger(L, 2));
     const char* cmd = luaL_checkstring(L, 3);
     flist_insert_cmd(fl, when, cmd);
     return 0;
@@ -718,7 +718,7 @@ int viscmd_command_fn(lua_State* L) {
 /* Vis.exit(Vis.flist, when) */
 int viscmd_exit_fn(lua_State* L) {
     flist_t fl = *(flist**)luaL_checkudata(L, 1, "flist**");
-    fnum when = do_msec2frames(L, (unsigned)luaL_checkinteger(L, 2));
+    fnum_t when = do_msec2frames(L, (msec_t)luaL_checkinteger(L, 2));
     flist_insert_exit(fl, when);
     return 0;
 }
@@ -726,7 +726,7 @@ int viscmd_exit_fn(lua_State* L) {
 /* Vis.emit(Vis.flist, n, when, emit_table) */
 int viscmd_emit_fn(lua_State* L) {
     int arg = 1;
-    fnum when;
+    fnum_t when;
     flist_t fl = *(flist**)luaL_checkudata(L, arg++, "flist**");
     emit_desc* frame = lua_args_to_emit_desc(L, arg, &when);
     flist_insert_emit(fl, when, frame);
@@ -736,7 +736,7 @@ int viscmd_emit_fn(lua_State* L) {
 /* Vis.audio(Vis.flist, when, path) */
 int viscmd_audio_fn(lua_State* L) {
     flist_t fl = *(flist**)luaL_checkudata(L, 1, "flist**");
-    fnum when = do_msec2frames(L, (unsigned)luaL_checkinteger(L, 2));
+    fnum_t when = do_msec2frames(L, (msec_t)luaL_checkinteger(L, 2));
     const char* file = luaL_checkstring(L, 3);
     if (!audio_open(file)) {
         DBPRINTF("Vis.audio(%s) failed", file);
@@ -754,7 +754,7 @@ int viscmd_audio_fn(lua_State* L) {
         lua_pushnumber(L, audio_get_length());
         lua_settable(L, -3);
         lua_pushstring(L, "AUDIO_LENGTH_MSEC");
-        lua_pushnumber(L, (unsigned)(audio_get_length() * 1000));
+        lua_pushnumber(L, (msec_t)(audio_get_length() * 1000));
         lua_settable(L, -3);
         lua_pop(L, 1); /* getglobal("Vis") */
     }
@@ -766,7 +766,7 @@ int viscmd_audio_fn(lua_State* L) {
 int viscmd_play_fn(lua_State* L) {
     if (lua_gettop(L) >= 2) {
         flist_t fl = *(flist**)luaL_checkudata(L, 1, "flist**");
-        fnum when = do_msec2frames(L, (unsigned)luaL_checkinteger(L, 2));
+        fnum_t when = do_msec2frames(L, (msec_t)luaL_checkinteger(L, 2));
         DBPRINTF("Vis.play(%p, [frame]%d)", fl, when);
         flist_insert_play(fl, when);
     } else {
@@ -781,7 +781,7 @@ int viscmd_play_fn(lua_State* L) {
 int viscmd_pause_fn(UNUSED_PARAM(lua_State* L)) {
     if (lua_gettop(L) >= 2) {
         flist_t fl = *(flist**)luaL_checkudata(L, 1, "flist**");
-        fnum when = do_msec2frames(L, (unsigned)luaL_checkinteger(L, 2));
+        fnum_t when = do_msec2frames(L, (msec_t)luaL_checkinteger(L, 2));
         DBPRINTF("Vis.pause(%p, [frame]%d)", fl, when);
         flist_insert_pause(fl, when);
     } else {
@@ -796,7 +796,7 @@ int viscmd_pause_fn(UNUSED_PARAM(lua_State* L)) {
 int viscmd_volume_fn(lua_State* L) {
     if (lua_gettop(L) >= 3) {
         flist_t fl = *(flist**)luaL_checkudata(L, 1, "flist**");
-        fnum when = do_msec2frames(L, (unsigned)luaL_checkinteger(L, 2));
+        fnum_t when = do_msec2frames(L, (msec_t)luaL_checkinteger(L, 2));
         float level = (float)luaL_checknumber(L, 3);
         DBPRINTF("Vis.volume(%p, [frame]%d, %f)", fl, when, level);
         flist_insert_volume(fl, when, level);
@@ -813,12 +813,12 @@ int viscmd_volume_fn(lua_State* L) {
 int viscmd_seek_fn(lua_State* L) {
     if (lua_gettop(L) >= 3) {
         flist_t fl = *(flist**)luaL_checkudata(L, 1, "flist**");
-        fnum when = do_msec2frames(L, (unsigned)luaL_checkinteger(L, 2));
-        unsigned offset = (unsigned)luaL_checkinteger(L, 3);
+        fnum_t when = do_msec2frames(L, (msec_t)luaL_checkinteger(L, 2));
+        msec_t offset = (msec_t)luaL_checkinteger(L, 3);
         DBPRINTF("Vis.seek(%p, [frame]%d, %d)", fl, when, (int)offset);
         flist_insert_audioseek(fl, when, offset);
     } else {
-        unsigned offset = (unsigned)luaL_checkinteger(L, 1);
+        msec_t offset = (msec_t)luaL_checkinteger(L, 1);
         DBPRINTF("Vis.seek(%d)", (int)offset);
         audio_seek(offset);
     }
@@ -828,8 +828,8 @@ int viscmd_seek_fn(lua_State* L) {
 /* Vis.seekms(Vis.flist, when, whereto) */
 int viscmd_seekms_fn(lua_State* L) {
     flist_t fl = *(flist**)luaL_checkudata(L, 1, "flist**");
-    fnum where = do_msec2frames(L, (unsigned)luaL_checkinteger(L, 2));
-    fnum whereto = do_msec2frames(L, (unsigned)luaL_checkinteger(L, 3));
+    fnum_t where = do_msec2frames(L, (msec_t)luaL_checkinteger(L, 2));
+    fnum_t whereto = do_msec2frames(L, (msec_t)luaL_checkinteger(L, 3));
     DBPRINTF("Vis.seekms(%p, [frame]%d, [frame]%d)", fl, where, whereto);
     flist_insert_seekframe(fl, where, whereto);
     return 0;
@@ -838,8 +838,8 @@ int viscmd_seekms_fn(lua_State* L) {
 /* Vis.seekframe(Vis.flist, when, whereto) */
 int viscmd_seekframe_fn(lua_State* L) {
     flist_t fl = *(flist**)luaL_checkudata(L, 1, "flist**");
-    fnum where = (fnum)(unsigned)luaL_checkinteger(L, 2);
-    fnum whereto = (fnum)(unsigned)luaL_checkinteger(L, 3);
+    fnum_t where = (fnum_t)luaL_checkinteger(L, 2);
+    fnum_t whereto = (fnum_t)luaL_checkinteger(L, 3);
     DBPRINTF("Vis.seekframe(%p, [frame]%d, [frame]%d)", fl, where, whereto);
     flist_insert_seekframe(fl, where, whereto);
     return 0;
@@ -848,7 +848,7 @@ int viscmd_seekframe_fn(lua_State* L) {
 /* Vis.gotoframe(Vis.flist, whereto) */
 int viscmd_gotoframe_fn(lua_State* L) {
     flist_t fl = *(flist**)luaL_checkudata(L, 1, "flist**");
-    fnum whereto = (fnum)(unsigned)luaL_checkinteger(L, 2);
+    fnum_t whereto = (fnum_t)luaL_checkinteger(L, 2);
     DBPRINTF("Vis.gotoframe(%p, [frame]%d)", fl, whereto);
     flist_goto_frame(fl, whereto);
     return 0;
@@ -857,8 +857,8 @@ int viscmd_gotoframe_fn(lua_State* L) {
 /* Vis.audiosync(Vis.flist, when, nframes) */
 int viscmd_audiosync_fn(lua_State* L) {
     flist_t fl = *(flist**)luaL_checkudata(L, 1, "flist**");
-    fnum where = (fnum)(unsigned)luaL_checkinteger(L, 2);
-    fnum nframes = (fnum)(unsigned)luaL_checkinteger(L, 3);
+    fnum_t where = (fnum_t)luaL_checkinteger(L, 2);
+    fnum_t nframes = (fnum_t)luaL_checkinteger(L, 3);
     DBPRINTF("Vis.audiosync(%p, [frame]%d, [frame]%d)", fl, where, nframes);
     flist_insert_audiosync(fl, where, nframes);
     return 0;
@@ -867,8 +867,8 @@ int viscmd_audiosync_fn(lua_State* L) {
 /* Vis.delay(Vis.flist, when, length) */
 static int viscmd_delay_fn(lua_State* L) {
     flist_t fl = *(flist**)luaL_checkudata(L, 1, "flist**");
-    fnum where = (fnum)(unsigned)luaL_checkinteger(L, 2);
-    fnum length = (fnum)(unsigned)luaL_checkinteger(L, 3);
+    fnum_t where = (fnum_t)luaL_checkinteger(L, 2);
+    fnum_t length = (fnum_t)luaL_checkinteger(L, 3);
     DBPRINTF("Vis.delay(%p, [frame]%d, [frame]%d)", fl, where, length);
     flist_insert_delay(fl, where, length);
     return 0;
@@ -879,7 +879,7 @@ static int viscmd_delay_fn(lua_State* L) {
  * Passing values less than 0 preserve existing values */
 int viscmd_bgcolor_fn(lua_State* L) {
     flist_t fl = *(flist**)luaL_checkudata(L, 1, "flist**");
-    fnum when = do_msec2frames(L, (unsigned)luaL_checkinteger(L, 2));
+    fnum_t when = do_msec2frames(L, (msec_t)luaL_checkinteger(L, 2));
     float c[3] = {
         (float)luaL_checknumber(L, 3),
         (float)luaL_checknumber(L, 4),
@@ -902,7 +902,7 @@ int viscmd_bgcolor_fn(lua_State* L) {
 int viscmd_mutate_fn(lua_State* L) {
     mutate_method* method = DBMALLOC(sizeof(struct mutate_method));
     flist_t fl = *(flist**)luaL_checkudata(L, 1, "flist**");
-    fnum when = do_msec2frames(L, (unsigned)luaL_checkinteger(L, 2));
+    fnum_t when = do_msec2frames(L, (msec_t)luaL_checkinteger(L, 2));
     mutate_id fnid = (mutate_id)(int)luaL_checkinteger(L, 3);
     method->id = fnid;
     if (fnid >= VIS_MUTATE_PUSH && fnid < VIS_MUTATE_TAG_SET) {
@@ -949,7 +949,7 @@ int viscmd_mutate_fn(lua_State* L) {
 /* Vis.callback(Vis.flist, when, Vis.script, "lua") */
 int viscmd_callback_fn(lua_State* L) {
     flist_t fl = *(flist**)luaL_checkudata(L, 1, "flist**");
-    fnum when = do_msec2frames(L, (unsigned)luaL_checkinteger(L, 2));
+    fnum_t when = do_msec2frames(L, (msec_t)luaL_checkinteger(L, 2));
     script_t s = util_checkscript(L, 3);
     script_cb* scb = DBMALLOC(sizeof(struct script_cb));
     scb->owner = s;
@@ -991,14 +991,14 @@ int viscmd_emitnow_fn(lua_State* L) {
 
 /* msec = Vis.frames2msec(frame) */
 int viscmd_f2ms_fn(lua_State* L) {
-    int result = do_frames2msec(L, (fnum)luaL_checknumber(L, 1));
+    int result = do_frames2msec(L, (fnum_t)luaL_checknumber(L, 1));
     lua_pushinteger(L, result);
     return 1;
 }
 
 /* fnum = Vis.msec2frames(msec) */
 int viscmd_ms2f_fn(lua_State* L) {
-    fnum result = do_msec2frames(L, (long)luaL_checknumber(L, 1));
+    fnum_t result = do_msec2frames(L, (long)luaL_checknumber(L, 1));
     lua_pushinteger(L, result);
     return 1;
 }
