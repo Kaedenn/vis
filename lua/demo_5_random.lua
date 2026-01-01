@@ -4,7 +4,7 @@ math = require("math")
 
 random = math.random
 function rand3f(low, high)
-    return random(low*1000, high*1000) / 100.0
+    return random(math.floor(low*1000), math.floor(high*1000)) / 100.0
 end
 function rand01()
     return random(0, 100) / 100.0

@@ -141,5 +141,9 @@ function Emit:blender(blend)
     self._t.blender = blend
 end
 
+function Emit:tag(tag)
+    self._t.tag = tag
+end
+
 return Emit
 

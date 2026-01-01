@@ -63,7 +63,7 @@ VisUtil.Debug.L_ESCAPE = 1
 VisUtil.Debug.L_TRACEBACK = 2
 VisUtil.Debug.L_INSPECT = 4
 
-VisUtil.Debug.Print = function(msg, args)
+function VisUtil.Debug.Print(msg, args)
     if args ~= nil then
         msg = msg:format(args)
     end
@@ -86,7 +86,7 @@ VisUtil.Debug.QUOTE_CHARS["\v"] = "\\v"
 VisUtil.Debug.QUOTE_CHARS["\\"] = "\\\\"
 VisUtil.Debug.QUOTE_CHARS['"'] = '\\"'
 
-VisUtil.Debug.QuoteString = function(str)
+function VisUtil.Debug.QuoteString(str)
     local result = ''
     for i = 1,#str do
         b = str:byte(i)
@@ -619,6 +619,8 @@ function VisUtil.Args:parse(args)
     return parsed, parsedenv, nil
 end
 
+--[[ END OF ARG API ]]
+
 function VisUtil.wrap_coord(x, y)
     while x < 0 do x = Vis.WIDTH + x end
     while y < 0 do y = Vis.HEIGHT + y end
@@ -629,13 +631,19 @@ end
 
 function VisUtil.make_emit_table()
     return {
-        count = 0, when = 0,
-        x = Vis.WIDTH / 2, y = Vis.HEIGHT / 2, ux = 0, uy = 0,
+        count = 0,
+        when = 0,
+        x = Vis.WIDTH / 2, y = Vis.HEIGHT / 2,
+        ux = 0, uy = 0,
+        s = 0, us = 0,
         radius = 1, uradius = 0,
-        ds = 0, uds = 0, theta = 0, utheta = 0,
+        ds = 0, uds = 0,
+        theta = 0, utheta = 0,
         life = 0, ulife = 0,
-        r = 1, g = 1, b = 1, ur = 0, ug = 0, ub = 0,
-        force = Vis.DEFAULT_FORCE, limit = Vis.DEFAULT_LIMIT,
+        r = 1, g = 1, b = 1,
+        ur = 0, ug = 0, ub = 0,
+        force = Vis.DEFAULT_FORCE,
+        limit = Vis.DEFAULT_LIMIT,
         blender = Vis.BLEND_LINEAR
     }
 end
@@ -648,23 +656,12 @@ function VisUtil.center_emit_table(t, x, y, ux, uy)
 end
 
 function VisUtil.color_emit_table(t, r, g, b, ur, ug, ub)
-    t.r = r and r>1 and r/255.0 or (r or 0)
-    t.g = g and g>1 and g/255.0 or (g or 0)
-    t.b = b and b>1 and b/255.0 or (b or 0)
-    t.ur = ur and ur>1 and ur/255.0 or (ur or 0)
-    t.ug = ug and ug>1 and ug/255.0 or (ug or 0)
-    t.ub = ub and ub>1 and ub/255.0 or (ub or 0)
-end
-
-function VisUtil.color_emit_table_v(t, rgb)
-    VisUtil.color_emit_table(t, rgb[1], rgb[2], rgb[3],
-                                rgb[4], rgb[5], rgb[6])
-end
-
-function VisUtil.color_emit_table_v2(t, rgb, urgb)
-    local urgb = urgb or {0, 0, 0}
-    VisUtil.color_emit_table(t, rgb[1], rgb[2], rgb[3],
-                                urgb[1], urgb[2], urgb[3])
+    t.r = r and r>1 and r/255.0 or (r or t.r)
+    t.g = g and g>1 and g/255.0 or (g or t.g)
+    t.b = b and b>1 and b/255.0 or (b or t.b)
+    t.ur = ur and ur>1 and ur/255.0 or (ur or t.ur)
+    t.ug = ug and ug>1 and ug/255.0 or (ug or t.ug)
+    t.ub = ub and ub>1 and ub/255.0 or (ub or t.ub)
 end
 
 function VisUtil.emit_table(t)
@@ -803,6 +800,27 @@ function VisUtil.strobject(o, i, seen, whereami, maxi)
     else
         return seen[o]
     end
+end
+
+function VisUtil.parse_midi_frame(line)
+    line = line:gsub("\n", "")
+    local values = {}
+    for entry in line:gmatch("[^,]*[,]?") do
+        entry = entry:gsub(",$", "")
+        table.insert(values, entry)
+    end
+    return {
+        id = tonumber(values[1]),
+        onms = tonumber(values[2]),
+        onticks = tonumber(values[3]),
+        durms = tonumber(values[4]),
+        durticks = tonumber(values[5]),
+        track = tonumber(values[6]),
+        channel = tonumber(values[7]),
+        note = tonumber(values[8]),
+        name = values[9],
+        velocity = tonumber(values[10])
+    }
 end
 
 function VisUtil.genlua_force(force)
