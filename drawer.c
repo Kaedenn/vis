@@ -199,9 +199,9 @@ GLFWwindow* drawer_get_window(drawer_t drawer) {
 }
 
 void drawer_bgcolor(drawer_t drawer, float r, float g, float b) {
-    drawer->bgcolor[0] = r;
-    drawer->bgcolor[1] = g;
-    drawer->bgcolor[2] = b;
+    if (r >= 0) drawer->bgcolor[0] = r;
+    if (g >= 0) drawer->bgcolor[1] = g;
+    if (b >= 0) drawer->bgcolor[2] = b;
 }
 
 int drawer_add_particle(drawer_t drawer, particle* p) {

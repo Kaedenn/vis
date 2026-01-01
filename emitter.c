@@ -95,6 +95,18 @@ void emitter_tick(void) {
             DBPRINTF("Ticking flist: %s at frame %d", ftype_str, curr_frame);
             audio_play();
             break;
+        case VIS_FTYPE_PAUSE:
+            DBPRINTF("Ticking flist: %s at frame %d", ftype_str, curr_frame);
+            audio_pause();
+            break;
+        case VIS_FTYPE_VOLUME:
+            DBPRINTF("Ticking flist: %s at frame %d", ftype_str, curr_frame);
+            audio_set_volume(fn->data.volume);
+            break;
+        case VIS_FTYPE_AUDIOSEEK:
+            DBPRINTF("Ticking flist: %s at frame %d", ftype_str, curr_frame);
+            audio_seek(fn->data.audioseek);
+            break;
         case VIS_FTYPE_CMD:
             DBPRINTF("Ticking flist: %s at frame %d", ftype_str, curr_frame);
             command_str(emitter.commands, fn->data.cmd);

@@ -11,6 +11,12 @@ const char* ftype_to_string(ftype_id ftype) {
         return "VIS_FTYPE_EXIT";
     case VIS_FTYPE_PLAY:
         return "VIS_FTYPE_PLAY";
+    case VIS_FTYPE_PAUSE:
+        return "VIS_FTYPE_PAUSE";
+    case VIS_FTYPE_VOLUME:
+        return "VIS_FTYPE_VOLUME";
+    case VIS_FTYPE_AUDIOSEEK:
+        return "VIS_FTYPE_AUDIOSEEK";
     case VIS_FTYPE_CMD:
         return "VIS_FTYPE_CMD";
     case VIS_FTYPE_BGCOLOR:
@@ -115,6 +121,35 @@ void flist_insert_play(flist_t fl, fnum when) {
     if (when >= VIS_NFRAMES) return;
     fn = flist_node_new();
     fn->type = VIS_FTYPE_PLAY;
+    flist_insert(fl, when, fn);
+}
+
+void flist_insert_pause(flist_t fl, fnum when) {
+    flist_node* fn = NULL;
+    if (!fl) return;
+    if (when >= VIS_NFRAMES) return;
+    fn = flist_node_new();
+    fn->type = VIS_FTYPE_PAUSE;
+    flist_insert(fl, when, fn);
+}
+
+void flist_insert_volume(flist_t fl, fnum when, float volume) {
+    flist_node* fn = NULL;
+    if (!fl) return;
+    if (when >= VIS_NFRAMES) return;
+    fn = flist_node_new();
+    fn->type = VIS_FTYPE_VOLUME;
+    fn->data.volume = volume;
+    flist_insert(fl, when, fn);
+}
+
+void flist_insert_audioseek(flist_t fl, fnum when, unsigned msec) {
+    flist_node* fn = NULL;
+    if (!fl) return;
+    if (when >= VIS_NFRAMES) return;
+    fn = flist_node_new();
+    fn->type = VIS_FTYPE_AUDIOSEEK;
+    fn->data.audioseek = msec;
     flist_insert(fl, when, fn);
 }
 

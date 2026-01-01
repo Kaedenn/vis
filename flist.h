@@ -22,7 +22,9 @@ typedef struct flist_node {
         float color[3];        /* BGCOLOR: bgcolor frame */
         mutate_method* method; /* MUTATE: mutate frame */
         script_cb* scriptcb;   /* SCRIPTCB: lua invoke frame */
+        unsigned audioseek;    /* AUDIOSEEK: audio seek milliseconds */
         fnum frameseek;        /* FRAMESEEK: go-to-frame-num frame */
+        float volume;          /* VOLUME: set volume frame */
         fnum delay;            /* DELAY|AUDIOSYNC: number of frames to wait */
     } data;
     struct flist_node* next;
@@ -52,6 +54,9 @@ void flist_insert(flist_t fl, fnum when, flist_node* fn);
 void flist_insert_emit(flist_t fl, fnum when, emit_desc* what);
 void flist_insert_exit(flist_t fl, fnum when);
 void flist_insert_play(flist_t fl, fnum when);
+void flist_insert_pause(flist_t fl, fnum when);
+void flist_insert_volume(flist_t fl, fnum when, float volume);
+void flist_insert_audioseek(flist_t fl, fnum when, unsigned msec);
 void flist_insert_cmd(flist_t fl, fnum when, const char* what);
 void flist_insert_bgcolor(flist_t fl, fnum when, float color[3]);
 void flist_insert_mutate(flist_t fl, fnum when, mutate_method* method);

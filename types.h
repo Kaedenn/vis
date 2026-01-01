@@ -4,6 +4,7 @@
 
 #include <stdint.h>
 
+/* Frame number */
 typedef unsigned int fnum;
 
 union particle_tag {
@@ -103,6 +104,9 @@ typedef enum {
     VIS_FTYPE_EMIT,
     VIS_FTYPE_EXIT,
     VIS_FTYPE_PLAY,
+    VIS_FTYPE_PAUSE,
+    VIS_FTYPE_VOLUME,
+    VIS_FTYPE_AUDIOSEEK,
     VIS_FTYPE_CMD,
     VIS_FTYPE_BGCOLOR,
     VIS_FTYPE_MUTATE,

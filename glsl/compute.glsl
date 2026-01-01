@@ -1,5 +1,8 @@
 #version 430
 
+/* NOTE: This is not currently used, but exists here in case profiling shows
+ * a need for it. */
+
 layout (local_size_x = 1) in;
 
 layout(std430, binding=0) buffer Pos {

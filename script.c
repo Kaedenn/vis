@@ -678,7 +678,8 @@ emit_desc* lua_args_to_emit_desc(lua_State* L, int arg, fnum* when) {
 /* end of private API */
 
 /* start of Lua API */
-/* Vis.debug(Vis.flist, ...) */
+/* Vis.debug(Vis.flist, ...)
+ * FIXME: Get the caller frame, not the VisUtil.Debug frame */
 int viscmd_debug_fn(lua_State* L) {
     int nargs = lua_gettop(L);
     lua_Debug ar;
@@ -710,7 +711,6 @@ int viscmd_command_fn(lua_State* L) {
     flist_t fl = *(flist_t*)luaL_checkudata(L, 1, "flist**");
     fnum when = do_msec2frames(L, (unsigned)luaL_checkinteger(L, 2));
     const char* cmd = luaL_checkstring(L, 3);
-    /* DBPRINTF("command(%p, %d, \"%s\")", fl, when, cmd); */
     flist_insert_cmd(fl, when, cmd);
     return 0;
 }
@@ -753,38 +753,75 @@ int viscmd_audio_fn(lua_State* L) {
         lua_pushstring(L, "AUDIO_LENGTH");
         lua_pushnumber(L, audio_get_length());
         lua_settable(L, -3);
+        lua_pushstring(L, "AUDIO_LENGTH_MSEC");
+        lua_pushnumber(L, (unsigned)(audio_get_length() * 1000));
+        lua_settable(L, -3);
         lua_pop(L, 1); /* getglobal("Vis") */
     }
     return 1;
 }
 
-/* Vis.play() */
-int viscmd_play_fn(UNUSED_PARAM(lua_State* L)) {
-    DBPRINTF("%s", "Vis.play()");
-    audio_play();
+/* Vis.play()
+ * Vis.play(Vis.flist, fnum) */
+int viscmd_play_fn(lua_State* L) {
+    if (lua_gettop(L) >= 2) {
+        flist_t fl = *(flist**)luaL_checkudata(L, 1, "flist**");
+        fnum when = do_msec2frames(L, (unsigned)luaL_checkinteger(L, 2));
+        DBPRINTF("Vis.play(%p, [frame]%d)", fl, when);
+        flist_insert_play(fl, when);
+    } else {
+        DBPRINTF("%s", "Vis.play()");
+        audio_play();
+    }
     return 0;
 }
 
-/* Vis.pause() */
+/* Vis.pause()
+ * Vis.pause(Vis.flist, fnum) */
 int viscmd_pause_fn(UNUSED_PARAM(lua_State* L)) {
-    DBPRINTF("%s", "Vis.pause()");
-    audio_pause();
+    if (lua_gettop(L) >= 2) {
+        flist_t fl = *(flist**)luaL_checkudata(L, 1, "flist**");
+        fnum when = do_msec2frames(L, (unsigned)luaL_checkinteger(L, 2));
+        DBPRINTF("Vis.pause(%p, [frame]%d)", fl, when);
+        flist_insert_pause(fl, when);
+    } else {
+        DBPRINTF("%s", "Vis.pause()");
+        audio_pause();
+    }
     return 0;
 }
 
-/* Vis.volume(level) */
+/* Vis.volume(level)
+ * Vis.volume(Vis.flist, fnum, offset) */
 int viscmd_volume_fn(lua_State* L) {
-    float level = (float)luaL_checknumber(L, 1);
-    DBPRINTF("Vis.volume(%f)", level);
-    audio_set_volume(level);
+    if (lua_gettop(L) >= 3) {
+        flist_t fl = *(flist**)luaL_checkudata(L, 1, "flist**");
+        fnum when = do_msec2frames(L, (unsigned)luaL_checkinteger(L, 2));
+        float level = (float)luaL_checknumber(L, 3);
+        DBPRINTF("Vis.volume(%p, [frame]%d, %f)", fl, when, level);
+        flist_insert_volume(fl, when, level);
+    } else {
+        float level = (float)luaL_checknumber(L, 1);
+        DBPRINTF("Vis.volume(%f)", level);
+        audio_set_volume(level);
+    }
     return 0;
 }
 
-/* Vis.seek(offset) */
+/* Vis.seek(offset)
+ * Vis.seek(Vis.flist, fnum, offset) */
 int viscmd_seek_fn(lua_State* L) {
-    unsigned offset = (unsigned)luaL_checkinteger(L, 1);
-    DBPRINTF("Vis.seek(%d)", (int)offset);
-    audio_seek(offset);
+    if (lua_gettop(L) >= 3) {
+        flist_t fl = *(flist**)luaL_checkudata(L, 1, "flist**");
+        fnum when = do_msec2frames(L, (unsigned)luaL_checkinteger(L, 2));
+        unsigned offset = (unsigned)luaL_checkinteger(L, 3);
+        DBPRINTF("Vis.seek(%p, [frame]%d, %d)", fl, when, (int)offset);
+        flist_insert_audioseek(fl, when, offset);
+    } else {
+        unsigned offset = (unsigned)luaL_checkinteger(L, 1);
+        DBPRINTF("Vis.seek(%d)", (int)offset);
+        audio_seek(offset);
+    }
     return 0;
 }
 
@@ -837,8 +874,9 @@ static int viscmd_delay_fn(lua_State* L) {
     return 0;
 }
 
-/* Vis.bgcolor(Vis.flist, when, r, g, b),
- * 0 <= @param rgb <= 1 */
+/* Vis.bgcolor(Vis.flist, when, r, g, b)
+ * 0 <= @param rgb <= 1
+ * Passing values less than 0 preserve existing values */
 int viscmd_bgcolor_fn(lua_State* L) {
     flist_t fl = *(flist**)luaL_checkudata(L, 1, "flist**");
     fnum when = do_msec2frames(L, (unsigned)luaL_checkinteger(L, 2));
@@ -951,21 +989,21 @@ int viscmd_emitnow_fn(lua_State* L) {
     return 0;
 }
 
-/* Vis.frames2msec(frame) */
+/* msec = Vis.frames2msec(frame) */
 int viscmd_f2ms_fn(lua_State* L) {
     int result = do_frames2msec(L, (fnum)luaL_checknumber(L, 1));
     lua_pushinteger(L, result);
     return 1;
 }
 
-/* Vis.msec2frames(msec) */
+/* fnum = Vis.msec2frames(msec) */
 int viscmd_ms2f_fn(lua_State* L) {
     fnum result = do_msec2frames(L, (long)luaL_checknumber(L, 1));
     lua_pushinteger(L, result);
     return 1;
 }
 
-/* Vis.get_debug(Vis.script, what) */
+/* value = Vis.get_debug(Vis.script, what) */
 int viscmd_get_debug_fn(lua_State* L) {
     script_t s = util_checkscript(L, 1);
     const char* what = luaL_checkstring(L, 2);

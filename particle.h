@@ -7,6 +7,9 @@
 #include "types.h"
 #include <stdlib.h>
 
+/* TODO: Move r, g, b out of pextra
+ * TODO: Move force, limit into pextra */
+
 struct particle;
 
 typedef void (*force_fn)(struct particle* p);
@@ -54,8 +57,8 @@ void particle_set_color(particle* p, float r, float g, float b, float a);
 /* special function for a particle's life to continue */
 void particle_tick(particle* p);
 
-#if DEBUG > DEBUG_NONE
 /* accessor functions */
+#if DEBUG > DEBUG_NONE
 int particle_is_alive(particle* p);
 double particle_get_x(particle* p);
 double particle_get_y(particle* p);
