@@ -56,10 +56,13 @@ function Message:emit_char(when, char, anchorx, anchory, letterx, lettery)
     Letters.map_fn_xy(char:upper(), function(basex, basey)
         local charx = anchorx + zoom*(basex+letterx)
         local chary = anchory + zoom*(basey+lettery)
+        if Letters[char:upper()] == nil then
+            error(("No character found for '%s' (as '%s')"):format(char:upper(), char))
+        end
         local adjy = #Letters[char:upper()] - Letters.LETTER_HEIGHT
         e:center(charx, chary - adjy, zoom/2, zoom/2)
         if when then
-            e:emit(when)
+            e:emit_at(when)
         else
             e:emitnow()
         end
