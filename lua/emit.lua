@@ -62,6 +62,15 @@ function Emit:center(x, y, ux, uy, s, us)
     return VisUtil.center_emit_table(self._t, x, y, ux or 0, uy or 0)
 end
 
+function Emit:place(x, y, ux, uy, s, us)
+    self._t.x = x or self._t.x or 0
+    self._t.y = y or self._t.y or 0
+    self._t.ux = ux or self._t.ux or 0
+    self._t.uy = uy or self._t.uy or 0
+    self._t.s = s or self._t.s or 0
+    self._t.us = us or self._t.us or 0
+end
+
 function Emit:move(dx, dy, udx, udy)
     self._t.x = self._t.x + dx
     self._t.y = self._t.y + dy
