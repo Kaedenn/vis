@@ -3,28 +3,12 @@ bit32 = require('bit32')
 
 VisUtil = {}
 
---[[ FIXME
--- Argument parsing
---
--- Change the many-objects paradigm to a list-of-objects paradigm.
---  -> Create VisUtil.Arg.Argument object
---
--- Multi-arg arguments (eg. -V,--volume) aren't always grouped together
--- in --help.
---]]
-
 VisUtil.EMIT_FIELDS = {
     "count", "when", "x", "y", "ux", "uy", "s", "us",
     "radius", "uradius", "ds", "uds", "theta", "utheta",
-    "life", "ulife", "r", "g", "b", "ur", "ug", "ub",
+    "depth", "life", "ulife", "r", "g", "b", "ur", "ug", "ub",
     "force", "limit", "blender", "tag"
 }
-
-VisUtil.COLOR = {}
-VisUtil.COLOR.BLUE1 = {0, 0.2, 0.8, 0, 0.1, 0.2}
-VisUtil.COLOR.BLUE2 = {0, 0.2, 0.8, 0, 0.21, 0.21}
-VisUtil.COLOR.GREEN1 = {0, 0.8, 0.2, 0, 0.2, 0.1}
-VisUtil.COLOR.GREEN2 = {0, 0.8, 0.2, 0, 0.21, 0.11}
 
 VisUtil.Debug = {}
 VisUtil.Debug.ENABLED = (function()
@@ -225,6 +209,7 @@ function VisUtil.Args:_check_match(argdef, argval)
     return false
 end
 
+--[[ Actually parse the arguments; uses script args if args is nil ]]
 function VisUtil.Args:parse_args(args)
     if not args then args = Arguments end
     if type(args) ~= "table" then
@@ -635,6 +620,7 @@ function VisUtil.make_emit_table()
         when = 0,
         x = Vis.WIDTH / 2, y = Vis.HEIGHT / 2,
         ux = 0, uy = 0,
+        depth = 0,
         s = 0, us = 0,
         radius = 1, uradius = 0,
         ds = 0, uds = 0,
@@ -644,7 +630,8 @@ function VisUtil.make_emit_table()
         ur = 0, ug = 0, ub = 0,
         force = Vis.DEFAULT_FORCE,
         limit = Vis.DEFAULT_LIMIT,
-        blender = Vis.BLEND_LINEAR
+        blender = Vis.BLEND_LINEAR,
+        tag = 0,
     }
 end
 
@@ -669,6 +656,7 @@ function VisUtil.emit_table(t)
     Vis.emit(Vis.flist, t.count, t.when, {
         x = x, y = y,
         ux = t.ux, uy = t.uy,
+        depth = t.depth,
         s = t.s, us = t.us,
         rad = t.radius, urad = t.uradius,
         ds = t.ds, uds = t.uds,
@@ -679,7 +667,7 @@ function VisUtil.emit_table(t)
         force = t.force,
         limit = t.limit,
         blender = t.blender,
-        tag = t.tag
+        tag = math.floor(t.tag)
     })
 end
 
@@ -688,6 +676,7 @@ function VisUtil.emit_table_now(t)
     Vis.emitnow(Vis.script, t.count, {
         x = x, y = y,
         ux = t.ux, uy = t.uy,
+        depth = t.depth,
         s = t.s, us = t.us,
         rad = t.radius, urad = t.uradius,
         ds = t.ds, uds = t.uds,
@@ -698,7 +687,7 @@ function VisUtil.emit_table_now(t)
         force = t.force,
         limit = t.limit,
         blender = t.blender,
-        tag = t.tag,
+        tag = math.floor(t.tag),
     })
 end
 
