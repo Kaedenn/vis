@@ -16,10 +16,12 @@ typedef void(*mutate_fn)(particle* p, struct mutate_method* method);
 typedef struct mutate_method {
     mutate_id id;
     mutate_fn func;
-    double factor[2];   /* coefficient, amount, etc */
-    double offset[2];   /* location (x, y) in world space */
+    double check_factor[2]; /* for conditional mutates */
+    double factor[2];       /* coefficient, amount, etc */
+    double offset[2];       /* location (x, y) in world space */
     mutate_cond_id cond;
-    union particle_tag tag;
+    union particle_tag tag;     /* for conditional mutates */
+    union particle_tag newtag;
 } mutate_method;
 
 BOOL mutate_cond_apply(particle* p, mutate_method* method);
@@ -44,6 +46,7 @@ void mutate_tag_add(particle* p, mutate_method* method);
 void mutate_tag_sub(particle* p, mutate_method* method);
 void mutate_tag_mul(particle* p, mutate_method* method);
 void mutate_tag_div(particle* p, mutate_method* method);
+void mutate_tag_set_if(particle* p, mutate_method* method);
 
 void mutate_push_if(particle* p, mutate_method* method);
 void mutate_push_dx_if(particle* p, mutate_method* method);
@@ -80,6 +83,7 @@ static const mutate_fn MUTATE_MAP[VIS_NMUTATES+1] = {
     [VIS_MUTATE_TAG_SUB] = mutate_tag_sub,
     [VIS_MUTATE_TAG_MUL] = mutate_tag_mul,
     [VIS_MUTATE_TAG_DIV] = mutate_tag_div,
+    [VIS_MUTATE_TAG_SET_IF] = mutate_tag_set_if,
     [VIS_MUTATE_PUSH_IF] = mutate_push_if,
     [VIS_MUTATE_PUSH_DX_IF] = mutate_push_dx_if,
     [VIS_MUTATE_PUSH_DY_IF] = mutate_push_dy_if,

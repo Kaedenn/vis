@@ -16,10 +16,6 @@
 
 #include "3rdparty/stb_image_write.h"
 
-#ifndef MAX
-#define MAX(a, b) ((a) < (b) ? (b) : (a))
-#endif
-
 static double calculate_blend(particle* p);
 static int render_to_file(drawer_t drawer, const char *path);
 
@@ -217,7 +213,7 @@ int drawer_add_particle(drawer_t drawer, particle* p) {
         v->g = (GLfloat)pe->g;
         v->b = (GLfloat)pe->b;
         v->a = (GLfloat)sqrt(calculate_blend(p));
-        v->depth = pe->tag.ui.l;
+        v->depth = (GLuint)p->depth;
 
         drawer->vertex_curr += 1;
         return 0;

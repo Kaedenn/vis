@@ -198,8 +198,8 @@ static void cmd_emit(struct commands* cmds, const char* buffer) {
                 limit = VIS_DEFAULT_LIMIT;
             }
 
-            p = particle_new_full(x, y, ux, uy, rad, urad, ds, uds,
-                theta, utheta, life, ulife,
+            p = particle_new_full(x, y, ux, uy, 0, 0, rad, urad, ds, uds,
+                theta, utheta, 0, life, ulife,
                 (force_id)force, (limit_id)limit, pe);
 
             plist_add(cmds->particles, p);

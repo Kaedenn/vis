@@ -30,6 +30,10 @@ void emit_set_rad(emit_desc* e, double rad, double urad) {
     e->urad = urad;
 }
 
+void emit_set_depth(emit_desc* e, int depth) {
+    e->depth = depth;
+}
+
 void emit_set_life(emit_desc* e, int life, int ulife) {
     e->life = life;
     e->ulife = ulife;
@@ -72,11 +76,11 @@ void emit_set_tag(emit_desc* e, uint64_t tag) {
 
 void dbprintf_emit_desc(emit_desc* e) {
     DBPRINTF("struct emit_desc { n=%d, x=%g, y=%g, ux=%g, uy=%g, "
-             "s=%g us=%g, rad=%g, urad=%g, life=%d, ulife=%d, "
+             "s=%g us=%g, rad=%g, urad=%g, depth=%d, life=%d, ulife=%d, "
              "ds=%g, uds=%g, theta=%g, utheta=%g, r=%f, g=%f, b=%f, "
              "ur=%f, ug=%f, ub=%f, force=%d, limit=%d, blender=%d };",
         e->n, e->x, e->y, e->ux, e->uy, e->s, e->us, e->rad, e->urad,
-        e->life, e->ulife, e->ds, e->uds, e->theta, e->utheta,
+        e->depth, e->life, e->ulife, e->ds, e->uds, e->theta, e->utheta,
         e->r, e->g, e->b, e->ur, e->ug, e->ub, e->force, e->limit,
         e->blender);
 }

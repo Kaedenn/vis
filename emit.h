@@ -25,6 +25,7 @@ typedef struct emit {
     double x, y, ux, uy;    /* where to emit from (in pixel coords) */
     double s, us;           /* radial position (added to x, y) */
     double rad, urad;       /* radius (size) */
+    int depth;              /* z depth; also used for draw order */
     int life, ulife;        /* particle lifetime (in frames) */
     double ds, uds;         /* initial velocity along theta */
     double theta, utheta;   /* initial facing angle */
@@ -43,6 +44,7 @@ void emit_set_n(emit_desc* e, int n);
 void emit_set_rad_pos(emit_desc* e, double s, double us);
 void emit_set_pos(emit_desc* e, double x, double y, double dx, double dy);
 void emit_set_rad(emit_desc* e, double rad, double urad);
+void emit_set_depth(emit_desc* e, int depth);
 void emit_set_life(emit_desc* e, int life, int ulife);
 void emit_set_ds(emit_desc* e, double ds, double uds);
 void emit_set_angle(emit_desc* e, double theta, double utheta);

@@ -26,6 +26,7 @@ typedef struct clargs {
     BOOL must_exit;
     int exit_status;
 } clargs;
+typedef clargs* clargs_t;
 
 clargs* argparse(int argc, char** argv);
 void clargs_free(clargs* args);

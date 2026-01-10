@@ -3,11 +3,12 @@
 #define VIS_EMITTER_HEADER_INCLUDED_ 1
 
 #include "command.h"
+#include "clargs.h"
 #include "emit.h"
 #include "flist.h"
 #include "plist.h"
 
-void emitter_setup(struct commands* cmds, plist_t plist, drawer_t drawer);
+void emitter_setup(struct commands* cmds, plist_t plist, drawer_t drawer, clargs_t args);
 void emitter_free(void);
 
 uint32_t emitter_get_frame_count(ftype_id ft);

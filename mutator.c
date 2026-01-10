@@ -1,7 +1,10 @@
 
+#include "helper.h"
 #include "mutator.h"
 #include "pextra.h"
 #include "random.h"
+
+#include <math.h>
 
 /* This hack validates the size of the MUTATE_MAP array at compilation
  * time. If the MUTATE_MAP is correct, fnmap_assert_size is char[1].
@@ -38,20 +41,46 @@ uint64_t mutate_debug_get_particle_tags_modified(void) {
 }
 
 static int64_t get_tag_l(particle* p) {
-    return ((pextra*)p->extra)->tag.i.l;
+    return ((pextra*)p->extra)->tag.l;
 }
 
 BOOL mutate_cond_apply(particle* p, mutate_method* method) {
     switch (method->cond) {
-        case VIS_MUTATE_IF_TRUE: return TRUE;
-        case VIS_MUTATE_IF_EQ: return get_tag_l(p) == method->tag.i.l;
-        case VIS_MUTATE_IF_NE: return get_tag_l(p) != method->tag.i.l;
-        case VIS_MUTATE_IF_LT: return get_tag_l(p) < method->tag.i.l;
-        case VIS_MUTATE_IF_LE: return get_tag_l(p) <= method->tag.i.l;
-        case VIS_MUTATE_IF_GT: return get_tag_l(p) > method->tag.i.l;
-        case VIS_MUTATE_IF_GE: return get_tag_l(p) >= method->tag.i.l;
-        case VIS_MUTATE_IF_EVEN: return (get_tag_l(p) % 2) == 0;
-        case VIS_MUTATE_IF_ODD: return (get_tag_l(p) % 2) == 1;
+        case VIS_MUTATE_IF_TRUE:
+            return TRUE;
+        case VIS_MUTATE_IF_EQ:
+            return get_tag_l(p) == method->tag.l;
+        case VIS_MUTATE_IF_NE:
+            return get_tag_l(p) != method->tag.l;
+        case VIS_MUTATE_IF_LT:
+            return get_tag_l(p) < method->tag.l;
+        case VIS_MUTATE_IF_LE:
+            return get_tag_l(p) <= method->tag.l;
+        case VIS_MUTATE_IF_GT:
+            return get_tag_l(p) > method->tag.l;
+        case VIS_MUTATE_IF_GE:
+            return get_tag_l(p) >= method->tag.l;
+        case VIS_MUTATE_IF_EVEN:
+            return (get_tag_l(p) % 2) == 0;
+        case VIS_MUTATE_IF_ODD:
+            return (get_tag_l(p) % 2) == 1;
+
+        case VIS_MUTATE_IF_ABOVE:
+            return p->y <= method->offset[1];
+        case VIS_MUTATE_IF_BELOW:
+            return p->y >= method->offset[1];
+        case VIS_MUTATE_IF_LEFT:
+            return p->x <= method->offset[0];
+        case VIS_MUTATE_IF_RIGHT:
+            return p->x >= method->offset[0];
+        case VIS_MUTATE_IF_NEAR:
+            return distance(p->x, p->y,
+                    method->offset[0], method->offset[1]) <= method->check_factor[0];
+        case VIS_MUTATE_IF_FAR:
+            return distance(p->x, p->y,
+                    method->offset[0], method->offset[1]) >= method->check_factor[0];
+        case VIS_MUTATE_NCONDS:
+            return FALSE;
     }
     return FALSE;
 }
@@ -118,37 +147,44 @@ void mutate_set_radius(particle* p, mutate_method* method) {
 
 void mutate_tag_set(particle* p, mutate_method* method) {
     DEBUG_EXPRESSION(dbg_ctr.particle_tags_modified += 1);
-    ((pextra*)p->extra)->tag.i.l = method->tag.i.l;
+    ((pextra*)p->extra)->tag.l = method->newtag.l;
 }
 
 void mutate_tag_inc(particle* p, UNUSED_PARAM(mutate_method* method)) {
     DEBUG_EXPRESSION(dbg_ctr.particle_tags_modified += 1);
-    ((pextra*)p->extra)->tag.i.l += 1;
+    ((pextra*)p->extra)->tag.l += 1;
 }
 
 void mutate_tag_dec(particle* p, UNUSED_PARAM(mutate_method* method)) {
     DEBUG_EXPRESSION(dbg_ctr.particle_tags_modified += 1);
-    ((pextra*)p->extra)->tag.i.l -= 1;
+    ((pextra*)p->extra)->tag.l -= 1;
 }
 
 void mutate_tag_add(particle* p, mutate_method* method) {
     DEBUG_EXPRESSION(dbg_ctr.particle_tags_modified += 1);
-    ((pextra*)p->extra)->tag.i.l += method->tag.i.l;
+    ((pextra*)p->extra)->tag.l += method->newtag.l;
 }
 
 void mutate_tag_sub(particle* p, mutate_method* method) {
     DEBUG_EXPRESSION(dbg_ctr.particle_tags_modified += 1);
-    ((pextra*)p->extra)->tag.i.l -= method->tag.i.l;
+    ((pextra*)p->extra)->tag.l -= method->newtag.l;
 }
 
 void mutate_tag_mul(particle* p, mutate_method* method) {
     DEBUG_EXPRESSION(dbg_ctr.particle_tags_modified += 1);
-    ((pextra*)p->extra)->tag.i.l *= method->tag.i.l;
+    ((pextra*)p->extra)->tag.l *= method->newtag.l;
 }
 
 void mutate_tag_div(particle* p, mutate_method* method) {
     DEBUG_EXPRESSION(dbg_ctr.particle_tags_modified += 1);
-    ((pextra*)p->extra)->tag.i.l /= method->tag.i.l;
+    ((pextra*)p->extra)->tag.l /= method->newtag.l;
+}
+
+void mutate_tag_set_if(particle* p, mutate_method* method) {
+    DEBUG_EXPRESSION(dbg_ctr.particle_tags_modified += 1);
+    if (mutate_cond_apply(p, method)) {
+        ((pextra*)p->extra)->tag.l = method->newtag.l;
+    }
 }
 
 #define GEN_COND_MUTATE_FN(mutate) \

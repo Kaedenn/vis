@@ -49,16 +49,6 @@
 #define VIS_NFRAMES ((VIS_FRAMES_NMINS * 60 + VIS_FRAMES_NSECS) * VIS_FPS_LIMIT)
 #endif
 
-/* window pos */
-#ifndef VIS_WINDOW_X
-/*#define VIS_WINDOW_X SDL_WINDOWPOS_UNDEFINED*/
-#define VIS_WINDOW_X 0
-#endif
-#ifndef VIS_WINDOW_Y
-/*#define VIS_WINDOW_Y SDL_WINDOWPOS_UNDEFINED*/
-#define VIS_WINDOW_Y 0
-#endif
-
 /* window size */
 #define VIS_WIDTH 800
 #define VIS_HEIGHT 600
@@ -73,16 +63,8 @@
 #define VIS_FORCE_FRICTION_COEFF 0.99
 #define VIS_FORCE_GRAVITY_FACTOR 0.03
 
-/* frame rate */
-#define VIS_FPS_LIMIT 30
-
-/* converting from frames to msec */
-#define VIS_FRAMES_TO_MSEC(frames) ((int)((frames) * 1000.0 / VIS_FPS_LIMIT + 0.5))
-#define VIS_MSEC_TO_FRAMES(ms) ((int)(VIS_FPS_LIMIT * (ms) / 1000.0 + 0.5))
-
-/* timing constants */
-#define VIS_10MS (10)
-#define VIS_MSEC_PER_FRAME (1000.0 / VIS_FPS_LIMIT)
+/* default frame rate */
+#define VIS_FPS_LIMIT 60
 
 /* audio constants */
 #define VIS_AUDIO_FREQ 44100
@@ -93,11 +75,7 @@
 #define VIS_BUFFER_LEN 4096
 
 /* initial capacity for particles */
-#define VIS_PLIST_INITIAL_SIZE (1024 * 1024)
-
-/* FIXME: unused */
-/* (drawing) number of vertices needed per particle */
-#define VIS_VTX_PER_PARTICLE 2
+#define VIS_PLIST_INITIAL_SIZE (2 * 1024 * 1024)
 
 /* convenience */
 #ifndef BOOL

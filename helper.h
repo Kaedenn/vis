@@ -81,4 +81,7 @@ double clampd(double value, double low, double high);
 float lerpf(float v0, float v1, float t);
 double lerpd(double v0, double v1, double t);
 
+double distance(double x1, double y1, double x2, double y2);
+float distancef(float x1, float y1, float x2, float y2);
+
 #endif

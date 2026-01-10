@@ -10,20 +10,19 @@ typedef unsigned int fnum_t;
 /* Milliseconds */
 typedef unsigned int msec_t;
 
+/* Eight bytes of arbitrary data */
 union particle_tag {
     int64_t l;
     uint64_t ul;
-    struct {
-        int32_t h;
-        int32_t l;
-    } i;
-    struct {
-        uint32_t h;
-        uint32_t l;
-    } ui;
+    struct { int32_t h; int32_t l; } i;
+    struct { uint32_t h; uint32_t l; } ui;
+    int16_t s[sizeof(uint64_t)/sizeof(int16_t)];
+    uint16_t us[sizeof(uint64_t)/sizeof(uint16_t)];
+    int8_t b[sizeof(uint64_t)/sizeof(int8_t)];
+    uint8_t ub[sizeof(uint64_t)/sizeof(uint8_t)];
 };
 
-/* force functions */
+/* force functions (applied to dx, dy) */
 typedef enum {
     /* default force is no force */
     VIS_DEFAULT_FORCE = 0,
@@ -32,7 +31,7 @@ typedef enum {
     VIS_NFORCES,
 } force_id;
 
-/* position-limiting functions */
+/* position-limiting functions (applied to x, y) */
 typedef enum {
     /* default limit is no limit */
     VIS_DEFAULT_LIMIT = 0,
@@ -54,6 +53,7 @@ typedef enum {
     VIS_MUTATE_SET_DX,
     VIS_MUTATE_SET_DY,
     VIS_MUTATE_SET_RADIUS,
+
     VIS_MUTATE_TAG_SET,
     VIS_MUTATE_TAG_INC,
     VIS_MUTATE_TAG_DEC,
@@ -61,6 +61,8 @@ typedef enum {
     VIS_MUTATE_TAG_SUB,
     VIS_MUTATE_TAG_MUL,
     VIS_MUTATE_TAG_DIV,
+    VIS_MUTATE_TAG_SET_IF,
+
     VIS_MUTATE_PUSH_IF,
     VIS_MUTATE_PUSH_DX_IF,
     VIS_MUTATE_PUSH_DY_IF,
@@ -72,12 +74,14 @@ typedef enum {
     VIS_MUTATE_SET_DX_IF,
     VIS_MUTATE_SET_DY_IF,
     VIS_MUTATE_SET_RADIUS_IF,
+
     VIS_NMUTATES,
 } mutate_id;
 
 /* mutation conditions */
 typedef enum {
-    VIS_MUTATE_IF_TRUE,
+    /* mutate based on value of particle tag */
+    VIS_MUTATE_IF_TRUE,     /* always mutate */
     VIS_MUTATE_IF_EQ,
     VIS_MUTATE_IF_NE,
     VIS_MUTATE_IF_LT,
@@ -86,6 +90,16 @@ typedef enum {
     VIS_MUTATE_IF_GE,
     VIS_MUTATE_IF_EVEN,
     VIS_MUTATE_IF_ODD,
+    /* mutate based on particle location */
+    VIS_MUTATE_IF_ABOVE,
+    VIS_MUTATE_IF_BELOW,
+    VIS_MUTATE_IF_LEFT,
+    VIS_MUTATE_IF_RIGHT,
+
+    VIS_MUTATE_IF_NEAR,
+    VIS_MUTATE_IF_FAR,
+
+    VIS_MUTATE_NCONDS,
 } mutate_cond_id;
 
 /* alpha-channel blending functions */

@@ -2,6 +2,7 @@
 #include "helper.h"
 
 #include <errno.h>
+#include <math.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -233,6 +234,18 @@ float lerpf(float v0, float v1, float t) {
 
 double lerpd(double v0, double v1, double t) {
     return v0 + t * (v1 - v0);
+}
+
+double distance(double x1, double y1, double x2, double y2) {
+    double x = x2 - x1;
+    double y = y2 - y1;
+    return sqrt(x*x + y*y);
+}
+
+float distancef(float x1, float y1, float x2, float y2) {
+    float x = x2 - x1;
+    float y = y2 - y1;
+    return sqrtf(x*x + y*y);
 }
 
 

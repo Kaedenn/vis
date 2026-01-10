@@ -78,6 +78,7 @@ const char* get_key_name(int key) {
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
     struct global_ctx* ctx = (struct global_ctx*)glfwGetWindowUserPointer(window);
+
     if (ctx->args->debug_level > DEBUG_NONE) {
         DBPRINTF("Key %d (%s) scancode %d action %d mods %d", key, get_key_name(key),
                 scancode, action, mods);
@@ -113,9 +114,11 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 
 void cursor_position_callback(GLFWwindow* window, double x, double y) {
     struct global_ctx* ctx = (struct global_ctx*)glfwGetWindowUserPointer(window);
-    if (ctx->args->debug_level >= DEBUG_DEBUG) {
+
+    if (ctx->args->debug_level > DEBUG_DEBUG) {
         DBPRINTF("Mouse move x %g y %g", x, y);
     }
+
     drawer_trace(ctx->drawer, (float)x, (float)y);
     script_mousemove(ctx->script, (int)x, (int)y);
 }
@@ -177,7 +180,7 @@ int main(int argc, char* argv[]) {
 
     g.cmds = command_setup(g.drawer, g.particles, g.script, g.args->interactive);
 
-    emitter_setup(g.cmds, g.particles, g.drawer);
+    emitter_setup(g.cmds, g.particles, g.drawer, g.args);
 
     if (!audio_init()) {
         exit(1);

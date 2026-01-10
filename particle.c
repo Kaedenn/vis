@@ -19,6 +19,7 @@ particle* particle_new(double x, double y, double r, int life, pextra* extra) {
     p->dx = 0.0;
     p->dy = 0.0;
     p->radius = r;
+    p->depth = 0;
     p->force = VIS_DEFAULT_FORCE;
     p->limit = VIS_DEFAULT_LIMIT;
     p->lifetime = life;
@@ -29,42 +30,13 @@ particle* particle_new(double x, double y, double r, int life, pextra* extra) {
 
 particle* particle_new_full(double x, double y,
                             double ux, double uy,
+                            double s, double us,
                             double r, double ur,
                             double ds, double uds,
                             double theta, double utheta,
-                            int life, int ulife,
-                            force_id force, limit_id limit,
-                            pextra* extra) {
-    particle* p = DBMALLOC(sizeof(particle));
-    
-    double t = randdouble(theta-utheta, theta+utheta);
-    ds = randdouble(ds-uds, ds+uds);
-    
-    p->x = randdouble(x-ux, x+ux);
-    p->y = randdouble(y-uy, y+uy);
-    p->radius = (int)randdouble(r-ur, r+ur);
-    p->dx = ds*cos(t);
-    p->dy = ds*sin(t);
-    
-    p->force = force;
-    p->limit = limit;
-    
-    p->lifetime = randint(life-ulife, life+ulife);
-    p->life = p->lifetime;
-    
-    p->extra = extra;
-    
-    return p;
-}
-
-particle* particle_new_circle(double x, double y,
-                              double ux, double uy,
-                              double s, double us,
-                              double r, double ur,
-                              double ds, double uds,
-                              double theta, double utheta,
-                              int life, int ulife,
-                              force_id force, limit_id limit, pextra* extra) {
+                            int depth, int life, int ulife,
+                            force_id force, limit_id limit, pextra* extra)
+{
     particle* p = DBMALLOC(sizeof(particle));
 
     double angle = randdouble(theta-utheta, theta+utheta);
@@ -75,6 +47,7 @@ particle* particle_new_circle(double x, double y,
     p->dx = speed * cos(angle);
     p->dy = speed * sin(angle);
     p->radius = (int)randdouble(r-ur, r+ur);
+    p->depth = depth;
     p->force = force;
     p->limit = limit;
     p->lifetime = randint(life-ulife, life+ulife);
@@ -123,14 +96,15 @@ void particle_tick(particle* p) {
 }
 
 #if DEBUG >= DEBUG_NONE
-inline int particle_is_alive(particle* p) { return p->life > 0; }
-inline double particle_get_x(particle* p) { return p->x; }
-inline double particle_get_y(particle* p) { return p->y; }
-inline double particle_get_dx(particle* p) { return p->dx; }
-inline double particle_get_dy(particle* p) { return p->dy; }
-inline double particle_get_radius(particle* p) { return p->radius; }
-inline int particle_get_life(particle* p) { return p->life; }
-inline int particle_get_lifetime(particle* p) { return p->lifetime; }
-inline pextra* particle_get_extra(particle* p) { return p->extra; }
+int particle_is_alive(particle* p) { return p->life > 0; }
+double particle_get_x(particle* p) { return p->x; }
+double particle_get_y(particle* p) { return p->y; }
+double particle_get_dx(particle* p) { return p->dx; }
+double particle_get_dy(particle* p) { return p->dy; }
+double particle_get_radius(particle* p) { return p->radius; }
+int particle_get_depth(particle* p) { return p->depth; }
+int particle_get_life(particle* p) { return p->life; }
+int particle_get_lifetime(particle* p) { return p->lifetime; }
+pextra* particle_get_extra(particle* p) { return p->extra; }
 #endif
 

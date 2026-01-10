@@ -17,17 +17,19 @@ static struct emitter {
     struct commands* commands;              /* pointer to commands object */
     plist_t particles;                      /* pointer to plist object */
     flist_t fl;                             /* pointer to flist object */
+    clargs_t args;                          /* pointer to args */
     drawer_t drawer;                        /* pointer to drawer object */
     uint32_t frame_counts[VIS_MAX_FTYPE];   /* frame type counts */
     uint32_t delay_counter;                 /* delay frames counter */
     BOOL do_sync;                           /* re-sync audio after delay */
 } emitter;
 
-void emitter_setup(struct commands* cmds, plist_t plist, drawer_t drawer) {
+void emitter_setup(struct commands* cmds, plist_t plist, drawer_t drawer, clargs_t args) {
     ZEROINIT(&emitter);
     emitter.commands = cmds;
     emitter.particles = plist;
     emitter.drawer = drawer;
+    emitter.args = args;
 }
 
 void emitter_free(void) {
@@ -84,7 +86,9 @@ void emitter_tick(void) {
         emitter.frame_counts[fn->type] += 1;
         switch (fn->type) {
         case VIS_FTYPE_EMIT:
-            /*DBPRINTF("Ticking flist: %s at frame %d", ftype_str, curr_frame);*/
+            if (emitter.args->debug_level > 1) {
+                DBPRINTF("Ticking flist: %s at frame %d", ftype_str, curr_frame);
+            }
             emit_frame(fn->data.frame);
             break;
         case VIS_FTYPE_EXIT:
@@ -171,14 +175,17 @@ void emit_frame(emit_desc* frame) {
         if (frame->ub != 0.0f) {
             b = randfloat(frame->b - frame->ub, frame->b + frame->ub);
         }
-        plist_add(emitter.particles, particle_new_circle(
+        pextra* pe = new_pextra(r, g, b, frame->blender);
+        pe->tag = frame->tag;
+        plist_add(emitter.particles, particle_new_full(
                 frame->x, frame->y, frame->ux, frame->uy,
                 frame->s, frame->us,
                 frame->rad, frame->urad,
                 frame->ds, frame->uds,
                 frame->theta, frame->utheta,
+                frame->depth,
                 frame->life, frame->ulife,
                 frame->force, frame->limit,
-                new_pextra(r, g, b, frame->blender)));
+                pe));
     }
 }
