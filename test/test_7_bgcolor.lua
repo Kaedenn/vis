@@ -10,7 +10,8 @@ e:ds(1.5, 1)
 e:theta(math.pi, math.pi)
 e:life(2000, 500)
 
-e:color(VisUtil.COLOR.BLUE2)
+BLUE2 = {0, 0.2, 0.8, 0, 0.21, 0.21}
+e:color(BLUE2)
 e:emit_at(0)
 
 rgb = {0, 0, 0}
