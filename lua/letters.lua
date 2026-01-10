@@ -6,6 +6,32 @@ Letters.LETTER_WIDTH = 5
 Letters.LETTER_HEIGHT = 7
 Letters.LETTER_SPACING = 1
 
+function unpack_hex(...)
+    local lines = {}
+    for _, num in ipairs({...}) do
+        local row = {}
+        for i = 1, Letters.LETTER_WIDTH do
+            table.insert(row, 1, num % 16)
+            num = math.floor(num / 16)
+        end
+        table.insert(lines, row)
+    end
+    while #lines < Letters.LETTER_HEIGHT do
+        local row = {}
+        for i = 1, Letters.LETTER_WIDTH do
+            table.insert(row, 0)
+        end
+        table.insert(lines, row)
+    end
+    local result = {}
+    for _, line in ipairs(lines) do
+        for _, pbit in ipairs(line) do
+            table.insert(result, pbit)
+        end
+    end
+    return result
+end
+
 -- Determine the width and height of a given string
 function Letters.find_extents(s)
     local width = 0
@@ -533,6 +559,52 @@ Letters['Z'] = {
     1, 0, 0, 0, 0,
     1, 1, 1, 1, 1,
 }
+
+Letters['<'] = {
+    0, 0, 0, 0, 0,
+    0, 0, 0, 1, 0,
+    0, 0, 1, 0, 0,
+    0, 1, 0, 0, 0,
+    0, 0, 1, 0, 0,
+    0, 0, 0, 1, 0,
+    0, 0, 0, 0, 0,
+}
+
+Letters['>'] = unpack_hex(
+    0x00000,
+    0x01000,
+    0x00100,
+    0x00010,
+    0x00100,
+    0x01000,
+    0x00000)
+
+Letters['('] = unpack_hex(
+    0x00100,
+    0x01000,
+    0x01000,
+    0x01000,
+    0x01000,
+    0x01000,
+    0x00100)
+
+Letters[')'] = unpack_hex(
+    0x00100,
+    0x00010,
+    0x00010,
+    0x00010,
+    0x00010,
+    0x00010,
+    0x00100)
+
+Letters['='] = unpack_hex(
+    0x00000,
+    0x00000,
+    0x01110,
+    0x00000,
+    0x01110,
+    0x00000,
+    0x00000)
 
 -- 0xa0   NO-BREAK SPACE
 Letters['\xa0'] = Letters[' ']
