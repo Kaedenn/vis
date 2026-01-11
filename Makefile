@@ -11,6 +11,8 @@
 # Use EXTRA_CFLAGS or EXTRA_LDFLAGS instead.
 #
 
+UNAME_S := $(shell uname -s)
+
 DIR = .
 OBJDIR = $(DIR)/.o
 DEPDIR = $(DIR)/.d
@@ -26,6 +28,10 @@ EXECBIN = vis
 VIS = $(DIR)/$(EXECBIN)
 
 SRCS := $(SRCS) 3rdparty/miniaudio.c 3rdparty/stb_image_write.c
+
+ifeq ($(UNAME_S),Linux)
+SRCS := $(SRCS) audio/pa_latency_probe.c
+endif
 
 LUA_TESTS := $(wildcard $(DIR)/test/test_*.lua)
 C_TESTS := $(wildcard $(DIR)/test/test_*.c)
@@ -46,14 +52,23 @@ CFLAGS_PROF = -pg
 CFLAGS_3RDPARTY = -Wno-conversion -Wno-switch-enum -Wno-cast-qual \
 				  -Wno-float-equal -Wno-shadow
 
+CFLAGS_AUDIO =
+LDFLAGS_AUDIO =
+ifeq ($(DISABLE_LATENCY_EVAL),)
+ifeq ($(UNAME_S),Linux)
+CFLAGS_AUDIO = -DHAVE_PULSEAUDIO
+LDFLAGS_AUDIO = -lpulse
+endif
+endif
+
 LDFLAGS_FAST = -O3 -flto
 LDFLAGS_PROF = -pg
 
 CFLAGS_LIBS = -I/usr/include/lua5.3
 LDFLAGS_LIBS = -llua5.3 -lglfw -lGL -lGLEW
 
-CFLAGS := $(CFLAGS) $(CFLAGS_LIBS) $(EXTRA_CFLAGS)
-LDFLAGS := $(LDFLAGS) $(LDFLAGS_LIBS) $(EXTRA_LDFLAGS)
+CFLAGS := $(CFLAGS) $(CFLAGS_LIBS) $(EXTRA_CFLAGS) $(CFLAGS_AUDIO)
+LDFLAGS := $(LDFLAGS) $(LDFLAGS_LIBS) $(EXTRA_LDFLAGS) $(LDFLAGS_AUDIO)
 
 ifneq ($(DEBUG),)
 all: CFLAGS += $(CFLAGS_DEBUG)
@@ -113,11 +128,17 @@ $(OBJDIR):
 $(OBJDIR)/3rdparty: | $(OBJDIR)
 	- test -d $(OBJDIR)/3rdparty || mkdir $(OBJDIR)/3rdparty 2>/dev/null
 
+$(OBJDIR)/audio: | $(OBJDIR)
+	- test -d $(OBJDIR)/audio || mkdir $(OBJDIR)/audio 2>/dev/null
+
 $(DEPFILES): | $(DEPDIR)
 $(OBJECTS): | $(OBJDIR)
 
 $(OBJDIR)/3rdparty/%.o: $(DIR)/3rdparty/%.c | $(OBJDIR)/3rdparty
 	$(CC) -c -o $@ $< -msse2 $(CFLAGS) $(CFLAGS_3RDPARTY)
+
+$(OBJDIR)/audio/%.o: $(DIR)/audio/%.c | $(OBJDIR)/audio
+	$(CC) -c -o $@ $< -msse2 $(CFLAGS) $(CFLAGS_AUDIO)
 
 $(OBJDIR)/emitter.o: emitter.c | $(OBJDIR)
 	$(CC) -c -o $@ $< $(CFLAGS) -Wno-float-equal

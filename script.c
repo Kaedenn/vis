@@ -94,6 +94,7 @@ static int viscmd_seekms_fn(lua_State* L);
 static int viscmd_seekframe_fn(lua_State* L);
 static int viscmd_gotoframe_fn(lua_State* L);
 static int viscmd_audiosync_fn(lua_State* L);
+static int viscmd_get_audio_delay_fn(lua_State* L);
 static int viscmd_delay_fn(lua_State* L);
 static int viscmd_bgcolor_fn(lua_State* L);
 static int viscmd_mutate_fn(lua_State* L);
@@ -321,6 +322,7 @@ int initialize_vis_lib(lua_State* L) {
         {"seekframe", viscmd_seekframe_fn},
         {"gotoframe", viscmd_gotoframe_fn},
         {"audiosync", viscmd_audiosync_fn},
+        {"get_audio_delay", viscmd_get_audio_delay_fn},
         {"delay", viscmd_delay_fn},
         {"bgcolor", viscmd_bgcolor_fn},
         {"mutate", viscmd_mutate_fn},
@@ -872,8 +874,16 @@ int viscmd_audiosync_fn(lua_State* L) {
     return 0;
 }
 
+/* msec = Vis.get_audio_delay() */
+int viscmd_get_audio_delay_fn(lua_State* L) {
+    msec_t delay = audio_delay_get_msec();
+    DBPRINTF("Vis.get_audio_delay() = %u", delay);
+    lua_pushinteger(L, (lua_Integer)delay);
+    return 1;
+}
+
 /* Vis.delay(Vis.flist, when, length) */
-static int viscmd_delay_fn(lua_State* L) {
+int viscmd_delay_fn(lua_State* L) {
     flist_t fl = *(flist**)luaL_checkudata(L, 1, "flist**");
     fnum_t where = (fnum_t)luaL_checkinteger(L, 2);
     fnum_t length = (fnum_t)luaL_checkinteger(L, 3);

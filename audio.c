@@ -4,6 +4,10 @@
 
 #include "3rdparty/miniaudio.h"
 
+#ifdef __linux__
+#include "audio/pa_latency_probe.h"
+#endif
+
 struct audio {
     char* file;
     BOOL muted;
@@ -12,6 +16,8 @@ struct audio {
     ma_context context;
     ma_engine engine;
     ma_sound* sound;
+
+    void* latency_probe;
 };
 
 static struct audio* audio = NULL;
@@ -31,6 +37,7 @@ BOOL audio_init(void) {
     audio->atend = FALSE;
     audio->volume = 1.0f;
     audio->sound = NULL;
+    audio->latency_probe = NULL;
 
     ma_context_config ctxConfig = ma_context_config_init();
 
@@ -101,8 +108,44 @@ void audio_free(void) {
             DZFREE(audio->sound);
         }
         ma_engine_uninit(&audio->engine);
+
+        if (audio->latency_probe) {
+#if defined(HAVE_PULSEAUDIO)
+            pa_latency_probe_destroy(audio->latency_probe);
+            audio->latency_probe = NULL;
+#elif defined(HAVE_WSAPI_AUDIO)
+            /* TODO */
+#elif defined(HAVE_CORE_AUDIO)
+            /* TODO */
+#else
+            DZFREE(audio->latency_probe);
+#endif
+        }
         DZFREE(audio);
     }
+}
+
+msec_t audio_get_delay_msec(void) {
+#if defined(HAVE_PULSEAUDIO)
+    if (!audio->latency_probe) {
+        audio->latency_probe = pa_latency_probe_create(
+                VIS_AUDIO_FREQ, VIS_AUDIO_CHANNELS);
+        if (!audio->latency_probe) {
+            EPRINTF("Failed to construct latency probe");
+            return 0;
+        }
+    }
+    return (msec_t)pa_latency_probe_get_delay_ms((pa_latency_probe*)audio->latency_probe);
+#elif defined(HAVE_WSAPI_AUDIO)
+    /* TODO */
+    EPRINTF("Windows support for audio delay measurement not yet implemented");
+#elif defined(HAVE_CORE_AUDIO)
+    /* TODO */
+    EPRINTF("Mac support for audio delay measurement not yet implemented");
+#else
+    EPRINTF("No appropriate backend found for audio_get_delay_msec");
+#endif
+    return 0;
 }
 
 void audio_play(void) {
