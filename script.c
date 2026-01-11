@@ -876,7 +876,7 @@ int viscmd_audiosync_fn(lua_State* L) {
 
 /* msec = Vis.get_audio_delay() */
 int viscmd_get_audio_delay_fn(lua_State* L) {
-    msec_t delay = audio_delay_get_msec();
+    msec_t delay = audio_get_delay_msec();
     DBPRINTF("Vis.get_audio_delay() = %u", delay);
     lua_pushinteger(L, (lua_Integer)delay);
     return 1;
