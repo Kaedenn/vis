@@ -62,6 +62,12 @@ function Letters.map_fn_xy(letter, func)
 end
 
 function Letters.combine(base_letter, combiner)
+    if type(base_letter) == "string" then
+        base_letter = Letters[base_letter]
+    end
+    if type(combiner) == "string" then
+        combiner = Combiners[combiner]
+    end
     local result = {}
     for _, row in ipairs(combiner) do
         table.insert(result, row)
@@ -606,40 +612,250 @@ Letters['='] = unpack_hex(
     0x00000,
     0x00000)
 
+-- 0x22 " QUOTATION MARK
+Letters['"'] = {
+    0, 0, 0, 0, 0,
+    0, 1, 0, 1, 0,
+    0, 1, 0, 1, 0,
+    0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0,
+}
+
+-- 0x23 # NUMBER SIGN
+Letters['#'] = {
+    0, 1, 0, 1, 0,
+    0, 1, 0, 1, 0,
+    1, 1, 1, 1, 1,
+    0, 1, 0, 1, 0,
+    1, 1, 1, 1, 1,
+    0, 1, 0, 1, 0,
+    0, 1, 0, 1, 0,
+}
+
+-- 0x24 $ DOLLAR SIGN
+Letters['$'] = {
+    0, 0, 1, 0, 0,
+    0, 1, 1, 1, 0,
+    0, 1, 0, 0, 0,
+    0, 1, 1, 1, 0,
+    0, 0, 0, 1, 0,
+    0, 1, 1, 1, 0,
+    0, 0, 1, 0, 0,
+}
+
+-- 0x25 % PERCENT SIGN
+Letters['%'] = {
+    0, 0, 0, 0, 1,
+    0, 1, 0, 1, 0,
+    0, 0, 0, 1, 0,
+    0, 0, 1, 0, 0,
+    0, 1, 0, 0, 0,
+    0, 1, 0, 1, 0,
+    1, 0, 0, 0, 0,
+}
+
+-- 0x26 & AMPERSAND (TODO)
+
+-- 0x2a * ASTERISK
+Letters['*'] = {
+    0, 0, 0, 0, 0,
+    0, 0, 1, 0, 0,
+    0, 1, 1, 1, 0,
+    0, 0, 1, 0, 0,
+    0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0,
+}
+
+-- 0x2f / SOLIDUS
+Letters['/'] = {
+    0, 0, 0, 0, 1,
+    0, 0, 0, 1, 0,
+    0, 0, 0, 1, 0,
+    0, 0, 1, 0, 0,
+    0, 1, 0, 0, 0,
+    0, 1, 0, 0, 0,
+    1, 0, 0, 0, 0,
+}
+
+-- 0x3a : COLON
+Letters[':'] = {
+    0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0,
+    0, 0, 1, 0, 0,
+    0, 0, 0, 0, 0,
+    0, 0, 1, 0, 0,
+    0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0,
+}
+
+-- 0x3b ; SEMICOLON
+Letters[';'] = {
+    0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0,
+    0, 0, 1, 0, 0,
+    0, 0, 0, 0, 0,
+    0, 0, 1, 0, 0,
+    0, 1, 0, 0, 0,
+    0, 0, 0, 0, 0,
+}
+
+-- 0x40 @ COMMERCIAL AT (TODO)
+
+-- 0x5b [ LEFT SQUARE BRACKET
+Letters['['] = {
+    0, 1, 1, 0, 0,
+    0, 1, 0, 0, 0,
+    0, 1, 0, 0, 0,
+    0, 1, 0, 0, 0,
+    0, 1, 0, 0, 0,
+    0, 1, 0, 0, 0,
+    0, 1, 1, 0, 0,
+}
+
+-- 0x5d ] RIGHT SQUARE BRACKET
+Letters[']'] = {
+    0, 0, 1, 1, 0,
+    0, 0, 0, 1, 0,
+    0, 0, 0, 1, 0,
+    0, 0, 0, 1, 0,
+    0, 0, 0, 1, 0,
+    0, 0, 0, 1, 0,
+    0, 0, 1, 1, 0,
+}
+
+-- 0x5e ^ CIRCUMFLEX ACCENT
+Letters['^'] = {
+    0, 0, 1, 0, 0,
+    0, 1, 0, 1, 0,
+    0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0,
+}
+
+-- 0x60 ` GRAVE ACCENT
+Letters['`'] = {
+    0, 0, 0, 0, 0,
+    0, 1, 0, 0, 0,
+    0, 0, 1, 0, 0,
+    0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0,
+}
+
+-- 0x7b { LEFT CURLY BRACKET
+Letters['{'] = {
+    0, 0, 1, 0, 0,
+    0, 1, 0, 0, 0,
+    0, 1, 0, 0, 0,
+    1, 0, 0, 0, 0,
+    0, 1, 0, 0, 0,
+    0, 1, 0, 0, 0,
+    0, 0, 1, 0, 0,
+}
+
+-- 0x7c | VERTICAL LINE
+Letters['|'] = {
+    0, 0, 1, 0, 0,
+    0, 0, 1, 0, 0,
+    0, 0, 1, 0, 0,
+    0, 0, 1, 0, 0,
+    0, 0, 1, 0, 0,
+    0, 0, 1, 0, 0,
+    0, 0, 1, 0, 0,
+}
+
+-- 0x7d } RIGHT CURLY BRACKET
+Letters['}'] = {
+    0, 0, 1, 0, 0,
+    0, 0, 0, 1, 0,
+    0, 0, 0, 1, 0,
+    0, 0, 0, 0, 1,
+    0, 0, 0, 1, 0,
+    0, 0, 0, 1, 0,
+    0, 0, 1, 0, 0,
+}
+
+-- 0x7e ~ TILDE
+Letters['~'] = {
+    0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0,
+    0, 0, 1, 0, 1,
+    0, 1, 0, 1, 0,
+    0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0,
+}
+
 -- 0xa0   NO-BREAK SPACE
 Letters['\xa0'] = Letters[' ']
 
--- 0xa1 ¡ INVERTED EXCLAMATION MARK
--- 0xa2 ¢ CENT SIGN
--- 0xa3 £ POUND SIGN
--- 0xa4 ¤ CURRENCY SIGN
--- 0xa5 ¥ YEN SIGN
--- 0xa6 ¦ BROKEN BAR
--- 0xa7 § SECTION SIGN
--- 0xa8 ¨ DIAERESIS
--- 0xa9 © COPYRIGHT SIGN
--- 0xaa ª FEMININE ORDINAL INDICATOR
--- 0xab « LEFT-POINTING DOUBLE ANGLE QUOTATION MARK
--- 0xac ¬ NOT SIGN
--- 0xad ­ SOFT HYPHEN
--- 0xae ® REGISTERED SIGN
--- 0xaf ¯ MACRON
--- 0xb0 ° DEGREE SIGN
--- 0xb1 ± PLUS-MINUS SIGN
--- 0xb2 ² SUPERSCRIPT TWO
--- 0xb3 ³ SUPERSCRIPT THREE
--- 0xb4 ´ ACUTE ACCENT
--- 0xb5 µ MICRO SIGN
--- 0xb6 ¶ PILCROW SIGN
--- 0xb7 · MIDDLE DOT
--- 0xb8 ¸ CEDILLA
--- 0xb9 ¹ SUPERSCRIPT ONE
--- 0xba º MASCULINE ORDINAL INDICATOR
--- 0xbb » RIGHT-POINTING DOUBLE ANGLE QUOTATION MARK
--- 0xbc ¼ VULGAR FRACTION ONE QUARTER
--- 0xbd ½ VULGAR FRACTION ONE HALF
--- 0xbe ¾ VULGAR FRACTION THREE QUARTERS
--- 0xbf ¿ INVERTED QUESTION MARK
+-- 0xa1 ¡ INVERTED EXCLAMATION MARK (TODO)
+
+-- 0xa2 ¢ CENT SIGN (TODO)
+
+-- 0xa3 £ POUND SIGN (TODO)
+
+-- 0xa4 ¤ CURRENCY SIGN (TODO)
+
+-- 0xa5 ¥ YEN SIGN (TODO)
+
+-- 0xa6 ¦ BROKEN BAR (TODO)
+
+-- 0xa7 § SECTION SIGN (TODO)
+
+-- 0xa8 ¨ DIAERESIS (TODO)
+
+-- 0xa9 © COPYRIGHT SIGN (TODO)
+
+-- 0xaa ª FEMININE ORDINAL INDICATOR (TODO)
+
+-- 0xab « LEFT-POINTING DOUBLE ANGLE QUOTATION MARK (TODO)
+
+-- 0xac ¬ NOT SIGN (TODO)
+
+-- 0xad ­ SOFT HYPHEN (TODO)
+
+-- 0xae ® REGISTERED SIGN (TODO)
+
+-- 0xaf ¯ MACRON (TODO)
+
+-- 0xb0 ° DEGREE SIGN (TODO)
+
+-- 0xb1 ± PLUS-MINUS SIGN (TODO)
+
+-- 0xb2 ² SUPERSCRIPT TWO (TODO)
+
+-- 0xb3 ³ SUPERSCRIPT THREE (TODO)
+
+-- 0xb4 ´ ACUTE ACCENT (TODO)
+
+-- 0xb5 µ MICRO SIGN (TODO)
+
+-- 0xb6 ¶ PILCROW SIGN (TODO)
+
+-- 0xb7 · MIDDLE DOT (TODO)
+
+-- 0xb8 ¸ CEDILLA (TODO)
+
+-- 0xb9 ¹ SUPERSCRIPT ONE (TODO)
+
+-- 0xba º MASCULINE ORDINAL INDICATOR (TODO)
+
+-- 0xbb » RIGHT-POINTING DOUBLE ANGLE QUOTATION MARK (TODO)
+
+-- 0xbc ¼ VULGAR FRACTION ONE QUARTER (TODO)
+
+-- 0xbd ½ VULGAR FRACTION ONE HALF (TODO)
+
+-- 0xbe ¾ VULGAR FRACTION THREE QUARTERS (TODO)
+
+-- 0xbf ¿ INVERTED QUESTION MARK (TODO)
 
 -- 0xc0 À LATIN CAPITAL LETTER A WITH GRAVE
 Letters['\xc0'] = Letters.combine(Letters['A'], Combiners["GRAVE"])
@@ -649,43 +865,82 @@ Letters['\xc1'] = Letters.combine(Letters['A'], Combiners["ACUTE"])
 
 -- 0xc2 Â LATIN CAPITAL LETTER A WITH CIRCUMFLEX
 Letters['\xc2'] = Letters.combine(Letters['A'], Combiners["CIRCUMFLEX"])
+
 -- 0xc3 Ã LATIN CAPITAL LETTER A WITH TILDE
 Letters['\xc3'] = Letters.combine(Letters['A'], Combiners["TILDE"])
+
 -- 0xc4 Ä LATIN CAPITAL LETTER A WITH DIAERESIS
 Letters['\xc4'] = Letters.combine(Letters['A'], Combiners["DIAERESIS"])
+
 -- 0xc5 Å LATIN CAPITAL LETTER A WITH RING
 Letters['\xc5'] = Letters.combine(Letters['A'], Combiners["RING ABOVE"])
--- 0xc6 Æ LATIN CAPITAL LETTER AE
+
+-- 0xc6 Æ LATIN CAPITAL LETTER AE (TODO)
+
 -- 0xc7 Ç LATIN CAPITAL LETTER C WITH CEDILLA
+Letters['\xc7'] = {
+    0, 0, 1, 1, 0,
+    0, 1, 0, 0, 0,
+    0, 1, 0, 0, 0,
+    0, 1, 0, 0, 0,
+    0, 1, 0, 0, 0,
+    0, 0, 1, 1, 0,
+    0, 1, 0, 0, 0,
+}
+
 -- 0xc8 È LATIN CAPITAL LETTER E WITH GRAVE
 Letters['\xc8'] = Letters.combine(Letters['E'], Combiners["GRAVE"])
+
 -- 0xc9 É LATIN CAPITAL LETTER E WITH ACUTE
 Letters['\xc9'] = Letters.combine(Letters['E'], Combiners["ACUTE"])
+
 -- 0xca Ê LATIN CAPITAL LETTER E WITH CIRCUMFLEX
 Letters['\xca'] = Letters.combine(Letters['E'], Combiners["CIRCUMFLEX"])
+
 -- 0xcb Ë LATIN CAPITAL LETTER E WITH DIAERESIS
 Letters['\xcb'] = Letters.combine(Letters['E'], Combiners["DIAERESIS"])
+
 -- 0xcc Ì LATIN CAPITAL LETTER I WITH GRAVE
 Letters['\xcc'] = Letters.combine(Letters['I'], Combiners["GRAVE"])
+
 -- 0xcd Í LATIN CAPITAL LETTER I WITH ACUTE
 Letters['\xcd'] = Letters.combine(Letters['I'], Combiners["ACUTE"])
+
 -- 0xce Î LATIN CAPITAL LETTER I WITH CIRCUMFLEX
 Letters['\xce'] = Letters.combine(Letters['I'], Combiners["CIRCUMFLEX"])
+
 -- 0xcf Ï LATIN CAPITAL LETTER I WITH DIAERESIS
 Letters['\xcf'] = Letters.combine(Letters['I'], Combiners["DIAERESIS"])
+
 -- 0xd0 Ð LATIN CAPITAL LETTER ETH
+Letters['\xd0'] = {
+    1, 1, 1, 0, 0,
+    1, 0, 0, 1, 0,
+    1, 0, 0, 1, 0,
+    1, 1, 0, 1, 0,
+    1, 0, 0, 1, 0,
+    1, 0, 0, 1, 0,
+    1, 1, 1, 0, 0,
+}
+
 -- 0xd1 Ñ LATIN CAPITAL LETTER N WITH TILDE
 Letters['\xd1'] = Letters.combine(Letters['N'], Combiners["TILDE"])
+
 -- 0xd2 Ò LATIN CAPITAL LETTER O WITH GRAVE
 Letters['\xd2'] = Letters.combine(Letters['O'], Combiners["GRAVE"])
+
 -- 0xd3 Ó LATIN CAPITAL LETTER O WITH ACUTE
 Letters['\xd3'] = Letters.combine(Letters['O'], Combiners["ACUTE"])
+
 -- 0xd4 Ô LATIN CAPITAL LETTER O WITH CIRCUMFLEX
 Letters['\xd4'] = Letters.combine(Letters['O'], Combiners["CIRCUMFLEX"])
+
 -- 0xd5 Õ LATIN CAPITAL LETTER O WITH TILDE
 Letters['\xd5'] = Letters.combine(Letters['O'], Combiners["TILDE"])
+
 -- 0xd6 Ö LATIN CAPITAL LETTER O WITH DIAERESIS
 Letters['\xd6'] = Letters.combine(Letters['O'], Combiners["DIAERESIS"])
+
 -- 0xd7 × MULTIPLICATION SIGN
 Letters['\xd7'] = {
     0, 0, 0, 0, 0,
@@ -707,33 +962,74 @@ Letters['\xd8'] = {
     1, 1, 0, 0, 1,
     1, 1, 1, 1, 0,
 }
+
 -- 0xd9 Ù LATIN CAPITAL LETTER U WITH GRAVE
 Letters['\xd9'] = Letters.combine(Letters['U'], Combiners["GRAVE"])
+
 -- 0xda Ú LATIN CAPITAL LETTER U WITH ACUTE
 Letters['\xda'] = Letters.combine(Letters['U'], Combiners["ACUTE"])
+
 -- 0xdb Û LATIN CAPITAL LETTER U WITH CIRCUMFLEX
 Letters['\xdb'] = Letters.combine(Letters['U'], Combiners["CIRCUMFLEX"])
+
 -- 0xdc Ü LATIN CAPITAL LETTER U WITH DIAERESIS
 Letters['\xdc'] = Letters.combine(Letters['U'], Combiners["DIAERESIS"])
+
 -- 0xdd Ý LATIN CAPITAL LETTER Y WITH ACUTE
 Letters['\xdd'] = Letters.combine(Letters['Y'], Combiners["ACUTE"])
+
 -- 0xde Þ LATIN CAPITAL LETTER THORN
--- 0xdf ß LATIN SMALL LETTER SHARP S
+Letters['\xde'] = {
+    0, 1, 0, 0, 0,
+    0, 1, 1, 0, 0,
+    0, 1, 0, 1, 0,
+    0, 1, 0, 1, 0,
+    0, 1, 1, 0, 0,
+    0, 1, 0, 0, 0,
+    0, 1, 0, 0, 0,
+}
+
+-- 0xdf ß LATIN SMALL LETTER SHARP S (TODO)
+
 -- 0xe6 æ LATIN SMALL LETTER AE
+Letters['\xe6'] = Letters['\xc6']
+
 -- 0xf0 ð LATIN SMALL LETTER ETH
+Letters['\xf0'] = Letters['\xd0']
+
 -- 0xf7 ÷ DIVISION SIGN
+Letters['\xf7'] = {
+    0, 0, 0, 0, 0,
+    0, 0, 1, 0, 0,
+    0, 0, 0, 0, 0,
+    0, 1, 1, 1, 0,
+    0, 0, 0, 0, 0,
+    0, 0, 1, 0, 0,
+    0, 0, 0, 0, 0,
+}
+
 -- 0xfe þ LATIN SMALL LETTER THORN
+Letters['\xfe'] = {
+    0, 1, 0, 0, 0,
+    0, 1, 0, 0, 0,
+    0, 1, 1, 0, 0,
+    0, 1, 0, 1, 0,
+    0, 1, 0, 1, 0,
+    0, 1, 1, 0, 0,
+    0, 1, 0, 0, 0,
+}
 
 -- Map the remaining lowercase Latin-1 characters, as we only support uppercase
-local function map_lcase_latin1()
-    for i = 0xe0, 0xfd do
-        local lchar = string.char(i)
-        local uchar = string.char(i-0x20)
+for i = 0xe0, 0xfd do
+    local lchar = string.char(i)
+    local uchar = string.char(i-0x20)
+    if not Letters[lchar] then
         if Letters[uchar] then
+            print(("Mapping 0x%02x '%s' to 0x%02x '%s'"):format(
+                i, utf8.char(i), i-0x20, utf8.char(i-0x20)))
             Letters[lchar] = Letters[uchar]
         end
     end
 end
-map_lcase_latin1()
 
 return Letters
