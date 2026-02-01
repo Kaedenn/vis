@@ -576,41 +576,45 @@ Letters['<'] = {
     0, 0, 0, 0, 0,
 }
 
-Letters['>'] = unpack_hex(
-    0x00000,
-    0x01000,
-    0x00100,
-    0x00010,
-    0x00100,
-    0x01000,
-    0x00000)
+Letters['>'] = {
+    0, 0, 0, 0, 0,
+    0, 1, 0, 0, 0,
+    0, 0, 1, 0, 0,
+    0, 0, 0, 1, 0,
+    0, 0, 1, 0, 0,
+    0, 1, 0, 0, 0,
+    0, 0, 0, 0, 0
+}
 
-Letters['('] = unpack_hex(
-    0x00100,
-    0x01000,
-    0x01000,
-    0x01000,
-    0x01000,
-    0x01000,
-    0x00100)
+Letters['('] = {
+    0, 0, 1, 0, 0,
+    0, 1, 0, 0, 0,
+    0, 1, 0, 0, 0,
+    0, 1, 0, 0, 0,
+    0, 1, 0, 0, 0,
+    0, 1, 0, 0, 0,
+    0, 0, 1, 0, 0
+}
 
-Letters[')'] = unpack_hex(
-    0x00100,
-    0x00010,
-    0x00010,
-    0x00010,
-    0x00010,
-    0x00010,
-    0x00100)
+Letters[')'] = {
+    0, 0, 1, 0, 0,
+    0, 0, 0, 1, 0,
+    0, 0, 0, 1, 0,
+    0, 0, 0, 1, 0,
+    0, 0, 0, 1, 0,
+    0, 0, 0, 1, 0,
+    0, 0, 1, 0, 0,
+}
 
-Letters['='] = unpack_hex(
-    0x00000,
-    0x00000,
-    0x01110,
-    0x00000,
-    0x01110,
-    0x00000,
-    0x00000)
+Letters['='] = {
+    0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0,
+    0, 1, 1, 1, 0,
+    0, 0, 0, 0, 0,
+    0, 1, 1, 1, 0,
+    0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0,
+}
 
 -- 0x22 " QUOTATION MARK
 Letters['"'] = {
@@ -656,7 +660,16 @@ Letters['%'] = {
     1, 0, 0, 0, 0,
 }
 
--- 0x26 & AMPERSAND (TODO)
+-- 0x26 & AMPERSAND
+Letters['&'] = {
+    0, 1, 1, 1, 0,
+    1, 0, 0, 0, 1,
+    0, 1, 0, 1, 0,
+    0, 0, 1, 0, 0,
+    0, 1, 0, 1, 0,
+    1, 0, 0, 0, 1,
+    0, 1, 1, 0, 0,
+}
 
 -- 0x2a * ASTERISK
 Letters['*'] = {
@@ -702,7 +715,16 @@ Letters[';'] = {
     0, 0, 0, 0, 0,
 }
 
--- 0x40 @ COMMERCIAL AT (TODO)
+-- 0x40 @ COMMERCIAL AT
+Letters['@'] = {
+    0, 1, 1, 1, 0,
+    1, 0, 0, 0, 1,
+    1, 0, 1, 1, 1,
+    1, 0, 1, 0, 1,
+    1, 0, 1, 1, 1,
+    1, 0, 0, 0, 0,
+    0, 1, 1, 1, 1,
+}
 
 -- 0x5b [ LEFT SQUARE BRACKET
 Letters['['] = {
@@ -1025,8 +1047,8 @@ for i = 0xe0, 0xfd do
     local uchar = string.char(i-0x20)
     if not Letters[lchar] then
         if Letters[uchar] then
-            print(("Mapping 0x%02x '%s' to 0x%02x '%s'"):format(
-                i, utf8.char(i), i-0x20, utf8.char(i-0x20)))
+            --print(("Mapping 0x%02x '%s' to 0x%02x '%s'"):format(
+            --    i, utf8.char(i), i-0x20, utf8.char(i-0x20)))
             Letters[lchar] = Letters[uchar]
         end
     end
