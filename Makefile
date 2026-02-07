@@ -13,6 +13,9 @@
 
 UNAME_S := $(shell uname -s)
 
+pkg_cflags = $(shell pkg-config --exists $(1) && pkg-config --cflags $(1))
+pkg_ldflags = $(shell pkg-config --exists $(1) && pkg-config --libs $(1))
+
 DIR = .
 OBJDIR = $(DIR)/.o
 DEPDIR = $(DIR)/.d
@@ -50,15 +53,25 @@ CFLAGS_TRACE = -O0 -ggdb -DDEBUG=DEBUG_TRACE
 CFLAGS_PROF = -pg
 
 CFLAGS_3RDPARTY = -Wno-conversion -Wno-switch-enum -Wno-cast-qual \
-				  -Wno-float-equal -Wno-shadow
+	-Wno-float-equal -Wno-shadow
 
 CFLAGS_AUDIO =
 LDFLAGS_AUDIO =
 ifeq ($(DISABLE_LATENCY_EVAL),)
 ifeq ($(UNAME_S),Linux)
-CFLAGS_AUDIO = -DHAVE_PULSEAUDIO
-LDFLAGS_AUDIO = -lpulse
+CFLAGS_AUDIO = $(call pkg_cflags,libpulse)
+LDFLAGS_AUDIO = $(call pkg_ldflags,libpulse)
+ifneq ($(CFLAGS_AUDIO),)
+CFLAGS_AUDIO += -DHAVE_PULSEAUDIO
 endif
+endif
+endif
+
+CFLAGS_FREETYPE =
+LDFLAGS_FREETYPE =
+ifeq ($(DISABLE_TEXT),)
+CFLAGS_FREETYPE = $(call pkg_cflags,freetype2)
+LDFLAGS_FREETYPE = $(call pkg_ldflags,freetype2)
 endif
 
 LDFLAGS_FAST = -O3 -flto
@@ -67,8 +80,8 @@ LDFLAGS_PROF = -pg
 CFLAGS_LIBS = -I/usr/include/lua5.3
 LDFLAGS_LIBS = -llua5.3 -lglfw -lGL -lGLEW
 
-CFLAGS := $(CFLAGS) $(CFLAGS_LIBS) $(EXTRA_CFLAGS) $(CFLAGS_AUDIO)
-LDFLAGS := $(LDFLAGS) $(LDFLAGS_LIBS) $(EXTRA_LDFLAGS) $(LDFLAGS_AUDIO)
+CFLAGS := $(CFLAGS) $(CFLAGS_LIBS) $(EXTRA_CFLAGS) $(CFLAGS_AUDIO) $(CFLAGS_FREETYPE)
+LDFLAGS := $(LDFLAGS) $(LDFLAGS_LIBS) $(EXTRA_LDFLAGS) $(LDFLAGS_AUDIO) $(LDFLAGS_FREETYPE)
 
 ifneq ($(DEBUG),)
 all: CFLAGS += $(CFLAGS_DEBUG)

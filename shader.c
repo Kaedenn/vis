@@ -1,4 +1,5 @@
 
+#include "defines.h"
 #include "shader.h"
 #include "helper.h"
 #include <errno.h>
@@ -52,58 +53,69 @@ GLuint compile_shader(const GLchar* shader_path, GLenum shader_type) {
     return shader_program;
 }
 
-shader_t* shader_create(const GLchar* vertex_path, const GLchar* fragment_path,
-                        const GLchar* compute_path) {
+shader_t* shader_create(const GLchar* geom_path, const GLchar* vertex_path,
+                        const GLchar* fragment_path, const GLchar* compute_path) {
     shader_t* shader = (shader_t*)malloc(sizeof(shader_t));
+    shader->geom_path = stralloc(strlen(geom_path) + 1);
     shader->vertex_path = stralloc(strlen(vertex_path) + 1);
     shader->fragment_path = stralloc(strlen(fragment_path) + 1);
     shader->compute_path = stralloc(strlen(compute_path) + 1);
     shader->shader_id = 0;
+    strcpy(shader->geom_path, geom_path);
     strcpy(shader->vertex_path, vertex_path);
     strcpy(shader->fragment_path, fragment_path);
     strcpy(shader->compute_path, compute_path);
 
-    GLuint vertex_shader_id = compile_shader(vertex_path, GL_VERTEX_SHADER);
-    if (vertex_shader_id == (GLuint)-1) {
+    GLuint geom_shader_id = compile_shader(geom_path, GL_GEOMETRY_SHADER);
+    if (geom_shader_id == (GLuint)-1) {
         shader_free(shader);
         return NULL;
     }
-    GLuint fragment_shader_id =
-        compile_shader(fragment_path, GL_FRAGMENT_SHADER);
+    GLuint vertex_shader_id = compile_shader(vertex_path, GL_VERTEX_SHADER);
+    if (vertex_shader_id == (GLuint)-1) {
+        glDeleteShader(geom_shader_id);
+        shader_free(shader);
+        return NULL;
+    }
+    GLuint fragment_shader_id = compile_shader(fragment_path, GL_FRAGMENT_SHADER);
     if (fragment_shader_id == (GLuint)-1) {
+        glDeleteShader(geom_shader_id);
         glDeleteShader(vertex_shader_id);
         shader_free(shader);
         return NULL;
     }
     GLuint compute_shader_id = compile_shader(compute_path, GL_COMPUTE_SHADER);
     if (compute_shader_id == (GLuint)-1) {
+        glDeleteShader(geom_shader_id);
         glDeleteShader(vertex_shader_id);
+        glDeleteShader(fragment_shader_id);
         shader_free(shader);
         return NULL;
     }
 
-    GLuint vert_frag_program = glCreateProgram();
-    glAttachShader(vert_frag_program, vertex_shader_id);
-    glAttachShader(vert_frag_program, fragment_shader_id);
-    glLinkProgram(vert_frag_program);
+    GLuint vertex_program = glCreateProgram();
+    /* (TODO) glAttachShader(vertex_program, geom_shader_id); */
+    glAttachShader(vertex_program, vertex_shader_id);
+    glAttachShader(vertex_program, fragment_shader_id);
+    glLinkProgram(vertex_program);
 
     GLuint compute_program = glCreateProgram();
     glAttachShader(compute_program, compute_shader_id);
     glLinkProgram(compute_program);
 
-    shader->shader_id = vert_frag_program;
+    shader->shader_id = vertex_program;
     shader->compute_shader_id = compute_program;
 
+    glDeleteShader(geom_shader_id);
     glDeleteShader(vertex_shader_id);
     glDeleteShader(fragment_shader_id);
     glDeleteShader(compute_shader_id);
 
     GLint success;
-    glGetProgramiv(vert_frag_program, GL_LINK_STATUS, &success);
+    glGetProgramiv(vertex_program, GL_LINK_STATUS, &success);
     if (!success) {
         char info_log[1024] = {0};
-        glGetProgramInfoLog(vert_frag_program, sizeof(info_log), NULL,
-                            info_log);
+        glGetProgramInfoLog(vertex_program, sizeof(info_log), NULL, info_log);
         EPRINTF("Linking shaders failed: %s\n", info_log);
         shader_free(shader);
         return NULL;
@@ -112,8 +124,7 @@ shader_t* shader_create(const GLchar* vertex_path, const GLchar* fragment_path,
     glGetProgramiv(compute_program, GL_LINK_STATUS, &success);
     if (!success) {
         char info_log[1024] = {0};
-        glGetProgramInfoLog(vert_frag_program, sizeof(info_log), NULL,
-                            info_log);
+        glGetProgramInfoLog(vertex_program, sizeof(info_log), NULL, info_log);
         EPRINTF("Linking shaders failed: %s\n", info_log);
         shader_free(shader);
         return NULL;
@@ -123,6 +134,7 @@ shader_t* shader_create(const GLchar* vertex_path, const GLchar* fragment_path,
 }
 
 void shader_free(shader_t* shader) {
+    free(shader->geom_path);
     free(shader->vertex_path);
     free(shader->fragment_path);
     free(shader->compute_path);

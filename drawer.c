@@ -1,9 +1,10 @@
 
 #define _DEFAULT_SOURCE /* for setenv */
 
+#include "defines.h"
+
 #include "drawer.h"
 #include "blender.h"
-#include "defines.h"
 #include "emitter.h"
 #include "genlua.h"
 #include "helper.h"
@@ -15,6 +16,7 @@
 #include <time.h>
 
 #include "3rdparty/stb_image_write.h"
+/*#include "3rdparty/stb_easy_font.h"*/
 
 static double calculate_blend(particle* p);
 static int render_to_file(drawer_t drawer, const char *path);
@@ -22,7 +24,7 @@ static int render_to_file(drawer_t drawer, const char *path);
 void drawer_ensure_fps_linear(drawer_t drawer);
 void drawer_ensure_fps_absolute(drawer_t drawer);
 
-/* Vertex structure for GPU */
+/* Vertex structure for GPU (TODO: replace with geometry shader) */
 typedef struct {
     GLfloat x, y;
     GLfloat radius;
@@ -60,6 +62,7 @@ struct drawer {
     char* dump_file_fmt;
 };
 
+const GLchar* GEOM_SOURCE = "glsl/geom.glsl";
 const GLchar* VERT_SOURCE = "glsl/vert.glsl";
 const GLchar* FRAG_SOURCE = "glsl/frag.glsl";
 const GLchar* COMPUTE_SOURCE = "glsl/compute.glsl";
@@ -106,7 +109,8 @@ drawer_t drawer_new(const clargs* args) {
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     /* Initialize shader */
-    drawer->shader = shader_create(VERT_SOURCE, FRAG_SOURCE, COMPUTE_SOURCE);
+    drawer->shader = shader_create(GEOM_SOURCE, VERT_SOURCE,
+                                   FRAG_SOURCE, COMPUTE_SOURCE);
     if (!drawer->shader) {
         EPRINTF("%s\n", "Failed to compile shaders");
         return NULL;
@@ -226,7 +230,7 @@ int drawer_add_particle(drawer_t drawer, particle* p) {
 }
 
 int drawer_draw_to_screen(drawer_t drawer) {
-    /* Handle dumping if needed (stubbed for now) */
+    /*static char text_buffer[0x100000] = {0};*/
 
     glClearColor(drawer->bgcolor[0], drawer->bgcolor[1], drawer->bgcolor[2], 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
@@ -254,6 +258,20 @@ int drawer_draw_to_screen(drawer_t drawer) {
             DZFREE(s);
         }
     }
+
+    /*
+    char text[] = "Test";
+    int num_quads = stb_easy_font_print(0, 0, text, NULL, text_buffer, sizeof(text_buffer));
+    DBPRINTF("Printing %d quads for %s", num_quads, text);
+    for (int i = 0; i < 4*num_quads; i += 4) {
+        DBPRINTF("quad[%d] = %d %d %d %d", i, text_buffer[i], text_buffer[i+1], text_buffer[i+2], text_buffer[i+3]);
+    }
+    glColor3f(1.0f, 1.0f, 1.0f);
+    glEnableClientState(GL_VERTEX_ARRAY);
+    glVertexPointer(2, GL_FLOAT, 16, text_buffer);
+    glDrawArrays(GL_QUADS, 0, num_quads*4);
+    glDisableClientState(GL_VERTEX_ARRAY);
+    */
 
     glfwSwapBuffers(drawer->window);
     /* glfwPollEvents is called in driver.c */

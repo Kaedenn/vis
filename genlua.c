@@ -1,4 +1,5 @@
 
+#include "defines.h"
 #include "genlua.h"
 #include "emit.h"
 #include "kstring.h"

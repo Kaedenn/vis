@@ -1,9 +1,10 @@
 
+#include "defines.h"
+
 #include "command.h"
 
 #include "async.h"
 #include "audio.h"
-#include "defines.h"
 #include "drawer.h"
 #include "emitter.h"
 #include "helper.h"

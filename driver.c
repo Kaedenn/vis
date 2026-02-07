@@ -1,11 +1,5 @@
+
 #include "defines.h"
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <time.h>
-
-#include <GL/glew.h>
-#include <GLFW/glfw3.h>
 
 #include "audio.h"
 #include "clargs.h"
@@ -17,6 +11,13 @@
 #include "plist.h"
 #include "plimits.h"
 #include "script.h"
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+
+#include <GL/glew.h>
+#include <GLFW/glfw3.h>
 
 /* dependencies
  *

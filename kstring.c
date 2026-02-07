@@ -1,4 +1,5 @@
 
+#include "defines.h"
 #include "kstring.h"
 #include "helper.h"
 

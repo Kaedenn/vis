@@ -2,12 +2,12 @@
 #ifndef VIS_DRAW_HEADER_INCLUDED_
 #define VIS_DRAW_HEADER_INCLUDED_ 1
 
-#include <GL/glew.h>
-#include <GLFW/glfw3.h>
-
 #include "clargs.h"
 #include "emit.h"
 #include "particle.h"
+
+#include <GL/glew.h>
+#include <GLFW/glfw3.h>
 
 typedef struct drawer* drawer_t;
 

@@ -1,8 +1,9 @@
 
+#include "defines.h"
+#include "plist.h"
+#include "helper.h"
 #include <stdlib.h>
 #include <stdio.h>
-#include "helper.h"
-#include "plist.h"
 
 plist_t plist_new(size_t initial_size) {
     plist_t plist = DBMALLOC(sizeof(struct plist));
