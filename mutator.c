@@ -41,7 +41,7 @@ uint64_t mutate_debug_get_particle_tags_modified(void) {
 }
 
 static int64_t get_tag_l(particle* p) {
-    return ((pextra*)p->extra)->tag.l;
+    return p->tag.l;
 }
 
 BOOL mutate_cond_apply(particle* p, mutate_method* method) {
@@ -124,7 +124,7 @@ void mutate_age(particle* p, mutate_method* method) {
 
 void mutate_opacity(particle* p, mutate_method* method) {
     DEBUG_EXPRESSION(dbg_ctr.particles_mutated += 1);
-    ((pextra*)p->extra)->a = (float)method->factor[0];
+    p->a = (float)method->factor[0];
 }
 
 void mutate_set_dx(particle* p, mutate_method* method) {
@@ -147,43 +147,43 @@ void mutate_set_radius(particle* p, mutate_method* method) {
 
 void mutate_tag_set(particle* p, mutate_method* method) {
     DEBUG_EXPRESSION(dbg_ctr.particle_tags_modified += 1);
-    ((pextra*)p->extra)->tag.l = method->newtag.l;
+    p->tag.l = method->newtag.l;
 }
 
 void mutate_tag_inc(particle* p, UNUSED_PARAM(mutate_method* method)) {
     DEBUG_EXPRESSION(dbg_ctr.particle_tags_modified += 1);
-    ((pextra*)p->extra)->tag.l += 1;
+    p->tag.l += 1;
 }
 
 void mutate_tag_dec(particle* p, UNUSED_PARAM(mutate_method* method)) {
     DEBUG_EXPRESSION(dbg_ctr.particle_tags_modified += 1);
-    ((pextra*)p->extra)->tag.l -= 1;
+    p->tag.l -= 1;
 }
 
 void mutate_tag_add(particle* p, mutate_method* method) {
     DEBUG_EXPRESSION(dbg_ctr.particle_tags_modified += 1);
-    ((pextra*)p->extra)->tag.l += method->newtag.l;
+    p->tag.l += method->newtag.l;
 }
 
 void mutate_tag_sub(particle* p, mutate_method* method) {
     DEBUG_EXPRESSION(dbg_ctr.particle_tags_modified += 1);
-    ((pextra*)p->extra)->tag.l -= method->newtag.l;
+    p->tag.l -= method->newtag.l;
 }
 
 void mutate_tag_mul(particle* p, mutate_method* method) {
     DEBUG_EXPRESSION(dbg_ctr.particle_tags_modified += 1);
-    ((pextra*)p->extra)->tag.l *= method->newtag.l;
+    p->tag.l *= method->newtag.l;
 }
 
 void mutate_tag_div(particle* p, mutate_method* method) {
     DEBUG_EXPRESSION(dbg_ctr.particle_tags_modified += 1);
-    ((pextra*)p->extra)->tag.l /= method->newtag.l;
+    p->tag.l /= method->newtag.l;
 }
 
 void mutate_tag_set_if(particle* p, mutate_method* method) {
     DEBUG_EXPRESSION(dbg_ctr.particle_tags_modified += 1);
     if (mutate_cond_apply(p, method)) {
-        ((pextra*)p->extra)->tag.l = method->newtag.l;
+        p->tag.l = method->newtag.l;
     }
 }
 

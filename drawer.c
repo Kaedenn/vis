@@ -205,7 +205,6 @@ void drawer_bgcolor(drawer_t drawer, float r, float g, float b) {
 }
 
 int drawer_add_particle(drawer_t drawer, particle* p) {
-    pextra* pe = (pextra*)p->extra;
     if (drawer->vertex_curr < drawer->vertex_count) {
         vertex_t* v = &drawer->vertex_array[drawer->vertex_curr];
 
@@ -213,9 +212,9 @@ int drawer_add_particle(drawer_t drawer, particle* p) {
         v->y = 2 * (0.5f - (GLfloat)p->y / (GLfloat)drawer->wsize[1]);
         v->radius = (GLfloat)p->radius;
 
-        v->r = (GLfloat)pe->r;
-        v->g = (GLfloat)pe->g;
-        v->b = (GLfloat)pe->b;
+        v->r = (GLfloat)p->r;
+        v->g = (GLfloat)p->g;
+        v->b = (GLfloat)p->b;
         v->a = (GLfloat)sqrt(calculate_blend(p));
         v->depth = (GLuint)p->depth;
 
@@ -411,12 +410,11 @@ void drawer_trace_scroll(drawer_t drawer, UNUSED_PARAM(float xoffset), float yof
 }
 
 double calculate_blend(particle* p) {
-    pextra* pe = (pextra*)p->extra;
-    double alpha = pe->a;
+    double alpha = p->a;
     double life = particle_get_life(p);
     double lifetime = particle_get_lifetime(p);
-    if (pe->blender >= VIS_BLEND_NONE && pe->blender < VIS_NBLENDS) {
-        alpha *= blend_fns[pe->blender](life, lifetime);
+    if (p->blender >= VIS_BLEND_NONE && p->blender < VIS_NBLENDS) {
+        alpha *= blend_fns[p->blender](life, lifetime);
     }
     return alpha;
 }

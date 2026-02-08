@@ -43,7 +43,6 @@ static struct cmd_map {
     void (*func)(struct commands* cmds, const char* buffer);
     const char* synopsis;
 } commands[] = {
-    /* clang-format off */
     {"emit", cmd_emit, "instant emit: type \"help emit\" to see args"},
     {"kick", cmd_kick, "takes one arg: number of particles"},
     {"snare", cmd_snare, "takes one arg: number of particles"},
@@ -55,7 +54,6 @@ static struct cmd_map {
     {"exit", cmd_exit, "exits simulation immediately"},
     {"help", cmd_help, "briefly describes commands"},
     {NULL, NULL, NULL}
-    /* clang-format on */
 };
 
 struct commands* command_setup(
@@ -185,12 +183,10 @@ static void cmd_emit(struct commands* cmds, const char* buffer) {
             &ds, &uds, &theta, &utheta, &life, &ulife,
             &r, &g, &b, &ur, &ug, &ub, &force, &limit, &blender) == nargs) {
         for (i = 0; i < n; ++i) {
-            pextra* pe = NULL;
             particle* p = NULL;
             ar = randfloat(r - ur, r + ur);
             ag = randfloat(g - ug, g + ug);
             ab = randfloat(b - ub, b + ub);
-            pe = new_pextra(ar, ag, ab, (blend_id)blender);
 
             if (force < 0 || force >= VIS_NFORCES) {
                 force = VIS_DEFAULT_FORCE;
@@ -199,9 +195,12 @@ static void cmd_emit(struct commands* cmds, const char* buffer) {
                 limit = VIS_DEFAULT_LIMIT;
             }
 
+            float rgba[4] = {ar, ag, ab, 1.0f};
+            union particle_tag tag = {0};
             p = particle_new_full(x, y, ux, uy, 0, 0, rad, urad, ds, uds,
                 theta, utheta, 0, life, ulife,
-                (force_id)force, (limit_id)limit, pe);
+                (force_id)force, (limit_id)limit,
+                rgba, (blend_id)blender, tag);
 
             plist_add(cmds->particles, p);
         }

@@ -5,10 +5,8 @@
 #include "defines.h"
 #include "pextra.h"
 #include "types.h"
-#include <stdlib.h>
 
-/* TODO: Move r, g, b out of pextra
- * TODO: Move force, limit into pextra */
+#include <stdlib.h>
 
 struct particle;
 
@@ -24,7 +22,9 @@ typedef struct particle {
     int life;
     force_id force;
     limit_id limit;
-    pextra* extra;
+    float r, g, b, a;
+    blend_id blender;
+    union particle_tag tag;
 } particle;
 
 /* create a simple particle with default values */
@@ -36,7 +36,9 @@ particle* particle_new_full(double x, double y, double ux, double uy,
                             double ds, double uds,
                             double theta, double utheta,
                             int depth, int life, int ulife,
-                            force_id force, limit_id limit, pextra* extra);
+                            force_id force, limit_id limit,
+                            float rgba[4], blend_id blender,
+                            union particle_tag tag);
 
 /* destructor */
 void particle_free(particle* p);
@@ -74,7 +76,6 @@ pextra* particle_get_extra(particle* p);
 #define particle_get_depth(p) ((p)->depth)
 #define particle_get_life(p) ((p)->life)
 #define particle_get_lifetime(p) ((p)->lifetime)
-#define particle_get_extra(p) ((p)->extra)
 #endif
 
 #endif

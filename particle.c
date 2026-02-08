@@ -5,11 +5,9 @@
 #include "forces.h"
 #include "plimits.h"
 #include "helper.h"
-#include "pextra.h"
 
 #include "random.h"
 
-#include <stdlib.h>
 #include <math.h>
 
 particle* particle_new(double x, double y, double r, int life, pextra* extra) {
@@ -24,7 +22,14 @@ particle* particle_new(double x, double y, double r, int life, pextra* extra) {
     p->limit = VIS_DEFAULT_LIMIT;
     p->lifetime = life;
     p->life = life;
-    p->extra = extra;
+    if (extra) {
+        p->r = extra->r;
+        p->g = extra->g;
+        p->b = extra->b;
+        p->blender = extra->blender;
+        p->tag = extra->tag;
+        free_pextra(extra);
+    }
     return p;
 }
 
@@ -35,7 +40,9 @@ particle* particle_new_full(double x, double y,
                             double ds, double uds,
                             double theta, double utheta,
                             int depth, int life, int ulife,
-                            force_id force, limit_id limit, pextra* extra)
+                            force_id force, limit_id limit,
+                            float rgba[4], blend_id blender,
+                            union particle_tag tag)
 {
     particle* p = DBMALLOC(sizeof(particle));
 
@@ -52,12 +59,16 @@ particle* particle_new_full(double x, double y,
     p->limit = limit;
     p->lifetime = randint(life-ulife, life+ulife);
     p->life = p->lifetime;
-    p->extra = extra;
+    p->r = rgba[0];
+    p->g = rgba[1];
+    p->b = rgba[2];
+    p->a = rgba[3];
+    p->blender = blender;
+    p->tag = tag;
     return p;
 }
 
 void particle_free(particle* p) {
-    free_pextra(p->extra);
     DZFREE(p);
 }
 
@@ -75,14 +86,10 @@ void particle_set_limit(particle* p, limit_id limit) {
 }
 
 void particle_set_color(particle* p, float r, float g, float b, float a) {
-    if (p->extra) {
-        if (r >= 0) p->extra->r = clampf(r, 0, 1);
-        if (g >= 0) p->extra->g = clampf(g, 0, 1);
-        if (b >= 0) p->extra->b = clampf(b, 0, 1);
-        if (a >= 0) p->extra->a = clampf(a, 0, 1);
-    } else {
-        DBPRINTF("Ignoring particle_set_color; no pextra on particle");
-    }
+    if (r >= 0) p->r = clampf(r, 0, 1);
+    if (g >= 0) p->g = clampf(g, 0, 1);
+    if (b >= 0) p->b = clampf(b, 0, 1);
+    if (a >= 0) p->a = clampf(a, 0, 1);
 }
 
 void particle_tick(particle* p) {
@@ -105,6 +112,5 @@ double particle_get_radius(particle* p) { return p->radius; }
 int particle_get_depth(particle* p) { return p->depth; }
 int particle_get_life(particle* p) { return p->life; }
 int particle_get_lifetime(particle* p) { return p->lifetime; }
-pextra* particle_get_extra(particle* p) { return p->extra; }
 #endif
 
