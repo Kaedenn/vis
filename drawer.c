@@ -144,7 +144,7 @@ drawer_t drawer_new(const clargs* args) {
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 
-    const GLulong vbuffer_size = drawer->vertex_count * sizeof(vertex_t);
+    const GLulong vbuffer_size = VIS_PLIST_INITIAL_SIZE * sizeof(vertex_t);
 
     /* initialize the vertex storage */
     drawer->vertex_curr = 0;
