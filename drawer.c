@@ -21,8 +21,8 @@
 static double calculate_blend(particle* p);
 static int render_to_file(drawer_t drawer, const char *path);
 
-void drawer_ensure_fps_linear(drawer_t drawer);
-void drawer_ensure_fps_absolute(drawer_t drawer);
+static void drawer_ensure_fps_linear(drawer_t drawer);
+static void drawer_ensure_fps_absolute(drawer_t drawer);
 
 /* Vertex structure for GPU (TODO: replace with geometry shader) */
 typedef struct {
@@ -57,7 +57,7 @@ struct drawer {
     uint32_t frame_skip;
     struct fps fps;
     BOOL tracing;
-    emit_desc* emit;
+    emit_desc* trace_emit;
     BOOL verbose_trace;
     char* dump_file_fmt;
 };
@@ -144,15 +144,16 @@ drawer_t drawer_new(const clargs* args) {
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 
+    const GLulong vbuffer_size = drawer->vertex_count * sizeof(vertex_t);
+
     /* initialize the vertex storage */
     drawer->vertex_curr = 0;
     drawer->vertex_count = VIS_PLIST_INITIAL_SIZE;
-    drawer->vertex_array = DBMALLOC(drawer->vertex_count * sizeof(vertex_t));
+    drawer->vertex_array = DBMALLOC(vbuffer_size);
 
     /* Buffer initial data (empty) */
     glBindBuffer(GL_ARRAY_BUFFER, drawer->vbo);
-    glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)(drawer->vertex_count * sizeof(vertex_t)),
-        NULL, GL_DYNAMIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)vbuffer_size, NULL, GL_DYNAMIC_DRAW);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
     /* initialize default values */
@@ -190,7 +191,7 @@ void drawer_free(drawer_t drawer) {
     glfwDestroyWindow(drawer->window);
     glfwTerminate();
 
-    DZFREE(drawer->emit);
+    DZFREE(drawer->trace_emit);
     DZFREE(drawer);
 }
 
@@ -364,11 +365,11 @@ void drawer_set_dumpfile_template(drawer_t drawer, const char* path) {
 }
 
 void drawer_set_trace(drawer_t drawer, emit_desc* emit) {
-    drawer->emit = emit;
+    drawer->trace_emit = emit;
 }
 
 emit_desc* drawer_get_trace(drawer_t drawer) {
-    return drawer->emit;
+    return drawer->trace_emit;
 }
 
 void drawer_begin_trace(drawer_t drawer) {
@@ -376,14 +377,14 @@ void drawer_begin_trace(drawer_t drawer) {
 }
 
 void drawer_trace(drawer_t drawer, float x, float y) {
-    if (!drawer->tracing || !drawer->emit)
+    if (!drawer->tracing || !drawer->trace_emit)
         return;
 
-    drawer->emit->x = (double)x;
-    drawer->emit->y = (double)y;
-    emit_frame(drawer->emit);
+    drawer->trace_emit->x = (double)x;
+    drawer->trace_emit->y = (double)y;
+    emit_frame(drawer->trace_emit);
     if (drawer->verbose_trace) {
-        char* line = genlua_emit(drawer->emit, drawer->fps.framecount);
+        char* line = genlua_emit(drawer->trace_emit, drawer->fps.framecount);
         printf("%s\n", line);
         DZFREE(line);
     }
@@ -395,16 +396,16 @@ void drawer_end_trace(drawer_t drawer) {
 
 void drawer_trace_scroll(drawer_t drawer, UNUSED_PARAM(float xoffset), float yoffset) {
     if (yoffset > 0) {
-        drawer->emit->rad += 1;
-        drawer->emit->ds *= 1.5f;
+        drawer->trace_emit->rad += 1;
+        drawer->trace_emit->ds *= 1.5f;
     } else if (yoffset < 0) {
-        drawer->emit->rad -= 1;
-        if (drawer->emit->rad <= 0) {
-            drawer->emit->rad = 1;
+        drawer->trace_emit->rad -= 1;
+        if (drawer->trace_emit->rad <= 0) {
+            drawer->trace_emit->rad = 1;
         }
-        drawer->emit->ds /= 1.5f;
-        if (drawer->emit->ds < 0.2f) {
-            drawer->emit->ds = 0.2f;
+        drawer->trace_emit->ds /= 1.5f;
+        if (drawer->trace_emit->ds < 0.2f) {
+            drawer->trace_emit->ds = 0.2f;
         }
     }
 }
