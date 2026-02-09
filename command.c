@@ -120,7 +120,7 @@ void command_str(struct commands* cmds, const char* buffer) {
         EPRINTF("Refusing to handle insane command %p", buffer);
         return;
     }
-    strcpy(rw_buffer, buffer);
+    strncpy(rw_buffer, buffer, sizeof(rw_buffer)-1);
     if ((c = strchr(rw_buffer, '\n')) != NULL) {
         *c = '\0';
     }
