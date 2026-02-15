@@ -24,6 +24,7 @@ struct particle {
     blend_id blender;
     union particle_tag tag;
 };
+
 typedef struct particle* particle_t;
 
 /* create a simple particle with default values */

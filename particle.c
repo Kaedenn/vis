@@ -34,15 +34,15 @@ particle_t particle_new(double x, double y, double r, int life, pextra* extra) {
 }
 
 particle_t particle_new_full(double x, double y,
-                            double ux, double uy,
-                            double s, double us,
-                            double r, double ur,
-                            double ds, double uds,
-                            double theta, double utheta,
-                            int depth, int life, int ulife,
-                            force_id force, limit_id limit,
-                            float rgba[4], blend_id blender,
-                            union particle_tag tag)
+                             double ux, double uy,
+                             double s, double us,
+                             double r, double ur,
+                             double ds, double uds,
+                             double theta, double utheta,
+                             int depth, int life, int ulife,
+                             force_id force, limit_id limit,
+                             float rgba[4], blend_id blender,
+                             union particle_tag tag)
 {
     particle_t p = DBMALLOC(sizeof(struct particle));
 
