@@ -9,7 +9,6 @@
 #include "genlua.h"
 #include "helper.h"
 #include "kstring.h"
-#include "pextra.h"
 #include "shader.h"
 #include "types.h"
 #include <math.h>
@@ -18,7 +17,7 @@
 #include "3rdparty/stb_image_write.h"
 /*#include "3rdparty/stb_easy_font.h"*/
 
-static double calculate_blend(particle* p);
+static double calculate_blend(particle_t p);
 static int render_to_file(drawer_t drawer, const char *path);
 
 static void drawer_ensure_fps_linear(drawer_t drawer);
@@ -205,7 +204,7 @@ void drawer_bgcolor(drawer_t drawer, float r, float g, float b) {
     if (b >= 0) drawer->bgcolor[2] = b;
 }
 
-int drawer_add_particle(drawer_t drawer, particle* p) {
+int drawer_add_particle(drawer_t drawer, particle_t p) {
     if (drawer->vertex_curr < drawer->vertex_count) {
         vertex_t* v = &drawer->vertex_array[drawer->vertex_curr];
 
@@ -410,7 +409,7 @@ void drawer_trace_scroll(drawer_t drawer, UNUSED_PARAM(float xoffset), float yof
     }
 }
 
-double calculate_blend(particle* p) {
+double calculate_blend(particle_t p) {
     double alpha = p->a;
     double life = particle_get_life(p);
     double lifetime = particle_get_lifetime(p);

@@ -17,7 +17,7 @@ GLFWwindow* drawer_get_window(drawer_t drawer);
 
 void drawer_config(drawer_t drawer, const clargs* args);
 void drawer_bgcolor(drawer_t drawer, float r, float g, float b);
-int drawer_add_particle(drawer_t drawer, particle* p);
+int drawer_add_particle(drawer_t drawer, particle_t p);
 int drawer_draw_to_screen(drawer_t drawer);
 void drawer_preserve_screen(drawer_t drawer);
 int drawer_get_configured_fps(drawer_t drawer);

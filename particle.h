@@ -6,14 +6,12 @@
 #include "pextra.h"
 #include "types.h"
 
-#include <stdlib.h>
-
 struct particle;
 
 typedef void (*force_fn)(struct particle* p);
 typedef void (*limit_fn)(struct particle* p);
 
-typedef struct particle {
+struct particle {
     double x, y;
     double dx, dy;
     double radius;
@@ -25,13 +23,14 @@ typedef struct particle {
     float r, g, b, a;
     blend_id blender;
     union particle_tag tag;
-} particle;
+};
+typedef struct particle* particle_t;
 
 /* create a simple particle with default values */
-particle* particle_new(double x, double y, double r, int life, pextra* extra);
+particle_t particle_new(double x, double y, double r, int life, pextra* extra);
 
 /* create a particle with both X/Y position and circle offset */
-particle* particle_new_full(double x, double y, double ux, double uy,
+particle_t particle_new_full(double x, double y, double ux, double uy,
                             double s, double us, double r, double ur,
                             double ds, double uds,
                             double theta, double utheta,
@@ -41,31 +40,31 @@ particle* particle_new_full(double x, double y, double ux, double uy,
                             union particle_tag tag);
 
 /* destructor */
-void particle_free(particle* p);
+void particle_free(particle_t p);
 
 /* specific mutation functions */
-void particle_push(particle* p, double dx, double dy);
-void particle_set_force(particle* p, force_id force);
-void particle_set_limit(particle* p, limit_id limit);
+void particle_push(particle_t p, double dx, double dy);
+void particle_set_force(particle_t p, force_id force);
+void particle_set_limit(particle_t p, limit_id limit);
 
 /* values less than 0 preserve color; values are clamped to 0..1 */
-void particle_set_color(particle* p, float r, float g, float b, float a);
+void particle_set_color(particle_t p, float r, float g, float b, float a);
 
 /* special function for a particle's life to continue */
-void particle_tick(particle* p);
+void particle_tick(particle_t p);
 
 /* accessor functions */
 #if DEBUG > DEBUG_NONE
-int particle_is_alive(particle* p);
-double particle_get_x(particle* p);
-double particle_get_y(particle* p);
-double particle_get_dx(particle* p);
-double particle_get_dy(particle* p);
-double particle_get_radius(particle* p);
-int particle_get_depth(particle* p);
-int particle_get_lifetime(particle* p);
-int particle_get_life(particle* p);
-pextra* particle_get_extra(particle* p);
+int particle_is_alive(particle_t p);
+double particle_get_x(particle_t p);
+double particle_get_y(particle_t p);
+double particle_get_dx(particle_t p);
+double particle_get_dy(particle_t p);
+double particle_get_radius(particle_t p);
+int particle_get_depth(particle_t p);
+int particle_get_lifetime(particle_t p);
+int particle_get_life(particle_t p);
+pextra* particle_get_extra(particle_t p);
 #else
 #define particle_is_alive(p) ((p)->life > 0)
 #define particle_get_x(p) ((p)->x)

@@ -11,7 +11,7 @@ uint64_t mutate_debug_get_particle_tags_modified(void);
 
 struct mutate_method;
 
-typedef void(*mutate_fn)(particle* p, struct mutate_method* method);
+typedef void(*mutate_fn)(particle_t p, struct mutate_method* method);
 
 typedef struct mutate_method {
     mutate_id id;
@@ -24,44 +24,44 @@ typedef struct mutate_method {
     union particle_tag newtag;
 } mutate_method;
 
-BOOL mutate_cond_apply(particle* p, mutate_method* method);
+BOOL mutate_cond_apply(particle_t p, mutate_method* method);
 
-void mutate_push(particle* p, mutate_method* method);
-void mutate_push_dx(particle* p, mutate_method* method);
-void mutate_push_dy(particle* p, mutate_method* method);
-void mutate_slow(particle* p, mutate_method* method);
-void mutate_shrink(particle* p, mutate_method* method);
-void mutate_grow(particle* p, mutate_method* method);
-void mutate_age(particle* p, mutate_method* method);
-void mutate_opacity(particle* p, mutate_method* method);
+void mutate_push(particle_t p, mutate_method* method);
+void mutate_push_dx(particle_t p, mutate_method* method);
+void mutate_push_dy(particle_t p, mutate_method* method);
+void mutate_slow(particle_t p, mutate_method* method);
+void mutate_shrink(particle_t p, mutate_method* method);
+void mutate_grow(particle_t p, mutate_method* method);
+void mutate_age(particle_t p, mutate_method* method);
+void mutate_opacity(particle_t p, mutate_method* method);
 
-void mutate_set_dx(particle* p, mutate_method* method);
-void mutate_set_dy(particle* p, mutate_method* method);
-void mutate_set_radius(particle* p, mutate_method* method);
+void mutate_set_dx(particle_t p, mutate_method* method);
+void mutate_set_dy(particle_t p, mutate_method* method);
+void mutate_set_radius(particle_t p, mutate_method* method);
 
-void mutate_tag_set(particle* p, mutate_method* method);
-void mutate_tag_inc(particle* p, mutate_method* method);
-void mutate_tag_dec(particle* p, mutate_method* method);
-void mutate_tag_add(particle* p, mutate_method* method);
-void mutate_tag_sub(particle* p, mutate_method* method);
-void mutate_tag_mul(particle* p, mutate_method* method);
-void mutate_tag_div(particle* p, mutate_method* method);
-void mutate_tag_set_if(particle* p, mutate_method* method);
+void mutate_tag_set(particle_t p, mutate_method* method);
+void mutate_tag_inc(particle_t p, mutate_method* method);
+void mutate_tag_dec(particle_t p, mutate_method* method);
+void mutate_tag_add(particle_t p, mutate_method* method);
+void mutate_tag_sub(particle_t p, mutate_method* method);
+void mutate_tag_mul(particle_t p, mutate_method* method);
+void mutate_tag_div(particle_t p, mutate_method* method);
+void mutate_tag_set_if(particle_t p, mutate_method* method);
 
-void mutate_push_if(particle* p, mutate_method* method);
-void mutate_push_dx_if(particle* p, mutate_method* method);
-void mutate_push_dy_if(particle* p, mutate_method* method);
-void mutate_slow_if(particle* p, mutate_method* method);
-void mutate_shrink_if(particle* p, mutate_method* method);
-void mutate_grow_if(particle* p, mutate_method* method);
-void mutate_age_if(particle* p, mutate_method* method);
-void mutate_opacity_if(particle* p, mutate_method* method);
+void mutate_push_if(particle_t p, mutate_method* method);
+void mutate_push_dx_if(particle_t p, mutate_method* method);
+void mutate_push_dy_if(particle_t p, mutate_method* method);
+void mutate_slow_if(particle_t p, mutate_method* method);
+void mutate_shrink_if(particle_t p, mutate_method* method);
+void mutate_grow_if(particle_t p, mutate_method* method);
+void mutate_age_if(particle_t p, mutate_method* method);
+void mutate_opacity_if(particle_t p, mutate_method* method);
 
-void mutate_set_dx_if(particle* p, mutate_method* method);
-void mutate_set_dy_if(particle* p, mutate_method* method);
-void mutate_set_radius_if(particle* p, mutate_method* method);
+void mutate_set_dx_if(particle_t p, mutate_method* method);
+void mutate_set_dy_if(particle_t p, mutate_method* method);
+void mutate_set_radius_if(particle_t p, mutate_method* method);
 
-void mutate_none(particle* p, mutate_method* method);
+void mutate_none(particle_t p, mutate_method* method);
 
 /* Must match the mutate_id enum in types.h */
 static const mutate_fn MUTATE_MAP[VIS_NMUTATES+1] = {

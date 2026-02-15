@@ -8,7 +8,6 @@
 #include "drawer.h"
 #include "helper.h"
 #include "particle.h"
-#include "pextra.h"
 #include "random.h"
 
 #include <time.h>
@@ -58,7 +57,7 @@ void emitter_schedule(flist_t frames) {
     }
 }
 
-static plist_action_id do_mutate_fn(particle* p, void* mutate) {
+static plist_action_id do_mutate_fn(particle_t p, void* mutate) {
     ((mutate_method*)mutate)->func(p, mutate);
     return ACTION_NEXT;
 }
@@ -173,7 +172,7 @@ void emit_frame(emit_desc* frame) {
         if (frame->ub != 0.0f) {
             rgba[2] = randfloat(frame->b - frame->ub, frame->b + frame->ub);
         }
-        particle* p = particle_new_full(
+        particle_t p = particle_new_full(
                 frame->x, frame->y, frame->ux, frame->uy,
                 frame->s, frame->us,
                 frame->rad, frame->urad,

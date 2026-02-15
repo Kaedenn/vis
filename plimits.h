@@ -8,13 +8,13 @@
 void plimits_update_screen_size(unsigned int width, unsigned int height);
 
 /* default */
-void no_limit(particle* p);
+void no_limit(particle_t p);
 
 /* particles stop at borders */
-void box(particle* p);
+void box(particle_t p);
 
 /* particles bounce off borders */
-void springbox(particle* p);
+void springbox(particle_t p);
 
 static const limit_fn LIMIT_MAP[] = {
     no_limit, box, springbox

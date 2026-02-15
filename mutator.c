@@ -40,11 +40,11 @@ uint64_t mutate_debug_get_particle_tags_modified(void) {
 #endif
 }
 
-static int64_t get_tag_l(particle* p) {
+static int64_t get_tag_l(particle_t p) {
     return p->tag.l;
 }
 
-BOOL mutate_cond_apply(particle* p, mutate_method* method) {
+BOOL mutate_cond_apply(particle_t p, mutate_method* method) {
     switch (method->cond) {
         case VIS_MUTATE_IF_TRUE:
             return TRUE;
@@ -85,102 +85,102 @@ BOOL mutate_cond_apply(particle* p, mutate_method* method) {
     return FALSE;
 }
 
-void mutate_push(particle* p, mutate_method* method) {
+void mutate_push(particle_t p, mutate_method* method) {
     DEBUG_EXPRESSION(dbg_ctr.particles_mutated += 1);
     p->dx = p->dx * method->factor[0];
     p->dy = p->dy * method->factor[0];
 }
 
-void mutate_push_dx(particle* p, mutate_method* method) {
+void mutate_push_dx(particle_t p, mutate_method* method) {
     DEBUG_EXPRESSION(dbg_ctr.particles_mutated += 1);
     p->dx = p->dx * method->factor[0];
 }
 
-void mutate_push_dy(particle* p, mutate_method* method) {
+void mutate_push_dy(particle_t p, mutate_method* method) {
     DEBUG_EXPRESSION(dbg_ctr.particles_mutated += 1);
     p->dy = p->dy * method->factor[0];
 }
 
-void mutate_slow(particle* p, mutate_method* method) {
+void mutate_slow(particle_t p, mutate_method* method) {
     DEBUG_EXPRESSION(dbg_ctr.particles_mutated += 1);
     p->dx = p->dx / method->factor[0];
     p->dy = p->dy / method->factor[0];
 }
 
-void mutate_shrink(particle* p, mutate_method* method) {
+void mutate_shrink(particle_t p, mutate_method* method) {
     DEBUG_EXPRESSION(dbg_ctr.particles_mutated += 1);
     p->radius = p->radius / method->factor[0];
 }
 
-void mutate_grow(particle* p, mutate_method* method) {
+void mutate_grow(particle_t p, mutate_method* method) {
     DEBUG_EXPRESSION(dbg_ctr.particles_mutated += 1);
     p->radius = p->radius * method->factor[0];
 }
 
-void mutate_age(particle* p, mutate_method* method) {
+void mutate_age(particle_t p, mutate_method* method) {
     DEBUG_EXPRESSION(dbg_ctr.particles_mutated += 1);
     p->life = (int)(p->lifetime * method->factor[0]);
 }
 
-void mutate_opacity(particle* p, mutate_method* method) {
+void mutate_opacity(particle_t p, mutate_method* method) {
     DEBUG_EXPRESSION(dbg_ctr.particles_mutated += 1);
     p->a = (float)method->factor[0];
 }
 
-void mutate_set_dx(particle* p, mutate_method* method) {
+void mutate_set_dx(particle_t p, mutate_method* method) {
     DEBUG_EXPRESSION(dbg_ctr.particles_mutated += 1);
     p->dx = randdouble(method->factor[0] - method->factor[1],
                        method->factor[0] + method->factor[1]);
 }
 
-void mutate_set_dy(particle* p, mutate_method* method) {
+void mutate_set_dy(particle_t p, mutate_method* method) {
     DEBUG_EXPRESSION(dbg_ctr.particles_mutated += 1);
     p->dy = randdouble(method->factor[0] - method->factor[1],
                        method->factor[0] + method->factor[1]);
 }
 
-void mutate_set_radius(particle* p, mutate_method* method) {
+void mutate_set_radius(particle_t p, mutate_method* method) {
     DEBUG_EXPRESSION(dbg_ctr.particles_mutated += 1);
     p->radius = randdouble(method->factor[0] - method->factor[1],
                            method->factor[0] + method->factor[1]);
 }
 
-void mutate_tag_set(particle* p, mutate_method* method) {
+void mutate_tag_set(particle_t p, mutate_method* method) {
     DEBUG_EXPRESSION(dbg_ctr.particle_tags_modified += 1);
     p->tag.l = method->newtag.l;
 }
 
-void mutate_tag_inc(particle* p, UNUSED_PARAM(mutate_method* method)) {
+void mutate_tag_inc(particle_t p, UNUSED_PARAM(mutate_method* method)) {
     DEBUG_EXPRESSION(dbg_ctr.particle_tags_modified += 1);
     p->tag.l += 1;
 }
 
-void mutate_tag_dec(particle* p, UNUSED_PARAM(mutate_method* method)) {
+void mutate_tag_dec(particle_t p, UNUSED_PARAM(mutate_method* method)) {
     DEBUG_EXPRESSION(dbg_ctr.particle_tags_modified += 1);
     p->tag.l -= 1;
 }
 
-void mutate_tag_add(particle* p, mutate_method* method) {
+void mutate_tag_add(particle_t p, mutate_method* method) {
     DEBUG_EXPRESSION(dbg_ctr.particle_tags_modified += 1);
     p->tag.l += method->newtag.l;
 }
 
-void mutate_tag_sub(particle* p, mutate_method* method) {
+void mutate_tag_sub(particle_t p, mutate_method* method) {
     DEBUG_EXPRESSION(dbg_ctr.particle_tags_modified += 1);
     p->tag.l -= method->newtag.l;
 }
 
-void mutate_tag_mul(particle* p, mutate_method* method) {
+void mutate_tag_mul(particle_t p, mutate_method* method) {
     DEBUG_EXPRESSION(dbg_ctr.particle_tags_modified += 1);
     p->tag.l *= method->newtag.l;
 }
 
-void mutate_tag_div(particle* p, mutate_method* method) {
+void mutate_tag_div(particle_t p, mutate_method* method) {
     DEBUG_EXPRESSION(dbg_ctr.particle_tags_modified += 1);
     p->tag.l /= method->newtag.l;
 }
 
-void mutate_tag_set_if(particle* p, mutate_method* method) {
+void mutate_tag_set_if(particle_t p, mutate_method* method) {
     DEBUG_EXPRESSION(dbg_ctr.particle_tags_modified += 1);
     if (mutate_cond_apply(p, method)) {
         p->tag.l = method->newtag.l;
@@ -188,7 +188,7 @@ void mutate_tag_set_if(particle* p, mutate_method* method) {
 }
 
 #define GEN_COND_MUTATE_FN(mutate) \
-    void (mutate##_if)(particle* p, mutate_method* method) { \
+    void (mutate##_if)(particle_t p, mutate_method* method) { \
         if (mutate_cond_apply(p, method)) { \
             (mutate)(p, method); \
         } \
@@ -208,5 +208,5 @@ GEN_COND_MUTATE_FN(mutate_set_radius)
 
 #undef GEN_COND_MUTATE_FN
 
-void mutate_none(UNUSED_PARAM(particle* p), UNUSED_PARAM(mutate_method* m)) {
+void mutate_none(UNUSED_PARAM(particle_t p), UNUSED_PARAM(mutate_method* m)) {
 }

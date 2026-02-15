@@ -11,11 +11,11 @@ void plimits_update_screen_size(unsigned int width, unsigned int height) {
     screen_size[1] = height;
 }
 
-void no_limit(UNUSED_PARAM(particle* p)) {
+void no_limit(UNUSED_PARAM(particle_t p)) {
     /* nothing */
 }
 
-void box(particle* p) {
+void box(particle_t p) {
     if (p->x < BOX_FUDGE(p)) {
         p->x = BOX_FUDGE(p);
         p->dx = 0.0;
@@ -32,7 +32,7 @@ void box(particle* p) {
     }
 }
 
-void springbox(particle* p) {
+void springbox(particle_t p) {
     if (p->x < BOX_FUDGE(p)) {
         p->x = BOX_FUDGE(p);
         p->dx = -p->dx;

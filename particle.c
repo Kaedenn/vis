@@ -10,8 +10,8 @@
 
 #include <math.h>
 
-particle* particle_new(double x, double y, double r, int life, pextra* extra) {
-    particle* p = DBMALLOC(sizeof(particle));
+particle_t particle_new(double x, double y, double r, int life, pextra* extra) {
+    particle_t p = DBMALLOC(sizeof(struct particle));
     p->x = x;
     p->y = y;
     p->dx = 0.0;
@@ -33,7 +33,7 @@ particle* particle_new(double x, double y, double r, int life, pextra* extra) {
     return p;
 }
 
-particle* particle_new_full(double x, double y,
+particle_t particle_new_full(double x, double y,
                             double ux, double uy,
                             double s, double us,
                             double r, double ur,
@@ -44,7 +44,7 @@ particle* particle_new_full(double x, double y,
                             float rgba[4], blend_id blender,
                             union particle_tag tag)
 {
-    particle* p = DBMALLOC(sizeof(particle));
+    particle_t p = DBMALLOC(sizeof(struct particle));
 
     double angle = randdouble(theta-utheta, theta+utheta);
     double offset = randdouble(s-us, s+us);
@@ -68,31 +68,31 @@ particle* particle_new_full(double x, double y,
     return p;
 }
 
-void particle_free(particle* p) {
+void particle_free(particle_t p) {
     DZFREE(p);
 }
 
-void particle_push(particle* p, double dx, double dy) {
+void particle_push(particle_t p, double dx, double dy) {
     p->dx += dx;
     p->dy += dy;
 }
 
-void particle_set_force(particle* p, force_id force) {
+void particle_set_force(particle_t p, force_id force) {
     p->force = force;
 }
 
-void particle_set_limit(particle* p, limit_id limit) {
+void particle_set_limit(particle_t p, limit_id limit) {
     p->limit = limit;
 }
 
-void particle_set_color(particle* p, float r, float g, float b, float a) {
+void particle_set_color(particle_t p, float r, float g, float b, float a) {
     if (r >= 0) p->r = clampf(r, 0, 1);
     if (g >= 0) p->g = clampf(g, 0, 1);
     if (b >= 0) p->b = clampf(b, 0, 1);
     if (a >= 0) p->a = clampf(a, 0, 1);
 }
 
-void particle_tick(particle* p) {
+void particle_tick(particle_t p) {
     p->x += p->dx;
     p->y += p->dy;
     VIS_ASSERT(0 <= p->force && p->force < VIS_NFORCES);
@@ -103,14 +103,14 @@ void particle_tick(particle* p) {
 }
 
 #if DEBUG >= DEBUG_NONE
-int particle_is_alive(particle* p) { return p->life > 0; }
-double particle_get_x(particle* p) { return p->x; }
-double particle_get_y(particle* p) { return p->y; }
-double particle_get_dx(particle* p) { return p->dx; }
-double particle_get_dy(particle* p) { return p->dy; }
-double particle_get_radius(particle* p) { return p->radius; }
-int particle_get_depth(particle* p) { return p->depth; }
-int particle_get_life(particle* p) { return p->life; }
-int particle_get_lifetime(particle* p) { return p->lifetime; }
+int particle_is_alive(particle_t p) { return p->life > 0; }
+double particle_get_x(particle_t p) { return p->x; }
+double particle_get_y(particle_t p) { return p->y; }
+double particle_get_dx(particle_t p) { return p->dx; }
+double particle_get_dy(particle_t p) { return p->dy; }
+double particle_get_radius(particle_t p) { return p->radius; }
+int particle_get_depth(particle_t p) { return p->depth; }
+int particle_get_life(particle_t p) { return p->life; }
+int particle_get_lifetime(particle_t p) { return p->lifetime; }
 #endif
 

@@ -9,6 +9,7 @@
  * It is therefore an array of (often singlar) linked lists.
  */
 
+#include "defines.h"
 #include "emit.h"
 #include "mutator.h"
 #include "script.h"
