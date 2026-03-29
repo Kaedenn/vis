@@ -152,6 +152,7 @@ int main(int argc, char* argv[]) {
 
     g.drawer = drawer_new(g.args);
     if (!g.drawer) {
+        clargs_free(g.args);
         exit(1);
     }
     drawer_config(g.drawer, g.args);
@@ -184,6 +185,12 @@ int main(int argc, char* argv[]) {
     emitter_setup(g.cmds, g.particles, g.drawer, g.args);
 
     if (!audio_init()) {
+        clargs_free(g.args);
+        drawer_free(g.drawer);
+        plist_free(g.particles);
+        command_teardown(g.cmds);
+        emitter_free();
+        script_free(g.script);
         exit(1);
     }
     if (g.args->quiet_audio) {

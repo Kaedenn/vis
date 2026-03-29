@@ -176,11 +176,13 @@ script_t script_new(script_cfg_mask cfg, const clargs* args) {
 }
 
 void script_free(script_t s) {
-    if (!s)
+    if (!s) {
         return;
+    }
     lua_close(s->L);
-    if (s->args)
+    if (s->args) {
         klist_free(s->args);
+    }
     DZFREE(s->dbg);
     DZFREE(s);
 }
