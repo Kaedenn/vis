@@ -74,6 +74,13 @@ CFLAGS_FREETYPE = $(call pkg_cflags,freetype2)
 LDFLAGS_FREETYPE = $(call pkg_ldflags,freetype2)
 endif
 
+CFLAGS_JSONC = $(call pkg_cflags,json-c)
+LDFLAGS_JSONC = $(call pkg_ldflags,json-c)
+ifneq ($(CFLAGS_JSONC),)
+CFLAGS += -DHAVE_JSONC $(CFLAGS_JSONC)
+LDFLAGS += $(LDFLAGS_JSONC)
+endif
+
 LDFLAGS_FAST = -O3 -flto
 LDFLAGS_PROF = -pg
 

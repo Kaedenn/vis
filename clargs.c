@@ -4,11 +4,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <errno.h>
 
 const char* usage_string = "Usage: %s [-l path] [arguments...]";
 const char* help_string[] = {
-    /* clang-format off */
     " Short options:",
+    "  -C <FILE>    load configuration from JSON <FILE>",
     "  -d <FILE>    dump frames to <FILE>_000.png",
     "  -l <FILE>    run lua script <FILE>",
     "  -L <LUA>     run lua string <LUA>",
@@ -31,19 +35,19 @@ const char* help_string[] = {
     "  --           everything following is sent to Lua (like -A)",
     "",
     NULL
-    /* clang-format on */
 };
 
-static void mark_error(clargs* args, int error) {
+static void mark_error(clargs_t args, int error) {
     args->must_exit = TRUE;
     if (error > args->exit_status) {
         args->exit_status = error;
     }
 }
 
-clargs* argparse(int argc, char** argv) {
-    clargs* args = DBMALLOC(sizeof(struct clargs));
+clargs_t argparse(int argc, char** argv) {
+    clargs_t args = DBMALLOC(sizeof(struct clargs));
     args->execname = argv[0];
+    args->configfile = NULL;
     args->scriptfile = NULL;
     args->scriptstring = NULL;
     args->dumpfile = NULL;
@@ -59,6 +63,9 @@ clargs* argparse(int argc, char** argv) {
     args->quiet_audio = FALSE;
     args->stay_after_script = FALSE;
     args->debug_level = 0;
+#ifdef HAVE_JSONC
+    args->configobj = NULL;
+#endif
     klist unrecognized = klist_new();
     int argi;
     for (argi = 1; argi < argc && argv[argi] && argv[argi][0]; ++argi) {
@@ -72,6 +79,14 @@ clargs* argparse(int argc, char** argv) {
             break;
         }
         switch (argv[argi][1]) {
+        case 'C':
+            if (argi + 1 < argc) {
+                args->configfile = argv[++argi];
+            } else {
+                EPRINTF("Argument -%c requires value", argv[argi][1]);
+                mark_error(args, 1);
+            }
+            break;
         case 'd':
             if (argi + 1 < argc) {
                 args->dumpfile = argv[++argi];
@@ -204,11 +219,65 @@ clargs* argparse(int argc, char** argv) {
         mark_error(args, 1);
     }
 
+#ifdef HAVE_JSONC
+    if (args->configfile) {
+        DBPRINTF("Loading configuration file from %s", args->configfile);
+        args->configobj = json_object_from_file(args->configfile);
+        if (!args->configobj) {
+            EPRINTF("Failed to parse JSON %s: %s", args->configfile,
+                    json_util_get_last_err());
+            mark_error(args, 1);
+        }
+    }
+#endif
+
     klist_free(unrecognized);
 
     return args;
 }
 
-void clargs_free(clargs* args) {
+void clargs_free(clargs_t args) {
+#ifdef HAVE_JSONC
+    if (args && args->configobj) {
+        json_object_put(args->configobj);
+        args->configobj = NULL;
+    }
+#endif
     DZFREE(args);
+}
+
+const char* clargs_config_get(clargs_t args, const char* key) {
+#ifdef HAVE_JSONC
+    if (args->configobj) {
+        return json_object_get_string(json_object_object_get(args->configobj, key));
+    }
+#endif
+    return NULL;
+}
+
+int clargs_config_geti(clargs_t args, const char* key) {
+#ifdef HAVE_JSONC
+    if (args->configobj) {
+        return json_object_get_int(json_object_object_get(args->configobj, key));
+    }
+#endif
+    return 0;
+}
+
+long clargs_config_getl(clargs_t args, const char* key) {
+#ifdef HAVE_JSONC
+    if (args->configobj) {
+        return json_object_get_int64(json_object_object_get(args->configobj, key));
+    }
+#endif
+    return 0L;
+}
+
+double clargs_config_getd(clargs_t args, const char* key) {
+#ifdef HAVE_JSONC
+    if (args->configobj) {
+        return json_object_get_double(json_object_object_get(args->configobj, key));
+    }
+#endif
+    return 0.0;
 }
