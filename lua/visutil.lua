@@ -667,7 +667,7 @@ function VisUtil.emit_table(t)
         force = t.force,
         limit = t.limit,
         blender = t.blender,
-        tag = math.floor(t.tag)
+        tag = math.floor(tonumber(t.tag) or 0)
     })
 end
 
@@ -687,7 +687,7 @@ function VisUtil.emit_table_now(t)
         force = t.force,
         limit = t.limit,
         blender = t.blender,
-        tag = math.floor(t.tag),
+        tag = math.floor(tonumber(t.tag) or 0)
     })
 end
 

@@ -20,11 +20,13 @@ function Emit:new(obj)
         _tagid = tagid,
         _tag = ("Emit(%s)"):format(tagid)
     }
-    o._t = {}
-    o._t = VisUtil.make_emit_table()
     o._t.tag = tagid
-    if obj ~= nil and obj._t ~= nil then
-        for k,v in pairs(obj._t) do
+    if obj ~= nil then
+        local from_obj = obj
+        if obj._t ~= nil then
+            from_obj = obj._t
+        end
+        for k,v in pairs(from_obj) do
             o._t[k] = v
         end
     end
