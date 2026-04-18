@@ -77,6 +77,13 @@ void eprintf(const char* fmt, ...) {
     fprintf(stderr, "\n");
 }
 
+void eprintfn(const char* fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+    vfprintf(stderr, fmt, args);
+    va_end(args);
+}
+
 static void do_assert_fail(const char* message, const char* file, int line)
     NORETURN;
 
@@ -104,6 +111,40 @@ void dbprintf(const char* fmt, ...) {
     vfprintf(stderr, fmt, args);
     va_end(args);
     fprintf(stderr, "\n");
+#else
+    (void)fmt;
+#endif
+}
+
+void dbprintfn(const char* fmt, ...) {
+#if DEBUG > DEBUG_NONE
+    va_list args;
+    fprintf(stderr, "DEBUG: ");
+    va_start(args, fmt);
+    vfprintf(stderr, fmt, args);
+    va_end(args);
+#else
+    (void)fmt;
+#endif
+}
+
+void dbprogress(const char* fmt, ...) {
+#if DEBUG > DEBUG_NONE
+    static int maxlen = 0;
+    int currlen = 0;
+    va_list args;
+    currlen += fprintf(stderr, "DEBUG: ");
+    va_start(args, fmt);
+    currlen += vfprintf(stderr, fmt, args);
+    va_end(args);
+    if (currlen < maxlen) {
+        for (int i = currlen; i <= maxlen; ++i) {
+            fprintf(stderr, " ");
+        }
+    } else {
+        maxlen = currlen;
+    }
+    fprintf(stderr, "\r");
 #else
     (void)fmt;
 #endif

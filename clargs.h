@@ -40,9 +40,10 @@ clargs* argparse(int argc, char** argv);
 void clargs_free(clargs* args);
 
 /* Functions for extracting data from configobj */
-const char* clargs_config_get(clargs* args, const char* key);
-int clargs_config_geti(clargs* args, const char* key);
-long clargs_config_getl(clargs* args, const char* key);
-double clargs_config_getd(clargs* args, const char* key);
+const char* clargs_config_get(const clargs_t args, const char* key);
+int clargs_config_geti(const clargs_t args, const char* key);
+int clargs_config_getb(const clargs_t args, const char* key);
+long clargs_config_getl(const clargs_t args, const char* key);
+double clargs_config_getd(const clargs_t args, const char* key);
 
 #endif

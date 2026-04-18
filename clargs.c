@@ -246,37 +246,56 @@ void clargs_free(clargs_t args) {
     DZFREE(args);
 }
 
-const char* clargs_config_get(clargs_t args, const char* key) {
+const char* clargs_config_get(const clargs_t args, const char* key) {
 #ifdef HAVE_JSONC
     if (args->configobj) {
-        return json_object_get_string(json_object_object_get(args->configobj, key));
+        if (json_object_object_get_ex(args->configobj, key, NULL)) {
+            return json_object_get_string(json_object_object_get(args->configobj, key));
+        }
     }
 #endif
     return NULL;
 }
 
-int clargs_config_geti(clargs_t args, const char* key) {
+int clargs_config_geti(const clargs_t args, const char* key) {
 #ifdef HAVE_JSONC
     if (args->configobj) {
-        return json_object_get_int(json_object_object_get(args->configobj, key));
+        if (json_object_object_get_ex(args->configobj, key, NULL)) {
+            return json_object_get_int(json_object_object_get(args->configobj, key));
+        }
     }
 #endif
     return 0;
 }
 
-long clargs_config_getl(clargs_t args, const char* key) {
+int clargs_config_getb(const clargs_t args, const char* key) {
 #ifdef HAVE_JSONC
     if (args->configobj) {
-        return json_object_get_int64(json_object_object_get(args->configobj, key));
+        if (json_object_object_get_ex(args->configobj, key, NULL)) {
+            return json_object_get_boolean(json_object_object_get(args->configobj, key));
+        }
+    }
+#endif
+    return 0;
+}
+
+long clargs_config_getl(const clargs_t args, const char* key) {
+#ifdef HAVE_JSONC
+    if (args->configobj) {
+        if (json_object_object_get_ex(args->configobj, key, NULL)) {
+            return json_object_get_int64(json_object_object_get(args->configobj, key));
+        }
     }
 #endif
     return 0L;
 }
 
-double clargs_config_getd(clargs_t args, const char* key) {
+double clargs_config_getd(const clargs_t args, const char* key) {
 #ifdef HAVE_JSONC
     if (args->configobj) {
-        return json_object_get_double(json_object_object_get(args->configobj, key));
+        if (json_object_object_get_ex(args->configobj, key, NULL)) {
+            return json_object_get_double(json_object_object_get(args->configobj, key));
+        }
     }
 #endif
     return 0.0;

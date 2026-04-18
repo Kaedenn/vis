@@ -4,14 +4,14 @@
 Convert image(s) to Lua emit calls
 """
 
-# FIXME: This generates far too many Emit calls. Add some intelligent processing
-# to aggregate contiguous strips of identical color (run-length-encoding?) and
-# emit those pixels together using ux/uy offsets.
+# TODO: Prevent regenerating emits if arguments haven't changed
+# This may require restructuring the inner for-loop to read the emit_####.lua
+# file before even opening the source image.
 
 # TODO: Implement a form of temporal compression to reduce Emit calls: the
 # lifetime of a particle should be increased if the pixel is unchanged on the
-# subsequent frame. Instead of generating two emits, generate one with the frame
-# duration added to the lifetime.
+# subsequent frame. Instead of generating two emits, generate one with the
+# frame duration added to the lifetime.
 
 import argparse
 from contextlib import contextmanager
@@ -22,7 +22,17 @@ import os
 import sys
 import textwrap
 
+import numpy as np
 from PIL import Image
+
+TRACE = 5 # DEBUG=10, INFO=20
+class TraceLogger(logging.Logger):
+  "Custom trace logger"
+  def trace(self, *args, **kwargs):
+    "Report a trace message"
+    return self.log(TRACE, *args, **kwargs)
+logging.addLevelName(TRACE, "TRACE")
+logging.setLoggerClass(TraceLogger)
 
 logging.basicConfig(format="%(module)s:%(lineno)s: %(levelname)s: %(message)s",
                     level=logging.INFO)
@@ -34,17 +44,27 @@ EMIT_FIELDS = ("count", "ux", "uy", "depth", "s", "us", "ds", "uds",
 
 class Optimizer(enum.Enum):
   "Method to use for reducing the number of emit calls"
-  NONE = enum.auto()
-  HSTRIP = enum.auto()
-  VSTRIP = enum.auto()
-  DESAMPLE2 = enum.auto()
-  DESAMPLE4 = enum.auto()
+  NONE = 0
+  DESAMPLE2 = 1 << 0
+  DESAMPLE4 = 1 << 1
+  HSTRIP = 1 << 4
+  HSTRIP2 = (1 << 4) + (1 << 0)
+  HSTRIP4 = (1 << 4) + (1 << 1)
+  VSTRIP = 1 << 8
+  VSTRIP2 = (1 << 8) + (1 << 0)
+  VSTRIP4 = (1 << 8) + (1 << 1)
 
 class ThresholdFunc(enum.Enum):
   "Threshold function used to prune unneeded pixels from the output"
   NONE = enum.auto()
   LESS = enum.auto()
   MORE = enum.auto()
+
+def optimizer_has(arg, base_value):
+  "Determine if the optimizer includes the given base"
+  value1 = arg.value if isinstance(arg, Optimizer) else arg
+  value2 = base_value.value if isinstance(base_value, Optimizer) else base_value
+  return (value1 & value2) != 0
 
 def optimizer_arg_to_func(arg):
   "Convert a named optimizer function to a optimizer function instance"
@@ -73,13 +93,109 @@ def evaluate_threshold(pixel, rule, argument):
     raise ValueError(f"Invalid threshold function {rule}")
   return result
 
-def evaluate_optimizer(pixel_data, motion_data, func):
-  "Optimize the pixel and motion data to reduce the number of Emit calls"
+# TODO: Incorporate motion data
+def evaluate_optimizer(pixel_data, motion_data, func): # pylint: disable=unused-argument
+  "Optimize iterating over the pixel and motion data"
   if func == Optimizer.NONE:
-    return pixel_data, motion_data
-  if func not in (Optimizer.DESAMPLE2, Optimizer.DESAMPLE4):
-    logger.warning("Optimizer function %s not yet implemented", func)
-  return pixel_data, motion_data
+    for pixel_x, pixel_y in pixel_data:
+      yield pixel_x, pixel_y, 0, 0
+
+  elif optimizer_has(func, Optimizer.HSTRIP):
+    array = pixels_to_ndarray(pixel_data)
+    height, width, _ = array.shape
+    off_axis_stride = 1
+    if optimizer_has(func, Optimizer.DESAMPLE2):
+      off_axis_stride = 2
+    elif optimizer_has(func, Optimizer.DESAMPLE4):
+      off_axis_stride = 4
+    for curr_y in range(height):
+      if optimizer_has(func, Optimizer.DESAMPLE2) and curr_y % 2 != 0:
+        continue
+      if optimizer_has(func, Optimizer.DESAMPLE4) and curr_y % 4 != 0:
+        continue
+      run_start_x = None
+      run_pixel = None
+      h_stride = 0
+      for curr_x in range(width):
+        pixel = array[curr_y, curr_x]
+        if not np.any(pixel):
+          # Empty pixel: flush any active run
+          if run_pixel is not None:
+            yield run_start_x, curr_y, h_stride, off_axis_stride
+            run_start_x = None
+            run_pixel = None
+            h_stride = 0
+          continue
+        if run_pixel is None:
+          run_start_x = curr_x
+          run_pixel = pixel.copy()
+          h_stride = 1
+        elif np.array_equal(pixel, run_pixel):
+          h_stride += 1
+        else:
+          # Different color: flush old run, start new one
+          yield run_start_x, curr_y, h_stride, off_axis_stride
+          run_start_x = curr_x
+          run_pixel = pixel.copy()
+          h_stride = 1
+      # End of row: flush trailing run
+      if run_pixel is not None:
+        yield run_start_x, curr_y, h_stride, off_axis_stride
+
+  elif optimizer_has(func, Optimizer.VSTRIP):
+    array = pixels_to_ndarray(pixel_data)
+    height, width, _ = array.shape
+    off_axis_stride = 1
+    if optimizer_has(func, Optimizer.DESAMPLE2):
+      off_axis_stride = 2
+    elif optimizer_has(func, Optimizer.DESAMPLE4):
+      off_axis_stride = 4
+    for curr_x in range(width):
+      if optimizer_has(func, Optimizer.DESAMPLE2) and curr_x % 2 != 0:
+        continue
+      if optimizer_has(func, Optimizer.DESAMPLE4) and curr_x % 4 != 0:
+        continue
+      run_start_y = None
+      run_pixel = None
+      v_stride = 0
+      for curr_y in range(height):
+        pixel = array[curr_y, curr_x]
+        if not np.any(pixel):
+          # Empty pixel: flush any active run
+          if run_pixel is not None:
+            yield curr_x, run_start_y, off_axis_stride, v_stride
+            run_start_y = None
+            run_pixel = None
+            v_stride = 0
+          continue
+        if run_pixel is None:
+          run_start_y = curr_y
+          run_pixel = pixel.copy()
+          v_stride = 1
+        elif np.array_equal(pixel, run_pixel):
+          v_stride += 1
+        else:
+          # Different color: flush old run, start new one
+          yield curr_x, run_start_y, off_axis_stride, v_stride
+          run_start_y = curr_y
+          run_pixel = pixel.copy()
+          v_stride = 1
+      # End of column: flush trailing run
+      if run_pixel is not None:
+        yield curr_x, run_start_y, off_axis_stride, v_stride
+
+  elif func == Optimizer.DESAMPLE2:
+    for pixel_x, pixel_y in pixel_data:
+      if not (pixel_x % 2 or pixel_y % 2):
+        yield pixel_x, pixel_y, 0, 0
+
+  elif func == Optimizer.DESAMPLE4:
+    for pixel_x, pixel_y in pixel_data:
+      if not (pixel_x % 4 or pixel_y % 4):
+        yield pixel_x, pixel_y, 0, 0
+
+  else:
+    raise ValueError(f"Invalid optimizer function {func}")
 
 def parse_image_entry(entry):
   "Parse a single image entry of the form [NUM=]PATH[,PATH]"
@@ -132,7 +248,7 @@ def extract_pixel_and_motion_data(image, motion, window_size=None, blank=None,
     rgb = rgba[:3]
     pixel_x = pidx % width
     pixel_y = pidx // width % height
-    if rgba[3] == 0:
+    if len(rgba) == 4 and rgba[3] == 0:
       continue
     if blank is not None:
       if rgb in blank:
@@ -169,25 +285,34 @@ def extract_pixel_and_motion_data(image, motion, window_size=None, blank=None,
 
   return pixel_data, motion_data
 
+def pixels_to_ndarray(pixel_data):
+  "Build an ndarray to store the pixel data"
+  coords = np.array(list(pixel_data.keys()))
+  values = np.array(list(pixel_data.values()), dtype=np.uint8)
+  xs = coords[:, 0]
+  ys = coords[:, 1]
+  width = xs.max() + 1
+  height = ys.max() + 1
+  stride = values.shape[1]
+  array = np.zeros((height, width, stride), dtype=np.uint8)
+  array[ys, xs] = values
+  return array
+
 def resize_image_centered(image, width, height, noscale=False):
   "Resize and center the given image, with a scaling toggle"
   # Ensure we have an alpha channel so transparency works correctly
   if image.mode != "RGBA":
     image = image.convert("RGBA")
-
   if width is None or height is None:
     return image
-
   if noscale:
     resized = image
     new_w, new_h = image.width, image.height
   else:
     # Compute scale factor to fit within target while preserving aspect ratio
     scale = min(width / image.width, height / image.height)
-
     new_w = int(round(image.width * scale))
     new_h = int(round(image.height * scale))
-
     # pylint: disable=no-member
     resized = image.resize((new_w, new_h), Image.NEAREST)
     # pylint: enable=no-member
@@ -204,29 +329,85 @@ def resize_image_centered(image, width, height, noscale=False):
 
   return result
 
+def flatten_strides(pixel_info, optimizer=Optimizer.NONE):
+  """
+  Merge consecutive identical entries to reduce Lua Emit() calls.
+
+  pixel_info is a list of 4-tuples, all with units of pixels:
+    base_x    between 0 ~ image.width
+    base_y    between 0 ~ image.height
+    width
+    height
+
+  For HSTRIP, we ignore y and height if x and width match
+  For VSTRIP, we ignore x and width if y and height match
+  """
+  prior = []
+  is_hstrip = optimizer_has(optimizer, Optimizer.HSTRIP)
+  is_vstrip = optimizer_has(optimizer, Optimizer.VSTRIP)
+
+  just_emitted = False
+  for pixel_record in pixel_info:
+    if optimizer == Optimizer.NONE:
+      yield pixel_record
+      just_emitted = True
+      continue
+    if not prior:
+      prior = list(pixel_record)
+      just_emitted = False
+      continue
+
+    pixelx, pixely, pixelw, pixelh = pixel_record
+    priorx, priory, priorw, priorh = prior
+
+    if is_hstrip:
+      matches = pixelx == priorx and pixelw == priorw
+    elif is_vstrip:
+      matches = pixely == priory and pixelh == priorh
+    if matches:
+      logger.trace("Prior matches record: %s == %s via %s",
+          prior, pixel_record, optimizer)
+      just_emitted = False
+      if is_hstrip:
+        prior[3] += pixel_record[3]
+      elif is_vstrip:
+        prior[2] += pixel_record[2]
+      logger.trace("Prior adjusted to %s with %s", prior, pixel_record)
+    else:
+      logger.trace("Emitting prior: %s (no match with %s via %s)",
+          prior, pixel_record, optimizer)
+      yield tuple(prior)
+      prior = list(pixel_record)
+      just_emitted = False    # We did not emit the current record
+  if not just_emitted:
+    logger.trace("Emitting last prior: %s", prior)
+    yield tuple(prior)
+
+# TODO: Change main for-loop to detect repeats in emit data
 def emit_lua(pixel_data, motion_data, ftime, output, optimizer=Optimizer.NONE,
     native=False, **overrides):
   "Build the final Lua code"
   num_emits = 0
   emit_fields = dict.fromkeys(EMIT_FIELDS, 0)
-  emit_fields["count"] = 1
   emit_fields["rad"] = 1
-  emit_fields["life"] = 200
-  if optimizer == Optimizer.HSTRIP:
-    logger.error("HSTRIP not implemented yet; ignoring")
-  elif optimizer == Optimizer.VSTRIP:
-    logger.error("VSTRIP not implemented yet; ignoring")
-  for pixel_x, pixel_y in pixel_data:
-    if optimizer == Optimizer.DESAMPLE2:
-      if pixel_x % 2 or pixel_y % 2:
-        continue
-    elif optimizer == Optimizer.DESAMPLE4:
-      if pixel_x % 4 or pixel_y % 4:
-        continue
+  emit_fields["life"] = 10
+
+  pixel_info = evaluate_optimizer(pixel_data, motion_data, optimizer)
+  for pixel_x, pixel_y, stride_x, stride_y in \
+      flatten_strides(pixel_info, optimizer=optimizer):
+    emit_fields["count"] = 1
     pixel = pixel_data[(pixel_x, pixel_y)]
     motion_hsv = motion_data.get((pixel_x, pixel_y), (0, 0, 0))
     emit_fields["x"] = pixel_x
     emit_fields["y"] = pixel_y
+    if stride_x > 0:
+      emit_fields["x"] = pixel_x + stride_x // 2
+      emit_fields["ux"] = stride_x / 2
+      emit_fields["count"] = emit_fields["count"] * stride_x
+    if stride_y > 0:
+      emit_fields["y"] = pixel_y + stride_y // 2
+      emit_fields["uy"] = stride_y / 2
+      emit_fields["count"] = emit_fields["count"] * stride_y
     emit_fields["theta"] = motion_hsv[0] / 360 * 2 * math.pi
     emit_fields["ds"] = motion_hsv[1] / 255
     emit_fields["r"] = pixel[0] / 255
@@ -272,7 +453,12 @@ def parse_rule(override, value):
       value = "Vis.LIMIT_" + value
   elif override == "blender":
     value = "Vis.BLEND_" + value
-  elif override in ("count", "depth", "rad", "urad", "life", "ulife", "tag"):
+  elif override in ("life", "ulife"):
+    if value.endswith("f"):
+      value = f"Vis.frames2msec({value[:-1]})"
+    else:
+      value = int(value)
+  elif override in ("count", "depth", "rad", "urad", "tag"):
     value = int(value)
   elif override in ("ux", "uy", "s", "us", "ds", "uds", "ur", "ug", "ub"):
     value = float(value)
@@ -355,7 +541,11 @@ def main():
 
       The -O,--optimizer argument accepts one of two optimization rules:
         HSTRIP          Reduce consecutive emits on the same row
+        HSTRIP2         Combination of HSTRIP and DESAMPLE2
+        HSTRIP4         Combination of HSTRIP and DESAMPLE4
         VSTRIP          Reduce consecutive emits on the same column
+        VSTRIP2         Combination of VSTRIP and DESAMPLE2
+        VSTRIP4         Combination of VSTRIP and DESAMPLE4
         DESAMPLE2       Reduce number of emits to a half of the total
         DESAMPLE4       Reduce number of emits to a quarter of the total
       Note that this necessarily uses ux,uy. Passing `-r ux=value` or
@@ -425,8 +615,8 @@ def main():
     optimizer = optimizer_arg_to_func(args.optimizer)
 
   with open_file_for_writing(args.output, append=args.append) as output:
-    logger.info("Processing %d image record(s) to %s", len(image_list),
-        output.name)
+    logger.info("Processing %d image record(s) to %s as %s", len(image_list),
+        args.output, output.name)
 
     overrides = {}
     try:
@@ -440,13 +630,13 @@ def main():
 
       # Prepend the contents of the pre-script
       if args.pre_script:
-        output.write(f"# Content of {args.pre_script}:{os.linesep}")
+        output.write(f"-- Content of {args.pre_script}:{os.linesep}")
         with open(args.pre_script, "rt", encoding="UTF-8") as fobj:
           content = fobj.read()
         output.write(content)
         if not content.endswith(os.linesep):
           output.write(os.linesep)
-        output.write(f"# Emit rules begin here:{os.linesep}")
+        output.write(f"-- Emit rules begin here:{os.linesep}")
 
       # Perform the actual work: interpret the image and generate Lua
       total_emits = 0
@@ -458,13 +648,18 @@ def main():
             pixel_image, motion_image, field_size, blank=args.blank,
             thresholds=thresholds, noscale=args.no_scale)
         logger.info("Emitting Lua for %s", pixel_image)
-        total_emits += emit_lua(pixel_data, motion_data, ftime, output,
+        this_frame_emits = emit_lua(pixel_data, motion_data, ftime, output,
             optimizer=optimizer, native=args.native, **overrides)
+        total_emits += this_frame_emits
+        if optimizer and optimizer != Optimizer.NONE:
+          logger.info("Optimized %d pixels to %d emits (%02.02f%%) reduction",
+              len(pixel_data), this_frame_emits,
+              100 - this_frame_emits / len(pixel_data) * 100)
 
       # Append the contents of the post-script
       if args.post_script:
         output.write(os.linesep)
-        output.write(f"# Content of {args.post_script}:{os.linesep}")
+        output.write(f"-- Content of {args.post_script}:{os.linesep}")
         with open(args.post_script, "rt", encoding="UTF-8") as fobj:
           content = fobj.read()
         output.write(content)

@@ -16,6 +16,22 @@
 #include <lua.h>
 #include <lualib.h>
 
+/* TODO: Common emit fields (default and override)
+ * 1) Vis.set_default{emit_table_field_name=value, ...}
+ * When parsing an emit table, pre-assign fields and values passed via a
+ * prior call to Vis.set_default{...} before parsing emit table.
+ * Example:
+ *  Vis.set_default{force=Vis.FORCE_GRAVITY}
+ * assigns Vis.FORCE_GRAVITY to all emits that don't override force.
+ * 2) Vis.set_override{emit_table_field_name=value, ...}
+ * When parsing an emit table, assign all fields and values passed via a
+ * prior call to Vis.set_override{...} after parsing the emit table.
+ * Example:
+ *  Vis.set_override{life=Vis.frames2msec(10)}
+ * will force all particles to live for 10 frames, overriding the prior
+ * lifetime.
+ */
+
 /* Initialization script */
 static const char* const LUA_INIT_SCRIPT =
     /* Adjust default Lua search path */
@@ -116,19 +132,33 @@ static int viscmd_get_debug_fn(lua_State* L);
 struct script {
     script_debug* dbg;
     lua_State* L;
+    clargs_t clargs;
     int debugidx;
+    int debuglevel;
+    int showprogress;
     klist args;
     flist_t fl;
     drawer_t drawer;
     int errors;
 };
 
+static script_t g_host = NULL;
+
 /* start of public API */
-script_t script_new(script_cfg_mask cfg, const clargs* args) {
+script_t script_new(script_cfg_mask cfg, clargs* args) {
     script_t s = DBMALLOC(sizeof(struct script));
+    g_host = s;
     s->dbg = DBMALLOC(sizeof(struct script_debug));
     s->fl = flist_new();
     s->L = luaL_newstate();
+    s->clargs = args;
+    s->debuglevel = clargs_config_geti(args, "DEBUG_SCRIPT_C");
+#ifdef DEBUG_SCRIPT_C
+    if (s->debuglevel < 1) {
+        s->debuglevel = 1;
+    }
+#endif
+    s->showprogress = clargs_config_geti(args, "DEBUG_SCRIPT_PROGRESS");
     luaL_openlibs(s->L);
     luaL_requiref(s->L, "Vis", initialize_vis_lib, 0);
     lua_pop(s->L, 1); /* requiref("Vis") */
@@ -162,6 +192,7 @@ script_t script_new(script_cfg_mask cfg, const clargs* args) {
         luaL_setmetatable(s->L, "script_t*");
         *sbox = s;
         lua_setfield(s->L, -2, "script");
+        VIS_ASSERT(s->errors == 0);
     }
 
     if ((cfg & SCRIPT_NO_EXIT) != 0) {
@@ -574,8 +605,8 @@ kstr lua_inspect_value(lua_State* L, int arg) {
     lua_getfield(L, -1, "inspect");
     lua_pushvalue(L, arg);
     lua_call(L, 1, 1);
-    kstr s = kstring_newfromvf("[%s]%s",
-            lua_typename(L, lua_type(L, arg)), lua_tostring(L, -1));
+    kstr s = kstring_newfromvf("[%s]%s", lua_typename(L, lua_type(L, arg)),
+            lua_tostring(L, -1));
     lua_pop(L, 2);
     return s;
 }
@@ -742,16 +773,18 @@ int viscmd_exit_fn(lua_State* L) {
 int viscmd_emit_fn(lua_State* L) {
     int arg = 1;
     fnum_t when;
-    flist_t fl = *(flist**)luaL_checkudata(L, arg++, "flist**");
+    flist_t fl = *(flist_t*)luaL_checkudata(L, arg++, "flist**");
     emit_desc* frame = lua_args_to_emit_desc(L, arg, &when);
+    if (g_host->showprogress > 0) {
+        DBPROGRESS("Vis.emit(%p, %d, %d, {x=%2.0f, y=%2.0f, ...})",
+                fl, frame->n, when, frame->x, frame->y);
+    }
     flist_insert_emit(fl, when, frame);
-#if DEBUG >= DEBUG_TRACE || defined(DEBUG_SCRIPT_C)
-    DBPRINTF("Vis.emit(%p, %d, %d, <table>)", fl, frame->n, when);
-#endif
     return 0;
 }
 
-/* Vis.audio(Vis.flist, when, path) */
+/* Vis.audio(Vis.flist, when, path)
+ * Sets AudIO_PATH, AUDIO_LENGTH, AUDIO_LENGTH_MSEC */
 int viscmd_audio_fn(lua_State* L) {
     flist_t fl = *(flist**)luaL_checkudata(L, 1, "flist**");
     fnum_t when = do_msec2frames(L, (msec_t)luaL_checkinteger(L, 2));

@@ -43,23 +43,45 @@ static const script_cfg_mask SCRIPT_ALLOW_ALL = 0; /* allow all features */
 static const script_cfg_mask SCRIPT_NO_CB = 1;     /* disable Vis.callback() */
 static const script_cfg_mask SCRIPT_NO_EXIT = 2;   /* disable Vis.exit() */
 
-script_t script_new(script_cfg_mask cfg, const clargs* args);
+/* Constructor: assigns the following variables:
+ *  Vis = initialize_vis_lib()
+ *  Vis.WIDTH = screen_width
+ *  Vis.HEIGHT = screen_height
+ *  Vis.flist = flist userdata pointer
+ *  Vis.script = script_t userdata pointer */
+script_t script_new(script_cfg_mask cfg, clargs* args);
 void script_free(script_t s);
 void script_callback_free(script_cb* cb);
 
-/* number of errors returned to the script API, 0 for success */
+/* Get number of errors returned to the script API, 0 for success */
 int script_get_status(script_t s);
 void script_clear_status(script_t s);
 
+/* Set debug value for given debug flag */
 void script_set_debug(script_t s, enum script_debug_id what, uint64_t n);
+
+/* Obtain all debugging entries */
 void script_get_debug(script_t s, /*out*/ script_debug* dbg);
 
+/* Assign command-line arguments */
 void script_set_args(script_t script, klist args);
+
+/* Load and run the given file. Assigns:
+ *  Vis.SCRIPT_NAME = filename
+ */
 struct flist* script_run(script_t script, const char* filename);
+
+/* Invoke Lua code directly */
 void script_run_string(script_t script, const char* torun);
+
+/* Invoke callback function */
 void script_run_cb(script_t state, script_cb* func, void* args);
+
+/* Tell the scripting engine about the drawer. Assigns:
+ *  Vis.FPS_LIMIT = get_configured_fps() */
 void script_set_drawer(script_t script, drawer_t drawer);
 
+/* Callback functions for various events */
 void script_mousescroll(script_t script, int xoffset, int yoffset);
 void script_mousemove(script_t script, int x, int y);
 void script_mousedown(script_t script, int x, int y, int button);

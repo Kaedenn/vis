@@ -17,7 +17,10 @@ void dbfree(void* ptr, const char* label);
 
 /* helper printfs for errors or debugging */
 void eprintf(const char* fmt, ...);
+void eprintfn(const char* fmt, ...);
 void dbprintf(const char* fmt, ...);
+void dbprintfn(const char* fmt, ...);
+void dbprogress(const char* fmt, ...);
 void do_assert(BOOL cond, const char* message, const char* file, int line);
 
 #define VIS_ASSERT(cond) do_assert(((cond) ? 1 : 0), (#cond), __FILE__, __LINE__)
@@ -42,7 +45,14 @@ void do_assert(BOOL cond, const char* message, const char* file, int line);
 #endif
 
 #define EPRINTF(...) do { WHEREAMI_STDERR(); eprintf(__VA_ARGS__); } while (0)
+#define EPRINTFN(...) do { WHEREAMI_STDERR(); eprintfn(__VA_ARGS__); } while (0)
 #define DBPRINTF(...) do { WHEREAMI_STDERR(); dbprintf(__VA_ARGS__); } while (0)
+#define DBPRINTFN(...) do { WHEREAMI_STDERR(); dbprintfn(__VA_ARGS__); } while (0)
+#define DBPROGRESS(...) do { \
+    fprintf(stderr, "\r"); \
+    WHEREAMI_STDERR(); \
+    dbprogress(__VA_ARGS__); \
+} while (0)
 
 #define ZEROINIT(p) memset(p, '\0', sizeof(*p))
 
