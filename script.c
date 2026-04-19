@@ -16,13 +16,17 @@
 #include <lua.h>
 #include <lualib.h>
 
-/* TODO: Common emit fields (default and override)
+/* TODO: lua -> luajit */
+
+/* TODO: Common emit fields (default and override):
+ *
  * 1) Vis.set_default{emit_table_field_name=value, ...}
  * When parsing an emit table, pre-assign fields and values passed via a
  * prior call to Vis.set_default{...} before parsing emit table.
  * Example:
  *  Vis.set_default{force=Vis.FORCE_GRAVITY}
  * assigns Vis.FORCE_GRAVITY to all emits that don't override force.
+ *
  * 2) Vis.set_override{emit_table_field_name=value, ...}
  * When parsing an emit table, assign all fields and values passed via a
  * prior call to Vis.set_override{...} after parsing the emit table.
@@ -40,6 +44,9 @@ static const char* const LUA_INIT_SCRIPT =
     /* Add default modules */
     "VisUtil = require(\"visutil\")\n"
     "Emit = require(\"emit\")\n"
+    /* Create defaults and overrides tables */
+    "Vis.EMIT_DEFAULTS = {}\n"
+    "Vis.EMIT_OVERRIDES = {}\n"
     /* Create tables for user input handling (used by script API) */
     "Vis._on_mousedowns = {}\n"
     "Vis._on_mouseups = {}\n"
@@ -637,6 +644,8 @@ emit_desc* lua_args_to_emit_desc(lua_State* L, int arg, fnum_t* when) {
     kstring_free(s);
 #endif
 
+    /* TODO: Merge values from defaults table */
+
     /* defaults: circle, 100 msec, 1 pixel, white */
     emit->theta = emit->utheta = M_PI;
     emit->life = (int)do_msec2frames(L, 100);
@@ -719,6 +728,9 @@ emit_desc* lua_args_to_emit_desc(lua_State* L, int arg, fnum_t* when) {
         }
         lua_pop(L, 1);
     }
+
+    /* TODO: Merge values from the overrides table */
+
     return emit;
 }
 /* end of private API */
