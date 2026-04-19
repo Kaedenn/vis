@@ -1,5 +1,4 @@
 Vis = require("Vis")
-bit32 = require('bit32')
 
 VisUtil = {}
 

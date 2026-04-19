@@ -36,6 +36,40 @@
  * lifetime.
  */
 
+/** LuaJIT Shims */
+#ifndef lua_absindex
+#define lua_absindex(L, idx) \
+  ((idx) > 0 || (idx) <= LUA_REGISTRYINDEX ? (idx) : lua_gettop(L) + (idx) + 1)
+#endif
+
+#ifndef luaL_requiref
+static void luaL_requiref(lua_State *L, const char *modname,
+                          lua_CFunction openf, int glb)
+{
+  lua_getglobal(L, "package");
+  lua_getfield(L, -1, "loaded");
+  lua_getfield(L, -1, modname);
+
+  if (!lua_toboolean(L, -1)) {
+    lua_pop(L, 1);
+    lua_pushcfunction(L, openf);
+    lua_pushstring(L, modname);
+    lua_call(L, 1, 1);
+
+    lua_pushvalue(L, -1);
+    lua_setfield(L, -3, modname);
+
+    if (glb) {
+      lua_pushvalue(L, -1);
+      lua_setglobal(L, modname);
+    }
+  }
+
+  lua_replace(L, -3);  /* remove 'loaded' table, keep module */
+  lua_pop(L, 1);       /* remove 'package' */
+}
+#endif
+
 /* Initialization script */
 static const char* const LUA_INIT_SCRIPT =
     /* Adjust default Lua search path */
@@ -493,7 +527,7 @@ void prepare_stack(script_t s, klist args) {
     lua_getglobal(s->L, "debug");
     lua_getfield(s->L, -1, "traceback");
     s->debugidx = lua_gettop(s->L);
-    lua_pushglobaltable(s->L);
+    lua_pushvalue(s->L, LUA_GLOBALSINDEX);
     lua_pushstring(s->L, "Arguments");
     if (args != NULL) {
         lua_createtable(s->L, (int)klist_length(args), 0);
