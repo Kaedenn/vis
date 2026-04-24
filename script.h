@@ -68,13 +68,15 @@ void script_set_args(script_t script, klist args);
 
 /* Load and run the given file. Assigns:
  *  Vis.SCRIPT_NAME = filename
- */
+ *  _G.Arguments = {...} */
 struct flist* script_run(script_t script, const char* filename);
 
-/* Invoke Lua code directly */
+/* Invoke Lua code directly. Assigns:
+ *  _G.Arguments = {...} */
 void script_run_string(script_t script, const char* torun);
 
-/* Invoke callback function */
+/* Invoke callback function. Assigns:
+ *  _G.Arguments = {...} */
 void script_run_cb(script_t state, script_cb* func, void* args);
 
 /* Tell the scripting engine about the drawer. Assigns:

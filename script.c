@@ -16,8 +16,6 @@
 #include <lua.h>
 #include <lualib.h>
 
-/* TODO: lua -> luajit */
-
 /* TODO: Common emit fields (default and override):
  *
  * 1) Vis.set_default{emit_table_field_name=value, ...}
@@ -540,7 +538,7 @@ void prepare_stack(script_t s, klist args) {
         lua_createtable(s->L, 0, 0);
     }
     lua_settable(s->L, -3);
-    lua_pop(s->L, 1); /* pushglobaltable(s->L) */
+    lua_pop(s->L, 1); /* lua_pushvalue(s->L, LUA_GLOBALSINDEX) */
     VIS_ASSERT(lua_gettop(s->L) == 2);
 }
 
@@ -817,13 +815,15 @@ int viscmd_exit_fn(lua_State* L) {
 
 /* Vis.emit(Vis.flist, n, when, emit_table) */
 int viscmd_emit_fn(lua_State* L) {
+    static fnum_t last_when = 0; /* Used for progress feedback */
     int arg = 1;
     fnum_t when;
     flist_t fl = *(flist_t*)luaL_checkudata(L, arg++, "flist**");
     emit_desc* frame = lua_args_to_emit_desc(L, arg, &when);
-    if (g_host->showprogress > 0) {
+    if (when != last_when && g_host->showprogress > 0) {
         DBPROGRESS("Vis.emit(%p, %d, %d, {x=%2.0f, y=%2.0f, ...})",
                 fl, frame->n, when, frame->x, frame->y);
+        last_when = when;
     }
     flist_insert_emit(fl, when, frame);
     return 0;

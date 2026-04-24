@@ -1,5 +1,5 @@
 {
-    "DEBUG_SCRIPT_C": 1,
+    "DEBUG_SCRIPT_C": 0,
     "DEBUG_SCRIPT_PROGRESS": 1
 }
 /* vim: set filetype=javascript: */
