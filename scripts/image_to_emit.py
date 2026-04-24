@@ -4,9 +4,10 @@
 Convert image(s) to Lua emit calls
 """
 
-# TODO: Prevent regenerating emits if arguments haven't changed
-# This may require restructuring the inner for-loop to read the emit_####.lua
-# file before even opening the source image.
+# TODO: Implement a sort of "defaults" and "overrides" tables for the generated
+# emits (ideally in an efficient way) so that broad-reaching changes can be
+# made without regenerating each Emit frame. This should work with both Emit()
+# and Vis.emit().
 
 # TODO: Implement a form of temporal compression to reduce Emit calls: the
 # lifetime of a particle should be increased if the pixel is unchanged on the
@@ -275,13 +276,14 @@ def extract_pixel_and_motion_data(image, motion, window_size=None, blank=None,
       if (pixel_x, pixel_y) in pixel_data:
         motion_data[(pixel_x, pixel_y)] = hsv
 
-  logger.debug("Emitting %d of %d pixels (%02.02f%%)", len(pixel_data),
-      width*height, len(pixel_data)/(width*height)*100)
-  pixel_values = list(pixel_data.values())
-  pixel_colors = set(pixel_values)
-  total_pixels = sum(pixel_values.count(color) for color in pixel_colors)
-  logger.debug("%d pixel colors appear an average of %d times each",
-      len(pixel_colors), total_pixels // len(pixel_colors))
+  if pixel_data:
+    logger.debug("Emitting %d of %d pixels (%02.02f%%)", len(pixel_data),
+        width*height, len(pixel_data)/(width*height)*100)
+    pixel_values = list(pixel_data.values())
+    pixel_colors = set(pixel_values)
+    total_pixels = sum(pixel_values.count(color) for color in pixel_colors)
+    logger.debug("%d pixel colors appear an average of %d times each",
+        len(pixel_colors), total_pixels // len(pixel_colors))
 
   return pixel_data, motion_data
 
@@ -383,9 +385,9 @@ def flatten_strides(pixel_info, optimizer=Optimizer.NONE):
     logger.trace("Emitting last prior: %s", prior)
     yield tuple(prior)
 
-# TODO: Change main for-loop to detect repeats in emit data
+# TODO: Change main for-loop to detect repeats in emit data across frames
 def emit_lua(pixel_data, motion_data, ftime, output, optimizer=Optimizer.NONE,
-    native=False, **overrides):
+    native=False, table_format="{{{table}}}", **overrides):
   "Build the final Lua code"
   num_emits = 0
   emit_fields = dict.fromkeys(EMIT_FIELDS, 0)
@@ -418,16 +420,18 @@ def emit_lua(pixel_data, motion_data, ftime, output, optimizer=Optimizer.NONE,
     if native:
       count = get_and_remove(emit_fields, "count")
       table = ", ".join(f"{key}={value}" for key, value in emit_fields.items())
+      lua_table_call = table_format.format(table=table)
       if ftime is not None:
-        lua_code = f"Vis.emit(Vis.flist, {count}, {ftime}, {{{table}}})"
+        lua_code = f"Vis.emit(Vis.flist, {count}, {ftime}, {lua_table_call})"
       else:
-        lua_code = f"Vis.emitnow(Vis.script, {count}, {{{table}}})"
+        lua_code = f"Vis.emitnow(Vis.script, {count}, {lua_table_call})"
     else:
       table = ", ".join(f"{key}={value}" for key, value in emit_fields.items())
+      lua_table_call = table_format.format(table=table)
       if ftime is not None:
-        lua_code = f"Emit:new({{{table}}}):emit_at({ftime})"
+        lua_code = f"Emit:new({lua_table_call}):emit_at({ftime})"
       else:
-        lua_code = f"Emit:new({{{table}}}):emit_now()"
+        lua_code = f"Emit:new({lua_table_call}):emit_now()"
 
     output.write(lua_code)
     output.write(os.linesep)
@@ -549,7 +553,12 @@ def main():
         DESAMPLE2       Reduce number of emits to a half of the total
         DESAMPLE4       Reduce number of emits to a quarter of the total
       Note that this necessarily uses ux,uy. Passing `-r ux=value` or
-      `-r uy=value` will override these optimizations."""),
+      `-r uy=value` will override these optimizations.
+
+      -T,--table-func can be used to wrap the Emit table with arbitrary
+      code. For example, -T "merge_defaults({{{table}}})" will call
+      merge_defaults() on the generated Emit table. Its return value
+      will then be used for the final Emit table."""),
       formatter_class=argparse.RawDescriptionHelpFormatter)
   ag = ap.add_argument_group("input specification")
   ag.add_argument("image_path", nargs="*", metavar="[MSEC=]PATH[,PATH]",
@@ -572,6 +581,8 @@ def main():
       help="reduce the number of Emit calls using %(metavar)s (see below)")
   ag.add_argument("-n", "--native", action="store_true",
       help="output using native Vis.emit instead of using Emit class")
+  ag.add_argument("-T", "--table-func", metavar="LUA", default="{{{table}}}",
+      help="override emit table generation (default: %(default)r)")
   ag = ap.add_argument_group("output specification")
   ag.add_argument("-o", "--output", metavar="PATH", default="-",
       help="write Lua commands to %(metavar)s; default is stdout")
@@ -592,7 +603,7 @@ def main():
   if not image_list:
     ap.error("Nothing to do")
 
-  field_size = None
+  window_size = None
   if args.size:
     width_s, height_s = "0", "0"
     if args.size.count(",") == 1:
@@ -603,7 +614,7 @@ def main():
       width_s, height_s = args.size.split()
     else:
       ap.error(f"-s,--size {args.size} has unknown format")
-    field_size = (int(width_s), int(height_s))
+    window_size = (int(width_s), int(height_s))
 
   thresholds = []
   if args.threshold:
@@ -644,15 +655,16 @@ def main():
         logger.debug("Processing record %d of %d", rid+1, len(image_list))
         motion_image = image_list[pixel_image]["motion"]
         ftime = image_list[pixel_image]["ftime"]
+        # TODO: Merge identical Emits from subsequent frames (think MPEG)
         pixel_data, motion_data = extract_pixel_and_motion_data(
-            pixel_image, motion_image, field_size, blank=args.blank,
+            pixel_image, motion_image, window_size, blank=args.blank,
             thresholds=thresholds, noscale=args.no_scale)
         logger.info("Emitting Lua for %s", pixel_image)
         this_frame_emits = emit_lua(pixel_data, motion_data, ftime, output,
             optimizer=optimizer, native=args.native, **overrides)
         total_emits += this_frame_emits
         if optimizer and optimizer != Optimizer.NONE:
-          logger.info("Optimized %d pixels to %d emits (%02.02f%%) reduction",
+          logger.debug("Optimized %d pixels to %d emits (%02.02f%%) reduction",
               len(pixel_data), this_frame_emits,
               100 - this_frame_emits / len(pixel_data) * 100)
 
