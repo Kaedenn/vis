@@ -27,9 +27,10 @@ void kstring_assimilate(kstr s1, kstr s2); /* frees s2 */
 
 void kstring_realloc(kstr s, size_t newcapacity);
 
-size_t kstring_length(kstr s);
-size_t kstring_capacity(kstr s);
-const char* kstring_content(kstr s);
+BOOL kstring_empty(const kstr s);
+size_t kstring_length(const kstr s);
+size_t kstring_capacity(const kstr s);
+const char* kstring_content(const kstr s);
 /* use dupstr(kstring_content(s)) to get a copy */
 
 #endif

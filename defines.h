@@ -75,7 +75,7 @@
 #define VIS_BUFFER_LEN 4096
 
 /* initial capacity for particles */
-#define VIS_PLIST_INITIAL_SIZE (2 * 1024 * 1024)
+#define VIS_PLIST_INITIAL_SIZE (8 * 1024 * 1024)
 
 /* convenience */
 #ifndef BOOL

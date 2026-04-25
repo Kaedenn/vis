@@ -246,6 +246,17 @@ void clargs_free(clargs_t args) {
     DZFREE(args);
 }
 
+BOOL clargs_config_has(const clargs_t args, const char* key) {
+#ifdef HAVE_JSONC
+    if (args->configobj) {
+        if (json_object_object_get_ex(args->configobj, key, NULL)) {
+            return TRUE;
+        }
+    }
+#endif
+    return FALSE;
+}
+
 const char* clargs_config_get(const clargs_t args, const char* key) {
 #ifdef HAVE_JSONC
     if (args->configobj) {

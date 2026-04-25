@@ -121,8 +121,7 @@ fast: $(DEPFILES) $(SOURCES)
 	$(MAKE) "CFLAGS=$(CFLAGS) $(CFLAGS_FAST)" \
 		"LDFLAGS=$(LDFLAGS) $(LDFLAGS_FAST)" $(VIS)
 
-release: $(DEPFILES) $(SOURCES)
-	$(MAKE) "CFLAGS=$(CFLAGS)" $(VIS)
+release: fast
 
 debug: $(DEPFILES) $(SOURCES)
 	$(MAKE) "CFLAGS=$(CFLAGS) $(CFLAGS_DEBUG)" $(VIS)

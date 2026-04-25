@@ -12,6 +12,12 @@
 
 #include <time.h>
 
+enum emitter_debug {
+    E_DEBUG_PLIST = 1 << 0,
+    E_DEBUG_EMIT = 1 << 1,
+    E_DEBUG_ALL = E_DEBUG_PLIST | E_DEBUG_EMIT
+};
+
 static struct emitter {
     struct commands* commands;              /* pointer to commands object */
     plist_t particles;                      /* pointer to plist object */
@@ -21,6 +27,7 @@ static struct emitter {
     uint32_t frame_counts[VIS_MAX_FTYPE];   /* frame type counts */
     uint32_t delay_counter;                 /* delay frames counter */
     BOOL do_sync;                           /* re-sync audio after delay */
+    uint64_t debug_mode;                    /* what debugging to show */
 } emitter;
 
 void emitter_setup(struct commands* cmds, plist_t plist, drawer_t drawer, clargs_t args) {
@@ -29,6 +36,10 @@ void emitter_setup(struct commands* cmds, plist_t plist, drawer_t drawer, clargs
     emitter.particles = plist;
     emitter.drawer = drawer;
     emitter.args = args;
+
+    if (clargs_config_has(args, "DEBUG_EMITTER")) {
+        emitter.debug_mode = (uint64_t)clargs_config_getl(args, "DEBUG_EMITTER");
+    }
 }
 
 void emitter_free(void) {
@@ -85,7 +96,7 @@ void emitter_tick(void) {
         emitter.frame_counts[fn->type] += 1;
         switch (fn->type) {
         case VIS_FTYPE_EMIT:
-            if (emitter.args->debug_level > 1) {
+            if ((emitter.debug_mode & E_DEBUG_EMIT) != 0) {
                 DBPRINTF("Ticking flist: %s at frame %d", ftype_str, curr_frame);
             }
             emit_frame(fn->data.frame);
@@ -157,6 +168,10 @@ void emitter_tick(void) {
         }
         /* frame seeks are immediate; terminate processing accordingly */
         fn = (fn->type == VIS_FTYPE_FRAMESEEK) ? NULL : flist_node_next(fn);
+    }
+    if ((emitter.debug_mode & E_DEBUG_PLIST) != 0) {
+        DBPRINTF("Ticked frame %d: plist %d",
+                curr_frame, plist_get_size(emitter.particles));
     }
 }
 

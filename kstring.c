@@ -119,7 +119,8 @@ void kstring_realloc(kstr s, size_t newcapacity) {
     s->capacity = newcapacity;
 }
 
-size_t kstring_length(kstr s) { VIS_ASSERT(s); return s->len; }
-size_t kstring_capacity(kstr s) { VIS_ASSERT(s); return s->capacity; }
-const char* kstring_content(kstr s) { VIS_ASSERT(s); return s->content; }
+BOOL kstring_empty(const kstr s) { VIS_ASSERT(s); return s->len != 0; }
+size_t kstring_length(const kstr s) { VIS_ASSERT(s); return s->len; }
+size_t kstring_capacity(const kstr s) { VIS_ASSERT(s); return s->capacity; }
+const char* kstring_content(const kstr s) { VIS_ASSERT(s); return s->content; }
 

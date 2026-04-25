@@ -1,5 +1,9 @@
 {
     "DEBUG_SCRIPT_C": 0,
-    "DEBUG_SCRIPT_PROGRESS": 1
+    "DEBUG_SCRIPT_PROGRESS": 1,
+    /* Bit flag:
+     * 1 << 0: Debug plist size every frame
+     * 1 << 1: Debug every emit call */
+    "DEBUG_EMITTER": 1,
 }
 /* vim: set filetype=javascript: */

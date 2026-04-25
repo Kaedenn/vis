@@ -23,7 +23,7 @@ with chromesthesia would experience.
 <summary><strong>Rules of Chromesthesia</strong></summary>
 
 To ensure the experience I create closely matches real chromesthesia, I have
-decided to abide by the following two rules:
+decided to abide by the following two arbitrary rules:
 
 1. Shape Duration: Shapes should only appear on-screen for the duration of the
    note, instrument, or chord. Once the sound stops or changes, the shape should
@@ -36,13 +36,31 @@ decided to abide by the following two rules:
 ## Compiling this thing
 
 This project depends on OpenGL and Lua. There are several `$(MAKE)` targets,
-including `all`, `debug`, `valgrind`, etc. A simple `make all` should do the
-trick just fine.
+including `all`, `debug`, `fast`, `valgrind`, etc. A simple `make all` should
+do the trick just fine. If the program seems slow, try `make fast`.
+
+### Make targets:
+
+* `all` - Equivalent to `make debug`.
+* `fast` - Enable fierce optimizations and link-time optimization.
+* `release` - Equivalent to `make fast`.
+* `debug` - Enable debug output.
+* `trace` - Enable _very noisy_ debug output.
+* `profile` - Compile with `make fast` and profiling flags, invoke
+  `lua/demo_5_random.lua`, and run `gprof` on the generated output.
+* `valgrind` - Compile with `make debug` and invoke `valgrind` on
+  `lua/demo_4_random.lua`.
+* `leakcheck` - Invoke `valgrind` with `--leak-check=full`.
+* `leakcheck-reachable` - `valgrind` with full check and reachable info.
+* `clean` - Removes all generated and intermediate files.
+* `distclean` - `make clean` and remove generated frames (`$(FP_BASE)_*.png`).
 
 ### Dependencies:
 
-* Lua 5.3 (with development libraries)
+* LuaJIT 2.1 (5.1 compat) (with development libraries)
 * OpenGL 4.3, GLFW, GLEW
+* libjson-c (optional, for config.json)
+* libpulse (optional, Linux only, for aduio playback matching)
 
 ## Running this thing
 
@@ -162,6 +180,10 @@ the `load <scriptfile>` command in interactive mode.
 `function Vis.debug(...)`: For debugging purposes, this function prints
 out its arguments to the debugging stream if and only if the program was
 compiled with debugging enabled (via `make debug`).
+
+`function Vis.debugp(string...)`: For debugging purposes, this function prints
+out its arguments as a single concatenated string. Note that passing anything
+other than strings may result in errors.
 
 `function Vis.command(Vis.flist, when, command)`: Executes the
 interactive-mode command `command` after `when` milliseconds has
@@ -470,14 +492,14 @@ unless argument `-e` is passed to `vis` on the command-line.
 `floats ds, uds`: The initial speed of the particles to emit, measured in
 pixels per frame.
 
-`floats theta, utheta`: The angle at which to emit the particles.
+`floats theta, utheta`: The angle at which to emit the particles, in radians.
 
 `integers life, ulife`: The lifetime, in milliseconds, of the particles
 to emit.
 
 `floats r, g, b, ur, ug, ub`: The color of the particles to
 emit. It is recommended to use `VisUtil.color_emit_table` or
-`Emit:color` over using these values directly.
+`Emit:color` over using these values directly. Values are between 0 and 1.
 
 `enumeration force`: One of the `Vis.FORCE_` values. Passing a value
 other than these will cause errors and, in certain circumstances, may cause
@@ -541,7 +563,7 @@ parameter can be omitted and defaults to zero.
 parameter defaults to zero.
 
 `e:theta(theta, utheta)`: Configure the emit's angle. The second parameter
-defaults to zero.
+defaults to zero. These angles are in radians.
 
 `e:life(life, ulife)`: Configure the emit's lifetime to the value given,
 in milliseconds. The second parameter defaults to zero.
@@ -688,19 +710,19 @@ New method:
 ```lua
 Vis.emit(Vis.flist, count, when, {
     x = number, y = number,                 -- position, 0,0 is upper left corner
-    ux = number, uy = number,
+    ux = number, uy = number,               -- adjustment to position
     s = number,                             -- radial position along theta
-    us = number,
+    us = number,                            -- adjustment to radial position
     ds = number,                            -- radial speed along theta
-    uds = number,
+    uds = number,                           -- adjustment to speed
     rad = number,                           -- direction (affects s and ds)
-    urad = number,
+    urad = number,                          -- adjustment to direction
     theta = number,                         -- 0 <= theta <= 2*math.pi
     utheta = number,                        -- 0 <= utheta <= 2*math.pi
     life = unsigned,                        -- in milliseconds
     ulife = unsigned,                       -- in milliseconds
     r = number, g = number, b = number,     -- 0 <= rgb <= 1
-    ur = number, ug = number, ub = number,
+    ur = number, ug = number, ub = number,  -- 0 <= urgb <= 1
     force = number (force_id),
     limit = number (limit_id),
     blender = number (blend_id)

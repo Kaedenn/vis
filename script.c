@@ -32,6 +32,14 @@
  *  Vis.set_override{life=Vis.frames2msec(10)}
  * will force all particles to live for 10 frames, overriding the prior
  * lifetime.
+ *
+ * These require refactoring emit_table_to_emit_desc:
+ *  1) Construct emit object with defaults
+ *  2) Parse Vis.EMIT_DEFAULTS and assign to emit object (new function)
+ *  3) Parse arg and assign to emit object (new function)
+ *  4) Parse Vis.EMIT_OVERRIDES and assign to emit object (new function)
+ *
+ * TODO: Debugging functions to get plist size and plist capacity.
  */
 
 /** LuaJIT Shims */
@@ -42,29 +50,26 @@
 
 #ifndef luaL_requiref
 static void luaL_requiref(lua_State *L, const char *modname,
-                          lua_CFunction openf, int glb)
-{
-  lua_getglobal(L, "package");
-  lua_getfield(L, -1, "loaded");
-  lua_getfield(L, -1, modname);
+                          lua_CFunction openf, int glb) {
+    lua_getglobal(L, "package");
+    lua_getfield(L, -1, "loaded");
+    lua_getfield(L, -1, modname);
 
-  if (!lua_toboolean(L, -1)) {
-    lua_pop(L, 1);
-    lua_pushcfunction(L, openf);
-    lua_pushstring(L, modname);
-    lua_call(L, 1, 1);
-
-    lua_pushvalue(L, -1);
-    lua_setfield(L, -3, modname);
-
-    if (glb) {
-      lua_pushvalue(L, -1);
-      lua_setglobal(L, modname);
+    if (!lua_toboolean(L, -1)) {
+        lua_pop(L, 1);  /* remove package.loaded */
+        lua_pushcfunction(L, openf);
+        lua_pushstring(L, modname);
+        lua_call(L, 1, 1);
+        lua_pushvalue(L, -1);
+        lua_setfield(L, -3, modname);
+        if (glb) {
+            lua_pushvalue(L, -1);
+            lua_setglobal(L, modname);
+        }
     }
-  }
 
-  lua_replace(L, -3);  /* remove 'loaded' table, keep module */
-  lua_pop(L, 1);       /* remove 'package' */
+    lua_replace(L, -3);  /* remove 'loaded' table, keep module */
+    lua_pop(L, 1);       /* remove 'package' */
 }
 #endif
 
@@ -72,8 +77,9 @@ static void luaL_requiref(lua_State *L, const char *modname,
 static const char* const LUA_INIT_SCRIPT =
     /* Adjust default Lua search path */
     "package = require('package')\n"
-    "package.path = '; ;./?.lua;./lua/?.lua;./test/?.lua'"
+    "package.path = '; ;./?.lua;./lua/?.lua;./test/?.lua'\n"
     /* Add default modules */
+    "Vis = require(\"Vis\")\n"
     "VisUtil = require(\"visutil\")\n"
     "Emit = require(\"emit\")\n"
     /* Create defaults and overrides tables */
@@ -123,20 +129,22 @@ static void prepare_stack(script_t s, klist args);
 static void cleanup_stack(script_t s);
 static script_t util_checkscript(lua_State* L, int pos);
 static const char* util_get_error(lua_State* L);
-static emit_desc* lua_args_to_emit_desc(lua_State* L, int arg, fnum_t* when);
+static void merge_emit_table(lua_State* L, int arg, emit_desc* emit);
+static emit_desc* emit_table_to_emit_desc(lua_State* L, int arg, fnum_t* when);
 static void table_assign_num(lua_State* L, const char* k, double v, int idx);
 static void table_assign_int(lua_State* L, const char* k, int v, int idx);
-static void table_assign_string(lua_State* L, const char* k, const char* v, int idx);
+static void table_assign_str(lua_State* L, const char* k, const char* v, int idx);
 static void table_assign_nil(lua_State* L, const char* k, int idx);
 static int do_mouse_event(lua_State* L, const char* fn, int x, int y, int b);
 static int do_key_event(lua_State* L, const char* fn, const char* k, BOOL shft);
 static int get_configured_fps(lua_State* L);
 static int do_frames2msec(lua_State* L, fnum_t frame);
 static fnum_t do_msec2frames(lua_State* L, long msec);
-static kstr lua_inspect_value(lua_State* L, int arg);
+static kstr do_inspect_value(lua_State* L, int arg);
 
 /* Functions exposed to Lua */
 static int viscmd_debug_fn(lua_State* L);
+static int viscmd_debugp_fn(lua_State* L);
 static int viscmd_command_fn(lua_State* L);
 static int viscmd_exit_fn(lua_State* L);
 static int viscmd_emit_fn(lua_State* L);
@@ -218,21 +226,19 @@ script_t script_new(script_cfg_mask cfg, clargs* args) {
     /* Create and assign Vis.flist */
     flist_t* flbox = lua_newuserdata(s->L, sizeof(flist_t));
     luaL_newmetatable(s->L, "flist**");
-    lua_pop(s->L, 1);
+    lua_pop(s->L, 1); /* newmetatable */
     luaL_setmetatable(s->L, "flist**");
     *flbox = s->fl;
     lua_setfield(s->L, -2, "flist");
 
-    /* Create and assign Vis.script (if enabled) */
-    if ((cfg & SCRIPT_NO_CB) == 0) {
-        script_t* sbox = lua_newuserdata(s->L, sizeof(script_t));
-        luaL_newmetatable(s->L, "script_t*");
-        lua_pop(s->L, 1);
-        luaL_setmetatable(s->L, "script_t*");
-        *sbox = s;
-        lua_setfield(s->L, -2, "script");
-        VIS_ASSERT(s->errors == 0);
-    }
+    /* Create and assign Vis.script */
+    script_t* sbox = lua_newuserdata(s->L, sizeof(script_t));
+    luaL_newmetatable(s->L, "script_t*");
+    lua_pop(s->L, 1); /* newmetatable */
+    luaL_setmetatable(s->L, "script_t*");
+    *sbox = s;
+    lua_setfield(s->L, -2, "script");
+    VIS_ASSERT(s->errors == 0);
 
     if ((cfg & SCRIPT_NO_EXIT) != 0) {
         script_run_string(s, "Vis.exit = function() end");
@@ -249,9 +255,13 @@ void script_free(script_t s) {
     if (!s) {
         return;
     }
-    lua_close(s->L);
+    if (s->L) {
+        lua_close(s->L);
+        s->L = NULL;
+    }
     if (s->args) {
         klist_free(s->args);
+        s->args = NULL;
     }
     DZFREE(s->dbg);
     DZFREE(s);
@@ -265,7 +275,7 @@ flist_t script_run(script_t s, const char* filename) {
     /* s->fl already bound to script in script_new */
     prepare_stack(s, s->args);
     lua_getglobal(s->L, "Vis");
-    table_assign_string(s->L, "SCRIPT_NAME", filename, -1);
+    table_assign_str(s->L, "SCRIPT_NAME", filename, -1);
     lua_pop(s->L, 1); /* getglobal("Vis") */
     if (luaL_loadfile(s->L, filename) != LUA_OK) {
         s->errors += 1;
@@ -322,6 +332,9 @@ void script_set_debug(script_t s, enum script_debug_id what, uint64_t n) {
     switch (what) {
     case SCRIPT_DEBUG_PARTICLES_EMITTED:
         s->dbg->particles_emitted = n;
+        break;
+    case SCRIPT_DEBUG_PARTICLE_COUNT:
+        s->dbg->particle_count = n;
         break;
     case SCRIPT_DEBUG_TIME_NOW:
         s->dbg->time_now = n;
@@ -382,6 +395,7 @@ void script_on_audio_ended(script_t s) {
 int initialize_vis_lib(lua_State* L) {
     static const struct luaL_Reg vis_lib[] = {
         {"debug", viscmd_debug_fn},
+        {"debugp", viscmd_debugp_fn},
         {"command", viscmd_command_fn},
         {"exit", viscmd_exit_fn},
         {"emit", viscmd_emit_fn},
@@ -512,7 +526,7 @@ int initialize_vis_lib(lua_State* L) {
     table_assign_int(L, "DEBUG_TRACE", DEBUG_TRACE, -1);
 
     /* helpful non-numeric constants */
-    table_assign_string(L, "LUA_STARTUP_FILE", LUA_STARTUP_FILE, -1);
+    table_assign_str(L, "LUA_STARTUP_FILE", LUA_STARTUP_FILE, -1);
 
     table_assign_nil(L, "AUDIO_FILE_PATH", -1);
 
@@ -558,7 +572,7 @@ void table_assign_int(lua_State* L, const char* k, int v, int idx) {
     lua_settable(L, idx - 2);
 }
 
-void table_assign_string(lua_State* L, const char* k, const char* v, int idx) {
+void table_assign_str(lua_State* L, const char* k, const char* v, int idx) {
     lua_pushstring(L, k);
     lua_pushstring(L, v);
     lua_settable(L, idx - 2);
@@ -589,14 +603,14 @@ drawer_t util_checkdrawer(lua_State* L, script_t s) {
 const char* util_get_error(lua_State* L) {
     static char error_buff[2048];
     strncpy(error_buff, luaL_checkstring(L, -1), 2048);
-    lua_pop(L, 1);
+    lua_pop(L, 1); /* string argument */
     return error_buff;
 }
 
 int do_mouse_event(lua_State* L, const char* func, int x, int y, int button) {
     int nerror = 0;
     kstr s = kstring_newfromvf(
-            "Vis._do_on_event(Vis._on_%ss, %d, %d, %d)", func, x, y, button);
+        "Vis._do_on_event(Vis._on_%ss, %d, %d, %d)", func, x, y, button);
     if (luaL_dostring(L, kstring_content(s)) != LUA_OK) {
         EPRINTF("Error in %s: %s", kstring_content(s), util_get_error(L));
         nerror = 1;
@@ -623,7 +637,7 @@ int get_configured_fps(lua_State* L) {
     lua_getglobal(L, "Vis");
     lua_getfield(L, -1, "FPS_LIMIT");
     int result = (int)lua_tointeger(L, -1);
-    lua_pop(L, 2);
+    lua_pop(L, 2); /* Vis.FPS_LIMIT, then Vis */
     return result;
 }
 
@@ -637,55 +651,21 @@ fnum_t do_msec2frames(lua_State* L, long msec) {
     return (fnum_t)(fps * (double)msec / 1000.0 + 0.5);
 }
 
-kstr lua_inspect_value(lua_State* L, int arg) {
+kstr do_inspect_value(lua_State* L, int arg) {
     lua_getglobal(L, "require");
     lua_pushstring(L, "inspect");
     lua_call(L, 1, 1);
     lua_getfield(L, -1, "inspect");
     lua_pushvalue(L, arg);
     lua_call(L, 1, 1);
-    kstr s = kstring_newfromvf("[%s]%s", lua_typename(L, lua_type(L, arg)),
-            lua_tostring(L, -1));
+    const char* argtype = lua_typename(L, lua_type(L, arg));
+    kstr s = kstring_newfromvf("[%s]%s", argtype, lua_tostring(L, -1));
     lua_pop(L, 2);
     return s;
 }
 
-emit_desc* lua_args_to_emit_desc(lua_State* L, int arg, fnum_t* when) {
-    emit_desc* emit = emit_new();
-
-    emit->n = (int)luaL_checkinteger(L, arg++);
-    if (when != NULL) {
-        *when = do_msec2frames(L, (msec_t)luaL_checkinteger(L, arg++));
-    }
-
-    if (lua_type(L, arg) != LUA_TTABLE) {
-        luaL_error(L, "Invalid argument type; expected table");
-        DZFREE(emit);
-        return NULL;
-    }
-
-#if DEBUG >= DEBUG_TRACE || defined(DEBUG_SCRIPT_C)
-    int nargs = lua_gettop(L);
-    kstr s = kstring_newfromvf("args[%d]: ", nargs);
-    for (int argi = 1; argi <= nargs; ++argi) {
-        kstr vs = lua_inspect_value(L, argi);
-        kstring_appendvf(s, "%s, ", kstring_content(vs));
-        kstring_free(vs);
-    }
-    DBPRINTF("Arguments: %s", kstring_content(s));
-    kstring_free(s);
-#endif
-
-    /* TODO: Merge values from defaults table */
-
-    /* defaults: circle, 100 msec, 1 pixel, white */
-    emit->theta = emit->utheta = M_PI;
-    emit->life = (int)do_msec2frames(L, 100);
-    emit->r = emit->g = emit->b = 1.0f;
-    emit->ur = emit->ug = emit->ub = 0.0f;
-    emit->force = VIS_DEFAULT_FORCE;
-    emit->limit = VIS_DEFAULT_LIMIT;
-    emit->blender = VIS_DEFAULT_BLEND;
+static void merge_emit_table(lua_State* L, int arg, emit_desc* emit) {
+    VIS_ASSERT(emit);
 
     int argi = lua_absindex(L, arg);
     lua_pushnil(L);
@@ -711,9 +691,9 @@ emit_desc* lua_args_to_emit_desc(lua_State* L, int arg, fnum_t* when) {
             emit->ds = luaL_checknumber(L, -1);
         } else if (!strcmp(key, "uds")) {
             emit->uds = luaL_checknumber(L, -1);
-        } else if (!strcmp(key, "rad")) {
+        } else if (!strcmp(key, "rad") || !strcmp(key, "radius")) {
             emit->rad = luaL_checknumber(L, -1);
-        } else if (!strcmp(key, "urad")) {
+        } else if (!strcmp(key, "urad") || !strcmp(key, "uradius")) {
             emit->urad = luaL_checknumber(L, -1);
         } else if (!strcmp(key, "depth")) {
             emit->depth = (int)luaL_checkinteger(L, -1);
@@ -758,18 +738,68 @@ emit_desc* lua_args_to_emit_desc(lua_State* L, int arg, fnum_t* when) {
             EPRINTF("Unknown key in emit table %s (type %s)",
                     key, lua_typename(L, valtype));
         }
-        lua_pop(L, 1);
+        lua_pop(L, 1); /* emit table */
+    }
+}
+
+emit_desc* emit_table_to_emit_desc(lua_State* L, int arg, fnum_t* when) {
+    emit_desc* emit = emit_new();
+    VIS_ASSERT(emit);
+
+    emit->n = (int)luaL_checkinteger(L, arg++);
+    if (when != NULL) {
+        *when = do_msec2frames(L, (msec_t)luaL_checkinteger(L, arg++));
     }
 
-    /* TODO: Merge values from the overrides table */
+    if (lua_type(L, arg) != LUA_TTABLE) {
+        luaL_error(L, "Invalid argument type; expected table");
+        DZFREE(emit);
+        return NULL;
+    }
+
+#if DEBUG >= DEBUG_TRACE || defined(DEBUG_SCRIPT_C)
+    int nargs = lua_gettop(L);
+    kstr s = kstring_newfromvf("args[%d]: ", nargs);
+    for (int argi = 1; argi <= nargs; ++argi) {
+        kstr vs = do_inspect_value(L, argi);
+        kstring_appendvf(s, "%s, ", kstring_content(vs));
+        kstring_free(vs);
+    }
+    DBPRINTF("Arguments: %s", kstring_content(s));
+    kstring_free(s);
+#endif
+
+    /* defaults: circle, 100 msec, 1 pixel, white */
+    emit->theta = emit->utheta = M_PI;
+    emit->life = (int)do_msec2frames(L, 100);
+    emit->r = emit->g = emit->b = 1.0f;
+    emit->ur = emit->ug = emit->ub = 0.0f;
+    emit->force = VIS_DEFAULT_FORCE;
+    emit->limit = VIS_DEFAULT_LIMIT;
+    emit->blender = VIS_DEFAULT_BLEND;
+
+    lua_getglobal(L, "Vis");
+    lua_getfield(L, -1, "EMIT_DEFAULTS");
+    if (lua_type(L, -1) == LUA_TTABLE) {
+        merge_emit_table(L, -1, emit);
+    }
+
+    merge_emit_table(L, arg, emit);
+
+    lua_getglobal(L, "Vis");
+    lua_getfield(L, -1, "EMIT_OVERRIDES");
+    if (lua_type(L, -1) == LUA_TTABLE) {
+        merge_emit_table(L, -1, emit);
+    }
 
     return emit;
 }
+
 /* end of private API */
 
 /* start of Lua API */
-/* Vis.debug(Vis.flist, ...)
- * FIXME: Get the caller frame, not the VisUtil.Debug frame */
+/* Vis.debug(...) - Print inspect(arguments) to STDERR
+ * FIXME: Allow frame offset somehow (kwarg, first/last, ?) */
 int viscmd_debug_fn(lua_State* L) {
     int nargs = lua_gettop(L);
     lua_Debug ar;
@@ -777,7 +807,7 @@ int viscmd_debug_fn(lua_State* L) {
     lua_getinfo(L, "nSl", &ar);
     kstr s = kstring_newfromvf("args[%d]{ ", nargs);
     for (int argi = 1; argi <= nargs; ++argi) {
-        kstr vs = lua_inspect_value(L, argi);
+        kstr vs = do_inspect_value(L, argi);
         if (argi > 1) {
             kstring_append(s, ", ");
         }
@@ -787,6 +817,32 @@ int viscmd_debug_fn(lua_State* L) {
     kstring_appendvf(s, "%s", " }");
 #if DEBUG >= DEBUG_DEBUG || defined(DEBUG_SCRIPT_C)
     DBPRINTF("(function %s)[%s:%d]: Vis.debug(%s)", ar.name, ar.source,
+            ar.currentline, kstring_content(s));
+#else
+    fprintf(stderr, "%s:%d: Debug: %s", ar.source, ar.currentline,
+            kstring_content(s));
+#endif
+    kstring_free(s);
+    return 0;
+}
+
+/* Vis.debugp(...) - Print arguments to STDERR */
+int viscmd_debugp_fn(lua_State* L) {
+    int nargs = lua_gettop(L);
+    lua_Debug ar;
+    lua_getstack(L, 1, &ar);
+    lua_getinfo(L, "nSl", &ar);
+    kstr s = kstring_newfrom("\"");
+    for (int argi = 1; argi <= nargs; ++argi) {
+        const char* part = luaL_checkstring(L, argi);
+        if (argi > 1) {
+            kstring_append(s, " ");
+        }
+        kstring_append(s, part);
+    }
+    kstring_append(s, "\"");
+#if DEBUG >= DEBUG_DEBUG || defined(DEBUG_SCRIPT_C)
+    DBPRINTF("(function %s)[%s:%d]: Vis.debugp(%s)", ar.name, ar.source,
             ar.currentline, kstring_content(s));
 #else
     fprintf(stderr, "%s:%d: Debug: %s", ar.source, ar.currentline,
@@ -819,7 +875,7 @@ int viscmd_emit_fn(lua_State* L) {
     int arg = 1;
     fnum_t when;
     flist_t fl = *(flist_t*)luaL_checkudata(L, arg++, "flist**");
-    emit_desc* frame = lua_args_to_emit_desc(L, arg, &when);
+    emit_desc* frame = emit_table_to_emit_desc(L, arg, &when);
     if (when != last_when && g_host->showprogress > 0) {
         DBPROGRESS("Vis.emit(%p, %d, %d, {x=%2.0f, y=%2.0f, ...})",
                 fl, frame->n, when, frame->x, frame->y);
@@ -844,7 +900,7 @@ int viscmd_audio_fn(lua_State* L) {
         lua_pushboolean(L, TRUE);
 
         lua_getglobal(L, "Vis");
-        table_assign_string(L, "AUDIO_PATH", file, -1);
+        table_assign_str(L, "AUDIO_PATH", file, -1);
         table_assign_num(L, "AUDIO_LENGTH", audio_get_length(), -1);
         table_assign_int(L, "AUDIO_LENGTH_MSEC", (int)(audio_get_length() * 1000), -1);
         lua_pop(L, 1); /* getglobal("Vis") */
@@ -1031,11 +1087,11 @@ int viscmd_mutate_fn(lua_State* L) {
 }
 
 /* Vis.mutateif(Vis.flist, when, func, cond,
- *      tag,    -- only if cond is EQ, NE, LT, LE, GT, GE
- *      newtag, -- only if func Vis.MUTATE_TAG_SET_IF
- *      factor1, factor2,   -- assigned
+ *      tag,                        -- only if cond is EQ, NE, LT, LE, GT, GE
+ *      newtag,                     -- only if func Vis.MUTATE_TAG_SET_IF
+ *      factor1, factor2,           -- assigned
  *      check_factor1, check_factor2,   -- checked
- *      offset1, offset2)   -- compared
+ *      offset1, offset2)           -- compared
  *  if a factor is to be checked (eg. Vis.MUTATE_IF_NEAR), then:
  *      factor1 is assigned
  *      factor2 is checked
@@ -1112,7 +1168,7 @@ int viscmd_fps_fn(lua_State* L) {
 int viscmd_settrace_fn(lua_State* L) {
     script_t s = util_checkscript(L, 1);
     drawer_t drawer = util_checkdrawer(L, s);
-    drawer_set_trace(drawer, lua_args_to_emit_desc(L, 2, NULL));
+    drawer_set_trace(drawer, emit_table_to_emit_desc(L, 2, NULL));
     return 0;
 }
 
@@ -1120,7 +1176,7 @@ int viscmd_settrace_fn(lua_State* L) {
  * Function has the same args as Vis.settrace */
 int viscmd_emitnow_fn(lua_State* L) {
     /* Vis.script is actually ignored, but is present for consistency */
-    emit_desc* emit = lua_args_to_emit_desc(L, 2, NULL);
+    emit_desc* emit = emit_table_to_emit_desc(L, 2, NULL);
     emit_frame(emit);
     emit_free(emit);
     return 0;
@@ -1146,6 +1202,8 @@ int viscmd_get_debug_fn(lua_State* L) {
     const char* what = luaL_checkstring(L, 2);
     if (!strcmp(what, "PARTICLES-EMITTED")) {
         lua_pushinteger(L, (uint32_t)s->dbg->particles_emitted);
+    } else if (!strcmp(what, "PARTICLE-COUNT")) {
+        lua_pushinteger(L, (uint32_t)s->dbg->particle_count);
     } else if (!strcmp(what, "TIME-NOW")) {
         lua_pushinteger(L, (uint32_t)s->dbg->time_now);
     } else if (!strcmp(what, "FRAMES-EMITTED")) {

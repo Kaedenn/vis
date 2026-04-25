@@ -20,16 +20,18 @@ typedef struct script* script_t;
 /* available debug watches */
 enum script_debug_id {
     SCRIPT_DEBUG_PARTICLES_EMITTED,
+    SCRIPT_DEBUG_PARTICLE_COUNT,
     SCRIPT_DEBUG_TIME_NOW,
     SCRIPT_DEBUG_FRAMES_EMITTED,
     SCRIPT_DEBUG_NUM_MUTATES,
     SCRIPT_DEBUG_PARTICLES_MUTATED,
-    SCRIPT_DEBUG_PARTICLE_TAGS_MODIFIED
+    SCRIPT_DEBUG_PARTICLE_TAGS_MODIFIED,
 };
 
 /* debug watch values */
 typedef struct script_debug {
     uint64_t particles_emitted;
+    uint64_t particle_count;
     uint64_t time_now;
     uint64_t frames_emitted;
     uint64_t num_mutates;
@@ -40,8 +42,7 @@ typedef struct script_debug {
 /* script configuration */
 typedef unsigned int script_cfg_mask;
 static const script_cfg_mask SCRIPT_ALLOW_ALL = 0; /* allow all features */
-static const script_cfg_mask SCRIPT_NO_CB = 1;     /* disable Vis.callback() */
-static const script_cfg_mask SCRIPT_NO_EXIT = 2;   /* disable Vis.exit() */
+static const script_cfg_mask SCRIPT_NO_EXIT = 1;   /* disable Vis.exit() */
 
 /* Constructor: assigns the following variables:
  *  Vis = initialize_vis_lib()
