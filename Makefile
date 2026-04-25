@@ -117,6 +117,11 @@ FP_AVI ?= $(FP_DIR)/bowser.avi
 
 all: debug
 
+# If you plan to use lua/letters.lua with LuaJIT or Lua5.1, this is needed
+lua/utf8.so: 3rdparty/luautf8-0.2.0.tar.gz
+	tar xvfz $^ -C 3rdparty/
+	clang -g -fsanitize=fuzzer-no-link,address -fPIC $(CFLAGS_LIBS) 3rdparty/luautf8-0.2.0/lutf8lib.c -shared -o lua/utf8.so
+
 fast: $(DEPFILES) $(SOURCES)
 	$(MAKE) "CFLAGS=$(CFLAGS) $(CFLAGS_FAST)" \
 		"LDFLAGS=$(LDFLAGS) $(LDFLAGS_FAST)" $(VIS)

@@ -77,7 +77,8 @@ static void luaL_requiref(lua_State *L, const char *modname,
 static const char* const LUA_INIT_SCRIPT =
     /* Adjust default Lua search path */
     "package = require('package')\n"
-    "package.path = '; ;./?.lua;./lua/?.lua;./test/?.lua'\n"
+    "package.path = package.path .. '; ;./?.lua;./lua/?.lua;./test/?.lua'\n"
+    "package.cpath = package.cpath .. ';./lua/?.so'\n"
     /* Add default modules */
     "Vis = require(\"Vis\")\n"
     "VisUtil = require(\"visutil\")\n"

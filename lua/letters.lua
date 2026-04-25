@@ -1,5 +1,32 @@
 math = require("math")
-utf8 = require("utf8")
+_, utf8 = pcall(require, "utf8")
+
+if not utf8 then
+    utf8 = {}
+    utf8.codes = function(s)
+        local i = 1
+        return function()
+            if i > #s then return nil end
+            local p = i
+            local c = s:byte(i)
+            local code
+            if c < 128 then
+                code = c
+                i = i + 1
+            elseif c < 224 then
+                code = ((c - 192) * 64) + (s:byte(i + 1) - 128)
+                i = i + 2
+            elseif c < 240 then
+                code = ((c - 224) * 4096) + ((s:byte(i + 1) - 128) * 64) + (s:byte(i + 2) - 128)
+                i = i + 3
+            else
+                code = ((c - 240) * 262144) + ((s:byte(i + 1) - 128) * 4096) + ((s:byte(i + 2) - 128) * 64) + (s:byte(i + 3) - 128)
+                i = i + 4
+            end
+            return p, code
+        end
+    end
+end
 
 Letters = {}
 Letters.LETTER_WIDTH = 5
