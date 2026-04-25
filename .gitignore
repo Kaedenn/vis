@@ -47,7 +47,7 @@ test/test_kstring
 test/test_klist
 
 # Temporary files
-*.swp
+*.sw[po]
 
 # Non-distributable assets
 scripts/makedep.awk
