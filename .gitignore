@@ -6,6 +6,9 @@
 # Reference material
 ref
 
+# Generated materials
+3rdparty/luautf8-0.2.0/
+
 # Dependency files
 *.d
 .d
