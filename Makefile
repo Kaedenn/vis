@@ -203,9 +203,10 @@ clean:
 	- $(RM) $(BIN_TESTS) 2>/dev/null
 
 distclean: clean fp-prep
+	- $(RM) -r 3rdparty/luautf8-0.2.0/ 2>/dev/null
 
 encode:
-	python $(SCR_PROCESS) "$(FP_BASE)" "$(FP_AVI)" -i "$(FP_AUDIO)" $(SCR_ARGS)
+	python3 $(SCR_PROCESS) "$(FP_BASE)" "$(FP_AVI)" -i "$(FP_AUDIO)" $(SCR_ARGS)
 
 fp-prep:
 	- $(MAKE) fp-cleanup

@@ -43,6 +43,9 @@ EMIT_FIELDS = ("count", "ux", "uy", "depth", "s", "us", "ds", "uds",
       "rad", "urad", "theta", "utheta", "life", "ulife", "ur", "ug", "ub",
       "force", "limit", "blender", "tag")
 
+GEN_SETTINGS_COMMENT = "-- GENERATION SETTINGS: "
+GEN_SETTINGS_DELIM = ": "
+
 class Optimizer(enum.Enum):
   "Method to use for reducing the number of emit calls"
   NONE = 0
@@ -625,19 +628,34 @@ def main():
   if args.optimizer:
     optimizer = optimizer_arg_to_func(args.optimizer)
 
+  # Determine if we really need to regenerate the file
+  curr_settings = repr(sys.argv)
+  if args.output != "-" and os.path.exists(args.output):
+    if os.stat(args.output).st_size > 0:
+      with open(args.output, "rt", encoding="UTF-8") as fobj:
+        line = next(fobj).strip()
+      if line.startswith(GEN_SETTINGS_COMMENT):
+        gen_settings = line.split(GEN_SETTINGS_DELIM, 1)[1]
+        if gen_settings == curr_settings:
+          logger.info("Already generated %s; skipping", args.output)
+          raise SystemExit(0)
+
+  # Parse -r,--rule arguments into the overrides dict
+  overrides = {}
+  if args.rule:
+    for rule in args.rule:
+      if rule.count("=") != 1:
+        ap.error(f"Invalid rule {rule!r}: delimiter missing or duplicated")
+      override, value = rule.split("=")
+      overrides[override] = parse_rule(override, value)
+
   with open_file_for_writing(args.output, append=args.append) as output:
     logger.info("Processing %d image record(s) to %s as %s", len(image_list),
         args.output, output.name)
 
-    overrides = {}
     try:
-      # Parse -r,--rule arguments into the overrides dict
-      if args.rule:
-        for rule in args.rule:
-          if rule.count("=") != 1:
-            ap.error(f"Invalid rule {rule!r}: delimiter missing or duplicated")
-          override, value = rule.split("=")
-          overrides[override] = parse_rule(override, value)
+      logger.debug("Writing \"%s\" to %s", curr_settings, args.output)
+      output.write(f"{GEN_SETTINGS_COMMENT}{curr_settings}{os.linesep}")
 
       # Prepend the contents of the pre-script
       if args.pre_script:

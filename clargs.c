@@ -268,7 +268,7 @@ const char* clargs_config_get(const clargs_t args, const char* key) {
     return NULL;
 }
 
-int clargs_config_geti(const clargs_t args, const char* key) {
+int clargs_config_get_int(const clargs_t args, const char* key) {
 #ifdef HAVE_JSONC
     if (args->configobj) {
         if (json_object_object_get_ex(args->configobj, key, NULL)) {
@@ -279,7 +279,7 @@ int clargs_config_geti(const clargs_t args, const char* key) {
     return 0;
 }
 
-int clargs_config_getb(const clargs_t args, const char* key) {
+int clargs_config_get_bool(const clargs_t args, const char* key) {
 #ifdef HAVE_JSONC
     if (args->configobj) {
         if (json_object_object_get_ex(args->configobj, key, NULL)) {
@@ -290,7 +290,7 @@ int clargs_config_getb(const clargs_t args, const char* key) {
     return 0;
 }
 
-long clargs_config_getl(const clargs_t args, const char* key) {
+int64_t clargs_config_get_int64(const clargs_t args, const char* key) {
 #ifdef HAVE_JSONC
     if (args->configobj) {
         if (json_object_object_get_ex(args->configobj, key, NULL)) {
@@ -301,7 +301,7 @@ long clargs_config_getl(const clargs_t args, const char* key) {
     return 0L;
 }
 
-double clargs_config_getd(const clargs_t args, const char* key) {
+double clargs_config_get_double(const clargs_t args, const char* key) {
 #ifdef HAVE_JSONC
     if (args->configobj) {
         if (json_object_object_get_ex(args->configobj, key, NULL)) {

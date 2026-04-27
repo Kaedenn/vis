@@ -29,7 +29,7 @@ typedef struct emit {
     int life, ulife;        /* particle lifetime (in frames) */
     double ds, uds;         /* initial velocity along theta */
     double theta, utheta;   /* initial facing angle */
-    float r, g, b;          /* color */
+    float r, g, b;          /* color (unit, 0 ~ 1)*/
     float ur, ug, ub;       /* uncertainty in r, g and b */
     force_id force;         /* force function */
     limit_id limit;         /* limit function */

@@ -42,9 +42,9 @@ void clargs_free(clargs* args);
 /* Functions for extracting data from configobj */
 BOOL clargs_config_has(const clargs_t args, const char* key);
 const char* clargs_config_get(const clargs_t args, const char* key);
-int clargs_config_geti(const clargs_t args, const char* key);
-int clargs_config_getb(const clargs_t args, const char* key);
-long clargs_config_getl(const clargs_t args, const char* key);
-double clargs_config_getd(const clargs_t args, const char* key);
+int clargs_config_get_int(const clargs_t args, const char* key);
+int clargs_config_get_bool(const clargs_t args, const char* key);
+int64_t clargs_config_get_int64(const clargs_t args, const char* key);
+double clargs_config_get_double(const clargs_t args, const char* key);
 
 #endif

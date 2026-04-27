@@ -1,12 +1,10 @@
 
-#include "defines.h"
 #include "kstring.h"
 #include "helper.h"
 
-#include <string.h>
-#include <stdlib.h>
-#include <stdarg.h>
 #include <ctype.h>
+#include <stdarg.h>
+#include <string.h>
 
 kstr kstring_new(size_t capacity) {
     kstr s = DBMALLOC(sizeof(struct kstring));
@@ -63,14 +61,21 @@ void kstring_strip(kstr s) {
 
 void kstring_stripl(kstr s) {
     VIS_ASSERT(s);
-    size_t i, j;
+    size_t i;
     for (i = 0; i < s->len; ++i) {
         if (!isspace(s->content[i])) break;
     }
     if (i > 0) {
-        s->len -= i;
-        for (j = 0; j < s->len; ++j) {
-            s->content[j] = s->content[j+i];
+        kstring_substr_l(s, i);
+    }
+}
+
+void kstring_substr_l(kstr s, size_t offset) {
+    VIS_ASSERT(s);
+    if (offset > 0 && offset < s->len) {
+        s->len -= offset;
+        for (size_t j = 0; j < s->len; ++j) {
+            s->content[j] = s->content[j+offset];
         }
         s->content[s->len] = '\0';
     }
@@ -86,8 +91,17 @@ void kstring_stripr(kstr s) {
             break;
         }
     }
-    s->content[newlen] = '\0';
-    s->len = newlen;
+    if (newlen < s->len) {
+        kstring_substr_r(s, s->len - newlen);
+    }
+}
+
+void kstring_substr_r(kstr s, size_t offset) {
+    VIS_ASSERT(s);
+    if (s->len > offset) {
+        s->content[s->len - offset] = '\0';
+        s->len = s->len - offset;
+    }
 }
 
 void kstring_append(kstr s, const char* news) {
@@ -111,6 +125,29 @@ void kstring_assimilate(kstr s1, kstr s2) {
     kstring_free(s2);
 }
 
+BOOL kstring_ltrim(kstr s, const char* text) {
+    VIS_ASSERT(s);
+    VIS_ASSERT(text);
+    if (!strncmp(s->content, text, strlen(text))) {
+        kstring_substr_l(s, strlen(text));
+        return TRUE;
+    }
+    return FALSE;
+}
+
+BOOL kstring_rtrim(kstr s, const char* text) {
+    VIS_ASSERT(s);
+    VIS_ASSERT(text);
+    if (s->len > strlen(text)) {
+        size_t offset = s->len - strlen(text);
+        if (!strncmp(s->content + offset, text, strlen(text))) {
+            kstring_substr_r(s, strlen(text));
+            return TRUE;
+        }
+    }
+    return FALSE;
+}
+
 void kstring_realloc(kstr s, size_t newcapacity) {
     VIS_ASSERT(s);
     VIS_ASSERT(newcapacity > 0);
@@ -119,7 +156,7 @@ void kstring_realloc(kstr s, size_t newcapacity) {
     s->capacity = newcapacity;
 }
 
-BOOL kstring_empty(const kstr s) { VIS_ASSERT(s); return s->len != 0; }
+BOOL kstring_empty(const kstr s) { VIS_ASSERT(s); return s->len == 0; }
 size_t kstring_length(const kstr s) { VIS_ASSERT(s); return s->len; }
 size_t kstring_capacity(const kstr s) { VIS_ASSERT(s); return s->capacity; }
 const char* kstring_content(const kstr s) { VIS_ASSERT(s); return s->content; }

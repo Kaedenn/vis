@@ -16,31 +16,7 @@
 #include <lua.h>
 #include <lualib.h>
 
-/* TODO: Common emit fields (default and override):
- *
- * 1) Vis.set_default{emit_table_field_name=value, ...}
- * When parsing an emit table, pre-assign fields and values passed via a
- * prior call to Vis.set_default{...} before parsing emit table.
- * Example:
- *  Vis.set_default{force=Vis.FORCE_GRAVITY}
- * assigns Vis.FORCE_GRAVITY to all emits that don't override force.
- *
- * 2) Vis.set_override{emit_table_field_name=value, ...}
- * When parsing an emit table, assign all fields and values passed via a
- * prior call to Vis.set_override{...} after parsing the emit table.
- * Example:
- *  Vis.set_override{life=Vis.frames2msec(10)}
- * will force all particles to live for 10 frames, overriding the prior
- * lifetime.
- *
- * These require refactoring emit_table_to_emit_desc:
- *  1) Construct emit object with defaults
- *  2) Parse Vis.EMIT_DEFAULTS and assign to emit object (new function)
- *  3) Parse arg and assign to emit object (new function)
- *  4) Parse Vis.EMIT_OVERRIDES and assign to emit object (new function)
- *
- * TODO: Debugging functions to get plist size and plist capacity.
- */
+/* TODO: Vis.callback(Vis.flist, when, Vis.script, func, ...args) */
 
 /** LuaJIT Shims */
 #ifndef lua_absindex
@@ -73,16 +49,12 @@ static void luaL_requiref(lua_State *L, const char *modname,
 }
 #endif
 
-/* Initialization script */
+/* Static initialization script */
 static const char* const LUA_INIT_SCRIPT =
     /* Adjust default Lua search path */
     "package = require('package')\n"
     "package.path = package.path .. '; ;./?.lua;./lua/?.lua;./test/?.lua'\n"
     "package.cpath = package.cpath .. ';./lua/?.so'\n"
-    /* Add default modules */
-    "Vis = require(\"Vis\")\n"
-    "VisUtil = require(\"visutil\")\n"
-    "Emit = require(\"emit\")\n"
     /* Create defaults and overrides tables */
     "Vis.EMIT_DEFAULTS = {}\n"
     "Vis.EMIT_OVERRIDES = {}\n"
@@ -97,31 +69,31 @@ static const char* const LUA_INIT_SCRIPT =
     "Vis._on_songends = {}\n"
     /* Create functions for interacting with said tables */
     "Vis._do_on_event = function(tab, ...)\n"
-    "   for i,f in pairs(tab) do f(...) end\n"
+    "   for _, func in pairs(tab) do func(...) end\n"
     "end\n"
-    "Vis.on_mousedown = function(f)\n"
-    "   table.insert(Vis._on_mousedowns, f)\n"
+    "Vis.on_mousedown = function(func)\n"
+    "   table.insert(Vis._on_mousedowns, func)\n"
     "end\n"
-    "Vis.on_mouseup = function(f)\n"
-    "   table.insert(Vis._on_mouseups, f)\n"
+    "Vis.on_mouseup = function(func)\n"
+    "   table.insert(Vis._on_mouseups, func)\n"
     "end\n"
-    "Vis.on_mousemove = function(f)\n"
-    "   table.insert(Vis._on_mousemoves, f)\n"
+    "Vis.on_mousemove = function(func)\n"
+    "   table.insert(Vis._on_mousemoves, func)\n"
     "end\n"
-    "Vis.on_mousescroll = function(f)\n"
-    "   table.insert(Vis._on_mousescrolls, f)\n"
+    "Vis.on_mousescroll = function(func)\n"
+    "   table.insert(Vis._on_mousescrolls, func)\n"
     "end\n"
-    "Vis.on_keydown = function(f)\n"
-    "   table.insert(Vis._on_keydowns, f)\n"
+    "Vis.on_keydown = function(func)\n"
+    "   table.insert(Vis._on_keydowns, func)\n"
     "end\n"
-    "Vis.on_keyup = function(f)\n"
-    "   table.insert(Vis._on_keyups, f)\n"
+    "Vis.on_keyup = function(func)\n"
+    "   table.insert(Vis._on_keyups, func)\n"
     "end\n"
-    "Vis.on_quit = function(f)\n"
-    "   table.insert(Vis._on_quits, f)\n"
+    "Vis.on_quit = function(func)\n"
+    "   table.insert(Vis._on_quits, func)\n"
     "end\n"
-    "Vis.on_songend = function(f)\n"
-    "   table.insert(Vis._on_songends, f)\n"
+    "Vis.on_songend = function(func)\n"
+    "   table.insert(Vis._on_songends, func)\n"
     "end\n";
 
 /* Helper functions not exposed to Lua */
@@ -200,15 +172,15 @@ script_t script_new(script_cfg_mask cfg, clargs* args) {
     s->fl = flist_new();
     s->L = luaL_newstate();
     s->clargs = args;
-    s->debuglevel = clargs_config_geti(args, "DEBUG_SCRIPT_C");
+    s->debuglevel = clargs_config_get_int(args, "DEBUG_SCRIPT_C");
 #ifdef DEBUG_SCRIPT_C
     if (s->debuglevel < 1) {
         s->debuglevel = 1;
     }
 #endif
-    s->showprogress = clargs_config_geti(args, "DEBUG_SCRIPT_PROGRESS");
+    s->showprogress = clargs_config_get_int(args, "DEBUG_SCRIPT_PROGRESS");
     luaL_openlibs(s->L);
-    luaL_requiref(s->L, "Vis", initialize_vis_lib, 0);
+    luaL_requiref(s->L, "Vis", initialize_vis_lib, 1);
     lua_pop(s->L, 1); /* requiref("Vis") */
 
     script_run_string(s, LUA_INIT_SCRIPT);
@@ -226,9 +198,9 @@ script_t script_new(script_cfg_mask cfg, clargs* args) {
 
     /* Create and assign Vis.flist */
     flist_t* flbox = lua_newuserdata(s->L, sizeof(flist_t));
-    luaL_newmetatable(s->L, "flist**");
+    luaL_newmetatable(s->L, "flist_t*");
     lua_pop(s->L, 1); /* newmetatable */
-    luaL_setmetatable(s->L, "flist**");
+    luaL_setmetatable(s->L, "flist_t*");
     *flbox = s->fl;
     lua_setfield(s->L, -2, "flist");
 
@@ -529,16 +501,19 @@ int initialize_vis_lib(lua_State* L) {
     /* helpful non-numeric constants */
     table_assign_str(L, "LUA_STARTUP_FILE", LUA_STARTUP_FILE, -1);
 
+    /* non-constant values */
     table_assign_nil(L, "AUDIO_FILE_PATH", -1);
-
     table_assign_num(L, "AUDIO_LENGTH", 0, -1);
 
     return 1;
 }
 
+/* Assign _G.Arguments = {args...} */
 void prepare_stack(script_t s, klist args) {
+    /* TODO: Determine why we do this
     lua_getglobal(s->L, "debug");
     lua_getfield(s->L, -1, "traceback");
+    lua_call(s->L, 0, 1);*/
     s->debugidx = lua_gettop(s->L);
     lua_pushvalue(s->L, LUA_GLOBALSINDEX);
     lua_pushstring(s->L, "Arguments");
@@ -554,7 +529,7 @@ void prepare_stack(script_t s, klist args) {
     }
     lua_settable(s->L, -3);
     lua_pop(s->L, 1); /* lua_pushvalue(s->L, LUA_GLOBALSINDEX) */
-    VIS_ASSERT(lua_gettop(s->L) == 2);
+    VIS_ASSERT(lua_gettop(s->L) == 0); /* was 2 */
 }
 
 void cleanup_stack(script_t s) {
@@ -601,6 +576,7 @@ drawer_t util_checkdrawer(lua_State* L, script_t s) {
     return NULL;
 }
 
+/* Formats the error message into a static buffer and pops the error message */
 const char* util_get_error(lua_State* L) {
     static char error_buff[2048];
     strncpy(error_buff, luaL_checkstring(L, -1), 2048);
@@ -779,14 +755,17 @@ emit_desc* emit_table_to_emit_desc(lua_State* L, int arg, fnum_t* when) {
     emit->limit = VIS_DEFAULT_LIMIT;
     emit->blender = VIS_DEFAULT_BLEND;
 
+    /* Pre-fill the table with default configuration */
     lua_getglobal(L, "Vis");
     lua_getfield(L, -1, "EMIT_DEFAULTS");
     if (lua_type(L, -1) == LUA_TTABLE) {
         merge_emit_table(L, -1, emit);
     }
 
+    /* Merge in the actual emit table */
     merge_emit_table(L, arg, emit);
 
+    /* Assign all of the overrides */
     lua_getglobal(L, "Vis");
     lua_getfield(L, -1, "EMIT_OVERRIDES");
     if (lua_type(L, -1) == LUA_TTABLE) {
@@ -800,7 +779,7 @@ emit_desc* emit_table_to_emit_desc(lua_State* L, int arg, fnum_t* when) {
 
 /* start of Lua API */
 /* Vis.debug(...) - Print inspect(arguments) to STDERR
- * FIXME: Allow frame offset somehow (kwarg, first/last, ?) */
+ * TODO: Allow frame offset somehow (kwarg, first/last, ?) */
 int viscmd_debug_fn(lua_State* L) {
     int nargs = lua_gettop(L);
     lua_Debug ar;
@@ -817,8 +796,8 @@ int viscmd_debug_fn(lua_State* L) {
     }
     kstring_appendvf(s, "%s", " }");
 #if DEBUG >= DEBUG_DEBUG || defined(DEBUG_SCRIPT_C)
-    DBPRINTF("(function %s)[%s:%d]: Vis.debug(%s)", ar.name, ar.source,
-            ar.currentline, kstring_content(s));
+    DBPRINTF("[%s:%d:%s]: Vis.debug(%s)", ar.source, ar.currentline, ar.name,
+            kstring_content(s));
 #else
     fprintf(stderr, "%s:%d: Debug: %s", ar.source, ar.currentline,
             kstring_content(s));
@@ -843,8 +822,8 @@ int viscmd_debugp_fn(lua_State* L) {
     }
     kstring_append(s, "\"");
 #if DEBUG >= DEBUG_DEBUG || defined(DEBUG_SCRIPT_C)
-    DBPRINTF("(function %s)[%s:%d]: Vis.debugp(%s)", ar.name, ar.source,
-            ar.currentline, kstring_content(s));
+    DBPRINTF("[%s:%d:%s]: Vis.debug(%s)", ar.source, ar.currentline, ar.name,
+            kstring_content(s));
 #else
     fprintf(stderr, "%s:%d: Debug: %s", ar.source, ar.currentline,
             kstring_content(s));
@@ -855,7 +834,7 @@ int viscmd_debugp_fn(lua_State* L) {
 
 /* Vis.command(Vis.flist, when, "command") */
 int viscmd_command_fn(lua_State* L) {
-    flist_t fl = *(flist_t*)luaL_checkudata(L, 1, "flist**");
+    flist_t fl = *(flist_t*)luaL_checkudata(L, 1, "flist_t*");
     fnum_t when = do_msec2frames(L, (msec_t)luaL_checkinteger(L, 2));
     const char* cmd = luaL_checkstring(L, 3);
     flist_insert_cmd(fl, when, cmd);
@@ -864,7 +843,7 @@ int viscmd_command_fn(lua_State* L) {
 
 /* Vis.exit(Vis.flist, when) */
 int viscmd_exit_fn(lua_State* L) {
-    flist_t fl = *(flist**)luaL_checkudata(L, 1, "flist**");
+    flist_t fl = *(flist_t*)luaL_checkudata(L, 1, "flist_t*");
     fnum_t when = do_msec2frames(L, (msec_t)luaL_checkinteger(L, 2));
     flist_insert_exit(fl, when);
     return 0;
@@ -875,7 +854,7 @@ int viscmd_emit_fn(lua_State* L) {
     static fnum_t last_when = 0; /* Used for progress feedback */
     int arg = 1;
     fnum_t when;
-    flist_t fl = *(flist_t*)luaL_checkudata(L, arg++, "flist**");
+    flist_t fl = *(flist_t*)luaL_checkudata(L, arg++, "flist_t*");
     emit_desc* frame = emit_table_to_emit_desc(L, arg, &when);
     if (when != last_when && g_host->showprogress > 0) {
         DBPROGRESS("Vis.emit(%p, %d, %d, {x=%2.0f, y=%2.0f, ...})",
@@ -889,7 +868,7 @@ int viscmd_emit_fn(lua_State* L) {
 /* Vis.audio(Vis.flist, when, path)
  * Sets AudIO_PATH, AUDIO_LENGTH, AUDIO_LENGTH_MSEC */
 int viscmd_audio_fn(lua_State* L) {
-    flist_t fl = *(flist**)luaL_checkudata(L, 1, "flist**");
+    flist_t fl = *(flist_t*)luaL_checkudata(L, 1, "flist_t*");
     fnum_t when = do_msec2frames(L, (msec_t)luaL_checkinteger(L, 2));
     const char* file = luaL_checkstring(L, 3);
     if (!audio_open(file)) {
@@ -913,7 +892,7 @@ int viscmd_audio_fn(lua_State* L) {
  * Vis.play(Vis.flist, fnum) */
 int viscmd_play_fn(lua_State* L) {
     if (lua_gettop(L) >= 2) {
-        flist_t fl = *(flist**)luaL_checkudata(L, 1, "flist**");
+        flist_t fl = *(flist_t*)luaL_checkudata(L, 1, "flist_t*");
         fnum_t when = do_msec2frames(L, (msec_t)luaL_checkinteger(L, 2));
         DBPRINTF("Vis.play(%p, [frame]%d)", fl, when);
         flist_insert_play(fl, when);
@@ -928,7 +907,7 @@ int viscmd_play_fn(lua_State* L) {
  * Vis.pause(Vis.flist, fnum) */
 int viscmd_pause_fn(UNUSED_PARAM(lua_State* L)) {
     if (lua_gettop(L) >= 2) {
-        flist_t fl = *(flist**)luaL_checkudata(L, 1, "flist**");
+        flist_t fl = *(flist_t*)luaL_checkudata(L, 1, "flist_t*");
         fnum_t when = do_msec2frames(L, (msec_t)luaL_checkinteger(L, 2));
         DBPRINTF("Vis.pause(%p, [frame]%d)", fl, when);
         flist_insert_pause(fl, when);
@@ -943,7 +922,7 @@ int viscmd_pause_fn(UNUSED_PARAM(lua_State* L)) {
  * Vis.volume(Vis.flist, fnum, offset) */
 int viscmd_volume_fn(lua_State* L) {
     if (lua_gettop(L) >= 3) {
-        flist_t fl = *(flist**)luaL_checkudata(L, 1, "flist**");
+        flist_t fl = *(flist_t*)luaL_checkudata(L, 1, "flist_t*");
         fnum_t when = do_msec2frames(L, (msec_t)luaL_checkinteger(L, 2));
         float level = (float)luaL_checknumber(L, 3);
         DBPRINTF("Vis.volume(%p, [frame]%d, %f)", fl, when, level);
@@ -960,7 +939,7 @@ int viscmd_volume_fn(lua_State* L) {
  * Vis.seek(Vis.flist, fnum, offset) */
 int viscmd_seek_fn(lua_State* L) {
     if (lua_gettop(L) >= 3) {
-        flist_t fl = *(flist**)luaL_checkudata(L, 1, "flist**");
+        flist_t fl = *(flist_t*)luaL_checkudata(L, 1, "flist_t*");
         fnum_t when = do_msec2frames(L, (msec_t)luaL_checkinteger(L, 2));
         msec_t offset = (msec_t)luaL_checkinteger(L, 3);
         DBPRINTF("Vis.seek(%p, [frame]%d, %d)", fl, when, (int)offset);
@@ -975,7 +954,7 @@ int viscmd_seek_fn(lua_State* L) {
 
 /* Vis.seekms(Vis.flist, when, whereto) */
 int viscmd_seekms_fn(lua_State* L) {
-    flist_t fl = *(flist**)luaL_checkudata(L, 1, "flist**");
+    flist_t fl = *(flist_t*)luaL_checkudata(L, 1, "flist_t*");
     fnum_t where = do_msec2frames(L, (msec_t)luaL_checkinteger(L, 2));
     fnum_t whereto = do_msec2frames(L, (msec_t)luaL_checkinteger(L, 3));
     DBPRINTF("Vis.seekms(%p, [frame]%d, [frame]%d)", fl, where, whereto);
@@ -985,7 +964,7 @@ int viscmd_seekms_fn(lua_State* L) {
 
 /* Vis.seekframe(Vis.flist, when, whereto) */
 int viscmd_seekframe_fn(lua_State* L) {
-    flist_t fl = *(flist**)luaL_checkudata(L, 1, "flist**");
+    flist_t fl = *(flist_t*)luaL_checkudata(L, 1, "flist_t*");
     fnum_t where = (fnum_t)luaL_checkinteger(L, 2);
     fnum_t whereto = (fnum_t)luaL_checkinteger(L, 3);
     DBPRINTF("Vis.seekframe(%p, [frame]%d, [frame]%d)", fl, where, whereto);
@@ -995,7 +974,7 @@ int viscmd_seekframe_fn(lua_State* L) {
 
 /* Vis.gotoframe(Vis.flist, whereto) */
 int viscmd_gotoframe_fn(lua_State* L) {
-    flist_t fl = *(flist**)luaL_checkudata(L, 1, "flist**");
+    flist_t fl = *(flist_t*)luaL_checkudata(L, 1, "flist_t*");
     fnum_t whereto = (fnum_t)luaL_checkinteger(L, 2);
     DBPRINTF("Vis.gotoframe(%p, [frame]%d)", fl, whereto);
     flist_goto_frame(fl, whereto);
@@ -1004,7 +983,7 @@ int viscmd_gotoframe_fn(lua_State* L) {
 
 /* Vis.audiosync(Vis.flist, when, nframes) */
 int viscmd_audiosync_fn(lua_State* L) {
-    flist_t fl = *(flist**)luaL_checkudata(L, 1, "flist**");
+    flist_t fl = *(flist_t*)luaL_checkudata(L, 1, "flist_t*");
     fnum_t where = (fnum_t)luaL_checkinteger(L, 2);
     fnum_t nframes = (fnum_t)luaL_checkinteger(L, 3);
     DBPRINTF("Vis.audiosync(%p, [frame]%d, [frame]%d)", fl, where, nframes);
@@ -1022,7 +1001,7 @@ int viscmd_get_audio_delay_fn(lua_State* L) {
 
 /* Vis.delay(Vis.flist, when, length) */
 int viscmd_delay_fn(lua_State* L) {
-    flist_t fl = *(flist**)luaL_checkudata(L, 1, "flist**");
+    flist_t fl = *(flist_t*)luaL_checkudata(L, 1, "flist_t*");
     fnum_t where = (fnum_t)luaL_checkinteger(L, 2);
     fnum_t length = (fnum_t)luaL_checkinteger(L, 3);
     DBPRINTF("Vis.delay(%p, [frame]%d, [frame]%d)", fl, where, length);
@@ -1030,11 +1009,10 @@ int viscmd_delay_fn(lua_State* L) {
     return 0;
 }
 
-/* Vis.bgcolor(Vis.flist, when, r, g, b)
- * 0 <= @param rgb <= 1
+/* Vis.bgcolor(Vis.flist, when, r, g, b) - 0 <= @param rgb <= 1
  * Passing values less than 0 preserve existing values */
 int viscmd_bgcolor_fn(lua_State* L) {
-    flist_t fl = *(flist**)luaL_checkudata(L, 1, "flist**");
+    flist_t fl = *(flist_t*)luaL_checkudata(L, 1, "flist_t*");
     fnum_t when = do_msec2frames(L, (msec_t)luaL_checkinteger(L, 2));
     float c[3] = {
         (float)luaL_checknumber(L, 3),
@@ -1056,7 +1034,7 @@ int viscmd_bgcolor_fn(lua_State* L) {
  */
 int viscmd_mutate_fn(lua_State* L) {
     mutate_method* method = DBMALLOC(sizeof(struct mutate_method));
-    flist_t fl = *(flist**)luaL_checkudata(L, 1, "flist**");
+    flist_t fl = *(flist_t*)luaL_checkudata(L, 1, "flist_t*");
     fnum_t when = do_msec2frames(L, (msec_t)luaL_checkinteger(L, 2));
     mutate_id fnid = (mutate_id)luaL_checkinteger(L, 3);
     method->id = fnid;
@@ -1099,7 +1077,7 @@ int viscmd_mutate_fn(lua_State* L) {
  */
 int viscmd_mutateif_fn(lua_State* L) {
     mutate_method* method = DBMALLOC(sizeof(struct mutate_method));
-    flist_t fl = *(flist**)luaL_checkudata(L, 1, "flist**");
+    flist_t fl = *(flist_t*)luaL_checkudata(L, 1, "flist_t*");
     fnum_t when = do_msec2frames(L, (msec_t)luaL_checkinteger(L, 2));
     mutate_id fnid = (mutate_id)luaL_checkinteger(L, 3);
     if (fnid >= VIS_MUTATE_PUSH && fnid < VIS_MUTATE_TAG_SET_IF) {
@@ -1142,7 +1120,7 @@ int viscmd_mutateif_fn(lua_State* L) {
 /* TODO: Vis.callback(Vis.flist, when, Vis.script, func, ...args) */
 /* Vis.callback(Vis.flist, when, Vis.script, "lua") */
 int viscmd_callback_fn(lua_State* L) {
-    flist_t fl = *(flist**)luaL_checkudata(L, 1, "flist**");
+    flist_t fl = *(flist_t*)luaL_checkudata(L, 1, "flist_t*");
     fnum_t when = do_msec2frames(L, (msec_t)luaL_checkinteger(L, 2));
     script_t s = util_checkscript(L, 3);
     script_cb* scb = DBMALLOC(sizeof(struct script_cb));

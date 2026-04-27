@@ -13,8 +13,8 @@
 #include <time.h>
 
 enum emitter_debug {
-    E_DEBUG_PLIST = 1 << 0,
-    E_DEBUG_EMIT = 1 << 1,
+    E_DEBUG_PLIST = 1 << 0, /* Dump particle counts each frame */
+    E_DEBUG_EMIT = 1 << 1,  /* Dump every emit (immensely noisy) */
     E_DEBUG_ALL = E_DEBUG_PLIST | E_DEBUG_EMIT
 };
 
@@ -38,7 +38,7 @@ void emitter_setup(struct commands* cmds, plist_t plist, drawer_t drawer, clargs
     emitter.args = args;
 
     if (clargs_config_has(args, "DEBUG_EMITTER")) {
-        emitter.debug_mode = (uint64_t)clargs_config_getl(args, "DEBUG_EMITTER");
+        emitter.debug_mode = (uint64_t)clargs_config_get_int64(args, "DEBUG_EMITTER");
     }
 }
 

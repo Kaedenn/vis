@@ -60,7 +60,7 @@ do the trick just fine. If the program seems slow, try `make fast`.
 * LuaJIT 2.1 (5.1 compat) (with development libraries)
 * OpenGL 4.3, GLFW, GLEW
 * libjson-c (optional, for config.json)
-* libpulse (optional, Linux only, for aduio playback matching)
+* libpulse (optional, Linux only, for audio playback matching)
 
 ## Running this thing
 
@@ -189,10 +189,11 @@ other than strings may result in errors.
 interactive-mode command `command` after `when` milliseconds has
 passed.
 
-`function Vis.emit(...)`: Do not use; see `VisUtil.make_emit_table`,
-`VisUtil.emit_table`, the `Emit` class, as well as the documentation
-on emit tables. This function actually performs the particle logic and
-has upwards of 24 (yes, twenty-four) arguments.
+`function Vis.emit(...)`: Core emit function. Using this is discouraged unless
+performance is a massive concern. For alternatives, see
+`VisUtil.make_emit_table`, `VisUtil.emit_table`, the `Emit` class, as well as
+the documentation on emit tables. This function actually performs the particle
+logic.
 
 `function Vis.audio(path)`: Load the audio file given by `path`.
 
@@ -216,7 +217,7 @@ between frames and milliseconds.
 
 `function Vis.audiosync(Vis.flist, when, frame_count)`: At the specific frame,
 stop processing visual effects, mute the audio, pause the audio, delay for the
-specified number of frames, then unmute and restart the audio track at the
+specified number of frames, then un-mute and restart the audio track at the
 beginning (0ms). This is needed when the audio track does not start playing
 immediately and ensures both the audio and visual effects have enough time to
 synchronize.
@@ -434,7 +435,7 @@ memory leaks.
 #### `module VisUtil = require("visutil")`
 
 This module is pure Lua and resides in `lua/visutil.lua`. Have a look there
-to see how everything is implemented.  The emit table granted by the
+to see how everything is implemented.  The emit table generated via the
 `VisUtil` functions has a large number of members, all of which are public
 and freely modifiable.
 
@@ -446,7 +447,7 @@ color set to white, and blend set to linear.
 table `table` at `x` and `y`, with a variance of `ux` and
 `uy`. With only one argument, the table is centered at the center of the
 screen and the variances are set to zero. Negative values wrap around the
-screen from the opposite side; `-VIS_WIDTH/4 == 3*VIS_WIDTH/4`
+screen from the opposite side. For example, `-VIS_WIDTH/4 == 3*VIS_WIDTH/4`
 
 `function VisUtil.color_emit_table(table, r, g, b, ur, ug, ub)`: Sets the
 color to the values given, with variances given by `ur`, `ug`, and
@@ -493,6 +494,11 @@ unless argument `-e` is passed to `vis` on the command-line.
 pixels per frame.
 
 `floats theta, utheta`: The angle at which to emit the particles, in radians.
+
+`integer depth`: Z-depth, currently only used for draw order. There are
+tentative plans to support 3D rendering (visible as distinct layers at an
+oblique angle), and this value would control which layer the particle belongs
+to.
 
 `integers life, ulife`: The lifetime, in milliseconds, of the particles
 to emit.
@@ -673,7 +679,7 @@ Conditions:
 5. `VIS_MUTATE_IF_LE` - Mutate if the particle's tag is less than or equal to `<tag>`
 6. `VIS_MUTATE_IF_GT` - Mutate if the particle's tag is greater than `<tag>`
 7. `VIS_MUTATE_IF_GE` - Mutate if the particle's tag is greater than or equal to `<tag>`
-8. `VIS_MUTATE_IF_EVEN` - Mutate if the paticle's tag is an even number
+8. `VIS_MUTATE_IF_EVEN` - Mutate if the particle's tag is an even number
 9. `VIS_MUTATE_IF_ODD` - Mutate if the particle's tag is an odd number
 
 Operations are the same as the ordinary mutate, but with `_IF` appended:
