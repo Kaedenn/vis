@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vis Script Editor</title>
+    <link rel="favicon" href="favicon.ico">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="index.css">
+    <script src="emit_context.js"></script>
+    <script src="emit_sequence.js"></script>
+</head>
+<body>
+    <header class="toolbar">
+        <div class="toolbar-group">
+            <button class="btn" title="Load Script" id="btn-load">
+                <span class="icon">📂</span> Load
+            </button>
+            <button class="btn" title="Save Script" id="btn-save">
+                <span class="icon">💾</span> Save
+            </button>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="toolbar-group">
+            <button class="btn" title="Export" id="btn-export">
+                <span class="icon">✨</span> Export
+            </button>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="toolbar-group">
+            <button class="btn toggle-btn" title="Toggle Mirror Mode" id="btn-mirror">
+                <span class="icon">🪞</span> Mirror
+            </button>
+            <button class="btn toggle-btn" title="Toggle Scale Mode" id="btn-scale">
+                <span class="icon">📏</span> Scale
+            </button>
+            <button class="btn toggle-btn" title="Toggle Drag Mode" id="btn-drag">
+                <span class="icon">🖐️</span> Drag
+            </button>
+            <button class="btn toggle-btn" title="Toggle Native Mode" id="btn-native">
+                <span class="icon">⏱️</span> Native
+            </button>
+            <button class="btn toggle-btn active" title="Toggle Axes" id="btn-axes">
+                <span class="icon">┼</span> Axes
+            </button>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="toolbar-group">
+            <button class="btn" id="btn-time-prev" disabled title="Previous Frame">
+                <span class="icon">◀</span>
+            </button>
+            <input type="text" class="time-spinner" id="input-time" value="0" min="0" title="Time (ms)">
+            <button class="btn" id="btn-time-next" title="Next Frame">
+                <span class="icon">▶</span>
+            </button>
+
+            <span class="frame-label" id="label-frame">Frame: 0</span>
+
+            <select class="fps-select" id="select-fps" title="Frames Per Second">
+                <option value="30">30 FPS</option>
+                <option value="60">60 FPS</option>
+            </select>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="toolbar-group">
+            <span class="toolbar-label">Canvas:</span>
+            <input type="text" class="dim-input" id="input-canvas-w" value="800" title="Canvas Width">
+            <span class="toolbar-label">x</span>
+            <input type="text" class="dim-input" id="input-canvas-h" value="600" title="Canvas Height">
+        </div>
+    </header>
+
+    <div class="editor-body">
+        <aside class="toolbar-left">
+            <button class="btn" title="Add Emit Layer" id="btn-add-layer">
+                <span class="icon">➕</span>
+            </button>
+
+            <div class="divider-horizontal"></div>
+
+            <button class="btn tool-btn active" title="Trapezoid Tool" id="tool-trapezoid">
+                <span class="icon">🟥</span>
+            </button>
+            <button class="btn tool-btn" title="Circle Tool" id="tool-circle">
+                <span class="icon">⭕</span>
+            </button>
+            <button class="btn tool-btn" title="Pencil Tool" id="tool-pencil">
+                <span class="icon">✏️</span>
+            </button>
+
+            <div class="divider-horizontal"></div>
+
+            <button class="btn" title="Undo" id="btn-undo">
+                <span class="icon">↩️</span>
+            </button>
+            <button class="btn" title="Redo" id="btn-redo">
+                <span class="icon">↪️</span>
+            </button>
+        </aside>
+
+        <main class="editor-workspace" id="workspace">
+            <canvas id="editor-canvas" tabindex="0"></canvas>
+        </main>
+    </div>
+
+    <footer class="status-bar">
+        <div class="status-item">
+            Cursor: <span id="status-cursor">- , -</span>
+        </div>
+    </footer>
+
+    <script src="main.js"></script>
+</body>
+</html>
+<!-- vim: set ts=4 sts=4 sw=4: -->

@@ -1,0 +1,233 @@
+:root {
+    --bg-color: #0f1115;
+    --toolbar-bg: rgba(22, 25, 31, 0.7);
+    --toolbar-border: rgba(255, 255, 255, 0.08);
+    --btn-bg: rgba(255, 255, 255, 0.03);
+    --btn-hover: rgba(255, 255, 255, 0.08);
+    --btn-active: rgba(255, 255, 255, 0.12);
+    --btn-border: rgba(255, 255, 255, 0.1);
+    --text-color: #e2e8f0;
+    --accent-color: #3b82f6;
+    --accent-hover: #2563eb;
+    --divider-color: rgba(255, 255, 255, 0.1);
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* Glassmorphism Toolbar */
+.toolbar {
+    display: flex;
+    align-items: center;
+    padding: 12px 24px;
+    background: var(--toolbar-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--toolbar-border);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    gap: 16px;
+    z-index: 100;
+}
+
+.toolbar-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.divider {
+    width: 1px;
+    height: 24px;
+    background-color: var(--divider-color);
+    margin: 0 8px;
+}
+
+/* Modern Buttons */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background-color: var(--btn-bg);
+    color: var(--text-color);
+    border: 1px solid var(--btn-border);
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    user-select: none;
+}
+
+.btn .icon {
+    font-size: 16px;
+}
+
+.btn:hover {
+    background-color: var(--btn-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.btn:active {
+    background-color: var(--btn-active);
+    transform: translateY(0);
+}
+
+/* Styling for buttons when they are toggled 'on' */
+.btn.toggle-btn.active, .btn.tool-btn.active {
+    background-color: rgba(59, 130, 246, 0.15);
+    border-color: var(--accent-color);
+    color: #fff;
+    box-shadow: 0 0 12px rgba(59, 130, 246, 0.3);
+}
+
+/* Workspace area styling */
+.editor-body {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+}
+
+.toolbar-left {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 16px 12px;
+    background: var(--toolbar-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-right: 1px solid var(--toolbar-border);
+    gap: 12px;
+    z-index: 99;
+}
+
+.toolbar-left .btn {
+    padding: 10px;
+}
+
+.divider-horizontal {
+    width: 24px;
+    height: 1px;
+    background-color: var(--divider-color);
+    margin: 4px 0;
+}
+
+.editor-workspace {
+    flex: 1;
+    position: relative;
+    background-color: var(--bg-color);
+    background-image: radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+    background-size: 24px 24px;
+}
+
+#editor-canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    outline: none;
+    cursor: crosshair;
+}
+
+/* Spinner and Select UI */
+.time-spinner {
+    width: 80px;
+    background-color: var(--btn-bg);
+    color: var(--text-color);
+    border: 1px solid var(--btn-border);
+    border-radius: 4px;
+    padding: 6px 8px;
+    text-align: center;
+    font-family: inherit;
+    font-size: 14px;
+}
+
+.time-spinner:focus {
+    outline: none;
+    border-color: var(--accent-color);
+}
+
+.fps-select {
+    background-color: var(--btn-bg);
+    color: var(--text-color);
+    border: 1px solid var(--btn-border);
+    border-radius: 4px;
+    padding: 6px 8px;
+    font-family: inherit;
+    font-size: 14px;
+}
+
+.fps-select:focus {
+    outline: none;
+    border-color: var(--accent-color);
+}
+
+.frame-label {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-color);
+    margin: 0 8px;
+    min-width: 70px;
+}
+
+.dim-input {
+    width: 60px;
+    background-color: var(--btn-bg);
+    color: var(--text-color);
+    border: 1px solid var(--btn-border);
+    border-radius: 4px;
+    padding: 6px 8px;
+    text-align: center;
+    font-family: inherit;
+    font-size: 14px;
+}
+
+.dim-input:focus {
+    outline: none;
+    border-color: var(--accent-color);
+}
+
+.toolbar-label {
+    font-size: 12px;
+    color: var(--text-color);
+    opacity: 0.7;
+    margin: 0 4px;
+}
+
+.status-bar {
+    display: flex;
+    align-items: center;
+    padding: 4px 12px;
+    background: var(--toolbar-bg);
+    border-top: 1px solid var(--toolbar-border);
+    font-size: 12px;
+    color: var(--text-color);
+    z-index: 100;
+}
+
+.status-item {
+    font-family: monospace;
+    opacity: 0.8;
+}
+
+.btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none !important;
+    box-shadow: none !important;
+}
