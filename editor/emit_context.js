@@ -14,13 +14,13 @@ class EmitContext {
         this._ds = 0; this._uds = 0;
 
         // Radius and radius variance
-        this._radius = 0; this._uradius = 0;
+        this._radius = 1; this._uradius = 0;
 
         // Rotation/Angle and their variance
         this._theta = 0; this._utheta = 0;
 
         // Lifetime and lifetime variance
-        this._life = 0; this._ulife = 0;
+        this._life = 1; this._ulife = 0;
 
         // Color and color variance
         this._r = 1; this._g = 1; this._b = 1;
@@ -174,9 +174,9 @@ class EmitContext {
         lua += `    tag = ${this._tag}\n`;
         lua += "}";
         if (isNativeMode) {
-            return `Vis.emit(Vis.flist, ${this._count}, ${timeMs}, ${lua})`;
+            return `Vis.emit(Vis.flist, ${this._count}, ${Math.floor(timeMs)}, ${lua})`;
         } else {
-            return `Emit:new(${lua}):emit_at(${timeMs})`
+            return `Emit:new(${lua}):emit_at(${Math.floor(timeMs)})`
         }
     }
 }

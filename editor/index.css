@@ -130,6 +130,7 @@ body {
 
 .editor-workspace {
     flex: 1;
+    min-width: 0; /* Prevent flex item from refusing to shrink below content size */
     position: relative;
     background-color: var(--bg-color);
     background-image: radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px);
@@ -230,4 +231,76 @@ body {
     cursor: not-allowed;
     transform: none !important;
     box-shadow: none !important;
+}
+
+/* Layer Panel styling */
+.layer-panel {
+    flex: 0 0 250px; /* Don't grow, don't shrink, strictly 250px */
+    width: 250px;
+    max-width: 250px;
+    background: var(--toolbar-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-left: 1px solid var(--toolbar-border);
+    display: flex;
+    flex-direction: column;
+    z-index: 99;
+}
+
+.layer-panel-header {
+    padding: 12px 16px;
+    font-size: 14px;
+    font-weight: 600;
+    border-bottom: 1px solid var(--toolbar-border);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-color);
+}
+
+.layer-list {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 8px 0;
+}
+
+.layer-item {
+    padding: 8px 16px;
+    cursor: pointer;
+    font-size: 14px;
+    font-family: monospace;
+    color: var(--text-color);
+    display: flex;
+    flex-direction: column;
+    transition: background-color 0.2s;
+}
+
+.layer-item:hover {
+    background-color: var(--btn-hover);
+}
+
+.layer-item.selected {
+    background-color: rgba(59, 130, 246, 0.15); /* matching btn active state */
+}
+
+.layer-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    user-select: none;
+}
+
+.layer-code {
+    margin-top: 8px;
+    background: rgba(0, 0, 0, 0.2);
+    padding: 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    white-space: pre-wrap;
+    display: none;
+    word-break: break-all;
+}
+
+.layer-item.selected .layer-code {
+    display: block;
 }
