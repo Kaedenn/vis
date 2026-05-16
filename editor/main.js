@@ -1,11 +1,20 @@
 // main.js - Editor Logic
 
+import { EmitContext, ForceFunc, LimitFunc, BlendFunc } from './emit_context.js';
+import { EmitSequence } from './emit_sequence.js';
+
+function randrange(min, max) {
+    return min + Math.random() * (max - min);
+}
+
 // Tool modes enum
 const ToolMode = Object.freeze({
     TRAPEZOID: 'trapezoid',
     CIRCLE: 'circle',
     PENCIL: 'pencil'
 });
+
+const STEP_SIZE = 0.5;
 
 class EmitBuilder {
     constructor(canvas, canvasW, canvasH) {
@@ -34,16 +43,22 @@ class EmitBuilder {
     }
 
     globalToLocal(offsetX, offsetY) {
+        const scale = Math.min(this._canvas.clientWidth / (2 * this._canvasW), this._canvas.clientHeight / (2 * this._canvasH));
+        const padX = (this._canvas.clientWidth - 2 * this._canvasW * scale) / 2;
+        const padY = (this._canvas.clientHeight - 2 * this._canvasH * scale) / 2;
         return {
-            x: Math.round((offsetX / this._canvas.clientWidth) * (2 * this._canvasW) - this._canvasW),
-            y: Math.round((offsetY / this._canvas.clientHeight) * (2 * this._canvasH) - this._canvasH)
+            x: Math.round((offsetX - padX) / scale - this._canvasW),
+            y: Math.round((offsetY - padY) / scale - this._canvasH)
         }
     }
 
     localToGlobal(mapX, mapY) {
+        const scale = Math.min(this._canvas.clientWidth / (2 * this._canvasW), this._canvas.clientHeight / (2 * this._canvasH));
+        const padX = (this._canvas.clientWidth - 2 * this._canvasW * scale) / 2;
+        const padY = (this._canvas.clientHeight - 2 * this._canvasH * scale) / 2;
         return {
-            x: Math.round((mapX + this._canvasW) * this._canvas.clientWidth / (2 * this._canvasW)),
-            y: Math.round((mapY + this._canvasH) * this._canvas.clientHeight / (2 * this._canvasH))
+            x: Math.round((mapX + this._canvasW) * scale + padX),
+            y: Math.round((mapY + this._canvasH) * scale + padY)
         }
     }
 
@@ -75,26 +90,39 @@ class EmitBuilder {
         this._dragging = false;
     }
 
+    getPoints(emit) {
+        let points = [];
+        for (let i = 0; i < emit.count; ++i) {
+            const px = randrange(emit.x - emit.ux, emit.x + emit.ux);
+            const py = randrange(emit.y - emit.uy, emit.y + emit.uy);
+            const ps = randrange(emit.s - emit.us, emit.s + emit.us);
+            const ptheta = randrange(emit.theta - emit.utheta, emit.theta + emit.utheta);
+            const p = this.localToGlobal(px + Math.cos(ptheta) * ps, py + Math.sin(ptheta) * ps);
+            const q = this.localToGlobal(px + Math.cos(ptheta) * (ps + emit.ds), py + Math.sin(ptheta) * (ps + emit.ds));
+            points.push(p);
+            points.push(q);
+        }
+        return points;
+    }
+
     draw(ctx) {
-        const emit = this.ctx;
-        const p0 = this.localToGlobal(emit.x, emit.y);
-        // Determine bounding box: x - ux, x + ux, y - uy, y + uy
-        // 
-        // Draw centered on p0, width emit.ux, height emit.uy
-        // 
-        switch (this._mode) {
-            case ToolMode.TRAPEZOID:
-                // TODO: Draw current context to ctx
-                break;
-            case ToolMode.CIRCLE:
-                // TODO: Draw current context to ctx
-                break;
-            case ToolMode.PENCIL:
-                // TODO: Draw current context to ctx
-                break;
+        const emit = this.ctx; /* EmitContext */
+        const points = this.getPoints(emit);
+        for (const p of points) {
+            const r = randrange(emit.r - emit.ur, emit.r + emit.ur) * 255;
+            const g = randrange(emit.g - emit.ug, emit.g + emit.ug) * 255;
+            const b = randrange(emit.b - emit.ub, emit.b + emit.ub) * 255;
+            ctx.fillStyle = `rgb(${Math.floor(r)}, ${Math.floor(g)}, ${Math.floor(b)})`;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, 2, 0, 2 * Math.PI);
+            ctx.fill();
         }
     }
 }
+
+window.emitSequence = null;
+window.currentEmits = null;
+window.currentEmitIndex = 0;
 
 document.addEventListener('DOMContentLoaded', () => {
     // Editor state
@@ -110,15 +138,15 @@ document.addEventListener('DOMContentLoaded', () => {
     let canvasH = 600; // Initial canvas height
 
     // Sequence to store all generated emits mapped by time
-    const emitSequence = new EmitSequence();
-
-    // The current array of emit contexts being edited/generated for the active frame
-    let currentEmits = [new EmitBuilder(canvasW, canvasH)];
-    let currentEmitIndex = 0; // Tracks which emit in currentEmits is actively being edited
+    window.emitSequence = new EmitSequence();
 
     const canvas = document.getElementById('editor-canvas');
     const ctx = canvas.getContext('2d');
     const workspace = document.getElementById('workspace');
+
+    // The current array of emit contexts being edited/generated for the active frame
+    window.currentEmits = [new EmitBuilder(canvas, canvasW, canvasH)];
+    window.currentEmitIndex = 0; // Tracks which emit in currentEmits is actively being edited
 
     // Resize canvas to fit the workspace
     function resizeCanvas() {
@@ -146,6 +174,7 @@ document.addEventListener('DOMContentLoaded', () => {
         for (const builder of currentEmits) {
             builder.resize(canvasW, canvasH);
         }
+        requestAnimationFrame(draw);
     });
 
     inputCanvasH.addEventListener('change', (e) => {
@@ -154,13 +183,14 @@ document.addEventListener('DOMContentLoaded', () => {
         for (const builder of currentEmits) {
             builder.resize(canvasW, canvasH);
         }
+        requestAnimationFrame(draw);
     });
 
     function updateLayerDisplay() {
         const layerList = document.getElementById('layer-list');
         if (!layerList) return;
         layerList.innerHTML = '';
-        
+
         if (currentEmits.length === 0) {
             const emptyMsg = document.createElement('div');
             emptyMsg.style.padding = '8px 16px';
@@ -179,14 +209,14 @@ document.addEventListener('DOMContentLoaded', () => {
             if (idx === currentEmitIndex) {
                 item.classList.add('selected');
             }
-            
+
             const title = document.createElement('div');
             title.className = 'layer-title';
-            
+
             const titleText = document.createElement('span');
             titleText.textContent = `${idx === currentEmitIndex ? '>' : ' '} Layer ${idx}`;
             titleText.style.flex = '1';
-            
+
             const closeBtn = document.createElement('button');
             closeBtn.innerHTML = '&#x2715;'; // X symbol
             closeBtn.style.background = 'none';
@@ -195,10 +225,10 @@ document.addEventListener('DOMContentLoaded', () => {
             closeBtn.style.cursor = 'pointer';
             closeBtn.style.padding = '0 4px';
             closeBtn.style.opacity = '0.6';
-            
+
             closeBtn.addEventListener('mouseenter', () => closeBtn.style.opacity = '1');
             closeBtn.addEventListener('mouseleave', () => closeBtn.style.opacity = '0.6');
-            
+
             closeBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
                 currentEmits.splice(idx, 1);
@@ -211,25 +241,172 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 updateLayerDisplay();
             });
-            
+
             title.appendChild(titleText);
             title.appendChild(closeBtn);
-            
+
+            const codeContainer = document.createElement('div');
+            codeContainer.className = 'layer-code-container';
+
             const code = document.createElement('code');
             code.className = 'layer-code';
-            
+            code.classList.toggle('collapsed');
+
+            const toggleBtn = document.createElement('button');
+            toggleBtn.className = 'layer-code-toggle';
+            toggleBtn.innerHTML = '&#9660;'; // Down caret
+
+            toggleBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                code.classList.toggle('collapsed');
+                if (code.classList.contains('collapsed')) {
+                    toggleBtn.innerHTML = '&#9660;'; // Down caret
+                } else {
+                    toggleBtn.innerHTML = '&#9650;'; // Up caret
+                }
+            });
+
             if (idx === currentEmitIndex) {
                 code.textContent = layer.ctx.serialize(nativeMode, currentTimeMs);
             }
-            
+
+            codeContainer.appendChild(code);
+            codeContainer.appendChild(toggleBtn);
+
             item.appendChild(title);
-            item.appendChild(code);
-            
+            item.appendChild(codeContainer);
+
+            if (idx === currentEmitIndex) {
+                const controls = document.createElement('div');
+                controls.style.display = 'flex';
+                controls.style.flexDirection = 'column';
+                controls.style.marginTop = '8px';
+                controls.style.gap = '4px';
+
+                const config = [
+                    { name: 'count', min: 0, step: 1 },
+                    { name: 'x', min: -canvasW/2, max: canvasW/2, step: 1 },
+                    { name: 'y', min: -canvasH/2, max: canvasH/2, step: 1 },
+                    { name: 'ux', min: 0, max: canvasW, step: 1 },
+                    { name: 'uy', min: 0, max: canvasH, step: 1 },
+                    { name: 's', min: 0, max: Math.max(canvasW, canvasH), step: 1 },
+                    { name: 'us', min: 0, max: Math.max(canvasW, canvasH), step: 1 },
+                    { name: 'theta', min: 0, max: 2 * Math.PI, step: 0.01 },
+                    { name: 'utheta', min: 0, max: Math.PI, step: 0.01 },
+                    { name: 'ds', step: 0.1 },
+                    { name: 'uds', step: 0.1 },
+                    { name: 'life', min: 0, step: 1 },
+                    { name: 'ulife', min: 0, step: 1 },
+                    { name: 'rgb', type: 'color' },
+                    { name: 'ur', min: 0, max: 1, step: 0.01 },
+                    { name: 'ug', min: 0, max: 1, step: 0.01 },
+                    { name: 'ub', min: 0, max: 1, step: 0.01 },
+                    { name: 'depth', step: 1 },
+                    { name: 'force', type: 'select', options: Object.keys(ForceFunc).map(k => ({text: k, value: ForceFunc[k]})) },
+                    { name: 'limit', type: 'select', options: Object.keys(LimitFunc).map(k => ({text: k, value: LimitFunc[k]})) },
+                    { name: 'blender', type: 'select', options: Object.keys(BlendFunc).map(k => ({text: k, value: BlendFunc[k]})) }
+                ];
+
+                for (const c of config) {
+                    const row = document.createElement('div');
+                    row.style.display = 'flex';
+                    row.style.justifyContent = 'space-between';
+
+                    const lbl = document.createElement('label');
+                    lbl.textContent = c.name;
+                    lbl.style.fontSize = '12px';
+                    lbl.style.minWidth = '60px';
+
+                    let inp;
+
+                    if (c.type === 'color') {
+                        inp = document.createElement('input');
+                        inp.type = 'color';
+                        const toHex = val => Math.round(Math.max(0, Math.min(1, val)) * 255).toString(16).padStart(2, '0');
+                        inp.value = `#${toHex(layer.ctx.r)}${toHex(layer.ctx.g)}${toHex(layer.ctx.b)}`;
+
+                        inp.addEventListener('input', (e) => {
+                            const hex = e.target.value;
+                            layer.ctx.r = parseInt(hex.slice(1,3), 16) / 255.0;
+                            layer.ctx.g = parseInt(hex.slice(3,5), 16) / 255.0;
+                            layer.ctx.b = parseInt(hex.slice(5,7), 16) / 255.0;
+                            code.textContent = layer.ctx.serialize(nativeMode, currentTimeMs);
+                            requestAnimationFrame(draw);
+                        });
+                    } else if (c.type === 'select') {
+                        inp = document.createElement('select');
+                        for (const opt of c.options) {
+                            const o = document.createElement('option');
+                            o.value = opt.value;
+                            o.textContent = opt.text;
+                            inp.appendChild(o);
+                        }
+                        inp.value = layer.ctx[c.name];
+
+                        inp.addEventListener('change', (e) => {
+                            layer.ctx[c.name] = e.target.value;
+                            code.textContent = layer.ctx.serialize(nativeMode, currentTimeMs);
+                            requestAnimationFrame(draw);
+                        });
+                    } else {
+                        inp = document.createElement('input');
+                        if (c.min !== undefined) inp.min = c.min;
+                        if (c.max !== undefined) {
+                            if (inp.min === undefined) inp.min = 0;
+                            inp.max = c.max;
+                            inp.type = 'range';
+                        } else {
+                            inp.type = 'number';
+                        }
+                        if (c.step !== undefined) inp.step = c.step;
+
+                        inp.placeholder = c.name;
+                        inp.value = layer.ctx[c.name] !== undefined ? layer.ctx[c.name] : 0;
+
+                        inp.addEventListener('input', (e) => {
+                            let text = e.target.value;
+                            if (c.type === 'range') {
+                                text = text.replace(/[^0-9.-]/g, '');
+                            } else if (c.name === 'count') {
+                                text = text.replace(/[^0-9]/g, '');
+                            } else {
+                                text = text.replace(/[^0-9.-]/g, '');
+                            }
+                            e.target.value = text;
+
+                            let val = parseFloat(text);
+                            if (!isNaN(val)) {
+                                layer.ctx[c.name] = val;
+                                code.textContent = layer.ctx.serialize(nativeMode, currentTimeMs);
+                                requestAnimationFrame(draw);
+                            }
+                        });
+                    }
+
+                    inp.style.width = '80px';
+                    inp.style.background = 'var(--bg-panel)';
+                    inp.style.color = 'var(--text-color)';
+                    inp.style.border = '1px solid var(--border-color)';
+                    if (c.type !== 'color') {
+                        inp.style.padding = '2px 4px';
+                    }
+
+                    inp.addEventListener('click', e => e.stopPropagation());
+
+                    row.appendChild(lbl);
+                    row.appendChild(inp);
+                    controls.appendChild(row);
+                }
+                item.appendChild(controls);
+            }
+
             item.addEventListener('click', () => {
-                currentEmitIndex = idx;
-                updateLayerDisplay();
+                if (currentEmitIndex !== idx) {
+                    currentEmitIndex = idx;
+                    updateLayerDisplay();
+                }
             });
-            
+
             layerList.appendChild(item);
         });
     }
@@ -242,6 +419,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const frameNum = Math.round(currentTimeMs * fps / 1000);
         labelFrame.textContent = `Frame: ${frameNum}`;
         updateLayerDisplay();
+        requestAnimationFrame(draw);
     }
 
     selectFps.addEventListener('change', (e) => {
@@ -262,6 +440,36 @@ document.addEventListener('DOMContentLoaded', () => {
             currentEmits = [];
             currentEmitIndex = null;
         }
+    }
+
+    function exportData() {
+        saveCurrentFrame();
+
+        const data = {
+            canvasW,
+            canvasH,
+            toggles: { showAxes, nativeMode, dragMode, scaleMode, mirrorMode },
+            frames: {}
+        };
+
+        for (const [time, builders] of emitSequence) {
+            const ms = Math.floor(time);
+            data.frames[ms] = builders.map(b => b.ctx.toJSON());
+        }
+        const ms = Math.floor(currentTimeMs);
+        if (!data.frames[ms]) {
+            console.log(`Missed entry for ${ms}: ${currentTimeMs}`);
+            data.frames[ms] = currentEmits.map(b => b.ctx.toJSON());
+        }
+
+        const json = JSON.stringify(data, null, 2);
+        const blob = new Blob([json], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'export.json';
+        a.click();
+        URL.revokeObjectURL(url);
     }
 
     btnTimePrev.addEventListener('click', () => {
@@ -323,6 +531,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
             ctx.stroke();
         }
+
+        for (const emit of currentEmits) {
+            emit.draw(ctx);
+        }
     }
 
     // Start rendering
@@ -378,7 +590,44 @@ document.addEventListener('DOMContentLoaded', () => {
         reader.onload = (e) => {
             try {
                 const data = JSON.parse(e.target.result);
-                console.log('Loaded JSON:', data);
+
+                if (data.canvasW) canvasW = data.canvasW;
+                if (data.canvasH) canvasH = data.canvasH;
+                inputCanvasW.value = canvasW;
+                inputCanvasH.value = canvasH;
+
+                if (data.toggles) {
+                    showAxes = !!data.toggles.showAxes;
+                    nativeMode = !!data.toggles.nativeMode;
+                    dragMode = !!data.toggles.dragMode;
+                    scaleMode = !!data.toggles.scaleMode;
+                    mirrorMode = !!data.toggles.mirrorMode;
+
+                    document.getElementById('btn-axes').classList.toggle('active', showAxes);
+                    document.getElementById('btn-native').classList.toggle('active', nativeMode);
+                    document.getElementById('btn-drag').classList.toggle('active', dragMode);
+                    document.getElementById('btn-scale').classList.toggle('active', scaleMode);
+                    document.getElementById('btn-mirror').classList.toggle('active', mirrorMode);
+                }
+
+                emitSequence.clear();
+                if (data.frames) {
+                    for (const [timeStr, contexts] of Object.entries(data.frames)) {
+                        const time = parseInt(timeStr, 10);
+                        const builders = contexts.map(ctxData => {
+                            const builder = new EmitBuilder(canvas, canvasW, canvasH);
+                            builder.ctx = EmitContext.fromJSON(ctxData);
+                            return builder;
+                        });
+                        emitSequence.setEmitsAt(time, builders);
+                    }
+                }
+
+                loadCurrentFrame();
+                updateTimeUI();
+                requestAnimationFrame(draw);
+
+                console.log('Loaded JSON successfully.');
             } catch (error) {
                 console.error('Failed to parse JSON:', error);
                 alert('Failed to parse JSON: ' + error.message);
@@ -440,7 +689,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Handle specific button actions
             if (btn.id === 'btn-add-layer') {
-                currentEmits.push(new EmitBuilder(canvasW, canvasH));
+                currentEmits.push(new EmitBuilder(canvas, canvasW, canvasH));
                 currentEmitIndex = currentEmits.length - 1;
                 console.log(`Added new emit layer. Now editing layer ${currentEmitIndex}`);
                 updateLayerDisplay();
@@ -457,23 +706,35 @@ document.addEventListener('DOMContentLoaded', () => {
                 };
                 input.click();
             } else if (btn.id === 'btn-save') {
-                //TODO: Stub for save logic
                 console.log('Save button clicked');
+                exportData();
             } else if (btn.id === 'btn-mirror') {
                 //TODO: Stub for mirror logic
-                console.log('Mirror button clicked');
+                console.log('Mirror mode toggled');
             } else if (btn.id === 'btn-scale') {
                 //TODO: Stub for scale logic
-                console.log('Scale button clicked');
+                console.log('Scale mode toggled');
             } else if (btn.id === 'btn-drag') {
                 //TODO: Stub for drag logic
-                console.log('Drag button clicked');
+                console.log('Drag mode toggled');
             } else if (btn.id === 'btn-native') {
-                //TODO: Stub for native logic
-                console.log('Native button clicked');
+                console.log('Native mode toggled');
             } else if (btn.id === 'btn-export') {
-                //TODO: Stub for luagen logic
                 console.log('Export button clicked');
+                saveCurrentFrame();
+                let luaContent = "";
+                for (const [time, builders] of window.emitSequence) {
+                    for (const builder of builders) {
+                        luaContent += builder.ctx.serialize(nativeMode, time) + "\n";
+                    }
+                }
+                const blob = new Blob([luaContent], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'sequence.lua';
+                a.click();
+                URL.revokeObjectURL(url);
             } else if (btn.id === 'btn-undo') {
                 //TODO: Stub for undo logic
                 console.log('Undo button clicked');

@@ -1,4 +1,6 @@
-class EmitSequence {
+import { EmitContext } from './emit_context.js';
+
+export class EmitSequence {
     constructor() {
         this._sequence = new Map(); // Maps integer time/frame to Array of EmitContexts
     }
@@ -24,6 +26,9 @@ class EmitSequence {
         for (const t of times) {
             yield [t, this._sequence.get(t)];
         }
+    }
+    clear() {
+        this._sequence.clear();
     }
 }
 

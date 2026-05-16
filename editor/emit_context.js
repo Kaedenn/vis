@@ -1,4 +1,37 @@
-class EmitContext {
+/**
+ * Emit context, which encapsulates the state of a single emission rule
+ * 
+ * Final particle position is calculated via the following steps:
+ * 
+ * angle = randrange(theta - utheta, theta + utheta)
+ * offset = randrange(s - us, s + us)
+ * px = randrange(x - ux, x + ux) + offset * Math.cos(angle)
+ * py = randrange(y - uy, y + uy) + offset * Math.sin(angle)
+ * 
+ */
+
+export const ForceFunc = Object.freeze({
+    DEFAULT_FORCE: 'Vis.DEFAULT_FORCE',
+    FORCE_GRAVITY: 'Vis.FORCE_GRAVITY',
+});
+
+export const LimitFunc = Object.freeze({
+    DEFAULT_LIMIT: 'Vis.DEFAULT_LIMIT',
+    LIMIT_BOX: 'Vis.LIMIT_BOX',
+    LIMIT_SPRINGBOX: 'Vis.LIMIT_SPRINGBOX',
+});
+
+export const BlendFunc = Object.freeze({
+    DEFAULT_BLEND: 'Vis.DEFAULT_BLEND',
+    BLEND_LINEAR: 'Vis.BLEND_LINEAR',
+    BLEND_PARABOLIC: 'Vis.BLEND_PARABOLIC',
+    BLEND_QUARTIC: 'Vis.BLEND_QUARTIC',
+    BLEND_SINE: 'Vis.BLEND_SINE',
+    BLEND_NEGGAMMA: 'Vis.BLEND_NEGGAMMA',
+    BLEND_EASING: 'Vis.BLEND_EASING',
+});
+
+export class EmitContext {
     constructor() {
         // Count
         this._count = 1;
@@ -17,7 +50,7 @@ class EmitContext {
         this._radius = 1; this._uradius = 0;
 
         // Rotation/Angle and their variance
-        this._theta = 0; this._utheta = 0;
+        this._theta = 0; this._utheta = Math.PI;
 
         // Lifetime and lifetime variance
         this._life = 1; this._ulife = 0;
@@ -28,9 +61,9 @@ class EmitContext {
 
         // Generic parameters
         this._depth = 0;
-        this._force = 0;
-        this._limit = 0;
-        this._blender = 0;
+        this._force = ForceFunc.DEFAULT_FORCE;
+        this._limit = LimitFunc.DEFAULT_LIMIT;
+        this._blender = BlendFunc.DEFAULT_BLEND;
         this._tag = 0;
     }
 
@@ -133,11 +166,11 @@ class EmitContext {
     get depth() { return this._depth; }
     set depth(v) { this._depth = v; }
     get force() { return this._force; }
-    set force(v) { this._force = typeof v === 'number' ? v : 0; }
+    set force(v) { this._force = typeof v === 'string' ? v : ForceFunc.DEFAULT_FORCE; }
     get limit() { return this._limit; }
-    set limit(v) { this._limit = typeof v === 'number' ? v : 0; }
+    set limit(v) { this._limit = typeof v === 'string' ? v : LimitFunc.DEFAULT_LIMIT; }
     get blender() { return this._blender; }
-    set blender(v) { this._blender = typeof v === 'number' ? v : 0; }
+    set blender(v) { this._blender = typeof v === 'string' ? v : BlendFunc.DEFAULT_BLEND; }
     get tag() { return this._tag; }
     set tag(v) { this._tag = typeof v === 'number' ? v : 0; }
 
@@ -147,26 +180,15 @@ class EmitContext {
         if (!isNativeMode) {
             lua += `    count = ${this._count},\n`;
         }
-        lua += `    x = ${this._x},\n`;
-        lua += `    y = ${this._y},\n`;
-        lua += `    ux = ${this._ux},\n`;
-        lua += `    uy = ${this._uy},\n`;
-        lua += `    s = ${this._s},\n`;
-        lua += `    us = ${this._us},\n`;
-        lua += `    ds = ${this._ds},\n`;
-        lua += `    uds = ${this._uds},\n`;
-        lua += `    radius = ${this._radius},\n`;
-        lua += `    uradius = ${this._uradius},\n`;
-        lua += `    theta = ${this._theta},\n`;
-        lua += `    utheta = ${this._utheta},\n`;
-        lua += `    life = ${this._life},\n`;
-        lua += `    ulife = ${this._ulife},\n`;
-        lua += `    r = ${this._r},\n`;
-        lua += `    g = ${this._g},\n`;
-        lua += `    b = ${this._b},\n`;
-        lua += `    ur = ${this._ur},\n`;
-        lua += `    ug = ${this._ug},\n`;
-        lua += `    ub = ${this._ub},\n`;
+        lua += `    x = ${this._x}, y = ${this._y},\n`;
+        lua += `    ux = ${this._ux}, uy = ${this._uy},\n`;
+        lua += `    s = ${this._s}, us = ${this._us},\n`;
+        lua += `    ds = ${this._ds}, uds = ${this._uds},\n`;
+        lua += `    radius = ${this._radius}, uradius = ${this._uradius},\n`;
+        lua += `    theta = ${this._theta}, utheta = ${this._utheta},\n`;
+        lua += `    life = ${this._life}, ulife = ${this._ulife},\n`;
+        lua += `    r = ${this._r}, g = ${this._g}, b = ${this._b},\n`;
+        lua += `    ur = ${this._ur}, ug = ${this._ug}, ub = ${this._ub},\n`;
         lua += `    depth = ${this._depth},\n`;
         lua += `    force = ${this._force},\n`;
         lua += `    limit = ${this._limit},\n`;
@@ -178,6 +200,43 @@ class EmitContext {
         } else {
             return `Emit:new(${lua}):emit_at(${Math.floor(timeMs)})`
         }
+    }
+
+    toJSON() {
+        return {
+            count: this._count,
+            x: this._x, y: this._y,
+            ux: this._ux, uy: this._uy,
+            s: this._s, us: this._us,
+            ds: this._ds, uds: this._uds,
+            radius: this._radius, uradius: this._uradius,
+            theta: this._theta, utheta: this._utheta,
+            life: this._life, ulife: this._ulife,
+            r: this._r, g: this._g, b: this._b,
+            ur: this._ur, ug: this._ug, ub: this._ub,
+            depth: this._depth,
+            force: this._force,
+            limit: this._limit,
+            blender: this._blender,
+            tag: this._tag
+        };
+    }
+
+    static fromJSON(data) {
+        const ctx = new EmitContext();
+        if (data.count !== undefined) ctx.count = data.count;
+        ctx.updatePosition(data.x, data.y, data.ux, data.uy);
+        ctx.updateScale(data.s, data.us, data.ds, data.uds);
+        ctx.updateRadius(data.radius, data.uradius);
+        ctx.updateTheta(data.theta, data.utheta);
+        ctx.updateLife(data.life, data.ulife);
+        ctx.updateColor(data.r, data.g, data.b, data.ur, data.ug, data.ub);
+        if (data.depth !== undefined) ctx.depth = data.depth;
+        if (data.force !== undefined) ctx.force = data.force;
+        if (data.limit !== undefined) ctx.limit = data.limit;
+        if (data.blender !== undefined) ctx.blender = data.blender;
+        if (data.tag !== undefined) ctx.tag = data.tag;
+        return ctx;
     }
 }
 

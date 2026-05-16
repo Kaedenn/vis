@@ -290,17 +290,51 @@ body {
     user-select: none;
 }
 
-.layer-code {
+.layer-code-container {
+    position: relative;
     margin-top: 8px;
+    display: none;
+}
+
+.layer-item.selected .layer-code-container {
+    display: block;
+}
+
+.layer-code {
+    display: block;
     background: rgba(0, 0, 0, 0.2);
     padding: 8px;
+    padding-right: 24px; /* Space for the caret */
     border-radius: 4px;
     font-size: 12px;
     white-space: pre-wrap;
-    display: none;
     word-break: break-all;
 }
 
-.layer-item.selected .layer-code {
-    display: block;
+.layer-code.collapsed {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.layer-code-toggle {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    background: none;
+    border: none;
+    color: var(--text-color);
+    opacity: 0.6;
+    cursor: pointer;
+    font-size: 12px;
+    padding: 4px;
+    transition: opacity 0.2s;
+}
+
+.layer-code-toggle:hover {
+    opacity: 1;
+}
+
+input[type="color"] {
+    height: 20px;
 }
