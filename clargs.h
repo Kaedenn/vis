@@ -4,6 +4,7 @@
 
 #include "defines.h"
 #include "klist.h"
+#include <stdint.h>
 
 #ifdef HAVE_JSONC
 #include <json.h>

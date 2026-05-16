@@ -55,14 +55,14 @@ particle_t particle_new_full(double x, double y,
     p->dy = speed * sin(angle);
     p->radius = (int)randdouble(r-ur, r+ur);
     p->depth = depth;
-    p->force = force;
-    p->limit = limit;
     p->lifetime = randint(life-ulife, life+ulife);
     p->life = p->lifetime;
     p->r = rgba[0];
     p->g = rgba[1];
     p->b = rgba[2];
     p->a = rgba[3];
+    p->force = force;
+    p->limit = limit;
     p->blender = blender;
     p->tag = tag;
     return p;

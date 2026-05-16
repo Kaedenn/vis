@@ -15,6 +15,5 @@
 -pedantic
 -std=c99
 -fdiagnostics-show-option
--I/usr/include/lua5.2
--I/usr/include/SDL2
+-I/usr/include/luajit-2.1
 -D_REENTRANT
