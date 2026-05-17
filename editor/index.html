@@ -10,16 +10,14 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="index.css">
     <script type="module" src="main.js"></script>
-    <script src="emit_context.js"></script>
-    <script src="emit_sequence.js"></script>
 </head>
 <body>
     <header class="toolbar">
         <div class="toolbar-group">
-            <button class="btn" title="Load Script" id="btn-load">
+            <button class="btn" id="btn-load" title="Load Script (shift+o)">
                 <span class="icon">📂</span> Load
             </button>
-            <button class="btn" title="Save Script" id="btn-save">
+            <button class="btn" id="btn-save" title="Save Script (shift+s)">
                 <span class="icon">💾</span> Save
             </button>
         </div>
@@ -27,7 +25,7 @@
         <div class="divider"></div>
 
         <div class="toolbar-group">
-            <button class="btn" title="Export" id="btn-export">
+            <button class="btn" id="btn-export" title="Export Lua (shift+e)">
                 <span class="icon">✨</span> Export
             </button>
         </div>
@@ -35,19 +33,17 @@
         <div class="divider"></div>
 
         <div class="toolbar-group">
-            <button class="btn toggle-btn" title="Toggle Mirror Mode" id="btn-mirror">
+            <button class="btn" id="btn-mirror" title="Toggle Mirror Mode">
                 <span class="icon">🪞</span> Mirror
             </button>
-            <button class="btn toggle-btn" title="Toggle Scale Mode" id="btn-scale">
-                <span class="icon">📏</span> Scale
-            </button>
-            <button class="btn toggle-btn" title="Toggle Drag Mode" id="btn-drag">
+
+            <button class="btn toggle-btn" id="btn-drag" title="Toggle Drag Mode">
                 <span class="icon">🖐️</span> Drag
             </button>
-            <button class="btn toggle-btn" title="Toggle Native Mode" id="btn-native">
+            <button class="btn toggle-btn" id="btn-native" title="Toggle Native Mode">
                 <span class="icon">⏱️</span> Native
             </button>
-            <button class="btn toggle-btn active" title="Toggle Axes" id="btn-axes">
+            <button class="btn toggle-btn active" id="btn-axes" title="Toggle Axes">
                 <span class="icon">┼</span> Axes
             </button>
         </div>
@@ -55,12 +51,18 @@
         <div class="divider"></div>
 
         <div class="toolbar-group">
+            <button class="btn" id="btn-time-seek-prev" title="Seek Previous Sequence">
+                <span class="icon">⏪</span>
+            </button>
             <button class="btn" id="btn-time-prev" disabled title="Previous Frame">
                 <span class="icon">◀</span>
             </button>
             <input type="text" class="time-spinner" id="input-time" value="0" min="0" title="Time (ms)">
             <button class="btn" id="btn-time-next" title="Next Frame">
                 <span class="icon">▶</span>
+            </button>
+            <button class="btn" id="btn-time-seek-next" title="Seek Next Sequence">
+                <span class="icon">⏩</span>
             </button>
 
             <span class="frame-label" id="label-frame">Frame: 0</span>
@@ -85,6 +87,12 @@
         <aside class="toolbar-left">
             <button class="btn" title="Add Emit Layer" id="btn-add-layer">
                 <span class="icon">➕</span>
+            </button>
+            <button class="btn" title="Copy Frame" id="btn-copy-frame">
+                <span class="icon">📑</span>
+            </button>
+            <button class="btn" title="Paste Frame" id="btn-paste-frame">
+                <span class="icon">📋</span>
             </button>
 
             <div class="divider-horizontal"></div>

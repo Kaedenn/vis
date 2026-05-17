@@ -3,126 +3,14 @@
 import { EmitContext, ForceFunc, LimitFunc, BlendFunc } from './emit_context.js';
 import { EmitSequence } from './emit_sequence.js';
 
-function randrange(min, max) {
-    return min + Math.random() * (max - min);
-}
-
-// Tool modes enum
-const ToolMode = Object.freeze({
-    TRAPEZOID: 'trapezoid',
-    CIRCLE: 'circle',
-    PENCIL: 'pencil'
-});
-
-const STEP_SIZE = 0.5;
-
-class EmitBuilder {
-    constructor(canvas, canvasW, canvasH) {
-        this._ctx = new EmitContext();
-        this._mode = ToolMode.TRAPEZOID;
-        this._dragging = false;
-        this._canvas = canvas;
-        this._canvasW = canvasW;
-        this._canvasH = canvasH;
-    }
-
-    get ctx() { return this._ctx; }
-    set ctx(value) { this._ctx = value; }
-    get mode() { return this._mode; }
-    set mode(value) { this._mode = value; }
-    get canvas() { return this._canvas; }
-    set canvas(value) { this._canvas = value; }
-    get canvasW() { return this._canvasW; }
-    set canvasW(value) { this._canvasW = value; }
-    get canvasH() { return this._canvasH; }
-    set canvasH(value) { this._canvasH = value; }
-
-    resize(canvasW, canvasH) {
-        this._canvasW = canvasW;
-        this._canvasH = canvasH;
-    }
-
-    globalToLocal(offsetX, offsetY) {
-        const scale = Math.min(this._canvas.clientWidth / (2 * this._canvasW), this._canvas.clientHeight / (2 * this._canvasH));
-        const padX = (this._canvas.clientWidth - 2 * this._canvasW * scale) / 2;
-        const padY = (this._canvas.clientHeight - 2 * this._canvasH * scale) / 2;
-        return {
-            x: Math.round((offsetX - padX) / scale - this._canvasW),
-            y: Math.round((offsetY - padY) / scale - this._canvasH)
-        }
-    }
-
-    localToGlobal(mapX, mapY) {
-        const scale = Math.min(this._canvas.clientWidth / (2 * this._canvasW), this._canvas.clientHeight / (2 * this._canvasH));
-        const padX = (this._canvas.clientWidth - 2 * this._canvasW * scale) / 2;
-        const padY = (this._canvas.clientHeight - 2 * this._canvasH * scale) / 2;
-        return {
-            x: Math.round((mapX + this._canvasW) * scale + padX),
-            y: Math.round((mapY + this._canvasH) * scale + padY)
-        }
-    }
-
-    mouseMove(e) {
-        const pos = this.globalToLocal(e.offsetX, e.offsetY);
-        if (!this._dragging) return;
-        switch (this._mode) {
-            case ToolMode.TRAPEZOID:
-                this._ctx.ux += (pos.x - this._ctx.x) / 2;
-                this._ctx.uy += (pos.y - this._ctx.y) / 2;
-                break;
-            case ToolMode.CIRCLE:
-                this._ctx.us = Math.sqrt(Math.pow(pos.x - this._ctx.x, 2) + Math.pow(pos.y - this._ctx.y, 2));
-                break;
-            case ToolMode.PENCIL:
-                // TODO
-                break;
-        }
-    }
-
-    mouseDown(e) {
-        this._dragging = true;
-        const pos = this.globalToLocal(e.offsetX, e.offsetY);
-        this._ctx.x = pos.x;
-        this._ctx.y = pos.y;
-    }
-
-    mouseUp(e) {
-        this._dragging = false;
-    }
-
-    getPoints(emit) {
-        let points = [];
-        for (let i = 0; i < emit.count; ++i) {
-            const px = randrange(emit.x - emit.ux, emit.x + emit.ux);
-            const py = randrange(emit.y - emit.uy, emit.y + emit.uy);
-            const ps = randrange(emit.s - emit.us, emit.s + emit.us);
-            const ptheta = randrange(emit.theta - emit.utheta, emit.theta + emit.utheta);
-            const p = this.localToGlobal(px + Math.cos(ptheta) * ps, py + Math.sin(ptheta) * ps);
-            const q = this.localToGlobal(px + Math.cos(ptheta) * (ps + emit.ds), py + Math.sin(ptheta) * (ps + emit.ds));
-            points.push(p);
-            points.push(q);
-        }
-        return points;
-    }
-
-    draw(ctx) {
-        const emit = this.ctx; /* EmitContext */
-        const points = this.getPoints(emit);
-        for (const p of points) {
-            const r = randrange(emit.r - emit.ur, emit.r + emit.ur) * 255;
-            const g = randrange(emit.g - emit.ug, emit.g + emit.ug) * 255;
-            const b = randrange(emit.b - emit.ub, emit.b + emit.ub) * 255;
-            ctx.fillStyle = `rgb(${Math.floor(r)}, ${Math.floor(g)}, ${Math.floor(b)})`;
-            ctx.beginPath();
-            ctx.arc(p.x, p.y, 2, 0, 2 * Math.PI);
-            ctx.fill();
-        }
-    }
-}
+import { EmitBuilder, ToolMode } from './emit_builder.js';
 
 window.emitSequence = null;
 window.currentEmits = null;
 window.currentEmitIndex = 0;
+
+const DOWN_CARET = '&#9660;';
+const UP_CARET = '&#9650;';
 
 document.addEventListener('DOMContentLoaded', () => {
     // Editor state
@@ -130,12 +18,12 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentTimeMs = 0; // State variable to track the currently edited time
     let fps = 30; // Frames per second
     let showAxes = true; // State for axes visibility
-    let mirrorMode = false;
-    let scaleMode = false;
+
     let dragMode = false;
     let nativeMode = false;
     let canvasW = 800; // Initial canvas width
     let canvasH = 600; // Initial canvas height
+    let clipboardFrame = null; // Stores serialized context list for copying/pasting frames
 
     // Sequence to store all generated emits mapped by time
     window.emitSequence = new EmitSequence();
@@ -161,6 +49,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // Setup Time UI controls
     const btnTimePrev = document.getElementById('btn-time-prev');
     const btnTimeNext = document.getElementById('btn-time-next');
+    const btnTimeSeekPrev = document.getElementById('btn-time-seek-prev');
+    const btnTimeSeekNext = document.getElementById('btn-time-seek-next');
     const inputTime = document.getElementById('input-time');
     const selectFps = document.getElementById('select-fps');
     const labelFrame = document.getElementById('label-frame');
@@ -186,6 +76,23 @@ document.addEventListener('DOMContentLoaded', () => {
         requestAnimationFrame(draw);
     });
 
+    // Keyboard Events
+    // Note: the canvas has tabindex="0" so it can receive focus for key events
+    document.addEventListener('keydown', (e) => {
+        console.log(`Key down: ${e.key} (Code: ${e.code})`);
+
+        if ((e.ctrlKey || e.shiftKey) && e.key.toLowerCase() === 's') {
+            e.preventDefault();
+            document.getElementById('btn-save').click();
+        } else if ((e.ctrlKey || e.shiftKey) && e.key.toLowerCase() === 'o') {
+            e.preventDefault();
+            document.getElementById('btn-load').click();
+        } else if ((e.ctrlKey || e.shiftKey) && e.key.toLowerCase() === 'e') {
+            e.preventDefault();
+            document.getElementById('btn-export').click();
+        }
+    });
+
     function updateLayerDisplay() {
         const layerList = document.getElementById('layer-list');
         if (!layerList) return;
@@ -203,6 +110,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        // Draw each layer window
         currentEmits.forEach((layer, idx) => {
             const item = document.createElement('div');
             item.className = 'layer-item';
@@ -216,6 +124,52 @@ document.addEventListener('DOMContentLoaded', () => {
             const titleText = document.createElement('span');
             titleText.textContent = `${idx === currentEmitIndex ? '>' : ' '} Layer ${idx}`;
             titleText.style.flex = '1';
+
+            const copyCodeBtn = document.createElement('button');
+            copyCodeBtn.innerHTML = '&#x2398;'; // ⎘ copy symbol
+            copyCodeBtn.title = 'Copy Code to Clipboard';
+            copyCodeBtn.style.background = 'none';
+            copyCodeBtn.style.border = 'none';
+            copyCodeBtn.style.color = 'inherit';
+            copyCodeBtn.style.cursor = 'pointer';
+            copyCodeBtn.style.padding = '0 4px';
+            copyCodeBtn.style.opacity = '0.6';
+
+            copyCodeBtn.addEventListener('mouseenter', () => copyCodeBtn.style.opacity = '1');
+            copyCodeBtn.addEventListener('mouseleave', () => copyCodeBtn.style.opacity = '0.6');
+
+            copyCodeBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const codeString = layer.ctx.serialize(nativeMode, currentTimeMs, true);
+                navigator.clipboard.writeText(codeString).then(() => {
+                    console.log('Code copied to clipboard.');
+                }).catch(err => {
+                    console.error('Failed to copy code: ', err);
+                });
+            });
+
+            const duplicateBtn = document.createElement('button');
+            duplicateBtn.innerHTML = '&#128203;'; // 📋 clipboard
+            duplicateBtn.title = 'Duplicate Layer';
+            duplicateBtn.style.background = 'none';
+            duplicateBtn.style.border = 'none';
+            duplicateBtn.style.color = 'inherit';
+            duplicateBtn.style.cursor = 'pointer';
+            duplicateBtn.style.padding = '0 4px';
+            duplicateBtn.style.opacity = '0.6';
+
+            duplicateBtn.addEventListener('mouseenter', () => duplicateBtn.style.opacity = '1');
+            duplicateBtn.addEventListener('mouseleave', () => duplicateBtn.style.opacity = '0.6');
+
+            duplicateBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const newBuilder = new EmitBuilder(canvas, canvasW, canvasH);
+                newBuilder.ctx = EmitContext.fromJSON(layer.ctx.toJSON());
+                currentEmits.splice(idx + 1, 0, newBuilder);
+                currentEmitIndex = idx + 1;
+                updateLayerDisplay();
+                requestAnimationFrame(draw);
+            });
 
             const closeBtn = document.createElement('button');
             closeBtn.innerHTML = '&#x2715;'; // X symbol
@@ -243,6 +197,8 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             title.appendChild(titleText);
+            title.appendChild(copyCodeBtn);
+            title.appendChild(duplicateBtn);
             title.appendChild(closeBtn);
 
             const codeContainer = document.createElement('div');
@@ -254,20 +210,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const toggleBtn = document.createElement('button');
             toggleBtn.className = 'layer-code-toggle';
-            toggleBtn.innerHTML = '&#9660;'; // Down caret
+            toggleBtn.innerHTML = DOWN_CARET;
 
             toggleBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
                 code.classList.toggle('collapsed');
-                if (code.classList.contains('collapsed')) {
-                    toggleBtn.innerHTML = '&#9660;'; // Down caret
-                } else {
-                    toggleBtn.innerHTML = '&#9650;'; // Up caret
+                toggleBtn.innerHTML = code.classList.contains('collapsed') ? DOWN_CARET : UP_CARET;
+                if (idx === currentEmitIndex) {
+                    code.textContent = layer.ctx.serialize(nativeMode, currentTimeMs, code.classList.contains('collapsed'));
                 }
             });
+            code.addEventListener('click', (e) => {
+                toggleBtn.click();   
+            })
 
             if (idx === currentEmitIndex) {
-                code.textContent = layer.ctx.serialize(nativeMode, currentTimeMs);
+                code.textContent = layer.ctx.serialize(nativeMode, currentTimeMs, code.classList.contains('collapsed'));
             }
 
             codeContainer.appendChild(code);
@@ -304,7 +262,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     { name: 'depth', step: 1 },
                     { name: 'force', type: 'select', options: Object.keys(ForceFunc).map(k => ({text: k, value: ForceFunc[k]})) },
                     { name: 'limit', type: 'select', options: Object.keys(LimitFunc).map(k => ({text: k, value: LimitFunc[k]})) },
-                    { name: 'blender', type: 'select', options: Object.keys(BlendFunc).map(k => ({text: k, value: BlendFunc[k]})) }
+                    { name: 'blender', type: 'select', options: Object.keys(BlendFunc).map(k => ({text: k, value: BlendFunc[k]})) },
+                    { name: 'tag', min: 0, step: 1 }
                 ];
 
                 for (const c of config) {
@@ -330,7 +289,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             layer.ctx.r = parseInt(hex.slice(1,3), 16) / 255.0;
                             layer.ctx.g = parseInt(hex.slice(3,5), 16) / 255.0;
                             layer.ctx.b = parseInt(hex.slice(5,7), 16) / 255.0;
-                            code.textContent = layer.ctx.serialize(nativeMode, currentTimeMs);
+                            code.textContent = layer.ctx.serialize(nativeMode, currentTimeMs, code.classList.contains('collapsed'));
                             requestAnimationFrame(draw);
                         });
                     } else if (c.type === 'select') {
@@ -345,7 +304,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                         inp.addEventListener('change', (e) => {
                             layer.ctx[c.name] = e.target.value;
-                            code.textContent = layer.ctx.serialize(nativeMode, currentTimeMs);
+                            code.textContent = layer.ctx.serialize(nativeMode, currentTimeMs, code.classList.contains('collapsed'));
                             requestAnimationFrame(draw);
                         });
                     } else {
@@ -377,7 +336,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             let val = parseFloat(text);
                             if (!isNaN(val)) {
                                 layer.ctx[c.name] = val;
-                                code.textContent = layer.ctx.serialize(nativeMode, currentTimeMs);
+                                code.textContent = layer.ctx.serialize(nativeMode, currentTimeMs, code.classList.contains('collapsed'));
                                 requestAnimationFrame(draw);
                             }
                         });
@@ -448,7 +407,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const data = {
             canvasW,
             canvasH,
-            toggles: { showAxes, nativeMode, dragMode, scaleMode, mirrorMode },
+            toggles: { showAxes, nativeMode, dragMode },
             frames: {}
         };
 
@@ -485,6 +444,44 @@ document.addEventListener('DOMContentLoaded', () => {
         saveCurrentFrame();
         const step = 1000 / fps;
         currentTimeMs += step;
+        loadCurrentFrame();
+        updateTimeUI();
+    });
+
+    btnTimeSeekPrev.addEventListener('click', () => {
+        saveCurrentFrame();
+        const times = Array.from(window.emitSequence._sequence.keys())
+            .filter(t => window.emitSequence.getEmitsAt(t).length > 0)
+            .sort((a, b) => a - b);
+        
+        if (times.length === 0) return;
+        if (times.length === 1 && times[0] === currentTimeMs) return;
+
+        let target = times.slice().reverse().find(t => t < currentTimeMs);
+        if (target === undefined) {
+            target = times[times.length - 1]; // wrap around to largest
+        }
+
+        currentTimeMs = target;
+        loadCurrentFrame();
+        updateTimeUI();
+    });
+
+    btnTimeSeekNext.addEventListener('click', () => {
+        saveCurrentFrame();
+        const times = Array.from(window.emitSequence._sequence.keys())
+            .filter(t => window.emitSequence.getEmitsAt(t).length > 0)
+            .sort((a, b) => a - b);
+        
+        if (times.length === 0) return;
+        if (times.length === 1 && times[0] === currentTimeMs) return;
+
+        let target = times.find(t => t > currentTimeMs);
+        if (target === undefined) {
+            target = times[0]; // wrap around to smallest
+        }
+
+        currentTimeMs = target;
         loadCurrentFrame();
         updateTimeUI();
     });
@@ -540,45 +537,79 @@ document.addEventListener('DOMContentLoaded', () => {
     // Start rendering
     requestAnimationFrame(draw);
 
-    // Mouse Events
-    canvas.addEventListener('mousemove', (e) => {
-        if (statusCursor) {
-            // Map coordinates: center is 0,0. Left is negative X, Up is negative Y.
-            // (-canvasW, -canvasH) is upper-left, (canvasW, canvasH) is lower-right.
-            const mapX = Math.round((e.offsetX / canvas.clientWidth) * (2 * canvasW) - canvasW);
-            const mapY = Math.round((e.offsetY / canvas.clientHeight) * (2 * canvasH) - canvasH);
+    let isDraggingCanvas = false;
+    let lastDragPos = null;
 
-            statusCursor.textContent = `${mapX} , ${mapY}`;
+    // Mouse Events
+    canvas.addEventListener('mousedown', (e) => {
+        if (dragMode) {
+            isDraggingCanvas = true;
+            const builder = currentEmits[currentEmitIndex];
+            if (builder) {
+                lastDragPos = builder.globalToLocal(e.offsetX, e.offsetY);
+            }
+        } else {
+            console.log(`Mouse down (Button: ${e.button}) at ${e.offsetX}, ${e.offsetY}`);
+        }
+    });
+
+    canvas.addEventListener('mousemove', (e) => {
+        const builder = currentEmits[currentEmitIndex] || (currentEmits.length > 0 ? currentEmits[0] : null);
+        let mapPos = { x: 0, y: 0 };
+        
+        if (builder) {
+            mapPos = builder.globalToLocal(e.offsetX, e.offsetY);
+        } else {
+            mapPos.x = Math.round((e.offsetX / canvas.clientWidth) * (2 * canvasW) - canvasW);
+            mapPos.y = Math.round((e.offsetY / canvas.clientHeight) * (2 * canvasH) - canvasH);
+        }
+
+        if (statusCursor) {
+            statusCursor.textContent = `${mapPos.x} , ${mapPos.y}`;
+        }
+
+        if (dragMode && isDraggingCanvas && lastDragPos && builder) {
+            const dx = mapPos.x - lastDragPos.x;
+            const dy = mapPos.y - lastDragPos.y;
+            builder.ctx.x += dx;
+            builder.ctx.y += dy;
+            lastDragPos = mapPos;
+            
+            requestAnimationFrame(draw);
+            
+            // Update code display in real time without tearing down DOM
+            const codeElements = document.querySelectorAll('.layer-code');
+            if (codeElements[currentEmitIndex]) {
+                codeElements[currentEmitIndex].textContent = builder.ctx.serialize(nativeMode, currentTimeMs, codeElements[currentEmitIndex].classList.contains('collapsed'));
+            }
+        }
+    });
+
+    canvas.addEventListener('mouseup', (e) => {
+        if (dragMode && isDraggingCanvas) {
+            isDraggingCanvas = false;
+            lastDragPos = null;
+            updateLayerDisplay(); // Refresh UI inputs on drop
+        } else {
+            console.log(`Mouse up (Button: ${e.button}) at ${e.offsetX}, ${e.offsetY}`);
         }
     });
 
     canvas.addEventListener('mouseleave', () => {
+        if (dragMode && isDraggingCanvas) {
+            isDraggingCanvas = false;
+            lastDragPos = null;
+            updateLayerDisplay();
+        }
         if (statusCursor) {
             statusCursor.textContent = `- , -`;
         }
     });
 
-    canvas.addEventListener('mousedown', (e) => {
-        console.log(`Mouse down (Button: ${e.button}) at ${e.offsetX}, ${e.offsetY}`);
-    });
-
-    canvas.addEventListener('mouseup', (e) => {
-        console.log(`Mouse up (Button: ${e.button}) at ${e.offsetX}, ${e.offsetY}`);
-    });
-
     canvas.addEventListener('click', (e) => {
-        console.log(`Click at ${e.offsetX}, ${e.offsetY}`);
-    });
-
-    // Keyboard Events
-    // Note: the canvas has tabindex="0" so it can receive focus for key events
-    canvas.addEventListener('keydown', (e) => {
-        console.log(`Key down: ${e.key} (Code: ${e.code})`);
-
-        // Prevent default behavior for specific keys if necessary (like scrolling with arrows)
-        // if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
-        //     e.preventDefault();
-        // }
+        if (!dragMode) {
+            console.log(`Click at ${e.offsetX}, ${e.offsetY}`);
+        }
     });
 
     canvas.addEventListener('keyup', (e) => {
@@ -600,14 +631,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     showAxes = !!data.toggles.showAxes;
                     nativeMode = !!data.toggles.nativeMode;
                     dragMode = !!data.toggles.dragMode;
-                    scaleMode = !!data.toggles.scaleMode;
-                    mirrorMode = !!data.toggles.mirrorMode;
 
                     document.getElementById('btn-axes').classList.toggle('active', showAxes);
                     document.getElementById('btn-native').classList.toggle('active', nativeMode);
                     document.getElementById('btn-drag').classList.toggle('active', dragMode);
-                    document.getElementById('btn-scale').classList.toggle('active', scaleMode);
-                    document.getElementById('btn-mirror').classList.toggle('active', mirrorMode);
                 }
 
                 emitSequence.clear();
@@ -670,29 +697,55 @@ document.addEventListener('DOMContentLoaded', () => {
                         break;
                     case 'btn-native':
                         nativeMode = btn.classList.contains('active');
+                        document.querySelectorAll('.layer-code').forEach((codeEl, i) => {
+                            if (currentEmits[i]) {
+                                codeEl.textContent = currentEmits[i].ctx.serialize(nativeMode, currentTimeMs, codeEl.classList.contains('collapsed'));
+                            }
+                        });
                         requestAnimationFrame(draw);
                         break;
                     case 'btn-drag':
                         dragMode = btn.classList.contains('active');
                         requestAnimationFrame(draw);
                         break;
-                    case 'btn-scale':
-                        scaleMode = btn.classList.contains('active');
-                        requestAnimationFrame(draw);
-                        break;
-                    case 'btn-mirror':
-                        mirrorMode = btn.classList.contains('active');
-                        requestAnimationFrame(draw);
-                        break;
+
                 }
             }
 
-            // Handle specific button actions
-            if (btn.id === 'btn-add-layer') {
+            if (btn.id === 'btn-mirror') {
+                // TODO: Copy current emits across y=0
+                requestAnimationFrame(draw);
+            } else if (btn.id === 'btn-add-layer') {
                 currentEmits.push(new EmitBuilder(canvas, canvasW, canvasH));
                 currentEmitIndex = currentEmits.length - 1;
                 console.log(`Added new emit layer. Now editing layer ${currentEmitIndex}`);
                 updateLayerDisplay();
+            } else if (btn.id === 'btn-copy-frame') {
+                if (currentEmits.length > 0) {
+                    clipboardFrame = currentEmits.map(b => b.ctx.toJSON());
+                    console.log(`Copied ${clipboardFrame.length} emits to clipboard.`);
+                } else {
+                    console.log('No emits to copy.');
+                    clipboardFrame = null;
+                }
+            } else if (btn.id === 'btn-paste-frame') {
+                if (clipboardFrame) {
+                    for (const data of clipboardFrame) {
+                        const builder = new EmitBuilder(canvas, canvasW, canvasH);
+                        // EmitContext uses fromJSON correctly? Wait, let's verify EmitContext import
+                        // We do have `import { EmitContext }` at top of main.js
+                        builder.ctx = EmitContext.fromJSON(data);
+                        currentEmits.push(builder);
+                    }
+                    if (currentEmitIndex === null || currentEmits.length > 0) {
+                        currentEmitIndex = currentEmits.length - 1;
+                    }
+                    updateLayerDisplay();
+                    requestAnimationFrame(draw);
+                    console.log(`Pasted ${clipboardFrame.length} emits from clipboard.`);
+                } else {
+                    console.log('Clipboard is empty.');
+                }
             } else if (btn.id === 'btn-load') {
                 const input = document.createElement('input');
                 input.type = 'file';
@@ -708,21 +761,17 @@ document.addEventListener('DOMContentLoaded', () => {
             } else if (btn.id === 'btn-save') {
                 console.log('Save button clicked');
                 exportData();
-            } else if (btn.id === 'btn-mirror') {
-                //TODO: Stub for mirror logic
-                console.log('Mirror mode toggled');
-            } else if (btn.id === 'btn-scale') {
-                //TODO: Stub for scale logic
-                console.log('Scale mode toggled');
-            } else if (btn.id === 'btn-drag') {
-                //TODO: Stub for drag logic
-                console.log('Drag mode toggled');
             } else if (btn.id === 'btn-native') {
                 console.log('Native mode toggled');
             } else if (btn.id === 'btn-export') {
                 console.log('Export button clicked');
                 saveCurrentFrame();
-                let luaContent = "";
+                let luaContent = `
+-- Generated by Vis editor
+Vis = require('Vis')
+VisUtil = require('visutil')
+Emit = require('emit')
+`;
                 for (const [time, builders] of window.emitSequence) {
                     for (const builder of builders) {
                         luaContent += builder.ctx.serialize(nativeMode, time) + "\n";

@@ -174,7 +174,7 @@ export class EmitContext {
     get tag() { return this._tag; }
     set tag(v) { this._tag = typeof v === 'number' ? v : 0; }
 
-    serialize(isNativeMode, timeMs) {
+    serialize(isNativeMode, timeMs, oneLine = false) {
         // Build a Lua table string that can be parsed by merge_emit_table
         let lua = "{\n";
         if (!isNativeMode) {
@@ -195,6 +195,11 @@ export class EmitContext {
         lua += `    blender = ${this._blender},\n`;
         lua += `    tag = ${this._tag}\n`;
         lua += "}";
+
+        if (oneLine) {
+            lua = lua.replace(/\n\s*/g, ' ');
+        }
+
         if (isNativeMode) {
             return `Vis.emit(Vis.flist, ${this._count}, ${Math.floor(timeMs)}, ${lua})`;
         } else {
