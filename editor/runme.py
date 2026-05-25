@@ -33,6 +33,8 @@ def main():
       help="bind to hostname %(metavar)s (default: %(default)r)")
   ap.add_argument("-d", "--directory", metavar="DIR",
       help="serve files from %(metavar)s (default: current directory)")
+  ap.add_argument("-n", "--no-cache", action="store_true",
+      help="disable caching, which can be problematic at times")
   args = ap.parse_args()
 
   dirname = "." if args.directory is None else args.directory
@@ -40,9 +42,16 @@ def main():
       dirname, args.bind, args.port)
   if args.directory is not None:
     os.chdir(args.directory)
-  HTTPServer((args.bind, args.port), NoCacheHandler).serve_forever()
+  if args.no_cache:
+    server = HTTPServer((args.bind, args.port), NoCacheHandler)
+  else:
+    server = HTTPServer((args.bind, args.port))
+  server.serve_forever()
 
 if __name__ == "__main__":
-  main()
+  try:
+    main()
+  except KeyboardInterrupt:
+    raise SystemExit(1)
 
 # vim: set ts=2 sts=2 sw=2:
