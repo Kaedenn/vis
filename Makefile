@@ -94,7 +94,7 @@ ifneq ($(DEBUG),)
 all: CFLAGS += $(CFLAGS_DEBUG)
 endif
 
-EXEC_ARGS ?= -i -l $(DIR)/lua/demo_4_random.lua
+EXEC_ARGS ?= -i -l $(DIR)/lua/demos/demo_4_random.lua
 VG_SUPP = --suppressions=$(DIR)/valgrind.supp
 VG_LEAKCHECK = --leak-check=full
 VG_REACHABLE = $(VG_LEAKCHECK) --show-reachable=yes --show-leak-kinds=all
@@ -137,7 +137,7 @@ trace: $(DEPFILES) $(SOURCES)
 profile: $(SOURCES)
 	$(MAKE) "CFLAGS=$(CFLAGS) $(CFLAGS_FAST) $(CFLAGS_PROF)" \
 		"LDFLAGS=$(LDFLAGS) $(LDFLAGS_FAST) $(LDFLAGS_PROF)" $(VIS)
-	$(VIS) -i -l $(DIR)/lua/demo_5_random.lua
+	$(VIS) -i -l $(DIR)/lua/demos/demo_5_random.lua
 	gprof $(VIS)
 	- $(RM) $(DIR)/gmon.out 2>/dev/null
 

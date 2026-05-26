@@ -47,9 +47,9 @@ do the trick just fine. If the program seems slow, try `make fast`.
 * `debug` - Enable debug output.
 * `trace` - Enable _very noisy_ debug output.
 * `profile` - Compile with `make fast` and profiling flags, invoke
-  `lua/demo_5_random.lua`, and run `gprof` on the generated output.
+  `lua/demos/demo_5_random.lua`, and run `gprof` on the generated output.
 * `valgrind` - Compile with `make debug` and invoke `valgrind` on
-  `lua/demo_4_random.lua`.
+  `lua/demos/demo_4_random.lua`.
 * `leakcheck` - Invoke `valgrind` with `--leak-check=full`.
 * `leakcheck-reachable` - `valgrind` with full check and reachable info.
 * `clean` - Removes all generated and intermediate files.
