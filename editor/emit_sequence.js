@@ -3,6 +3,7 @@ import { EmitContext } from './emit_context.js';
 export class EmitSequence {
     constructor() {
         this._sequence = new Map(); // Maps integer time/frame to Array of EmitContexts
+        this._names = new Map(); // Maps integer time/frame to string name
     }
 
     add(time, emitContext) {
@@ -20,6 +21,23 @@ export class EmitSequence {
         this._sequence.set(frame, emits);
     }
 
+    deleteAt(frame) {
+        this._sequence.delete(frame);
+        this._names.delete(frame);
+    }
+
+    getNameAt(frame) {
+        return this._names.get(frame) || "";
+    }
+
+    setNameAt(frame, name) {
+        if (name) {
+            this._names.set(frame, name);
+        } else {
+            this._names.delete(frame);
+        }
+    }
+
     // Iterator to loop over timestamps and emits. Keys are sorted chronologically.
     *[Symbol.iterator]() {
         const times = Array.from(this._sequence.keys()).sort((a, b) => a - b);
@@ -29,6 +47,7 @@ export class EmitSequence {
     }
     clear() {
         this._sequence.clear();
+        this._names.clear();
     }
 }
 

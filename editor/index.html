@@ -15,10 +15,10 @@
     <header class="toolbar">
         <div class="toolbar-group">
             <button class="btn" id="btn-load" title="Load Script (shift+o)">
-                <span class="icon">📂</span> Load
+                <span class="icon">📂</span>
             </button>
             <button class="btn" id="btn-save" title="Save Script (shift+s)">
-                <span class="icon">💾</span> Save
+                <span class="icon">💾</span>
             </button>
         </div>
 
@@ -26,7 +26,7 @@
 
         <div class="toolbar-group">
             <button class="btn" id="btn-export" title="Export Lua (shift+e)">
-                <span class="icon">✨</span> Export
+                <img src="assets/Lua-Icon.png" alt="Lua" class="icon" style="height: 1em; width: auto;"> Export
             </button>
         </div>
 
@@ -44,22 +44,25 @@
                 <span class="icon">⏱️</span> Native
             </button>
             <button class="btn toggle-btn active" id="btn-axes" title="Toggle Axes">
-                <span class="icon">┼</span> Axes
+                <span class="icon">➕</span> Axes
             </button>
         </div>
 
         <div class="divider"></div>
 
         <div class="toolbar-group">
+            <button class="btn" id="btn-import-timing" title="Import Timing CSV">
+                <span class="icon">⏱️</span> Import Timing
+            </button>
             <button class="btn" id="btn-time-seek-prev" title="Seek Previous Sequence">
                 <span class="icon">⏪</span>
             </button>
             <button class="btn" id="btn-time-prev" disabled title="Previous Frame">
-                <span class="icon">◀</span>
+                <span class="icon">◀️</span>
             </button>
             <input type="text" class="time-spinner" id="input-time" value="0" min="0" title="Time (ms)">
             <button class="btn" id="btn-time-next" title="Next Frame">
-                <span class="icon">▶</span>
+                <span class="icon">▶️</span>
             </button>
             <button class="btn" id="btn-time-seek-next" title="Seek Next Sequence">
                 <span class="icon">⏩</span>
@@ -94,17 +97,17 @@
             <button class="btn" title="Paste Frame" id="btn-paste-frame">
                 <span class="icon">📋</span>
             </button>
+            <button class="btn" title="Delete Frame" id="btn-delete-frame">
+                <span class="icon">🗑️</span>
+            </button>
 
             <div class="divider-horizontal"></div>
 
-            <button class="btn tool-btn active" title="Trapezoid Tool" id="tool-trapezoid">
+            <button class="btn tool-btn active" title="Square Tool" id="tool-square">
                 <span class="icon">🟥</span>
             </button>
             <button class="btn tool-btn" title="Circle Tool" id="tool-circle">
                 <span class="icon">⭕</span>
-            </button>
-            <button class="btn tool-btn" title="Pencil Tool" id="tool-pencil">
-                <span class="icon">✏️</span>
             </button>
 
             <div class="divider-horizontal"></div>
@@ -122,9 +125,26 @@
         </main>
 
         <aside class="layer-panel" id="layer-panel">
-            <div class="layer-panel-header">Layers</div>
+            <div class="layer-panel-header">
+                <input type="text" id="input-frame-name" class="frame-name-input" title="Frame Name" placeholder="Frame Name">
+                <input type="text" id="input-frame-offset" class="frame-name-input" title="Offset (ms)" placeholder="Offset (ms)" style="margin-top: 8px;">
+            </div>
             <div class="layer-list" id="layer-list"></div>
         </aside>
+    </div>
+
+    <div class="timeline-wrapper">
+        <div class="timeline-container" id="timeline-container"></div>
+        <div class="timeline-controls">
+            <span class="toolbar-label">Tempo:</span>
+            <input type="number" class="dim-input" id="input-tempo" value="60" min="1" title="Tempo (BPM)">
+            <span class="toolbar-label">Format:</span>
+            <select class="fps-select" id="select-time-format" title="Time Format">
+                <option value="ms">Milliseconds</option>
+                <option value="beat">Beats</option>
+                <option value="frame">Frame Index</option>
+            </select>
+        </div>
     </div>
 
     <footer class="status-bar">
@@ -133,6 +153,16 @@
         </div>
     </footer>
 
+    <div id="theta-modal" class="theta-modal">
+        <div class="modal-content">
+            <canvas id="theta-canvas" width="150" height="150"></canvas>
+            <input type="range" id="theta-slider" min="0" max="6.28318" step="0.01">
+            <label style="font-size: 12px; margin-top: 8px;">Radians</label>
+            <input type="number" id="theta-radians" step="0.01" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white; padding: 4px; border-radius: 4px;">
+            <label style="font-size: 12px;">Degrees</label>
+            <input type="number" id="theta-degrees" step="1" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white; padding: 4px; border-radius: 4px;">
+        </div>
+    </div>
 </body>
 </html>
 <!-- vim: set ts=4 sts=4 sw=4: -->

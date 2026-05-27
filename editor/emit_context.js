@@ -34,7 +34,7 @@ export const BlendFunc = Object.freeze({
 export class EmitContext {
     constructor() {
         // Count
-        this._count = 1;
+        this._count = 1000;
 
         // Position and position variance
         this._x = 0; this._y = 0;
@@ -52,7 +52,7 @@ export class EmitContext {
         // Rotation/Angle and their variance
         this._theta = 0; this._utheta = Math.PI;
 
-        // Lifetime and lifetime variance
+        // Lifetime and lifetime variance (in milliseconds; 1 for single frame)
         this._life = 1; this._ulife = 0;
 
         // Color and color variance
@@ -65,6 +65,57 @@ export class EmitContext {
         this._limit = LimitFunc.DEFAULT_LIMIT;
         this._blender = BlendFunc.DEFAULT_BLEND;
         this._tag = 0;
+    }
+
+    static FromJSON(obj) {
+        const ctx = new EmitContext();
+        if (obj.count) ctx._count = obj.count;
+        if (obj.x) ctx._x = obj.x;
+        if (obj.y) ctx._y = obj.y;
+        if (obj.ux) ctx._ux = obj.ux;
+        if (obj.uy) ctx._uy = obj.uy;
+        if (obj.s) ctx._s = obj.s;
+        if (obj.us) ctx._us = obj.us;
+        if (obj.ds) ctx._ds = obj.ds;
+        if (obj.uds) ctx._uds = obj.uds;
+        if (obj.radius) ctx._radius = obj.radius;
+        if (obj.uradius) ctx._uradius = obj.uradius;
+        if (obj.theta) ctx._theta = obj.theta;
+        if (obj.utheta) ctx._utheta = obj.utheta;
+        if (obj.life) ctx._life = obj.life;
+        if (obj.ulife) ctx._ulife = obj.ulife;
+        if (obj.r) ctx._r = obj.r;
+        if (obj.g) ctx._g = obj.g;
+        if (obj.b) ctx._b = obj.b;
+        if (obj.ur) ctx._ur = obj.ur;
+        if (obj.ug) ctx._ug = obj.ug;
+        if (obj.ub) ctx._ub = obj.ub;
+        if (obj.depth) ctx._depth = obj.depth;
+        if (obj.force) ctx._force = obj.force;
+        if (obj.limit) ctx._limit = obj.limit;
+        if (obj.blender) ctx._blender = obj.blender;
+        if (obj.tag) ctx._tag = obj.tag;
+        return ctx;
+    }
+
+    toJSON() {
+        return {
+            count: this._count,
+            x: this._x, y: this._y,
+            ux: this._ux, uy: this._uy,
+            s: this._s, us: this._us,
+            ds: this._ds, uds: this._uds,
+            radius: this._radius, uradius: this._uradius,
+            theta: this._theta, utheta: this._utheta,
+            life: this._life, ulife: this._ulife,
+            r: this._r, g: this._g, b: this._b,
+            ur: this._ur, ug: this._ug, ub: this._ub,
+            depth: this._depth,
+            force: this._force,
+            limit: this._limit,
+            blender: this._blender,
+            tag: this._tag
+        };
     }
 
     // Count
@@ -174,13 +225,13 @@ export class EmitContext {
     get tag() { return this._tag; }
     set tag(v) { this._tag = typeof v === 'number' ? v : 0; }
 
-    serialize(isNativeMode, timeMs, oneLine = false) {
+    serialize(isNativeMode, timeMs, oneLine = false, frameName = null) {
         // Build a Lua table string that can be parsed by merge_emit_table
         let lua = "{\n";
         if (!isNativeMode) {
             lua += `    count = ${this._count},\n`;
         }
-        lua += `    x = ${this._x}, y = ${this._y},\n`;
+        lua += `    x = Vis.WIDTH / 2 + ${this._x}, y = Vis.HEIGHT / 2 + ${this._y},\n`;
         lua += `    ux = ${this._ux}, uy = ${this._uy},\n`;
         lua += `    s = ${this._s}, us = ${this._us},\n`;
         lua += `    ds = ${this._ds}, uds = ${this._uds},\n`;
@@ -193,38 +244,24 @@ export class EmitContext {
         lua += `    force = ${this._force},\n`;
         lua += `    limit = ${this._limit},\n`;
         lua += `    blender = ${this._blender},\n`;
-        lua += `    tag = ${this._tag}\n`;
+        lua += `    tag = ${this._tag === 0 ? Math.floor(timeMs) : this._tag}\n`;
         lua += "}";
 
         if (oneLine) {
             lua = lua.replace(/\n\s*/g, ' ');
         }
 
+        let result = "";
         if (isNativeMode) {
-            return `Vis.emit(Vis.flist, ${this._count}, ${Math.floor(timeMs)}, ${lua})`;
+            result = `Vis.emit(Vis.flist, ${this._count}, BASE + ${Math.floor(timeMs)}, ${lua})`;
         } else {
-            return `Emit:new(${lua}):emit_at(${Math.floor(timeMs)})`
+            result = `Emit:new(${lua}):emit_at(BASE + ${Math.floor(timeMs)})`;
         }
-    }
 
-    toJSON() {
-        return {
-            count: this._count,
-            x: this._x, y: this._y,
-            ux: this._ux, uy: this._uy,
-            s: this._s, us: this._us,
-            ds: this._ds, uds: this._uds,
-            radius: this._radius, uradius: this._uradius,
-            theta: this._theta, utheta: this._utheta,
-            life: this._life, ulife: this._ulife,
-            r: this._r, g: this._g, b: this._b,
-            ur: this._ur, ug: this._ug, ub: this._ub,
-            depth: this._depth,
-            force: this._force,
-            limit: this._limit,
-            blender: this._blender,
-            tag: this._tag
-        };
+        if (frameName) {
+            result += ` -- ${frameName}`;
+        }
+        return result;
     }
 
     static fromJSON(data) {

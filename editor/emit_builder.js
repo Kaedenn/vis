@@ -6,19 +6,20 @@ export function randrange(min, max) {
 
 // Tool modes enum
 export const ToolMode = Object.freeze({
-    TRAPEZOID: 'trapezoid',
-    CIRCLE: 'circle',
-    PENCIL: 'pencil'
+    SQUARE: 'square',
+    CIRCLE: 'circle'
 });
 
 export class EmitBuilder {
     constructor(canvas, canvasW, canvasH) {
         this._ctx = new EmitContext();
-        this._mode = ToolMode.TRAPEZOID;
+        this._mode = ToolMode.SQUARE;
         this._dragging = false;
         this._canvas = canvas;
         this._canvasW = canvasW;
         this._canvasH = canvasH;
+
+        this._clickOffset = { x: 0, y: 0 };
     }
 
     get ctx() { return this._ctx; }
@@ -31,6 +32,9 @@ export class EmitBuilder {
     set canvasW(value) { this._canvasW = value; }
     get canvasH() { return this._canvasH; }
     set canvasH(value) { this._canvasH = value; }
+
+    get dragging() { return this._dragging; }
+    set dragging(value) { this._dragging = value; }
 
     resize(canvasW, canvasH) {
         this._canvasW = canvasW;
@@ -58,18 +62,16 @@ export class EmitBuilder {
     }
 
     mouseMove(e) {
-        const pos = this.globalToLocal(e.offsetX, e.offsetY);
         if (!this._dragging) return;
+        const pos = this.globalToLocal(e.offsetX, e.offsetY);
+        const clickPos = this._clickOffset;
         switch (this._mode) {
-            case ToolMode.TRAPEZOID:
-                this._ctx.ux += (pos.x - this._ctx.x) / 2;
-                this._ctx.uy += (pos.y - this._ctx.y) / 2;
+            case ToolMode.SQUARE:
+                this._ctx.ux = Math.abs(pos.x - clickPos.x);
+                this._ctx.uy = Math.abs(pos.y - clickPos.y);
                 break;
             case ToolMode.CIRCLE:
-                this._ctx.us = Math.sqrt(Math.pow(pos.x - this._ctx.x, 2) + Math.pow(pos.y - this._ctx.y, 2));
-                break;
-            case ToolMode.PENCIL:
-                // TODO
+                this._ctx.us = Math.sqrt(Math.pow(pos.x - clickPos.x, 2) + Math.pow(pos.y - clickPos.y, 2));
                 break;
         }
     }
@@ -77,8 +79,7 @@ export class EmitBuilder {
     mouseDown(e) {
         this._dragging = true;
         const pos = this.globalToLocal(e.offsetX, e.offsetY);
-        this._ctx.x = pos.x;
-        this._ctx.y = pos.y;
+        this._clickOffset = { x: pos.x, y: pos.y };
     }
 
     mouseUp(e) {
@@ -92,10 +93,9 @@ export class EmitBuilder {
             const py = randrange(emit.y - emit.uy, emit.y + emit.uy);
             const ps = randrange(emit.s - emit.us, emit.s + emit.us);
             const ptheta = randrange(emit.theta - emit.utheta, emit.theta + emit.utheta);
-            const p = this.localToGlobal(px + Math.cos(ptheta) * ps, py + Math.sin(ptheta) * ps);
-            const q = this.localToGlobal(px + Math.cos(ptheta) * (ps + emit.ds), py + Math.sin(ptheta) * (ps + emit.ds));
-            points.push(p);
-            points.push(q);
+            points.push(this.localToGlobal(
+                px + Math.cos(ptheta) * ps,
+                py + Math.sin(ptheta) * ps));
         }
         return points;
     }
@@ -109,7 +109,7 @@ export class EmitBuilder {
             const b = randrange(emit.b - emit.ub, emit.b + emit.ub) * 255;
             ctx.fillStyle = `rgb(${Math.floor(r)}, ${Math.floor(g)}, ${Math.floor(b)})`;
             ctx.beginPath();
-            ctx.arc(p.x, p.y, 2, 0, 2 * Math.PI);
+            ctx.arc(p.x, p.y, emit.radius, 0, 2 * Math.PI);
             ctx.fill();
         }
     }

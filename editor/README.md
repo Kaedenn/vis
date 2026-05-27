@@ -27,7 +27,7 @@ The application supports generating and loading the following file types:
 
 ### Left Toolbar
 *   **Add / Copy / Paste Layer:** Controls to add a new emit layer or duplicate existing frame sequences.
-*   **Tools:** Shape and drawing tools (Trapezoid, Circle, Pencil) to modify the selected emit.
+*   **Tools:** Shape and drawing tools (Square, Circle) to modify the selected emit.
 *   **Undo / Redo:** Standard history controls to undo and redo core editing actions.
 
 ### Layer Panel (Right Side)
