@@ -790,27 +790,6 @@ function VisUtil.strobject(o, i, seen, whereami, maxi)
     end
 end
 
-function VisUtil.parse_midi_frame(line)
-    line = line:gsub("\n", "")
-    local values = {}
-    for entry in line:gmatch("[^,]*[,]?") do
-        entry = entry:gsub(",$", "")
-        table.insert(values, entry)
-    end
-    return {
-        id = tonumber(values[1]),
-        onms = tonumber(values[2]),
-        onticks = tonumber(values[3]),
-        durms = tonumber(values[4]),
-        durticks = tonumber(values[5]),
-        track = tonumber(values[6]),
-        channel = tonumber(values[7]),
-        note = tonumber(values[8]),
-        name = values[9],
-        velocity = tonumber(values[10])
-    }
-end
-
 function VisUtil.genlua_force(force)
     if force == Vis.DEFAULT_FORCE then return "Vis.DEFAULT_FORCE" end
     if force == Vis.FORCE_FRICTION then return "Vis.FORCE_FRICTION" end

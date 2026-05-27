@@ -91,8 +91,19 @@ function Message:emit_center_message(when, message, anchorx, anchory)
     self:emit_message(when, message, messagex, messagey)
 end
 
---[[ Emit a table of strings on consecutive lines, centered ]]
+--[[ Emit a table of strings on consecutive lines ]]
 function Message:emit_lines(when, lines, anchorx, anchory)
+    self:_ensure_emit()
+    local zoom = self:get("zoom")
+    local line_height = self:get("line_spacing") * Letters.LETTER_HEIGHT * zoom
+    for idx, line in ipairs(lines) do
+        local liney = anchory + (idx-1)*line_height
+        self:emit_message(when, line, anchorx, liney)
+    end
+end
+
+--[[ Emit a table of strings on consecutive lines, centered ]]
+function Message:emit_center_lines(when, lines, anchorx, anchory)
     self:_ensure_emit()
     local zoom = self:get("zoom")
     local line_height = self:get("line_spacing") * Letters.LETTER_HEIGHT * zoom
