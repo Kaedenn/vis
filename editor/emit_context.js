@@ -236,7 +236,7 @@ export class EmitContext {
         }
 
         if (frameName) {
-            result += ` -- ${frameName}`;
+            result += ` -- ${frameName.replace(/\n/g, '')}`;
         }
         return result;
     }
