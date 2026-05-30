@@ -45,7 +45,7 @@ def main():
   if args.no_cache:
     server = HTTPServer((args.bind, args.port), NoCacheHandler)
   else:
-    server = HTTPServer((args.bind, args.port))
+    server = HTTPServer((args.bind, args.port), SimpleHTTPRequestHandler)
   server.serve_forever()
 
 if __name__ == "__main__":

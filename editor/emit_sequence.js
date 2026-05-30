@@ -13,6 +13,10 @@ export class EmitSequence {
         this._sequence.get(time).push(emitContext);
     }
 
+    exists(frame) {
+        return this._sequence.has(frame);
+    }
+
     getEmitsAt(frame) {
         return this._sequence.get(frame) || [];
     }

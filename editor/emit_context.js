@@ -1,13 +1,13 @@
 /**
  * Emit context, which encapsulates the state of a single emission rule
- * 
+ *
  * Final particle position is calculated via the following steps:
- * 
+ *
  * angle = randrange(theta - utheta, theta + utheta)
  * offset = randrange(s - us, s + us)
  * px = randrange(x - ux, x + ux) + offset * Math.cos(angle)
  * py = randrange(y - uy, y + uy) + offset * Math.sin(angle)
- * 
+ *
  */
 
 export const ForceFunc = Object.freeze({
@@ -41,7 +41,7 @@ export class EmitContext {
         this._ux = 0; this._uy = 0;
 
         // Linear Position along Theta and its variance
-        this._s = 1; this._us = 0;
+        this._s = 1; this._us = 200;
 
         // Velocity and velocity variance
         this._ds = 0; this._uds = 0;
@@ -65,37 +65,6 @@ export class EmitContext {
         this._limit = LimitFunc.DEFAULT_LIMIT;
         this._blender = BlendFunc.DEFAULT_BLEND;
         this._tag = 0;
-    }
-
-    static FromJSON(obj) {
-        const ctx = new EmitContext();
-        if (obj.count) ctx._count = obj.count;
-        if (obj.x) ctx._x = obj.x;
-        if (obj.y) ctx._y = obj.y;
-        if (obj.ux) ctx._ux = obj.ux;
-        if (obj.uy) ctx._uy = obj.uy;
-        if (obj.s) ctx._s = obj.s;
-        if (obj.us) ctx._us = obj.us;
-        if (obj.ds) ctx._ds = obj.ds;
-        if (obj.uds) ctx._uds = obj.uds;
-        if (obj.radius) ctx._radius = obj.radius;
-        if (obj.uradius) ctx._uradius = obj.uradius;
-        if (obj.theta) ctx._theta = obj.theta;
-        if (obj.utheta) ctx._utheta = obj.utheta;
-        if (obj.life) ctx._life = obj.life;
-        if (obj.ulife) ctx._ulife = obj.ulife;
-        if (obj.r) ctx._r = obj.r;
-        if (obj.g) ctx._g = obj.g;
-        if (obj.b) ctx._b = obj.b;
-        if (obj.ur) ctx._ur = obj.ur;
-        if (obj.ug) ctx._ug = obj.ug;
-        if (obj.ub) ctx._ub = obj.ub;
-        if (obj.depth) ctx._depth = obj.depth;
-        if (obj.force) ctx._force = obj.force;
-        if (obj.limit) ctx._limit = obj.limit;
-        if (obj.blender) ctx._blender = obj.blender;
-        if (obj.tag) ctx._tag = obj.tag;
-        return ctx;
     }
 
     toJSON() {
@@ -144,13 +113,14 @@ export class EmitContext {
     set s(v) { this._s = v; }
     get us() { return this._us; }
     set us(v) { this._us = v; }
+
     // --- Velocity ---
     get ds() { return this._ds; }
     set ds(v) { this._ds = v; }
     get uds() { return this._uds; }
     set uds(v) { this._uds = v; }
 
-    updateScale(s, us = this._us, ds = this._ds, uds = this._uds) {
+    updateDisplacement(s, us = this._us, ds = this._ds, uds = this._uds) {
         if (s !== undefined) this._s = s;
         if (us !== undefined) this._us = us;
         if (ds !== undefined) this._ds = ds;
@@ -264,11 +234,11 @@ export class EmitContext {
         return result;
     }
 
-    static fromJSON(data) {
+    static FromJSON(data) {
         const ctx = new EmitContext();
         if (data.count !== undefined) ctx.count = data.count;
         ctx.updatePosition(data.x, data.y, data.ux, data.uy);
-        ctx.updateScale(data.s, data.us, data.ds, data.uds);
+        ctx.updateDisplacement(data.s, data.us, data.ds, data.uds);
         ctx.updateRadius(data.radius, data.uradius);
         ctx.updateTheta(data.theta, data.utheta);
         ctx.updateLife(data.life, data.ulife);
