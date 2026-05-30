@@ -11,6 +11,7 @@
 -Wswitch-enum
 -Wundef
 -Wconversion
+-Wno-unused-includes
 -ansi
 -pedantic
 -std=c99

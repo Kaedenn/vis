@@ -3,8 +3,8 @@ Vis = require("Vis")
 VisUtil = {}
 
 VisUtil.EMIT_FIELDS = {
-    "count", "when", "x", "y", "ux", "uy", "s", "us",
-    "radius", "uradius", "ds", "uds", "theta", "utheta",
+    "count", "when", "x", "y", "ux", "uy", "dx", "dy",
+    "s", "us", "radius", "uradius", "ds", "uds", "theta", "utheta",
     "depth", "life", "ulife", "r", "g", "b", "ur", "ug", "ub",
     "force", "limit", "blender", "tag"
 }
@@ -619,6 +619,7 @@ function VisUtil.make_emit_table()
         when = 0,
         x = Vis.WIDTH / 2, y = Vis.HEIGHT / 2,
         ux = 0, uy = 0,
+        dx = 0, dy = 0,
         depth = 0,
         s = 0, us = 0,
         radius = 1, uradius = 0,
@@ -641,6 +642,11 @@ function VisUtil.center_emit_table(t, x, y, ux, uy)
     t.uy = uy or 0
 end
 
+function VisUtil.set_emit_velocity(t, dx, dy)
+    t.dx = dx or 0
+    t.dy = dy or 0
+end
+
 function VisUtil.color_emit_table(t, r, g, b, ur, ug, ub)
     t.r = r and r>1 and r/255.0 or (r or t.r)
     t.g = g and g>1 and g/255.0 or (g or t.g)
@@ -655,6 +661,7 @@ function VisUtil.emit_table(t)
     Vis.emit(Vis.flist, t.count, t.when, {
         x = x, y = y,
         ux = t.ux, uy = t.uy,
+        dx = t.dx, dy = t.dy,
         depth = t.depth,
         s = t.s, us = t.us,
         rad = t.radius, urad = t.uradius,
@@ -675,6 +682,7 @@ function VisUtil.emit_table_now(t)
     Vis.emitnow(Vis.script, t.count, {
         x = x, y = y,
         ux = t.ux, uy = t.uy,
+        dx = t.dx, dy = t.dy,
         depth = t.depth,
         s = t.s, us = t.us,
         rad = t.radius, urad = t.uradius,
@@ -697,9 +705,10 @@ end
 
 function VisUtil.set_trace_table(t)
     Vis.settrace(Vis.script, t.count, t.x, t.y, t.ux, t.uy,
-                 t.rad, t.urad, t.ds, t.uds, t.theta, t.utheta,
-                 t.life, t.ulife, t.r, t.g, t.b, t.ur, t.ug, t.ub,
-                 t.force, t.limit, t.blender)
+                 t.dx, t.dy,
+                 t.depth, t.s, t.us, t.rad, t.urad, t.ds, t.uds,
+                 t.theta, t.utheta, t.life, t.ulife, t.r, t.g, t.b,
+                 t.ur, t.ug, t.ub, t.force, t.limit, t.blender)
 end
 
 function VisUtil.mutate_tag(when, tagop, tagval)

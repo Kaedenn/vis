@@ -45,6 +45,7 @@ export class EmitContext {
 
         // Velocity and velocity variance
         this._ds = 0; this._uds = 0;
+        this._dx = 0; this._dy = 0;
 
         // Radius and radius variance
         this._radius = 1; this._uradius = 0;
@@ -74,6 +75,7 @@ export class EmitContext {
             ux: this._ux, uy: this._uy,
             s: this._s, us: this._us,
             ds: this._ds, uds: this._uds,
+            dx: this._dx, dy: this._dy,
             radius: this._radius, uradius: this._uradius,
             theta: this._theta, utheta: this._utheta,
             life: this._life, ulife: this._ulife,
@@ -119,6 +121,10 @@ export class EmitContext {
     set ds(v) { this._ds = v; }
     get uds() { return this._uds; }
     set uds(v) { this._uds = v; }
+    get dx() { return this._dx; }
+    set dx(v) { this._dx = v; }
+    get dy() { return this._dy; }
+    set dy(v) { this._dy = v; }
 
     updateDisplacement(s, us = this._us, ds = this._ds, uds = this._uds) {
         if (s !== undefined) this._s = s;
@@ -205,6 +211,7 @@ export class EmitContext {
         lua += `    ux = ${this._ux}, uy = ${this._uy},\n`;
         lua += `    s = ${this._s}, us = ${this._us},\n`;
         lua += `    ds = ${this._ds}, uds = ${this._uds},\n`;
+        lua += `    dx = ${this._dx}, dy = ${this._dy},\n`;
         lua += `    radius = ${this._radius}, uradius = ${this._uradius},\n`;
         lua += `    theta = ${this._theta}, utheta = ${this._utheta},\n`;
         lua += `    life = ${this._life}, ulife = ${this._ulife},\n`;
@@ -239,6 +246,8 @@ export class EmitContext {
         if (data.count !== undefined) ctx.count = data.count;
         ctx.updatePosition(data.x, data.y, data.ux, data.uy);
         ctx.updateDisplacement(data.s, data.us, data.ds, data.uds);
+        if (data.dx !== undefined) ctx.dx = data.dx;
+        if (data.dy !== undefined) ctx.dy = data.dy;
         ctx.updateRadius(data.radius, data.uradius);
         ctx.updateTheta(data.theta, data.utheta);
         ctx.updateLife(data.life, data.ulife);

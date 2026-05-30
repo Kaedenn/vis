@@ -1,7 +1,6 @@
 
 #include "particle.h"
 
-#include "clargs.h"
 #include "forces.h"
 #include "plimits.h"
 #include "helper.h"
@@ -35,6 +34,7 @@ particle_t particle_new(double x, double y, double r, int life, pextra* extra) {
 
 particle_t particle_new_full(double x, double y,
                              double ux, double uy,
+                             double dx, double dy,
                              double s, double us,
                              double r, double ur,
                              double ds, double uds,
@@ -51,8 +51,8 @@ particle_t particle_new_full(double x, double y,
     p->x = randdouble(x-ux, x+ux) + offset * cos(angle);
     p->y = randdouble(y-uy, y+uy) + offset * sin(angle);
     double speed = randdouble(ds-uds, ds+uds);
-    p->dx = speed * cos(angle);
-    p->dy = speed * sin(angle);
+    p->dx = dx + speed * cos(angle);
+    p->dy = dy + speed * sin(angle);
     p->radius = (int)randdouble(r-ur, r+ur);
     p->depth = depth;
     p->lifetime = randint(life-ulife, life+ulife);

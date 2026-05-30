@@ -1,7 +1,6 @@
 #ifndef VIS_EMIT_HEADER_INCLUDED_
 #define VIS_EMIT_HEADER_INCLUDED_ 1
 
-#include "helper.h"
 #include "types.h"
 
 /** main emit frame structure
@@ -22,13 +21,14 @@
 typedef struct emit {
     int n;                  /* number of particles to emit */
     double x, y, ux, uy;    /* where to emit from (in pixel coords) */
+    double dx, dy;          /* initial velocity (same for all particles) */
     double s, us;           /* radial position (added to x, y) */
     double rad, urad;       /* radius (size) */
     int depth;              /* z depth; also used for draw order */
     int life, ulife;        /* particle lifetime (in frames) */
     double ds, uds;         /* initial velocity along theta */
     double theta, utheta;   /* initial facing angle */
-    float r, g, b;          /* color (unit, 0 ~ 1)*/
+    float r, g, b;          /* color (unit, 0 ~ 1) */
     float ur, ug, ub;       /* uncertainty in r, g and b */
     force_id force;         /* force function */
     limit_id limit;         /* limit function */
@@ -41,11 +41,12 @@ void emit_free(emit_desc* emit);
 
 void emit_set_n(emit_desc* e, int n);
 void emit_set_rad_pos(emit_desc* e, double s, double us);
-void emit_set_pos(emit_desc* e, double x, double y, double dx, double dy);
+void emit_set_pos(emit_desc* e, double x, double y, double ux, double uy);
 void emit_set_rad(emit_desc* e, double rad, double urad);
 void emit_set_depth(emit_desc* e, int depth);
 void emit_set_life(emit_desc* e, int life, int ulife);
 void emit_set_ds(emit_desc* e, double ds, double uds);
+void emit_set_vel(emit_desc* e, double dx, double dy);
 void emit_set_angle(emit_desc* e, double theta, double utheta);
 void emit_set_color(emit_desc* e, float r, float g, float b,
                     float ur, float ug, float ub);

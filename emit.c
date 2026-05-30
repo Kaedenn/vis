@@ -1,4 +1,5 @@
 
+#include "helper.h"
 #include "emit.h"
 
 emit_desc* emit_new(void) {
@@ -42,6 +43,11 @@ void emit_set_life(emit_desc* e, int life, int ulife) {
 void emit_set_ds(emit_desc* e, double ds, double uds) {
     e->ds = ds;
     e->uds = uds;
+}
+
+void emit_set_vel(emit_desc* e, double dx, double dy) {
+    e->dx = dx;
+    e->dy = dy;
 }
 
 void emit_set_angle(emit_desc* e, double theta, double utheta) {

@@ -208,6 +208,7 @@ int drawer_add_particle(drawer_t drawer, particle_t p) {
     if (drawer->vertex_curr < drawer->vertex_count) {
         vertex_t* v = &drawer->vertex_array[drawer->vertex_curr];
 
+        // origin is lower-left corner
         v->x = 2 * ((GLfloat)p->x / (GLfloat)drawer->wsize[0] - 0.5f);
         v->y = 2 * (0.5f - (GLfloat)p->y / (GLfloat)drawer->wsize[1]);
         v->radius = (GLfloat)p->radius;

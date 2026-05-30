@@ -189,6 +189,7 @@ void emit_frame(emit_desc* frame) {
         }
         particle_t p = particle_new_full(
                 frame->x, frame->y, frame->ux, frame->uy,
+                frame->dx, frame->dy,
                 frame->s, frame->us,
                 frame->rad, frame->urad,
                 frame->ds, frame->uds,

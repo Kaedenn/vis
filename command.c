@@ -197,7 +197,7 @@ static void cmd_emit(struct commands* cmds, const char* buffer) {
 
             float rgba[4] = {ar, ag, ab, 1.0f};
             union particle_tag tag = {0};
-            p = particle_new_full(x, y, ux, uy, 0, 0, rad, urad, ds, uds,
+            p = particle_new_full(x, y, ux, uy, 0, 0, 0, 0, rad, urad, ds, uds,
                 theta, utheta, 0, life, ulife,
                 (force_id)force, (limit_id)limit,
                 rgba, (blend_id)blender, tag);

@@ -32,13 +32,14 @@ particle_t particle_new(double x, double y, double r, int life, pextra* extra);
 
 /* create a particle with both X/Y position and circle offset */
 particle_t particle_new_full(double x, double y, double ux, double uy,
-                            double s, double us, double r, double ur,
-                            double ds, double uds,
-                            double theta, double utheta,
-                            int depth, int life, int ulife,
-                            force_id force, limit_id limit,
-                            float rgba[4], blend_id blender,
-                            union particle_tag tag);
+                             double dx, double dy,
+                             double s, double us, double r, double ur,
+                             double ds, double uds,
+                             double theta, double utheta,
+                             int depth, int life, int ulife,
+                             force_id force, limit_id limit,
+                             float rgba[4], blend_id blender,
+                             union particle_tag tag);
 
 /* destructor */
 void particle_free(particle_t p);

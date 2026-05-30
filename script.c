@@ -660,6 +660,10 @@ static void merge_emit_table(lua_State* L, int arg, emit_desc* emit) {
             emit->ux = luaL_checknumber(L, -1);
         } else if (!strcmp(key, "uy")) {
             emit->uy = luaL_checknumber(L, -1);
+        } else if (!strcmp(key, "dx")) {
+            emit->dx = luaL_checknumber(L, -1);
+        } else if (!strcmp(key, "dy")) {
+            emit->dy = luaL_checknumber(L, -1);
         } else if (!strcmp(key, "s")) {
             emit->s = luaL_checknumber(L, -1);
         } else if (!strcmp(key, "us")) {

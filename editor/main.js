@@ -451,6 +451,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     { name: 'us', min: 0, max: Math.max(canvasW, canvasH), step: 1 },
                     { name: 'ds', step: 0.1 },
                     { name: 'uds', step: 0.1 },
+                    { name: 'dx', step: 0.1 },
+                    { name: 'dy', step: 0.1 },
                     { name: 'radius', min: 1, step: 1 },
                     { name: 'uradius', min: 0, step: 1 },
                     { name: 'theta', min: 0, max: 2 * Math.PI, step: 0.01 },

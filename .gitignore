@@ -1,5 +1,7 @@
 # Local AI configuration
-AGENTS.md
+AGENT.md
+CAPABILITIES.md
+run_venv.sh
 
 # Protected objects
 .envrc

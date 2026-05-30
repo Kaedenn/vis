@@ -1,8 +1,18 @@
+-- emit.lua - Particle emitter table structure and helper functions
 
+-- Depends on visutil.lua for C bindings and utility functions
 VisUtil = require('visutil')
+
+-- The Emit table is a Lua table that mimics the C-based Emit struct.
+-- It contains the complete state for a single particle emission, including
+-- position, velocity, appearance, and timing information.
+-- See particle.c for the corresponding C struct definition.
 
 Emit = {}
 
+inspect = require('inspect')
+
+-- Internal helper to deduce a unique tag identifier from an object
 local function _deduce_tag_id(obj)
     if obj then
         if obj.tag then
@@ -78,6 +88,11 @@ function Emit:move(dx, dy, udx, udy)
     self._t.y = self._t.y + dy
     self._t.ux = self._t.ux + udx or 0
     self._t.uy = self._t.uy + udy or 0
+end
+
+function Emit:velocity(dx, dy)
+    self._t.dx = dx or 0
+    self._t.dy = dy or 0
 end
 
 function Emit:radius(radius, uradius)
