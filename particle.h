@@ -15,7 +15,7 @@ struct particle {
     double x, y;
     double dx, dy;
     double radius;
-    int depth;
+    float depth;
     int lifetime;
     int life;
     force_id force;
@@ -36,7 +36,7 @@ void particle_init_full(particle_t p, double x, double y, double ux, double uy,
                              double s, double us, double r, double ur,
                              double ds, double uds,
                              double theta, double utheta,
-                             int depth, int life, int ulife,
+                             float depth, int life, int ulife,
                              force_id force, limit_id limit,
                              float rgba[4], blend_id blender,
                              union particle_tag tag);
@@ -60,7 +60,7 @@ double particle_get_y(particle_t p);
 double particle_get_dx(particle_t p);
 double particle_get_dy(particle_t p);
 double particle_get_radius(particle_t p);
-int particle_get_depth(particle_t p);
+float particle_get_depth(particle_t p);
 int particle_get_lifetime(particle_t p);
 int particle_get_life(particle_t p);
 pextra* particle_get_extra(particle_t p);

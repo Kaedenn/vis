@@ -210,12 +210,14 @@ int main(int argc, char* argv[]) {
     drawer_set_trace(g.drawer, emit);
 
     if (g.args->scriptfile) {
-        emitter_schedule(script_run(g.script, g.args->scriptfile));
+        script_run(g.script, g.args->scriptfile);
     }
 
     if (g.args->scriptstring) {
         script_run_string(g.script, g.args->scriptstring);
     }
+
+    emitter_schedule(script_get_flist(g.script));
 
     mainloop(&g);
 

@@ -4,6 +4,7 @@
 #include "defines.h"
 
 #include "drawer.h"
+#include "matrix.h"
 #include "blender.h"
 #include "emitter.h"
 #include "genlua.h"
@@ -28,7 +29,7 @@ typedef struct {
     GLfloat x, y;
     GLfloat radius;
     GLfloat r, g, b, a;
-    GLuint depth;
+    GLfloat depth;
 } vertex_t;
 
 /* used, obviously, for fps tracking and limiting */
@@ -47,6 +48,8 @@ struct drawer {
     shader_t* shader;
     unsigned int wsize[2];
     int frames_per_second;
+    float view_matrix[16];
+    float proj_matrix[16];
 
     vertex_t* vertex_array;
     size_t vertex_curr;
@@ -106,6 +109,7 @@ drawer_t drawer_new(const clargs* args) {
     glEnable(GL_PROGRAM_POINT_SIZE);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glEnable(GL_DEPTH_TEST);
 
     /* Initialize shader */
     drawer->shader = shader_create(GEOM_SOURCE, VERT_SOURCE,
@@ -135,8 +139,8 @@ drawer_t drawer_new(const clargs* args) {
     glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(vertex_t),
         (GLvoid*)offsetof(vertex_t, r));
     glEnableVertexAttribArray(2);
-    /* 3: depth (uint) */
-    glVertexAttribPointer(3, 1, GL_UNSIGNED_INT, GL_FALSE, sizeof(vertex_t),
+    /* 3: depth (float) */
+    glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, sizeof(vertex_t),
         (GLvoid*)offsetof(vertex_t, depth));
     glEnableVertexAttribArray(3);
 
@@ -157,6 +161,8 @@ drawer_t drawer_new(const clargs* args) {
 
     /* initialize default values */
     drawer_bgcolor(drawer, 0, 0, 0);
+    mat4_ortho(drawer->proj_matrix, 0.0f, (float)winwidth, (float)winheight, 0.0f, -10000.0f, 10000.0f);
+    mat4_identity(drawer->view_matrix);
     /* initialize fps analysis */
     drawer->fps.start_time = glfwGetTime();
     drawer->fps.framestart_time = drawer->fps.start_time;
@@ -198,6 +204,10 @@ GLFWwindow* drawer_get_window(drawer_t drawer) {
     return drawer->window;
 }
 
+void drawer_set_lookat(drawer_t drawer, float ex, float ey, float ez, float cx, float cy, float cz, float ux, float uy, float uz) {
+    mat4_look_at(drawer->view_matrix, ex, ey, ez, cx, cy, cz, ux, uy, uz);
+}
+
 void drawer_bgcolor(drawer_t drawer, float r, float g, float b) {
     if (r >= 0) drawer->bgcolor[0] = r;
     if (g >= 0) drawer->bgcolor[1] = g;
@@ -208,16 +218,15 @@ int drawer_add_particle(drawer_t drawer, particle_t p) {
     if (drawer->vertex_curr < drawer->vertex_count) {
         vertex_t* v = &drawer->vertex_array[drawer->vertex_curr];
 
-        // origin is lower-left corner
-        v->x = 2 * ((GLfloat)p->x / (GLfloat)drawer->wsize[0] - 0.5f);
-        v->y = 2 * (0.5f - (GLfloat)p->y / (GLfloat)drawer->wsize[1]);
+        v->x = (GLfloat)p->x;
+        v->y = (GLfloat)p->y;
         v->radius = (GLfloat)p->radius;
 
         v->r = (GLfloat)p->r;
         v->g = (GLfloat)p->g;
         v->b = (GLfloat)p->b;
         v->a = (GLfloat)sqrt(calculate_blend(p));
-        v->depth = (GLuint)p->depth;
+        v->depth = (GLfloat)p->depth;
 
         drawer->vertex_curr += 1;
         return 0;
@@ -233,9 +242,15 @@ int drawer_draw_to_screen(drawer_t drawer) {
     /*static char text_buffer[0x100000] = {0};*/
 
     glClearColor(drawer->bgcolor[0], drawer->bgcolor[1], drawer->bgcolor[2], 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     shader_use(drawer->shader);
+    
+    GLint proj_loc = shader_get_uniform(drawer->shader, "projection");
+    GLint view_loc = shader_get_uniform(drawer->shader, "view");
+    if (proj_loc != -1) glUniformMatrix4fv(proj_loc, 1, GL_FALSE, drawer->proj_matrix);
+    if (view_loc != -1) glUniformMatrix4fv(view_loc, 1, GL_FALSE, drawer->view_matrix);
+
     glBindVertexArray(drawer->vao);
 
     /* Update VBO */

@@ -1,3 +1,6 @@
+/**
+ * Configuration file for vis
+ */
 {
     "DEBUG_SCRIPT_C": 0,
     "DEBUG_SCRIPT_PROGRESS": 1,

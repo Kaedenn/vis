@@ -38,7 +38,7 @@ void particle_init_full(particle_t p, double x, double y,
                              double r, double ur,
                              double ds, double uds,
                              double theta, double utheta,
-                             int depth, int life, int ulife,
+                             float depth, int life, int ulife,
                              force_id force, limit_id limit,
                              float rgba[4], blend_id blender,
                              union particle_tag tag)
@@ -101,7 +101,7 @@ double particle_get_y(particle_t p) { return p->y; }
 double particle_get_dx(particle_t p) { return p->dx; }
 double particle_get_dy(particle_t p) { return p->dy; }
 double particle_get_radius(particle_t p) { return p->radius; }
-int particle_get_depth(particle_t p) { return p->depth; }
+float particle_get_depth(particle_t p) { return p->depth; }
 int particle_get_life(particle_t p) { return p->life; }
 int particle_get_lifetime(particle_t p) { return p->lifetime; }
 #endif

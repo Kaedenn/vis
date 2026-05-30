@@ -67,6 +67,9 @@ void script_get_debug(script_t s, /*out*/ script_debug* dbg);
 /* Assign command-line arguments */
 void script_set_args(script_t script, klist args);
 
+/* Get the flist associated with the script environment */
+struct flist* script_get_flist(script_t script);
+
 /* Load and run the given file. Assigns:
  *  Vis.SCRIPT_NAME = filename
  *  _G.Arguments = {...} */

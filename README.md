@@ -13,11 +13,11 @@ simulate synesthesia in general, but rather simulate a specific person's
 experience.
 
 Chromesthesia has been described as "a fireworks display for the mind" and can
-be genuinely enjoyable. Unfortunately, I do not have chromesthesia. Therefore,
-I should be the perfect use case for this project.
+be genuinely enjoyable.
 
-Unfortunately, as the developer, this means I need to determine what someone
-with chromesthesia would experience.
+Unfortunately, I do not have Chromesthesia. However, I do have a form of
+"music-shape" synesthesia where music triggers shapes in my mind, though
+without color information.
 
 <details>
 <summary><strong>Rules of Chromesthesia</strong></summary>
@@ -163,7 +163,7 @@ values which all follow this rule.
 <details>
 <summary><strong>The <code>Vis</code> Module</strong></summary>
 
-#### `module Vis = require("Vis")`
+### `module Vis = require("Vis")`
 
 This is the core library. Its fields are:
 
@@ -432,7 +432,7 @@ memory leaks.
 <details>
 <summary><strong>The <code>VisUtil</code> Module</strong></summary>
 
-#### `module VisUtil = require("visutil")`
+### `module VisUtil = require("visutil")`
 
 This module is pure Lua and resides in `lua/visutil.lua`. Have a look there
 to see how everything is implemented.  The emit table generated via the
@@ -490,7 +490,10 @@ from the bottom of the screen.
 emit. As a special case, a particle with a radius of 1 will be a single pixel
 unless argument `-e` is passed to `vis` on the command-line.
 
-`floats ds, uds`: The initial speed of the particles to emit, measured in
+`floats dx, dy`: The base initial velocity of the particles to emit, measured in
+pixels per frame. This is added to the radial velocity defined by `ds` and `theta`.
+
+`floats ds, uds`: The initial radial speed of the particles to emit, measured in
 pixels per frame.
 
 `floats theta, utheta`: The angle at which to emit the particles, in radians.
@@ -565,7 +568,10 @@ Omitting `x` and `y` will place the emit at the center of the screen.
 `e:radius(radius, uradius)`: Configure the emit's radius. The second
 parameter can be omitted and defaults to zero.
 
-`e:ds(ds, uds)`: Configure the emit's initial velocity. The second
+`e:velocity(dx, dy)`: Configure the emit's base initial velocity. These values
+are added to the radial velocity defined by `ds` and `theta`. Any omitted value defaults to zero.
+
+`e:ds(ds, uds)`: Configure the emit's initial radial speed. The second
 parameter defaults to zero.
 
 `e:theta(theta, utheta)`: Configure the emit's angle. The second parameter
@@ -717,6 +723,7 @@ New method:
 Vis.emit(Vis.flist, count, when, {
     x = number, y = number,                 -- position, 0,0 is upper left corner
     ux = number, uy = number,               -- adjustment to position
+    dx = number, dy = number,               -- base initial velocity
     s = number,                             -- radial position along theta
     us = number,                            -- adjustment to radial position
     ds = number,                            -- radial speed along theta

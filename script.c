@@ -244,6 +244,10 @@ void script_set_args(script_t s, klist args) {
     s->args = args;
 }
 
+flist_t script_get_flist(script_t s) {
+    return s->fl;
+}
+
 flist_t script_run(script_t s, const char* filename) {
     /* s->fl already bound to script in script_new */
     prepare_stack(s, s->args);
@@ -677,7 +681,7 @@ static void merge_emit_table(lua_State* L, int arg, emit_desc* emit) {
         } else if (!strcmp(key, "urad") || !strcmp(key, "uradius")) {
             emit->urad = luaL_checknumber(L, -1);
         } else if (!strcmp(key, "depth")) {
-            emit->depth = (int)luaL_checkinteger(L, -1);
+            emit->depth = (float)luaL_checknumber(L, -1);
         } else if (!strcmp(key, "theta")) {
             emit->theta = luaL_checknumber(L, -1);
         } else if (!strcmp(key, "utheta")) {

@@ -873,6 +873,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             const builder = window.currentEmits[currentEmitIndex];
             if (builder) {
+                saveStateForUndo();
                 builder.mouseDown(e);
             }
         }
