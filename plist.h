@@ -12,7 +12,7 @@
 #include <stddef.h>
 
 typedef struct plist {
-    particle_t* particles;
+    struct particle* particles;
     size_t size;
     size_t capacity;
 } *plist_t;
@@ -32,7 +32,7 @@ size_t plist_get_size(plist_t plist);
 
 void plist_foreach(plist_t plist, item_fn fn, void* userdefined);
 
-void plist_add(plist_t plist, particle_t p);
+particle_t plist_add(plist_t plist);
 void plist_clear(plist_t plist);
 
 #endif

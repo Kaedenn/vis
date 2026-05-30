@@ -27,11 +27,11 @@ struct particle {
 
 typedef struct particle* particle_t;
 
-/* create a simple particle with default values */
-particle_t particle_new(double x, double y, double r, int life, pextra* extra);
+/* initialize a simple particle with default values */
+void particle_init(particle_t p, double x, double y, double r, int life, pextra* extra);
 
-/* create a particle with both X/Y position and circle offset */
-particle_t particle_new_full(double x, double y, double ux, double uy,
+/* initialize a particle with both X/Y position and circle offset */
+void particle_init_full(particle_t p, double x, double y, double ux, double uy,
                              double dx, double dy,
                              double s, double us, double r, double ur,
                              double ds, double uds,
@@ -40,9 +40,6 @@ particle_t particle_new_full(double x, double y, double ux, double uy,
                              force_id force, limit_id limit,
                              float rgba[4], blend_id blender,
                              union particle_tag tag);
-
-/* destructor */
-void particle_free(particle_t p);
 
 /* specific mutation functions */
 void particle_push(particle_t p, double dx, double dy);

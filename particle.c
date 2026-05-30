@@ -9,8 +9,7 @@
 
 #include <math.h>
 
-particle_t particle_new(double x, double y, double r, int life, pextra* extra) {
-    particle_t p = DBMALLOC(sizeof(struct particle));
+void particle_init(particle_t p, double x, double y, double r, int life, pextra* extra) {
     p->x = x;
     p->y = y;
     p->dx = 0.0;
@@ -25,14 +24,14 @@ particle_t particle_new(double x, double y, double r, int life, pextra* extra) {
         p->r = extra->r;
         p->g = extra->g;
         p->b = extra->b;
+        p->a = extra->a;
         p->blender = extra->blender;
         p->tag = extra->tag;
         free_pextra(extra);
     }
-    return p;
 }
 
-particle_t particle_new_full(double x, double y,
+void particle_init_full(particle_t p, double x, double y,
                              double ux, double uy,
                              double dx, double dy,
                              double s, double us,
@@ -44,8 +43,6 @@ particle_t particle_new_full(double x, double y,
                              float rgba[4], blend_id blender,
                              union particle_tag tag)
 {
-    particle_t p = DBMALLOC(sizeof(struct particle));
-
     double angle = randdouble(theta-utheta, theta+utheta);
     double offset = randdouble(s-us, s+us);
     p->x = randdouble(x-ux, x+ux) + offset * cos(angle);
@@ -65,11 +62,6 @@ particle_t particle_new_full(double x, double y,
     p->limit = limit;
     p->blender = blender;
     p->tag = tag;
-    return p;
-}
-
-void particle_free(particle_t p) {
-    DZFREE(p);
 }
 
 void particle_push(particle_t p, double dx, double dy) {

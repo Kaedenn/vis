@@ -146,6 +146,12 @@ $(DEPDIR): $(SOURCES) $(SCR_MAKEDEP)
 	$(BASH) $(SCR_MAKEDEP)
 	touch $(DEPDIR)
 
+CURRENT_FLAGS = $(strip $(CFLAGS) $(LDFLAGS))
+OLD_FLAGS := $(strip $(file < .cflags))
+ifneq ($(CURRENT_FLAGS),$(OLD_FLAGS))
+_DUMMY := $(file > .cflags,$(CURRENT_FLAGS))
+endif
+
 $(OBJDIR):
 	- test -d $(OBJDIR) || mkdir $(OBJDIR) 2>/dev/null
 
@@ -158,20 +164,20 @@ $(OBJDIR)/audio: | $(OBJDIR)
 $(DEPFILES): | $(DEPDIR)
 $(OBJECTS): | $(OBJDIR)
 
-$(OBJDIR)/3rdparty/%.o: $(DIR)/3rdparty/%.c | $(OBJDIR)/3rdparty
+$(OBJDIR)/3rdparty/%.o: $(DIR)/3rdparty/%.c .cflags | $(OBJDIR)/3rdparty
 	$(CC) -c -o $@ $< -msse2 $(CFLAGS) $(CFLAGS_3RDPARTY)
 
-$(OBJDIR)/audio/%.o: $(DIR)/audio/%.c | $(OBJDIR)/audio
+$(OBJDIR)/audio/%.o: $(DIR)/audio/%.c .cflags | $(OBJDIR)/audio
 	$(CC) -c -o $@ $< -msse2 $(CFLAGS) $(CFLAGS_AUDIO)
 
-$(OBJDIR)/emitter.o: emitter.c | $(OBJDIR)
+$(OBJDIR)/emitter.o: emitter.c .cflags | $(OBJDIR)
 	$(CC) -c -o $@ $< $(CFLAGS) -Wno-float-equal
 
-$(OBJDIR)/%.o: %.c | $(OBJDIR)
+$(OBJDIR)/%.o: %.c .cflags | $(OBJDIR)
 	$(CC) -c -o $@ $< $(CFLAGS)
 
-$(VIS): $(OBJECTS)
-	$(CC) -o $@ $^ $(LDFLAGS)
+$(VIS): $(OBJECTS) .cflags
+	$(CC) -o $@ $(filter %.o,$^) $(LDFLAGS)
 
 test/test_kstring: test/test_kstring.c kstring.c helper.c
 	$(CC) -o $@ $^ $(CFLAGS) $(CFLAGS_DEBUG) $(LDFLAGS)
@@ -199,7 +205,7 @@ leakcheck-reachable: debug
 clean:
 	- $(RM) -r $(DEPDIR) 2>/dev/null
 	- $(RM) -r $(OBJDIR) 2>/dev/null
-	- $(RM) $(VIS) 2>/dev/null
+	- $(RM) $(VIS) .cflags 2>/dev/null
 	- $(RM) $(BIN_TESTS) 2>/dev/null
 
 distclean: clean fp-prep

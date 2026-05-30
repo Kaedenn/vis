@@ -197,12 +197,11 @@ static void cmd_emit(struct commands* cmds, const char* buffer) {
 
             float rgba[4] = {ar, ag, ab, 1.0f};
             union particle_tag tag = {0};
-            p = particle_new_full(x, y, ux, uy, 0, 0, 0, 0, rad, urad, ds, uds,
+            p = plist_add(cmds->particles);
+            if (p) particle_init_full(p, x, y, ux, uy, 0, 0, 0, 0, rad, urad, ds, uds,
                 theta, utheta, 0, life, ulife,
                 (force_id)force, (limit_id)limit,
                 rgba, (blend_id)blender, tag);
-
-            plist_add(cmds->particles, p);
         }
     } else {
         EPRINTF("%s", "usage: emit n x y ux uy rad urad ds uds theta utheta "
@@ -231,13 +230,15 @@ static void cmd_kick(struct commands* cmds, const char* buffer) {
             g = randfloat(0.0f, 0.7f);
             b = randfloat(0.0f, 0.4f);
             pe = new_pextra(r, g, b, VIS_BLEND_LINEAR);
-            p = particle_new(x, y, radius, life, pe);
-            ds = randdouble(0.1, 3.0);
-            theta = randdouble(0.0, 2 * M_PI);
-            particle_push(p, ds * cos(theta), ds * sin(theta));
-            particle_set_force(p, VIS_FORCE_FRICTION);
-            particle_set_limit(p, VIS_LIMIT_SPRINGBOX);
-            plist_add(cmds->particles, p);
+            p = plist_add(cmds->particles);
+            if (p) {
+                particle_init(p, x, y, radius, life, pe);
+                ds = randdouble(0.1, 3.0);
+                theta = randdouble(0.0, 2 * M_PI);
+                particle_push(p, ds * cos(theta), ds * sin(theta));
+                particle_set_force(p, VIS_FORCE_FRICTION);
+                particle_set_limit(p, VIS_LIMIT_SPRINGBOX);
+            }
             ++i;
         }
     } else {
@@ -265,13 +266,15 @@ static void cmd_snare(struct commands* cmds, const char* buffer) {
             g = randfloat(0.0f, 1.0f);
             b = randfloat(0.0f, 0.4f);
             pe = new_pextra(r, g, b, VIS_BLEND_LINEAR);
-            p = particle_new(x, y, radius, life, pe);
-            ds = randdouble(0.1, 2.0);
-            theta = randdouble(0.0, 2 * M_PI);
-            particle_push(p, ds * cos(theta), ds * sin(theta));
-            particle_set_force(p, VIS_FORCE_GRAVITY);
-            particle_set_limit(p, VIS_LIMIT_SPRINGBOX);
-            plist_add(cmds->particles, p);
+            p = plist_add(cmds->particles);
+            if (p) {
+                particle_init(p, x, y, radius, life, pe);
+                ds = randdouble(0.1, 2.0);
+                theta = randdouble(0.0, 2 * M_PI);
+                particle_push(p, ds * cos(theta), ds * sin(theta));
+                particle_set_force(p, VIS_FORCE_GRAVITY);
+                particle_set_limit(p, VIS_LIMIT_SPRINGBOX);
+            }
             ++i;
         }
     } else {
@@ -300,13 +303,15 @@ static void cmd_strum(struct commands* cmds, const char* buffer) {
             g = randfloat(0.0f, 0.7f);
             b = randfloat(0.0f, 1.0f);
             pe = new_pextra(r, g, b, VIS_BLEND_LINEAR);
-            p = particle_new(x, y, radius, life, pe);
-            ds = randdouble(0.1, 3.0);
-            theta = randdouble(0.0, 2 * M_PI);
-            particle_push(p, ds * cos(theta), ds * sin(theta));
-            particle_set_force(p, VIS_FORCE_FRICTION);
-            particle_set_limit(p, VIS_LIMIT_SPRINGBOX);
-            plist_add(cmds->particles, p);
+            p = plist_add(cmds->particles);
+            if (p) {
+                particle_init(p, x, y, radius, life, pe);
+                ds = randdouble(0.1, 3.0);
+                theta = randdouble(0.0, 2 * M_PI);
+                particle_push(p, ds * cos(theta), ds * sin(theta));
+                particle_set_force(p, VIS_FORCE_FRICTION);
+                particle_set_limit(p, VIS_LIMIT_SPRINGBOX);
+            }
             ++i;
         }
     } else {
@@ -336,13 +341,15 @@ static void cmd_rain(struct commands* cmds, const char* buffer) {
             g = randfloat(0.1f, 0.3f);
             b = randfloat(0.4f, 1.0f);
             pe = new_pextra(r, g, b, VIS_BLEND_NONE);
-            p = particle_new(x, y, radius, life, pe);
-            ds = randdouble(0.0, 1.0);
-            theta = M_PI * 3 / 2;
-            particle_push(p, ds * cos(theta), ds * sin(theta));
-            particle_set_force(p, VIS_FORCE_GRAVITY);
-            particle_set_limit(p, VIS_DEFAULT_LIMIT);
-            plist_add(cmds->particles, p);
+            p = plist_add(cmds->particles);
+            if (p) {
+                particle_init(p, x, y, radius, life, pe);
+                ds = randdouble(0.0, 1.0);
+                theta = M_PI * 3 / 2;
+                particle_push(p, ds * cos(theta), ds * sin(theta));
+                particle_set_force(p, VIS_FORCE_GRAVITY);
+                particle_set_limit(p, VIS_DEFAULT_LIMIT);
+            }
             ++i;
         }
     } else {

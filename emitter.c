@@ -187,7 +187,8 @@ void emit_frame(emit_desc* frame) {
         if (frame->ub != 0.0f) {
             rgba[2] = randfloat(frame->b - frame->ub, frame->b + frame->ub);
         }
-        particle_t p = particle_new_full(
+        particle_t p = plist_add(emitter.particles);
+        if (p) particle_init_full(p,
                 frame->x, frame->y, frame->ux, frame->uy,
                 frame->dx, frame->dy,
                 frame->s, frame->us,
@@ -198,6 +199,5 @@ void emit_frame(emit_desc* frame) {
                 frame->life, frame->ulife,
                 frame->force, frame->limit,
                 rgba, frame->blender, frame->tag);
-        plist_add(emitter.particles, p);
     }
 }
