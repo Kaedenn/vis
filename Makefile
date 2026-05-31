@@ -90,8 +90,18 @@ LDFLAGS_LIBS = -lluajit-5.1 -lglfw -lGL -lGLEW
 CFLAGS := $(CFLAGS) $(CFLAGS_LIBS) $(EXTRA_CFLAGS) $(CFLAGS_AUDIO) $(CFLAGS_FREETYPE)
 LDFLAGS := $(LDFLAGS) $(LDFLAGS_LIBS) $(EXTRA_LDFLAGS) $(LDFLAGS_AUDIO) $(LDFLAGS_FREETYPE)
 
-ifneq ($(DEBUG),)
-all: CFLAGS += $(CFLAGS_DEBUG)
+# Determine build mode based on target
+ifneq ($(filter fast release,$(MAKECMDGOALS)),)
+CFLAGS += $(CFLAGS_FAST)
+LDFLAGS += $(LDFLAGS_FAST)
+else ifneq ($(filter trace,$(MAKECMDGOALS)),)
+CFLAGS += $(CFLAGS_TRACE)
+else ifneq ($(filter profile,$(MAKECMDGOALS)),)
+CFLAGS += $(CFLAGS_FAST) $(CFLAGS_PROF)
+LDFLAGS += $(LDFLAGS_FAST) $(LDFLAGS_PROF)
+else
+# Default to debug
+CFLAGS += $(CFLAGS_DEBUG)
 endif
 
 EXEC_ARGS ?= -i -l $(DIR)/lua/demos/demo_4_random.lua
@@ -111,10 +121,6 @@ FP_BASE ?= $(FP_DIR)/bowser
 FP_AUDIO ?= media/bowser-full.mp3
 FP_AVI ?= $(FP_DIR)/bowser.avi
 
-#.PHONY: all fast debug trace profile execute valgrind leakcheck \
-#	leakcheck-reachable clean distclean finalproduct fp-prep fp-makeframes \
-#	fp-flip fp-encode fp-cleanup test
-
 all: debug
 
 # If you plan to use lua/letters.lua with LuaJIT or Lua5.1, this is needed
@@ -122,21 +128,9 @@ lua/utf8.so: 3rdparty/luautf8-0.2.0.tar.gz
 	tar xvfz $^ -C 3rdparty/
 	clang -g -fsanitize=fuzzer-no-link,address -fPIC $(CFLAGS_LIBS) 3rdparty/luautf8-0.2.0/lutf8lib.c -shared -o lua/utf8.so
 
-fast: $(DEPFILES) $(SOURCES)
-	$(MAKE) "CFLAGS=$(CFLAGS) $(CFLAGS_FAST)" \
-		"LDFLAGS=$(LDFLAGS) $(LDFLAGS_FAST)" $(VIS)
+fast release debug trace: $(DEPFILES) $(SOURCES) $(VIS)
 
-release: fast
-
-debug: $(DEPFILES) $(SOURCES)
-	$(MAKE) "CFLAGS=$(CFLAGS) $(CFLAGS_DEBUG)" $(VIS)
-
-trace: $(DEPFILES) $(SOURCES)
-	$(MAKE) "CFLAGS=$(CFLAGS) $(CFLAGS_TRACE)" $(VIS)
-
-profile: $(SOURCES)
-	$(MAKE) "CFLAGS=$(CFLAGS) $(CFLAGS_FAST) $(CFLAGS_PROF)" \
-		"LDFLAGS=$(LDFLAGS) $(LDFLAGS_FAST) $(LDFLAGS_PROF)" $(VIS)
+profile: $(SOURCES) $(VIS)
 	$(VIS) -i -l $(DIR)/lua/demos/demo_5_random.lua
 	gprof $(VIS)
 	- $(RM) $(DIR)/gmon.out 2>/dev/null
@@ -201,6 +195,9 @@ leakcheck: debug
 
 leakcheck-reachable: debug
 	$(VALGRIND) $(VG_REACHABLE) $(VIS) $(EXEC_ARGS)
+
+miniclean:
+	- $(RM) $(OBJDIR)/*.o $(DEPDIR)/*.d 2>/dev/null
 
 clean:
 	- $(RM) -r $(DEPDIR) 2>/dev/null

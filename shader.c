@@ -94,7 +94,7 @@ shader_t* shader_create(const GLchar* geom_path, const GLchar* vertex_path,
     }
 
     GLuint vertex_program = glCreateProgram();
-    /* (TODO) glAttachShader(vertex_program, geom_shader_id); */
+    glAttachShader(vertex_program, geom_shader_id);
     glAttachShader(vertex_program, vertex_shader_id);
     glAttachShader(vertex_program, fragment_shader_id);
     glLinkProgram(vertex_program);
