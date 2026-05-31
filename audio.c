@@ -108,6 +108,7 @@ void audio_free(void) {
             DZFREE(audio->sound);
         }
         ma_engine_uninit(&audio->engine);
+        ma_context_uninit(&audio->context);
 
         if (audio->latency_probe) {
 #if defined(HAVE_PULSEAUDIO)

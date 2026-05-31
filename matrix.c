@@ -67,11 +67,11 @@ void mat4_look_at(float* out, float ex, float ey, float ez, float cx, float cy, 
     out[0] = s[0];
     out[4] = s[1];
     out[8] = s[2];
-    
+
     out[1] = u_calc[0];
     out[5] = u_calc[1];
     out[9] = u_calc[2];
-    
+
     out[2] = -f[0];
     out[6] = -f[1];
     out[10] = -f[2];

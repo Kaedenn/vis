@@ -56,9 +56,6 @@
 /* interactive mode: poll async once per 5 frames */
 #define VIS_CMD_DELAY_NSTEPS 5
 
-/* size of fuzzy edges around particle p */
-#define BOX_FUDGE(p) (0)
-
 /* physics */
 #define VIS_FORCE_FRICTION_COEFF 0.99
 #define VIS_FORCE_GRAVITY_FACTOR 0.03
@@ -75,7 +72,7 @@
 #define VIS_BUFFER_LEN 4096
 
 /* initial capacity for particles */
-#define VIS_PLIST_INITIAL_SIZE (8 * 1024 * 1024)
+#define VIS_PLIST_INITIAL_SIZE 10000
 
 /* convenience */
 #ifndef BOOL

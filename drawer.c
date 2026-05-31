@@ -225,29 +225,31 @@ void drawer_bgcolor(drawer_t drawer, float r, float g, float b) {
 }
 
 int drawer_add_particle(drawer_t drawer, particle_t p) {
-    if (drawer->vertex_curr < drawer->vertex_count) {
-        vertex_t* v = &drawer->vertex_array[drawer->vertex_curr];
+    if (drawer->vertex_curr >= drawer->vertex_count) {
+        drawer->vertex_count *= 2;
+        drawer->vertex_array = DBREALLOC(drawer->vertex_array, drawer->vertex_count * sizeof(vertex_t));
 
-        v->x = (GLfloat)p->x;
-        v->y = (GLfloat)p->y;
-        v->radius = (GLfloat)p->radius;
-
-        v->r = (GLfloat)p->r;
-        v->g = (GLfloat)p->g;
-        v->b = (GLfloat)p->b;
-        v->a = (GLfloat)sqrt(calculate_blend(p));
-        v->depth = (GLfloat)p->depth;
-        v->vertices = (GLuint)p->vertices;
-        v->angle = (GLfloat)p->angle;
-
-        drawer->vertex_curr += 1;
-        return 0;
-    } else {
-        EPRINTF("can't add more than %lu particles, did you call "
-                "drawer_draw_to_screen?",
-            (unsigned long)drawer->vertex_count);
-        return 1;
+        glBindBuffer(GL_ARRAY_BUFFER, drawer->vbo);
+        glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)(drawer->vertex_count * sizeof(vertex_t)), NULL, GL_DYNAMIC_DRAW);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
     }
+
+    vertex_t* v = &drawer->vertex_array[drawer->vertex_curr];
+
+    v->x = (GLfloat)p->x;
+    v->y = (GLfloat)p->y;
+    v->radius = (GLfloat)p->radius;
+
+    v->r = (GLfloat)p->r;
+    v->g = (GLfloat)p->g;
+    v->b = (GLfloat)p->b;
+    v->a = (GLfloat)sqrt(calculate_blend(p));
+    v->depth = (GLfloat)p->depth;
+    v->vertices = (GLuint)p->vertices;
+    v->angle = (GLfloat)p->angle;
+
+    drawer->vertex_curr += 1;
+    return 0;
 }
 
 int drawer_draw_to_screen(drawer_t drawer) {
@@ -257,7 +259,7 @@ int drawer_draw_to_screen(drawer_t drawer) {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     shader_use(drawer->shader);
-    
+
     GLint proj_loc = shader_get_uniform(drawer->shader, "projection");
     GLint view_loc = shader_get_uniform(drawer->shader, "view");
     if (proj_loc != -1) glUniformMatrix4fv(proj_loc, 1, GL_FALSE, drawer->proj_matrix);
@@ -464,7 +466,7 @@ BOOL render_to_file(drawer_t drawer, const char *path) {
 
     /* flip vertically because OpenGL origin is bottom-left, but image origin is top-left */
     stbi_flip_vertically_on_write(1);
-    
+
     if (!stbi_write_png(path, width, height, 4, buffer, stride)) {
         EPRINTF("Failed to write image to %s", path);
         DZFREE(buffer);

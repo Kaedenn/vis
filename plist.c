@@ -43,13 +43,11 @@ void plist_foreach(plist_t plist, item_fn fn, void* userdefined) {
 }
 
 particle_t plist_add(plist_t plist) {
-    if (plist->size < plist->capacity) {
-        return &plist->particles[plist->size++];
-    } else {
-        EPRINTF("Attempted to add more than %lu particles to plist %p, "
-                "particle dropped", (unsigned long)plist->capacity, plist);
-        return NULL;
+    if (plist->size >= plist->capacity) {
+        plist->capacity *= 2;
+        plist->particles = DBREALLOC(plist->particles, sizeof(struct particle) * plist->capacity);
     }
+    return &plist->particles[plist->size++];
 }
 
 void plist_clear(plist_t plist) {

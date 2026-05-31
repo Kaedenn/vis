@@ -12,7 +12,9 @@ FILE* try_fopen(const char* path, const char* mode);
 
 /* malloc+assert */
 void* chmalloc(size_t nbytes);
+void* chrealloc(void* ptr, size_t nbytes);
 void* dbmalloc(size_t nbytes, const char* label);
+void* dbrealloc(void* ptr, size_t nbytes, const char* label);
 void dbfree(void* ptr, const char* label);
 
 /* helper printfs for errors or debugging */
@@ -27,9 +29,11 @@ void do_assert(BOOL cond, const char* message, const char* file, int line);
 
 #if DEBUG >= DEBUG_TRACE
 #define DBMALLOC(size) dbmalloc((size), (#size))
+#define DBREALLOC(ptr, size) dbrealloc((ptr), (size), (#size))
 #define DBFREE(ptr) dbfree((ptr), (#ptr))
 #else
 #define DBMALLOC(size) chmalloc((size))
+#define DBREALLOC(ptr, size) chrealloc((ptr), (size))
 #define DBFREE(ptr) free((ptr))
 #endif
 

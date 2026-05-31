@@ -4,7 +4,7 @@
 /** KString library for simple managed string operations.
  *
  * This module aims to provide memory-safe buffer operations on
- * character arrays. 
+ * character arrays.
  */
 
 #include "defines.h"

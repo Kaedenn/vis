@@ -58,10 +58,22 @@ void* chmalloc(size_t nbytes) {
     return p;
 }
 
+void* chrealloc(void* ptr, size_t nbytes) {
+    void* p = realloc(ptr, nbytes);
+    VIS_ASSERT(p != NULL || nbytes == 0);
+    return p;
+}
+
 void* dbmalloc(size_t nbytes, const char* label) {
     void* ptr = chmalloc(nbytes);
-    DBPRINTF("Allocated %d bytes for %s: %p", nbytes, label, ptr);
+    DBPRINTF("Allocated %d bytes for %s: %p", (int)nbytes, label, ptr);
     return ptr;
+}
+
+void* dbrealloc(void* ptr, size_t nbytes, const char* label) {
+    void* p = chrealloc(ptr, nbytes);
+    DBPRINTF("Reallocated %p to %d bytes for %s: %p", ptr, (int)nbytes, label, p);
+    return p;
 }
 
 void dbfree(void* ptr, const char* label) {

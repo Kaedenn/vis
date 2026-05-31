@@ -1,274 +1,4039 @@
 {
-    # I can't figure out how to free libpulse0 allocations
-    pa-mainloop-iterate
-    Memcheck:Leak
-    match-leak-kinds: all
-    ...
-    fun:pa_mainloop_iterate
+   auto-suppress-1
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:pa_xmalloc
+   fun:pa_tls_new
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+   fun:pa_run_once
+   fun:pa_cstrerror
+   fun:pa_config_parse
+   fun:pa_config_parse
+   fun:pa_client_conf_load
+   fun:pa_context_new_with_proplist
+   fun:ma_init_pa_mainloop_and_pa_context__pulse
+   fun:ma_context_init__pulse
 }
 {
-    # Stack frames broken, so leak ignored
-    libgl-so
-    Memcheck:Leak
-    match-leak-kinds: all
-    ...
-    obj:/usr/lib/nvidia-331-updates/libGL.so.331.113
-    ...
+   auto-suppress-2
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:calloc
+   fun:pa_xmalloc0
+   fun:pa_flist_new_with_name
+   obj:/usr/lib/x86_64-linux-gnu/libpulse.so.0.21.2
+   fun:pa_run_once
+   obj:/usr/lib/x86_64-linux-gnu/libpulse.so.0.21.2
+   fun:pa_context_get_sink_info_by_name
+   fun:ma_context_get_sink_info__pulse
+   fun:ma_device_init__pulse
+   fun:ma_device_init
+   fun:ma_engine_init
+   fun:audio_init
 }
 {
-    Memcheck:Cond
-    obj:/usr/lib/nvidia-331-updates/libnvidia-glcore.so.331.113
-    obj:/usr/lib/nvidia-331-updates/libnvidia-glcore.so.331.113
-    obj:/dev/nvidia0
+   auto-suppress-3
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:_ZN4llvm12PassRegistry12registerPassERKNS_8PassInfoEb
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm44initializeTargetTransformInfoWrapperPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm34initializeIslScheduleOptimizerPassERNS_12PassRegistryE
+   fun:_ZN5polly21initializePollyPassesERN4llvm12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:call_init.part.0
 }
 {
-    libnvidia-cond
-    Memcheck:Cond
-    obj:/usr/lib/nvidia-331-updates/libnvidia-glcore.so.331.113
+   auto-suppress-4
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:calloc
+   fun:_dl_new_object
+   fun:_dl_map_object_from_fd
+   fun:_dl_map_object
+   fun:openaux
+   fun:_dl_catch_exception
+   fun:_dl_map_object_deps
+   fun:dl_open_worker
+   fun:_dl_catch_exception
+   fun:_dl_open
+   fun:dlopen_doit
+   fun:_dl_catch_exception
 }
 {
-    libpa-do-call
-    Memcheck:Leak
-    match-leak-kinds: reachable
-    fun:malloc
-    fun:pa_xmalloc
-    fun:pa_xmemdup
-    fun:pa_flist_new_with_name
-    fun:entries_flist_init
-    fun:pa_run_once
-    fun:pa_queue_push
-    fun:pa_pstream_send_packet
-    fun:pa_pstream_send_tagstruct_with_creds
-    fun:on_connection
-    fun:do_call
-    fun:pa_mainloop_dispatch
+   auto-suppress-5
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm35initializeMaximalStaticExpanderPassERNS_12PassRegistryE
+   fun:_ZN5polly21initializePollyPassesERN4llvm12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:call_init.part.0
+   fun:call_init
+   fun:_dl_init
+   fun:_dl_catch_exception
+   fun:dl_open_worker
+   fun:_dl_catch_exception
+   fun:_dl_open
 }
 {
-    libpa-dispatch-run-2
-    Memcheck:Leak
-    match-leak-kinds: reachable
-    fun:malloc
-    fun:pa_xmalloc
-    fun:pa_xmemdup
-    fun:pa_flist_new_with_name
-    fun:operations_flist_init
-    fun:pa_run_once
-    fun:pa_operation_new
-    fun:pa_stream_update_timing_info
-    fun:request_auto_timing_update
-    fun:pa_create_stream_callback
-    fun:run_action
-    fun:pa_pdispatch_run
+   auto-suppress-6
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   obj:/usr/lib/x86_64-linux-gnu/libX11.so.6.3.0
+   fun:_XrmInternalStringToQuark
+   fun:XrmInitialize
+   obj:/usr/lib/x86_64-linux-gnu/libglfw.so.3.3
+   fun:glfwInit
+   fun:drawer_new
+   fun:main
 }
 {
-    libpa-mainloop-dispatch
-    Memcheck:Leak
-    match-leak-kinds: reachable
-    fun:malloc
-    fun:pa_xmalloc
-    fun:pa_mutex_new
-    fun:pa_static_mutex_get
-    fun:pa_once_begin
-    fun:pa_run_once
-    fun:pa_queue_push
-    fun:pa_pstream_send_packet
-    fun:pa_pstream_send_tagstruct_with_creds
-    fun:on_connection
-    fun:do_call
-    fun:pa_mainloop_dispatch
+   auto-suppress-7
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:pa_xmalloc
+   fun:pa_mutex_new
+   fun:pa_static_mutex_get
+   fun:pa_once_begin
+   fun:pa_run_once
+   fun:pa_pdispatch_register_reply
+   obj:/usr/lib/x86_64-linux-gnu/libpulse.so.0.21.2
+   obj:/usr/lib/x86_64-linux-gnu/libpulse.so.0.21.2
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+   fun:pa_mainloop_dispatch
+   fun:pa_mainloop_iterate
 }
 {
-    libpa-dispatch-run
-    Memcheck:Leak
-    match-leak-kinds: reachable
-    fun:malloc
-    fun:pa_xmalloc
-    fun:pa_mutex_new
-    fun:pa_static_mutex_get
-    fun:pa_once_begin
-    fun:pa_run_once
-    fun:pa_operation_new
-    fun:pa_stream_update_timing_info
-    fun:request_auto_timing_update
-    fun:pa_create_stream_callback
-    fun:run_action
-    fun:pa_pdispatch_run
+   auto-suppress-8
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:pa_xmalloc
+   fun:pa_xmemdup
+   fun:pa_flist_new_with_name
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+   fun:pa_run_once
+   fun:pa_memimport_get
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+   fun:pa_mainloop_dispatch
+   fun:pa_mainloop_iterate
+   fun:ma_wait_for_pa_context_to_connect__pulse
 }
 {
-    libdbus-conn-reply-block
-    Memcheck:Leak
-    match-leak-kinds: reachable
-    fun:malloc
-    obj:/lib/x86_64-linux-gnu/libdbus-1.so.3.7.6
-    obj:/lib/x86_64-linux-gnu/libdbus-1.so.3.7.6
-    obj:/lib/x86_64-linux-gnu/libdbus-1.so.3.7.6
-    obj:/lib/x86_64-linux-gnu/libdbus-1.so.3.7.6
-    obj:/lib/x86_64-linux-gnu/libdbus-1.so.3.7.6
-    obj:/lib/x86_64-linux-gnu/libdbus-1.so.3.7.6
-    obj:/lib/x86_64-linux-gnu/libdbus-1.so.3.7.6
-    obj:/lib/x86_64-linux-gnu/libdbus-1.so.3.7.6
-    obj:/lib/x86_64-linux-gnu/libdbus-1.so.3.7.6
-    obj:/lib/x86_64-linux-gnu/libdbus-1.so.3.7.6
-    fun:dbus_connection_send_with_reply_and_block
+   auto-suppress-9
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:pa_xmalloc
+   fun:pa_pdispatch_register_reply
+   obj:/usr/lib/x86_64-linux-gnu/libpulse.so.0.21.2
+   obj:/usr/lib/x86_64-linux-gnu/libpulse.so.0.21.2
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+   fun:pa_mainloop_dispatch
+   fun:pa_mainloop_iterate
+   fun:ma_wait_for_pa_context_to_connect__pulse
+   fun:ma_init_pa_mainloop_and_pa_context__pulse
+   fun:ma_context_init__pulse
+   fun:ma_context_init
 }
 {
-    libdl-glibc
-    Memcheck:Leak
-    match-leak-kinds: reachable
-    fun:malloc
-    fun:_dl_map_object
-    fun:openaux
-    fun:_dl_catch_error
-    fun:_dl_map_object_deps
-    fun:dl_open_worker
-    fun:_dl_catch_error
-    fun:_dl_open
-    fun:dlopen_doit
-    fun:_dl_catch_error
-    fun:_dlerror_run
-    fun:dlopen@@GLIBC_2.2.5
+   auto-suppress-10
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:pa_xmalloc
+   fun:pa_packet_new
+   fun:pa_packet_new_data
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+   fun:pa_pstream_send_tagstruct_with_fds
+   fun:pa_pstream_register_memfd_mempool
+   obj:/usr/lib/x86_64-linux-gnu/libpulse.so.0.21.2
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+   fun:pa_pdispatch_run
+   obj:/usr/lib/x86_64-linux-gnu/libpulse.so.0.21.2
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
 }
 {
-    libdl-dlopen-doit
-    Memcheck:Leak
-    match-leak-kinds: reachable
-    fun:malloc
-    fun:_dl_new_object
-    fun:_dl_map_object_from_fd
-    fun:_dl_map_object
-    fun:openaux
-    fun:_dl_catch_error
-    fun:_dl_map_object_deps
-    fun:dl_open_worker
-    fun:_dl_catch_error
-    fun:_dl_open
-    fun:dlopen_doit
-    fun:_dl_catch_error
+   auto-suppress-11
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:strdup
+   obj:/usr/lib/x86_64-linux-gnu/libglapi.so.0.0.0
+   fun:_glapi_get_proc_address
+   obj:/usr/lib/x86_64-linux-gnu/libGLdispatch.so.0.0.0
+   fun:__glDispatchMakeCurrent
+   obj:/usr/lib/x86_64-linux-gnu/libGLX.so.0.0.0
+   obj:/usr/lib/x86_64-linux-gnu/libGLX.so.0.0.0
+   obj:/usr/lib/x86_64-linux-gnu/libglfw.so.3.3
+   obj:/usr/lib/x86_64-linux-gnu/libglfw.so.3.3
+   fun:glfwCreateWindow
+   fun:drawer_new
 }
 {
-    libpa-mainloop
-    Memcheck:Leak
-    match-leak-kinds: reachable
-    fun:malloc
-    fun:pa_xmalloc
-    fun:pa_hashmap_put
-    fun:pa_proplist_set
-    fun:pa_tagstruct_get_proplist
-    fun:pa_tagstruct_get_format_info
-    fun:pa_create_stream_callback
-    fun:run_action
-    fun:pa_pdispatch_run
-    fun:pstream_packet_callback
-    fun:do_pstream_read_write
-    fun:pa_mainloop_dispatch
+   auto-suppress-12
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:calloc
+   fun:_ZN4llvm13StringMapImpl11RehashTableEj
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:_ZN4llvm12PassRegistry12registerPassERKNS_8PassInfoEb
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm27initializeForwardOpTreePassERNS_12PassRegistryE
+   fun:_ZN5polly21initializePollyPassesERN4llvm12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:call_init.part.0
+   fun:call_init
+   fun:_dl_init
+   fun:_dl_catch_exception
 }
 {
-    libdbus-unknown
-    Memcheck:Leak
-    match-leak-kinds: reachable
-    fun:realloc
-    obj:/lib/x86_64-linux-gnu/libdbus-1.so.3.7.6
-    obj:/lib/x86_64-linux-gnu/libdbus-1.so.3.7.6
-    obj:/lib/x86_64-linux-gnu/libdbus-1.so.3.7.6
-    obj:/lib/x86_64-linux-gnu/libdbus-1.so.3.7.6
-    obj:/lib/x86_64-linux-gnu/libdbus-1.so.3.7.6
-    obj:/lib/x86_64-linux-gnu/libdbus-1.so.3.7.6
-    obj:/lib/x86_64-linux-gnu/libdbus-1.so.3.7.6
-    obj:/lib/x86_64-linux-gnu/libdbus-1.so.3.7.6
-    obj:/lib/x86_64-linux-gnu/libdbus-1.so.3.7.6
-    obj:/lib/x86_64-linux-gnu/libdbus-1.so.3.7.6
-    obj:/lib/x86_64-linux-gnu/libdbus-1.so.3.7.6
+   auto-suppress-13
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:pa_xmalloc
+   fun:pa_mutex_new
+   fun:pa_static_mutex_get
+   fun:pa_once_begin
+   fun:pa_run_once
+   obj:/usr/lib/x86_64-linux-gnu/libpulse.so.0.21.2
+   fun:pa_context_get_sink_info_by_name
+   fun:ma_context_get_sink_info__pulse
+   fun:ma_device_init__pulse
+   fun:ma_device_init
+   fun:ma_engine_init
 }
 {
-    libdbus-register
-    Memcheck:Leak
-    match-leak-kinds: reachable
-    fun:calloc
-    obj:/lib/x86_64-linux-gnu/libdbus-1.so.3.7.6
-    obj:/lib/x86_64-linux-gnu/libdbus-1.so.3.7.6
-    obj:/lib/x86_64-linux-gnu/libdbus-1.so.3.7.6
-    obj:/lib/x86_64-linux-gnu/libdbus-1.so.3.7.6
-    obj:/lib/x86_64-linux-gnu/libdbus-1.so.3.7.6
-    obj:/lib/x86_64-linux-gnu/libdbus-1.so.3.7.6
-    obj:/lib/x86_64-linux-gnu/libdbus-1.so.3.7.6
-    obj:/lib/x86_64-linux-gnu/libdbus-1.so.3.7.6
-    obj:/lib/x86_64-linux-gnu/libdbus-1.so.3.7.6
-    fun:dbus_connection_send_with_reply_and_block
-    fun:dbus_bus_register
+   auto-suppress-14
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:add_to_global_resize
+   fun:dl_open_worker
+   fun:_dl_catch_exception
+   fun:_dl_open
+   fun:dlopen_doit
+   fun:_dl_catch_exception
+   fun:_dl_catch_error
+   fun:_dlerror_run
+   fun:dlopen@@GLIBC_2.2.5
+   obj:*
+   obj:*
 }
 {
-    libdbus-connection
-    Memcheck:Leak
-    match-leak-kinds: reachable
-    fun:realloc
-    obj:/lib/x86_64-linux-gnu/libdbus-1.so.3.7.6
-    obj:/lib/x86_64-linux-gnu/libdbus-1.so.3.7.6
-    obj:/lib/x86_64-linux-gnu/libdbus-1.so.3.7.6
-    obj:/lib/x86_64-linux-gnu/libdbus-1.so.3.7.6
-    obj:/lib/x86_64-linux-gnu/libdbus-1.so.3.7.6
-    obj:/lib/x86_64-linux-gnu/libdbus-1.so.3.7.6
-    fun:dbus_message_iter_append_basic
-    fun:dbus_message_new_error
-    obj:/lib/x86_64-linux-gnu/libdbus-1.so.3.7.6
-    fun:dbus_connection_send_with_reply
-    fun:dbus_connection_send_with_reply_and_block
+   auto-suppress-15
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:_dl_close_worker.part.0
+   fun:_dl_close_worker
+   fun:_dl_close
+   fun:_dl_catch_exception
+   fun:_dl_catch_error
+   fun:dlerror_run
+   fun:__libc_dlclose
+   fun:free_mem
+   fun:__libc_freeres
+   fun:_vgnU_freeres
+   fun:__run_exit_handlers
+   fun:exit
+   fun:(below main)
 }
 {
-    libdl-dlopen
-    Memcheck:Leak
-    match-leak-kinds: reachable
-    fun:calloc
-    fun:_dl_new_object
-    fun:_dl_map_object_from_fd
-    fun:_dl_map_object
-    fun:openaux
-    fun:_dl_catch_error
-    fun:_dl_map_object_deps
-    fun:dl_open_worker
-    fun:_dl_catch_error
-    fun:_dl_open
-    fun:dlopen_doit
-    fun:_dl_catch_error
+   auto-suppress-16
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm25initializeScopInlinerPassERNS_12PassRegistryE
+   fun:_ZN5polly21initializePollyPassesERN4llvm12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:call_init.part.0
+   fun:call_init
+   fun:_dl_init
+   fun:_dl_catch_exception
+   fun:dl_open_worker
+   fun:_dl_catch_exception
+   fun:_dl_open
 }
 {
-    libpa-packet-cb
-    Memcheck:Leak
-    match-leak-kinds: reachable
-    fun:calloc
-    fun:pa_xmalloc0
-    fun:pa_flist_new_with_name
-    fun:operations_flist_init
-    fun:pa_run_once
-    fun:pa_operation_new
-    fun:pa_stream_update_timing_info
-    fun:request_auto_timing_update
-    fun:pa_create_stream_callback
-    fun:run_action
-    fun:pa_pdispatch_run
-    fun:pstream_packet_callback
+   auto-suppress-17
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   fun:_ZNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEE9_M_assignERKS4_
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:call_init.part.0
+   fun:call_init
+   fun:_dl_init
+   fun:_dl_catch_exception
+   fun:dl_open_worker
+   fun:_dl_catch_exception
+   fun:_dl_open
+   fun:dlopen_doit
 }
 {
-    libx11-xopenim
-    Memcheck:Leak
-    match-leak-kinds: reachable
-    fun:malloc
-    obj:/usr/lib/x86_64-linux-gnu/libX11.so.6.3.0
-    fun:_XrmInternalStringToQuark
-    fun:_XlcGetCharSet
-    fun:_XlcAddCT
-    fun:_XlcInitCTInfo
-    obj:/usr/lib/x86_64-linux-gnu/libX11.so.6.3.0
-    obj:/usr/lib/x86_64-linux-gnu/libX11.so.6.3.0
-    fun:_XlcCreateLC
-    fun:_XlcUtf8Loader
-    fun:_XOpenLC
-    fun:XOpenIM
+   auto-suppress-18
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:_ZN4llvm12PassRegistry12registerPassERKNS_8PassInfoEb
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm32initializeSimplifyLegacyPassPassERNS_12PassRegistryE
+   fun:_ZN5polly21initializePollyPassesERN4llvm12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:call_init.part.0
+   fun:call_init
+   fun:_dl_init
+   fun:_dl_catch_exception
+   fun:dl_open_worker
 }
 {
-    dlopen-cxxnew
-    Memcheck:Leak
-    match-leak-kinds: reachable
-    ...
-    obj:/usr/lib/x86_64-linux-gnu/libjack.so.0.1.0
-    ...
+   auto-suppress-19
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:pa_xmalloc
+   fun:pa_mutex_new
+   fun:pa_static_mutex_get
+   fun:pa_once_begin
+   fun:pa_run_once
+   fun:pa_idxset_put
+   fun:pa_pstream_attach_memfd_shmid
+   fun:pa_pstream_register_memfd_mempool
+   obj:/usr/lib/x86_64-linux-gnu/libpulse.so.0.21.2
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+   fun:pa_pdispatch_run
+}
+{
+   auto-suppress-20
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm32initializeRewriteByrefParamsPassERNS_12PassRegistryE
+   fun:_ZN5polly21initializePollyPassesERN4llvm12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:call_init.part.0
+   fun:call_init
+   fun:_dl_init
+   fun:_dl_catch_exception
+   fun:dl_open_worker
+   fun:_dl_catch_exception
+   fun:_dl_open
+}
+{
+   auto-suppress-21
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:pa_xmalloc
+   fun:pa_hashmap_put
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+   fun:pa_memimport_attach_memfd
+   fun:pa_pstream_attach_memfd_shmid
+   fun:pa_pstream_register_memfd_mempool
+   obj:/usr/lib/x86_64-linux-gnu/libpulse.so.0.21.2
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+   fun:pa_pdispatch_run
+   obj:/usr/lib/x86_64-linux-gnu/libpulse.so.0.21.2
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+}
+{
+   auto-suppress-22
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm36initializeTypeBasedAAWrapperPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm34initializeAAResultsWrapperPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm32initializeScopInfoRegionPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+}
+{
+   auto-suppress-23
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm20initializeDeLICMPassERNS_12PassRegistryE
+   fun:_ZN5polly21initializePollyPassesERN4llvm12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:call_init.part.0
+   fun:call_init
+   fun:_dl_init
+   fun:_dl_catch_exception
+   fun:dl_open_worker
+   fun:_dl_catch_exception
+   fun:_dl_open
+}
+{
+   auto-suppress-24
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:pa_xmalloc
+   fun:pa_xmemdup
+   fun:pa_flist_new_with_name
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+   fun:pa_run_once
+   fun:pa_idxset_put
+   fun:pa_pstream_attach_memfd_shmid
+   fun:pa_pstream_register_memfd_mempool
+   obj:/usr/lib/x86_64-linux-gnu/libpulse.so.0.21.2
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+   fun:pa_pdispatch_run
+}
+{
+   auto-suppress-25
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:pa_xmalloc
+   obj:/usr/lib/x86_64-linux-gnu/libpulse.so.0.21.2
+   fun:pa_context_get_sink_info_by_name
+   fun:ma_context_get_sink_info__pulse
+   fun:ma_device_init__pulse
+   fun:ma_device_init
+   fun:ma_engine_init
+   fun:audio_init
+   fun:main
+}
+{
+   auto-suppress-26
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:calloc
+   fun:_dl_new_object
+   fun:_dl_map_object_from_fd
+   fun:_dl_map_object
+   fun:dl_open_worker
+   fun:_dl_catch_exception
+   fun:_dl_open
+   fun:dlopen_doit
+   fun:_dl_catch_exception
+   fun:_dl_catch_error
+   fun:_dlerror_run
+   fun:dlopen@@GLIBC_2.2.5
+}
+{
+   auto-suppress-27
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:strdup
+   fun:_XlcCreateLC
+   fun:_XlcDefaultLoader
+   fun:_XOpenLC
+   fun:_XrmInitParseInfo
+   obj:/usr/lib/x86_64-linux-gnu/libX11.so.6.3.0
+   fun:XrmGetStringDatabase
+   obj:/usr/lib/x86_64-linux-gnu/libX11.so.6.3.0
+   fun:XGetDefault
+   obj:*
+   obj:*
+}
+{
+   auto-suppress-28
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:calloc
+   fun:_dl_check_map_versions
+   fun:dl_open_worker
+   fun:_dl_catch_exception
+   fun:_dl_open
+   fun:dlopen_doit
+   fun:_dl_catch_exception
+   fun:_dl_catch_error
+   fun:_dlerror_run
+   fun:dlopen@@GLIBC_2.2.5
+   obj:*
+   obj:*
+}
+{
+   auto-suppress-29
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:malloc
+   obj:/usr/lib/x86_64-linux-gnu/dri/nouveau_dri.so
+   obj:/usr/lib/x86_64-linux-gnu/dri/nouveau_dri.so
+   fun:nouveau_drm_screen_create
+   obj:/usr/lib/x86_64-linux-gnu/dri/nouveau_dri.so
+   obj:/usr/lib/x86_64-linux-gnu/dri/nouveau_dri.so
+   obj:/usr/lib/x86_64-linux-gnu/dri/nouveau_dri.so
+   obj:/usr/lib/x86_64-linux-gnu/dri/nouveau_dri.so
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+}
+{
+   auto-suppress-30
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:_ZN4llvm12PassRegistry12registerPassERKNS_8PassInfoEb
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm33initializeScopInfoWrapperPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm39initializeDependenceInfoWrapperPassPassERNS_12PassRegistryE
+   fun:_ZN5polly21initializePollyPassesERN4llvm12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:call_init.part.0
+}
+{
+   auto-suppress-31
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm28initializePolyhedralInfoPassERNS_12PassRegistryE
+   fun:_ZN5polly21initializePollyPassesERN4llvm12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:call_init.part.0
+   fun:call_init
+   fun:_dl_init
+   fun:_dl_catch_exception
+   fun:dl_open_worker
+   fun:_dl_catch_exception
+   fun:_dl_open
+}
+{
+   auto-suppress-32
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:_ZN4llvm12PassRegistry12registerPassERKNS_8PassInfoEb
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm39initializeDependenceInfoWrapperPassPassERNS_12PassRegistryE
+   fun:_ZN5polly21initializePollyPassesERN4llvm12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:call_init.part.0
+   fun:call_init
+   fun:_dl_init
+   fun:_dl_catch_exception
+   fun:dl_open_worker
+}
+{
+   auto-suppress-33
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:calloc
+   obj:/usr/lib/x86_64-linux-gnu/libX11.so.6.3.0
+   obj:/usr/lib/x86_64-linux-gnu/libX11.so.6.3.0
+   fun:_XlcCreateLocaleDataBase
+   obj:/usr/lib/x86_64-linux-gnu/libX11.so.6.3.0
+   obj:/usr/lib/x86_64-linux-gnu/libX11.so.6.3.0
+   fun:_XlcCreateLC
+   fun:_XlcDefaultLoader
+   fun:_XOpenLC
+   fun:_XrmInitParseInfo
+   obj:/usr/lib/x86_64-linux-gnu/libX11.so.6.3.0
+   fun:XrmGetStringDatabase
+}
+{
+   auto-suppress-34
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:calloc
+   fun:_XrmInternalStringToQuark
+   fun:XrmInitialize
+   obj:/usr/lib/x86_64-linux-gnu/libglfw.so.3.3
+   fun:glfwInit
+   fun:drawer_new
+   fun:main
+}
+{
+   auto-suppress-35
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:pa_xmalloc
+   fun:pa_pstream_send_memblock
+   fun:pa_stream_write_ext_free
+   fun:pa_stream_write
+   fun:ma_device_write_to_stream__pulse
+   fun:ma_device_on_write__pulse
+   obj:/usr/lib/x86_64-linux-gnu/libpulse.so.0.21.2
+   fun:pa_pdispatch_run
+   obj:/usr/lib/x86_64-linux-gnu/libpulse.so.0.21.2
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+}
+{
+   auto-suppress-36
+   Memcheck:Cond
+   obj:/usr/lib/x86_64-linux-gnu/libluajit-5.1.so.2.1.0
+   fun:lua_pushlstring
+   obj:/usr/lib/x86_64-linux-gnu/libluajit-5.1.so.2.1.0
+   fun:luaL_pushresult
+   fun:luaL_gsub
+   obj:/usr/lib/x86_64-linux-gnu/libluajit-5.1.so.2.1.0
+   obj:/usr/lib/x86_64-linux-gnu/libluajit-5.1.so.2.1.0
+   obj:/usr/lib/x86_64-linux-gnu/libluajit-5.1.so.2.1.0
+   obj:/usr/lib/x86_64-linux-gnu/libluajit-5.1.so.2.1.0
+   obj:/usr/lib/x86_64-linux-gnu/libluajit-5.1.so.2.1.0
+   fun:lua_pcall
+   fun:script_run
+}
+{
+   auto-suppress-37
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:strdup
+   obj:/usr/lib/x86_64-linux-gnu/libX11.so.6.3.0
+   obj:/usr/lib/x86_64-linux-gnu/libX11.so.6.3.0
+   fun:_XlcCreateLocaleDataBase
+   obj:/usr/lib/x86_64-linux-gnu/libX11.so.6.3.0
+   obj:/usr/lib/x86_64-linux-gnu/libX11.so.6.3.0
+   fun:_XlcCreateLC
+   fun:_XlcDefaultLoader
+   fun:_XOpenLC
+   fun:_XrmInitParseInfo
+   obj:/usr/lib/x86_64-linux-gnu/libX11.so.6.3.0
+}
+{
+   auto-suppress-38
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:pa_xmalloc
+   fun:pa_mutex_new
+   fun:pa_static_mutex_get
+   fun:pa_once_begin
+   fun:pa_run_once
+   fun:pa_queue_push
+   fun:pa_pstream_send_packet
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+   fun:pa_pstream_send_tagstruct_with_creds
+   obj:/usr/lib/x86_64-linux-gnu/libpulse.so.0.21.2
+   obj:/usr/lib/x86_64-linux-gnu/libpulse.so.0.21.2
+}
+{
+   auto-suppress-39
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:_ZN4llvm12PassRegistry12registerPassERKNS_8PassInfoEb
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm36initializeTypeBasedAAWrapperPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm34initializeAAResultsWrapperPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm32initializeScopInfoRegionPassPassERNS_12PassRegistryE
+}
+{
+   auto-suppress-40
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm29initializeFlattenSchedulePassERNS_12PassRegistryE
+   fun:_ZN5polly21initializePollyPassesERN4llvm12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:call_init.part.0
+   fun:call_init
+   fun:_dl_init
+   fun:_dl_catch_exception
+   fun:dl_open_worker
+   fun:_dl_catch_exception
+   fun:_dl_open
+}
+{
+   auto-suppress-41
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm50initializeOptimizationRemarkEmitterWrapperPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm38initializeScopDetectionWrapperPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm32initializeScopInfoRegionPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+}
+{
+   auto-suppress-42
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm31initializePruneUnprofitablePassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:call_init.part.0
+   fun:call_init
+   fun:_dl_init
+   fun:_dl_catch_exception
+   fun:dl_open_worker
+   fun:_dl_catch_exception
+   fun:_dl_open
+   fun:dlopen_doit
+}
+{
+   auto-suppress-43
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:_ZN4llvm12PassRegistry12registerPassERKNS_8PassInfoEb
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm28initializeCodegenCleanupPassERNS_12PassRegistryE
+   fun:_ZN5polly21initializePollyPassesERN4llvm12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:call_init.part.0
+   fun:call_init
+   fun:_dl_init
+   fun:_dl_catch_exception
+   fun:dl_open_worker
+}
+{
+   auto-suppress-44
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   obj:*
+   obj:*
+   fun:glXGetClientString
+   fun:glxewInit
+   fun:glewInit
+   fun:drawer_new
+   fun:main
+}
+{
+   auto-suppress-45
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:_ZNK4llvm17ManagedStaticBase21RegisterManagedStaticEPFPvvEPFvS1_E
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:call_init.part.0
+   fun:call_init
+   fun:_dl_init
+   fun:_dl_catch_exception
+   fun:dl_open_worker
+   fun:_dl_catch_exception
+   fun:_dl_open
+   fun:dlopen_doit
+   fun:_dl_catch_exception
+}
+{
+   auto-suppress-46
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm34initializeObjCARCAAWrapperPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm34initializeAAResultsWrapperPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm32initializeScopInfoRegionPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+}
+{
+   auto-suppress-47
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:pa_xmalloc
+   fun:pa_mutex_new
+   fun:pa_static_mutex_get
+   fun:pa_once_begin
+   fun:pa_run_once
+   fun:pa_tagstruct_new
+   obj:/usr/lib/x86_64-linux-gnu/libpulse.so.0.21.2
+   obj:/usr/lib/x86_64-linux-gnu/libpulse.so.0.21.2
+   obj:/usr/lib/x86_64-linux-gnu/libpulse.so.0.21.2
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+   fun:pa_mainloop_dispatch
+}
+{
+   auto-suppress-48
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:_ZN4llvm12PassRegistry12registerPassERKNS_8PassInfoEb
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm28initializeCodeGenerationPassERNS_12PassRegistryE
+   fun:_ZN5polly21initializePollyPassesERN4llvm12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:call_init.part.0
+   fun:call_init
+   fun:_dl_init
+   fun:_dl_catch_exception
+   fun:dl_open_worker
+}
+{
+   auto-suppress-49
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:_ZN4llvm12PassRegistry12registerPassERKNS_8PassInfoEb
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm35initializeIslAstInfoWrapperPassPassERNS_12PassRegistryE
+   fun:_ZN5polly21initializePollyPassesERN4llvm12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:call_init.part.0
+   fun:call_init
+   fun:_dl_init
+   fun:_dl_catch_exception
+   fun:dl_open_worker
+}
+{
+   auto-suppress-50
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:call_init.part.0
+   fun:call_init
+   fun:_dl_init
+   fun:_dl_catch_exception
+   fun:dl_open_worker
+   fun:_dl_catch_exception
+   fun:_dl_open
+   fun:dlopen_doit
+   fun:_dl_catch_exception
+}
+{
+   auto-suppress-51
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:pa_xmalloc
+   fun:pa_mutex_new
+   fun:pa_static_mutex_get
+   fun:pa_once_begin
+   fun:pa_run_once
+   fun:pa_pstream_send_packet
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+   fun:pa_pstream_send_tagstruct_with_creds
+   obj:/usr/lib/x86_64-linux-gnu/libpulse.so.0.21.2
+   obj:/usr/lib/x86_64-linux-gnu/libpulse.so.0.21.2
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+}
+{
+   auto-suppress-52
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:_ZN4llvm12PassRegistry12registerPassERKNS_8PassInfoEb
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm43initializeProfileSummaryInfoWrapperPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm50initializeOptimizationRemarkEmitterWrapperPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm38initializeScopDetectionWrapperPassPassERNS_12PassRegistryE
+}
+{
+   auto-suppress-53
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:_ZN4llvm12PassRegistry12registerPassERKNS_8PassInfoEb
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm24initializeDumpModulePassERNS_12PassRegistryE
+   fun:_ZN5polly21initializePollyPassesERN4llvm12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:call_init.part.0
+   fun:call_init
+   fun:_dl_init
+   fun:_dl_catch_exception
+   fun:dl_open_worker
+}
+{
+   auto-suppress-54
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:pa_xmalloc
+   fun:pa_queue_push
+   fun:pa_pstream_send_packet
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+   fun:pa_pstream_send_tagstruct_with_creds
+   obj:/usr/lib/x86_64-linux-gnu/libpulse.so.0.21.2
+   obj:/usr/lib/x86_64-linux-gnu/libpulse.so.0.21.2
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+   fun:pa_mainloop_dispatch
+   fun:pa_mainloop_iterate
+   fun:ma_wait_for_pa_context_to_connect__pulse
+}
+{
+   auto-suppress-55
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm34initializeIslScheduleOptimizerPassERNS_12PassRegistryE
+   fun:_ZN5polly21initializePollyPassesERN4llvm12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:call_init.part.0
+   fun:call_init
+   fun:_dl_init
+   fun:_dl_catch_exception
+   fun:dl_open_worker
+   fun:_dl_catch_exception
+   fun:_dl_open
+}
+{
+   auto-suppress-56
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:pa_xmalloc
+   fun:pa_xmemdup
+   fun:pa_flist_new_with_name
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+   fun:pa_run_once
+   fun:pa_pdispatch_register_reply
+   obj:/usr/lib/x86_64-linux-gnu/libpulse.so.0.21.2
+   obj:/usr/lib/x86_64-linux-gnu/libpulse.so.0.21.2
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+   fun:pa_mainloop_dispatch
+   fun:pa_mainloop_iterate
+}
+{
+   auto-suppress-57
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:_ZNK4llvm17ManagedStaticBase21RegisterManagedStaticEPFPvvEPFvS1_E
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:_ZNK4llvm17ManagedStaticBase21RegisterManagedStaticEPFPvvEPFvS1_E
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:call_init.part.0
+   fun:call_init
+   fun:_dl_init
+   fun:_dl_catch_exception
+   fun:dl_open_worker
+   fun:_dl_catch_exception
+}
+{
+   auto-suppress-58
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:_XlcSetConverter
+   fun:_XlcAddUtf8Converters
+   fun:_XlcDefaultLoader
+   fun:_XOpenLC
+   fun:_XrmInitParseInfo
+   obj:/usr/lib/x86_64-linux-gnu/libX11.so.6.3.0
+   fun:XrmGetStringDatabase
+   obj:/usr/lib/x86_64-linux-gnu/libX11.so.6.3.0
+   fun:XGetDefault
+   obj:*
+   obj:*
+}
+{
+   auto-suppress-59
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   obj:/usr/lib/x86_64-linux-gnu/libX11.so.6.3.0
+   fun:_XlcCreateLC
+   fun:_XlcDefaultLoader
+   fun:_XOpenLC
+   fun:_XrmInitParseInfo
+   obj:/usr/lib/x86_64-linux-gnu/libX11.so.6.3.0
+   fun:XrmGetStringDatabase
+   obj:/usr/lib/x86_64-linux-gnu/libX11.so.6.3.0
+   fun:XGetDefault
+   obj:*
+   obj:*
+}
+{
+   auto-suppress-60
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:_ZN4llvm12PassRegistry12registerPassERKNS_8PassInfoEb
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm33initializeLoopInfoWrapperPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm40initializeScalarEvolutionWrapperPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm31initializeSCEVAAWrapperPassPassERNS_12PassRegistryE
+}
+{
+   auto-suppress-61
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:_ZN4llvm12PassRegistry12registerPassERKNS_8PassInfoEb
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm27initializeForwardOpTreePassERNS_12PassRegistryE
+   fun:_ZN5polly21initializePollyPassesERN4llvm12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:call_init.part.0
+   fun:call_init
+   fun:_dl_init
+   fun:_dl_catch_exception
+   fun:dl_open_worker
+}
+{
+   auto-suppress-62
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:pa_xmalloc
+   fun:pa_mutex_new
+   fun:pa_static_mutex_get
+   fun:pa_once_begin
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+   fun:pa_memtrap_add
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+   fun:pa_memimport_attach_memfd
+   fun:pa_pstream_attach_memfd_shmid
+   fun:pa_pstream_register_memfd_mempool
+   obj:/usr/lib/x86_64-linux-gnu/libpulse.so.0.21.2
+}
+{
+   auto-suppress-63
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:pa_xmalloc
+   fun:pa_mutex_new
+   fun:pa_static_mutex_get
+   fun:pa_once_begin
+   fun:pa_page_size
+   fun:pa_mempool_new
+   fun:pa_context_new_with_proplist
+   fun:ma_init_pa_mainloop_and_pa_context__pulse
+   fun:ma_context_init__pulse
+   fun:ma_context_init
+   fun:audio_init
+}
+{
+   auto-suppress-64
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm29initializeCodePreparationPassERNS_12PassRegistryE
+   fun:_ZN5polly21initializePollyPassesERN4llvm12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:call_init.part.0
+   fun:call_init
+   fun:_dl_init
+   fun:_dl_catch_exception
+   fun:dl_open_worker
+   fun:_dl_catch_exception
+   fun:_dl_open
+}
+{
+   auto-suppress-65
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:_ZN4llvm12PassRegistry12registerPassERKNS_8PassInfoEb
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm28initializePolyhedralInfoPassERNS_12PassRegistryE
+   fun:_ZN5polly21initializePollyPassesERN4llvm12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:call_init.part.0
+   fun:call_init
+   fun:_dl_init
+   fun:_dl_catch_exception
+   fun:dl_open_worker
+}
+{
+   auto-suppress-66
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:_ZN4llvm12PassRegistry12registerPassERKNS_8PassInfoEb
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm38initializeDominatorTreeWrapperPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm32initializeBasicAAWrapperPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm34initializeAAResultsWrapperPassPassERNS_12PassRegistryE
+}
+{
+   auto-suppress-67
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:pa_xmalloc
+   fun:pa_idxset_put
+   fun:pa_pstream_attach_memfd_shmid
+   fun:pa_pstream_register_memfd_mempool
+   obj:/usr/lib/x86_64-linux-gnu/libpulse.so.0.21.2
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+   fun:pa_pdispatch_run
+   obj:/usr/lib/x86_64-linux-gnu/libpulse.so.0.21.2
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+   fun:pa_mainloop_dispatch
+}
+{
+   auto-suppress-68
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:calloc
+   fun:_XlcCreateLocaleDataBase
+   obj:/usr/lib/x86_64-linux-gnu/libX11.so.6.3.0
+   obj:/usr/lib/x86_64-linux-gnu/libX11.so.6.3.0
+   fun:_XlcCreateLC
+   fun:_XlcDefaultLoader
+   fun:_XOpenLC
+   fun:_XrmInitParseInfo
+   obj:/usr/lib/x86_64-linux-gnu/libX11.so.6.3.0
+   fun:XrmGetStringDatabase
+   obj:/usr/lib/x86_64-linux-gnu/libX11.so.6.3.0
+   fun:XGetDefault
+}
+{
+   auto-suppress-69
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:_ZN4llvm12PassRegistry12registerPassERKNS_8PassInfoEb
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm25initializeScopInlinerPassERNS_12PassRegistryE
+   fun:_ZN5polly21initializePollyPassesERN4llvm12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:call_init.part.0
+   fun:call_init
+   fun:_dl_init
+   fun:_dl_catch_exception
+   fun:dl_open_worker
+}
+{
+   auto-suppress-70
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:malloc
+   obj:/usr/lib/x86_64-linux-gnu/dri/nouveau_dri.so
+   obj:/usr/lib/x86_64-linux-gnu/dri/nouveau_dri.so
+   obj:/usr/lib/x86_64-linux-gnu/dri/nouveau_dri.so
+   fun:nouveau_drm_screen_create
+   obj:/usr/lib/x86_64-linux-gnu/dri/nouveau_dri.so
+   obj:/usr/lib/x86_64-linux-gnu/dri/nouveau_dri.so
+   obj:/usr/lib/x86_64-linux-gnu/dri/nouveau_dri.so
+   obj:/usr/lib/x86_64-linux-gnu/dri/nouveau_dri.so
+   obj:*
+   obj:*
+   obj:*
+}
+{
+   auto-suppress-71
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:pa_xmalloc
+   fun:pa_queue_push
+   fun:pa_pstream_send_packet
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+   fun:pa_pstream_send_tagstruct_with_creds
+   obj:/usr/lib/x86_64-linux-gnu/libpulse.so.0.21.2
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+   fun:pa_pdispatch_run
+   obj:/usr/lib/x86_64-linux-gnu/libpulse.so.0.21.2
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+}
+{
+   auto-suppress-72
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:_XlcCreateLocaleDataBase
+   obj:/usr/lib/x86_64-linux-gnu/libX11.so.6.3.0
+   obj:/usr/lib/x86_64-linux-gnu/libX11.so.6.3.0
+   fun:_XlcCreateLC
+   fun:_XlcDefaultLoader
+   fun:_XOpenLC
+   fun:_XrmInitParseInfo
+   obj:/usr/lib/x86_64-linux-gnu/libX11.so.6.3.0
+   fun:XrmGetStringDatabase
+   obj:/usr/lib/x86_64-linux-gnu/libX11.so.6.3.0
+   fun:XGetDefault
+}
+{
+   auto-suppress-73
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:pa_xmalloc
+   fun:pa_hashmap_put
+   fun:pa_memimport_get
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+   fun:pa_mainloop_dispatch
+   fun:pa_mainloop_iterate
+   fun:ma_wait_for_pa_context_to_connect__pulse
+   fun:ma_init_pa_mainloop_and_pa_context__pulse
+   fun:ma_device_init__pulse
+   fun:ma_device_init
+}
+{
+   auto-suppress-74
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:pa_xmalloc
+   fun:pa_mutex_new
+   fun:pa_static_mutex_get
+   fun:pa_once_begin
+   fun:pa_run_once
+   fun:pa_hashmap_put
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+   fun:pa_memimport_attach_memfd
+   fun:pa_pstream_attach_memfd_shmid
+   fun:pa_pstream_register_memfd_mempool
+   obj:/usr/lib/x86_64-linux-gnu/libpulse.so.0.21.2
+}
+{
+   auto-suppress-75
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm32initializeSimplifyLegacyPassPassERNS_12PassRegistryE
+   fun:_ZN5polly21initializePollyPassesERN4llvm12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:call_init.part.0
+   fun:call_init
+   fun:_dl_init
+   fun:_dl_catch_exception
+   fun:dl_open_worker
+   fun:_dl_catch_exception
+   fun:_dl_open
+}
+{
+   auto-suppress-76
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:_ZN4llvm12PassRegistry12registerPassERKNS_8PassInfoEb
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm36initializeCFLSteensAAWrapperPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm34initializeAAResultsWrapperPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm32initializeScopInfoRegionPassPassERNS_12PassRegistryE
+}
+{
+   auto-suppress-77
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   fun:_ZNSt8_Rb_treeINSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEESt4pairIKS5_jESt10_Select1stIS8_ESt4lessIS5_ESaIS8_EE22_M_emplace_hint_uniqueIJRKSt21piecewise_construct_tSt5tupleIJRS7_EESJ_IJEEEEESt17_Rb_tree_iteratorIS8_ESt23_Rb_tree_const_iteratorIS8_EDpOT_
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:call_init.part.0
+   fun:call_init
+   fun:_dl_init
+   fun:_dl_catch_exception
+   fun:dl_open_worker
+   fun:_dl_catch_exception
+   fun:_dl_open
+}
+{
+   auto-suppress-78
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:calloc
+   fun:pa_xmalloc0
+   fun:pa_flist_new_with_name
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+   fun:pa_run_once
+   fun:pa_hashmap_put
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+   fun:pa_memimport_attach_memfd
+   fun:pa_pstream_attach_memfd_shmid
+   fun:pa_pstream_register_memfd_mempool
+   obj:/usr/lib/x86_64-linux-gnu/libpulse.so.0.21.2
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+}
+{
+   auto-suppress-79
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:_ZNK4llvm17ManagedStaticBase21RegisterManagedStaticEPFPvvEPFvS1_E
+   fun:_ZN4llvm18PassManagerBuilder18addGlobalExtensionENS0_16ExtensionPointTyESt8functionIFvRKS0_RNS_6legacy15PassManagerBaseEEE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:call_init.part.0
+   fun:call_init
+   fun:_dl_init
+   fun:_dl_catch_exception
+   fun:dl_open_worker
+   fun:_dl_catch_exception
+   fun:_dl_open
+   fun:dlopen_doit
+}
+{
+   auto-suppress-80
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:pa_xmalloc
+   fun:pa_mutex_new
+   fun:pa_aupdate_new
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+   fun:pa_memtrap_add
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+   fun:pa_memimport_attach_memfd
+   fun:pa_pstream_attach_memfd_shmid
+   fun:pa_pstream_register_memfd_mempool
+   obj:/usr/lib/x86_64-linux-gnu/libpulse.so.0.21.2
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+}
+{
+   auto-suppress-81
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:pa_xmalloc
+   fun:pa_memimport_get
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+   fun:pa_mainloop_dispatch
+   fun:pa_mainloop_iterate
+   fun:ma_wait_for_pa_context_to_connect__pulse
+   fun:ma_init_pa_mainloop_and_pa_context__pulse
+   fun:ma_device_init__pulse
+   fun:ma_device_init
+   fun:ma_engine_init
+}
+{
+   auto-suppress-82
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:_ZN4llvm12PassRegistry12registerPassERKNS_8PassInfoEb
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm25initializeLazyBFIPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm50initializeOptimizationRemarkEmitterWrapperPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm38initializeScopDetectionWrapperPassPassERNS_12PassRegistryE
+}
+{
+   auto-suppress-83
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib/x86_64-linux-gnu/dri/nouveau_dri.so
+   obj:/usr/lib/x86_64-linux-gnu/dri/nouveau_dri.so
+   fun:call_init.part.0
+   fun:call_init
+   fun:_dl_init
+   fun:_dl_catch_exception
+   fun:dl_open_worker
+   fun:_dl_catch_exception
+   fun:_dl_open
+   fun:dlopen_doit
+   fun:_dl_catch_exception
+   fun:_dl_catch_error
+}
+{
+   auto-suppress-84
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:calloc
+   fun:pa_xmalloc0
+   fun:pa_flist_new_with_name
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+   fun:pa_run_once
+   fun:pa_queue_push
+   fun:pa_pstream_send_packet
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+   fun:pa_pstream_send_tagstruct_with_creds
+   obj:/usr/lib/x86_64-linux-gnu/libpulse.so.0.21.2
+   obj:/usr/lib/x86_64-linux-gnu/libpulse.so.0.21.2
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+}
+{
+   auto-suppress-85
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:_ZN4llvm2cl6Option11addArgumentEv
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:call_init.part.0
+   fun:call_init
+   fun:_dl_init
+   fun:_dl_catch_exception
+   fun:dl_open_worker
+   fun:_dl_catch_exception
+   fun:_dl_open
+}
+{
+   auto-suppress-86
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:pa_xmalloc
+   fun:pa_mutex_new
+   fun:pa_static_mutex_get
+   fun:pa_once_begin
+   fun:pa_run_once
+   fun:pa_packet_new
+   fun:pa_packet_new_data
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+   fun:pa_pstream_send_tagstruct_with_creds
+   obj:/usr/lib/x86_64-linux-gnu/libpulse.so.0.21.2
+   obj:/usr/lib/x86_64-linux-gnu/libpulse.so.0.21.2
+}
+{
+   auto-suppress-87
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm39initializeDependenceInfoWrapperPassPassERNS_12PassRegistryE
+   fun:_ZN5polly21initializePollyPassesERN4llvm12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:call_init.part.0
+   fun:call_init
+   fun:_dl_init
+   fun:_dl_catch_exception
+   fun:dl_open_worker
+   fun:_dl_catch_exception
+   fun:_dl_open
+}
+{
+   auto-suppress-88
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:_ZN4llvm12PassRegistry12registerPassERKNS_8PassInfoEb
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm31initializePollyCanonicalizePassERNS_12PassRegistryE
+   fun:_ZN5polly21initializePollyPassesERN4llvm12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:call_init.part.0
+   fun:call_init
+   fun:_dl_init
+   fun:_dl_catch_exception
+   fun:dl_open_worker
+}
+{
+   auto-suppress-89
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm26initializeJSONExporterPassERNS_12PassRegistryE
+   fun:_ZN5polly21initializePollyPassesERN4llvm12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:call_init.part.0
+   fun:call_init
+   fun:_dl_init
+   fun:_dl_catch_exception
+   fun:dl_open_worker
+   fun:_dl_catch_exception
+   fun:_dl_open
+}
+{
+   auto-suppress-90
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:strdup
+   fun:_XlcResolveLocaleName
+   obj:/usr/lib/x86_64-linux-gnu/libX11.so.6.3.0
+   obj:/usr/lib/x86_64-linux-gnu/libX11.so.6.3.0
+   fun:_XlcCreateLC
+   fun:_XlcDefaultLoader
+   fun:_XOpenLC
+   fun:_XrmInitParseInfo
+   obj:/usr/lib/x86_64-linux-gnu/libX11.so.6.3.0
+   fun:XrmGetStringDatabase
+   obj:/usr/lib/x86_64-linux-gnu/libX11.so.6.3.0
+}
+{
+   auto-suppress-91
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:calloc
+   fun:pa_xmalloc0
+   fun:pa_flist_new_with_name
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+   fun:pa_run_once
+   fun:pa_tagstruct_new
+   obj:/usr/lib/x86_64-linux-gnu/libpulse.so.0.21.2
+   obj:/usr/lib/x86_64-linux-gnu/libpulse.so.0.21.2
+   obj:/usr/lib/x86_64-linux-gnu/libpulse.so.0.21.2
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+   fun:pa_mainloop_dispatch
+   fun:pa_mainloop_iterate
+}
+{
+   auto-suppress-92
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:_ZN4llvm12PassRegistry12registerPassERKNS_8PassInfoEb
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm34initializeCallGraphWrapperPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm34initializeGlobalsAAWrapperPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm34initializeAAResultsWrapperPassPassERNS_12PassRegistryE
+}
+{
+   auto-suppress-93
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm42initializeDominanceFrontierWrapperPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm28initializeRegionInfoPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm32initializeScopInfoRegionPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+}
+{
+   auto-suppress-94
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm35initializeIslAstInfoWrapperPassPassERNS_12PassRegistryE
+   fun:_ZN5polly21initializePollyPassesERN4llvm12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:call_init.part.0
+   fun:call_init
+   fun:_dl_init
+   fun:_dl_catch_exception
+   fun:dl_open_worker
+   fun:_dl_catch_exception
+   fun:_dl_open
+}
+{
+   auto-suppress-95
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm32initializeBasicAAWrapperPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm34initializeAAResultsWrapperPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm32initializeScopInfoRegionPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+}
+{
+   auto-suppress-96
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:_XlcCreateLocaleDataBase
+   obj:/usr/lib/x86_64-linux-gnu/libX11.so.6.3.0
+   obj:/usr/lib/x86_64-linux-gnu/libX11.so.6.3.0
+   fun:_XlcCreateLC
+   fun:_XlcUtf8Loader
+   fun:_XOpenLC
+   fun:_XrmInitParseInfo
+   obj:/usr/lib/x86_64-linux-gnu/libX11.so.6.3.0
+   fun:XrmGetStringDatabase
+   obj:/usr/lib/x86_64-linux-gnu/libglfw.so.3.3
+   fun:glfwInit
+}
+{
+   auto-suppress-97
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:_XimOpenIM
+   obj:/usr/lib/x86_64-linux-gnu/libglfw.so.3.3
+   fun:glfwInit
+   fun:drawer_new
+   fun:main
+}
+{
+   auto-suppress-98
+   Memcheck:Param
+   ioctl(generic)
+   fun:ioctl
+   fun:drmIoctl
+   fun:drmCommandWriteRead
+   fun:nouveau_object_mthd
+   fun:nouveau_device_new
+   fun:nouveau_drm_screen_create
+   obj:/usr/lib/x86_64-linux-gnu/dri/nouveau_dri.so
+   obj:/usr/lib/x86_64-linux-gnu/dri/nouveau_dri.so
+   obj:/usr/lib/x86_64-linux-gnu/dri/nouveau_dri.so
+   obj:/usr/lib/x86_64-linux-gnu/dri/nouveau_dri.so
+   obj:/usr/lib/x86_64-linux-gnu/libGLX_mesa.so.0.0.0
+   obj:/usr/lib/x86_64-linux-gnu/libGLX_mesa.so.0.0.0
+}
+{
+   auto-suppress-99
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:pa_xmalloc
+   fun:pa_xmemdup
+   fun:pa_flist_new_with_name
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+   fun:pa_run_once
+   fun:pa_tagstruct_new
+   obj:/usr/lib/x86_64-linux-gnu/libpulse.so.0.21.2
+   obj:/usr/lib/x86_64-linux-gnu/libpulse.so.0.21.2
+   obj:/usr/lib/x86_64-linux-gnu/libpulse.so.0.21.2
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+   fun:pa_mainloop_dispatch
+}
+{
+   auto-suppress-100
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:pa_xmalloc
+   fun:pa_packet_new
+   fun:pa_packet_new_data
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+   fun:pa_pstream_send_tagstruct_with_creds
+   obj:/usr/lib/x86_64-linux-gnu/libpulse.so.0.21.2
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+   fun:pa_pdispatch_run
+   obj:/usr/lib/x86_64-linux-gnu/libpulse.so.0.21.2
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+}
+{
+   auto-suppress-101
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:calloc
+   fun:_ZN4llvm13StringMapImpl11RehashTableEj
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:_ZN4llvm2cl6Option11addArgumentEv
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:call_init.part.0
+   fun:call_init
+   fun:_dl_init
+   fun:_dl_catch_exception
+   fun:dl_open_worker
+   fun:_dl_catch_exception
+   fun:_dl_open
+}
+{
+   auto-suppress-102
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:realloc
+   obj:/usr/lib/x86_64-linux-gnu/libX11.so.6.3.0
+   obj:/usr/lib/x86_64-linux-gnu/libX11.so.6.3.0
+   obj:/usr/lib/x86_64-linux-gnu/libX11.so.6.3.0
+   fun:_XlcCreateLC
+   fun:_XlcDefaultLoader
+   fun:_XOpenLC
+   fun:_XrmInitParseInfo
+   obj:/usr/lib/x86_64-linux-gnu/libX11.so.6.3.0
+   fun:XrmGetStringDatabase
+   obj:/usr/lib/x86_64-linux-gnu/libX11.so.6.3.0
+   fun:XGetDefault
+}
+{
+   auto-suppress-103
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:pa_xmalloc
+   fun:pa_hashmap_put
+   fun:pa_proplist_set
+   fun:pa_tagstruct_get_proplist
+   obj:/usr/lib/x86_64-linux-gnu/libpulse.so.0.21.2
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+   fun:pa_pdispatch_run
+   obj:/usr/lib/x86_64-linux-gnu/libpulse.so.0.21.2
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+   fun:pa_mainloop_dispatch
+}
+{
+   auto-suppress-104
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:calloc
+   obj:/usr/lib/x86_64-linux-gnu/libX11.so.6.3.0
+   fun:_XlcCreateLC
+   fun:_XlcDefaultLoader
+   fun:_XOpenLC
+   fun:_XrmInitParseInfo
+   obj:/usr/lib/x86_64-linux-gnu/libX11.so.6.3.0
+   fun:XrmGetStringDatabase
+   obj:/usr/lib/x86_64-linux-gnu/libX11.so.6.3.0
+   fun:XGetDefault
+   obj:*
+   obj:*
+}
+{
+   auto-suppress-105
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:pa_xmalloc
+   fun:pa_pstream_send_packet
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+   fun:pa_pstream_send_tagstruct_with_creds
+   obj:/usr/lib/x86_64-linux-gnu/libpulse.so.0.21.2
+   obj:/usr/lib/x86_64-linux-gnu/libpulse.so.0.21.2
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+   fun:pa_mainloop_dispatch
+   fun:pa_mainloop_iterate
+   fun:ma_wait_for_pa_context_to_connect__pulse
+   fun:ma_init_pa_mainloop_and_pa_context__pulse
+}
+{
+   auto-suppress-106
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm31initializeSCEVAAWrapperPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm34initializeAAResultsWrapperPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm32initializeScopInfoRegionPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+}
+{
+   auto-suppress-107
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:calloc
+   fun:do_lookup_unique
+   fun:do_lookup_x
+   fun:_dl_lookup_symbol_x
+   fun:elf_machine_rela
+   fun:elf_dynamic_do_Rela
+   fun:_dl_relocate_object
+   fun:dl_open_worker
+   fun:_dl_catch_exception
+   fun:_dl_open
+   fun:dlopen_doit
+   fun:_dl_catch_exception
+   fun:_dl_catch_error
+   fun:_dlerror_run
+   fun:dlopen@@GLIBC_2.2.5
+}
+{
+   auto-suppress-108
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:pa_xmalloc
+   fun:pa_mutex_new
+   fun:pa_static_mutex_get
+   fun:pa_once_begin
+   fun:pa_init_i18n
+   fun:pa_mainloop_new
+   fun:ma_init_pa_mainloop_and_pa_context__pulse
+   fun:ma_context_init__pulse
+   fun:ma_context_init
+   fun:audio_init
+   fun:main
+}
+{
+   auto-suppress-109
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:_XlcSetConverter
+   fun:_XlcDefaultLoader
+   fun:_XOpenLC
+   fun:_XrmInitParseInfo
+   obj:/usr/lib/x86_64-linux-gnu/libX11.so.6.3.0
+   fun:XrmGetStringDatabase
+   obj:/usr/lib/x86_64-linux-gnu/libX11.so.6.3.0
+   fun:XGetDefault
+   obj:*
+   obj:*
+   obj:*
+}
+{
+   auto-suppress-110
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm28initializeCodeGenerationPassERNS_12PassRegistryE
+   fun:_ZN5polly21initializePollyPassesERN4llvm12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:call_init.part.0
+   fun:call_init
+   fun:_dl_init
+   fun:_dl_catch_exception
+   fun:dl_open_worker
+   fun:_dl_catch_exception
+   fun:_dl_open
+}
+{
+   auto-suppress-111
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm38initializeScopDetectionWrapperPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm32initializeScopInfoRegionPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm28initializeDependenceInfoPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+}
+{
+   auto-suppress-112
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:pa_xmalloc
+   fun:pa_mutex_new
+   fun:pa_static_mutex_get
+   fun:pa_memtrap_add
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+   fun:pa_memimport_attach_memfd
+   fun:pa_pstream_attach_memfd_shmid
+   fun:pa_pstream_register_memfd_mempool
+   obj:/usr/lib/x86_64-linux-gnu/libpulse.so.0.21.2
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+   fun:pa_pdispatch_run
+}
+{
+   auto-suppress-113
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm42initializePostDominatorTreeWrapperPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm28initializeRegionInfoPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm32initializeScopInfoRegionPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+}
+{
+   auto-suppress-114
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:calloc
+   fun:pa_xmalloc0
+   fun:pa_flist_new_with_name
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+   fun:pa_run_once
+   fun:pa_pdispatch_register_reply
+   obj:/usr/lib/x86_64-linux-gnu/libpulse.so.0.21.2
+   obj:/usr/lib/x86_64-linux-gnu/libpulse.so.0.21.2
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+   fun:pa_mainloop_dispatch
+   fun:pa_mainloop_iterate
+   fun:ma_wait_for_pa_context_to_connect__pulse
+}
+{
+   auto-suppress-115
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:pa_xmalloc
+   fun:pa_mutex_new
+   fun:pa_static_mutex_get
+   fun:pa_once_begin
+   fun:pa_run_once
+   fun:pa_memimport_get
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+   fun:pa_mainloop_dispatch
+   fun:pa_mainloop_iterate
+   fun:ma_wait_for_pa_context_to_connect__pulse
+}
+{
+   auto-suppress-116
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:calloc
+   fun:pa_xmalloc0
+   fun:pa_flist_new_with_name
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+   fun:pa_run_once
+   fun:pa_packet_new
+   fun:pa_packet_new_data
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+   fun:pa_pstream_send_tagstruct_with_creds
+   obj:/usr/lib/x86_64-linux-gnu/libpulse.so.0.21.2
+   obj:/usr/lib/x86_64-linux-gnu/libpulse.so.0.21.2
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+}
+{
+   auto-suppress-117
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:_ZN4llvm12PassRegistry12registerPassERKNS_8PassInfoEb
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm29initializeFlattenSchedulePassERNS_12PassRegistryE
+   fun:_ZN5polly21initializePollyPassesERN4llvm12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:call_init.part.0
+   fun:call_init
+   fun:_dl_init
+   fun:_dl_catch_exception
+   fun:dl_open_worker
+}
+{
+   auto-suppress-118
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:_ZN4llvm12PassRegistry12registerPassERKNS_8PassInfoEb
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm26initializeJSONExporterPassERNS_12PassRegistryE
+   fun:_ZN5polly21initializePollyPassesERN4llvm12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:call_init.part.0
+   fun:call_init
+   fun:_dl_init
+   fun:_dl_catch_exception
+   fun:dl_open_worker
+}
+{
+   auto-suppress-119
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:_XlcAddCT
+   fun:_XlcInitCTInfo
+   obj:/usr/lib/x86_64-linux-gnu/libX11.so.6.3.0
+   obj:/usr/lib/x86_64-linux-gnu/libX11.so.6.3.0
+   fun:_XlcCreateLC
+   fun:_XlcUtf8Loader
+   fun:_XOpenLC
+   fun:_XrmInitParseInfo
+   obj:/usr/lib/x86_64-linux-gnu/libX11.so.6.3.0
+   fun:XrmGetStringDatabase
+   obj:/usr/lib/x86_64-linux-gnu/libglfw.so.3.3
+}
+{
+   auto-suppress-120
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:call_init.part.0
+   fun:call_init
+   fun:_dl_init
+   fun:_dl_catch_exception
+   fun:dl_open_worker
+   fun:_dl_catch_exception
+   fun:_dl_open
+   fun:dlopen_doit
+}
+{
+   auto-suppress-121
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:_XlcCreateDefaultCharSet
+   fun:_XlcAddCT
+   fun:_XlcInitCTInfo
+   obj:/usr/lib/x86_64-linux-gnu/libX11.so.6.3.0
+   obj:/usr/lib/x86_64-linux-gnu/libX11.so.6.3.0
+   fun:_XlcCreateLC
+   fun:_XlcUtf8Loader
+   fun:_XOpenLC
+   fun:_XrmInitParseInfo
+   obj:/usr/lib/x86_64-linux-gnu/libX11.so.6.3.0
+   fun:XrmGetStringDatabase
+}
+{
+   auto-suppress-122
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm36initializeCFLSteensAAWrapperPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm34initializeAAResultsWrapperPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm32initializeScopInfoRegionPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+}
+{
+   auto-suppress-123
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:calloc
+   obj:/usr/lib/x86_64-linux-gnu/libX11.so.6.3.0
+   obj:/usr/lib/x86_64-linux-gnu/libX11.so.6.3.0
+   obj:/usr/lib/x86_64-linux-gnu/libX11.so.6.3.0
+   fun:_XlcCreateLC
+   fun:_XlcDefaultLoader
+   fun:_XOpenLC
+   fun:_XrmInitParseInfo
+   obj:/usr/lib/x86_64-linux-gnu/libX11.so.6.3.0
+   fun:XrmGetStringDatabase
+   obj:/usr/lib/x86_64-linux-gnu/libX11.so.6.3.0
+   fun:XGetDefault
+}
+{
+   auto-suppress-124
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:_ZN4llvm12PassRegistry12registerPassERKNS_8PassInfoEb
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm26initializeDeadCodeElimPassERNS_12PassRegistryE
+   fun:_ZN5polly21initializePollyPassesERN4llvm12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:call_init.part.0
+   fun:call_init
+   fun:_dl_init
+   fun:_dl_catch_exception
+   fun:dl_open_worker
+}
+{
+   auto-suppress-125
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm28initializeRegionInfoPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm32initializeScopInfoRegionPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm28initializeDependenceInfoPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+}
+{
+   auto-suppress-126
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm28initializeDependenceInfoPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm28initializeCodeGenerationPassERNS_12PassRegistryE
+   fun:_ZN5polly21initializePollyPassesERN4llvm12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:call_init.part.0
+   fun:call_init
+   fun:_dl_init
+   fun:_dl_catch_exception
+}
+{
+   auto-suppress-127
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:_ZNK4llvm17ManagedStaticBase21RegisterManagedStaticEPFPvvEPFvS1_E
+   fun:_ZN4llvm12PassRegistry15getPassRegistryEv
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:call_init.part.0
+   fun:call_init
+   fun:_dl_init
+   fun:_dl_catch_exception
+   fun:dl_open_worker
+   fun:_dl_catch_exception
+   fun:_dl_open
+   fun:dlopen_doit
+}
+{
+   auto-suppress-128
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:_ZN4llvm12PassRegistry12registerPassERKNS_8PassInfoEb
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm28initializeRegionInfoPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm32initializeScopInfoRegionPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm28initializeDependenceInfoPassERNS_12PassRegistryE
+}
+{
+   auto-suppress-129
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm36initializeAssumptionCacheTrackerPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm32initializeBasicAAWrapperPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm34initializeAAResultsWrapperPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+}
+{
+   auto-suppress-130
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:_ZN4llvm12PassRegistry12registerPassERKNS_8PassInfoEb
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm50initializeOptimizationRemarkEmitterWrapperPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm38initializeScopDetectionWrapperPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm32initializeScopInfoRegionPassPassERNS_12PassRegistryE
+}
+{
+   auto-suppress-131
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm34initializeGlobalsAAWrapperPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm34initializeAAResultsWrapperPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm32initializeScopInfoRegionPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+}
+{
+   auto-suppress-132
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:_ZN4llvm12PassRegistry12registerPassERKNS_8PassInfoEb
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm34initializeAAResultsWrapperPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm32initializeScopInfoRegionPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+}
+{
+   auto-suppress-133
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:_ZN4llvm12PassRegistry12registerPassERKNS_8PassInfoEb
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm31initializePruneUnprofitablePassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:call_init.part.0
+   fun:call_init
+   fun:_dl_init
+   fun:_dl_catch_exception
+   fun:dl_open_worker
+   fun:_dl_catch_exception
+}
+{
+   auto-suppress-134
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:_ZN4llvm12PassRegistry12registerPassERKNS_8PassInfoEb
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm35initializeMaximalStaticExpanderPassERNS_12PassRegistryE
+   fun:_ZN5polly21initializePollyPassesERN4llvm12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:call_init.part.0
+   fun:call_init
+   fun:_dl_init
+   fun:_dl_catch_exception
+   fun:dl_open_worker
+}
+{
+   auto-suppress-135
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:calloc
+   fun:pa_xmalloc0
+   fun:pa_flist_new_with_name
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+   fun:pa_run_once
+   fun:pa_idxset_put
+   fun:pa_pstream_attach_memfd_shmid
+   fun:pa_pstream_register_memfd_mempool
+   obj:/usr/lib/x86_64-linux-gnu/libpulse.so.0.21.2
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+   fun:pa_pdispatch_run
+   obj:/usr/lib/x86_64-linux-gnu/libpulse.so.0.21.2
+}
+{
+   auto-suppress-136
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:_XrmInternalStringToQuark
+   fun:XrmInitialize
+   obj:/usr/lib/x86_64-linux-gnu/libglfw.so.3.3
+   fun:glfwInit
+   fun:drawer_new
+   fun:main
+}
+{
+   auto-suppress-137
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:strdup
+   fun:_dl_map_object
+   fun:dl_open_worker
+   fun:_dl_catch_exception
+   fun:_dl_open
+   fun:dlopen_doit
+   fun:_dl_catch_exception
+   fun:_dl_catch_error
+   fun:_dlerror_run
+   fun:dlopen@@GLIBC_2.2.5
+   obj:*
+}
+{
+   auto-suppress-138
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm25initializeLazyBPIPassPassERNS_12PassRegistryE
+   fun:_ZN4llvm25initializeLazyBFIPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm50initializeOptimizationRemarkEmitterWrapperPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm38initializeScopDetectionWrapperPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+}
+{
+   auto-suppress-139
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:pa_xmalloc
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+   fun:pa_log_set_ident
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+   fun:pa_log_levelv_meta
+   fun:pa_log_level_meta
+   fun:pa_config_parse
+   fun:pa_client_conf_load
+   fun:pa_context_new_with_proplist
+   fun:ma_init_pa_mainloop_and_pa_context__pulse
+   fun:ma_context_init__pulse
+}
+{
+   auto-suppress-140
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:_ZN4llvm2cl6Option11addArgumentEv
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:call_init.part.0
+   fun:call_init
+   fun:_dl_init
+   fun:_dl_catch_exception
+   fun:dl_open_worker
+   fun:_dl_catch_exception
+   fun:_dl_open
+   fun:dlopen_doit
+}
+{
+   auto-suppress-141
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:_ZN4llvm12PassRegistry12registerPassERKNS_8PassInfoEb
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm38initializeScopDetectionWrapperPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm32initializeScopInfoRegionPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm28initializeDependenceInfoPassERNS_12PassRegistryE
+}
+{
+   auto-suppress-142
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:allocate_dtv_entry
+   fun:allocate_and_init
+   fun:tls_get_addr_tail.isra.0
+   fun:__tls_get_addr
+   fun:_ZNK4llvm17ManagedStaticBase21RegisterManagedStaticEPFPvvEPFvS1_E
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:call_init.part.0
+   fun:call_init
+   fun:_dl_init
+   fun:_dl_catch_exception
+   fun:dl_open_worker
+   fun:_dl_catch_exception
+   fun:_dl_open
+   fun:dlopen_doit
+}
+{
+   auto-suppress-143
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:pa_xmalloc
+   fun:pa_mutex_new
+   fun:pa_static_mutex_get
+   fun:pa_once_begin
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+   fun:pa_log_levelv_meta
+   fun:pa_log_level_meta
+   fun:pa_config_parse
+   fun:pa_client_conf_load
+   fun:pa_context_new_with_proplist
+   fun:ma_init_pa_mainloop_and_pa_context__pulse
+}
+{
+   auto-suppress-144
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:calloc
+   fun:_ZN4llvm13StringMapImpl15LookupBucketForENS_9StringRefE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:call_init.part.0
+   fun:call_init
+   fun:_dl_init
+   fun:_dl_catch_exception
+   fun:dl_open_worker
+   fun:_dl_catch_exception
+   fun:_dl_open
+}
+{
+   auto-suppress-145
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm34initializePhiValuesWrapperPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm32initializeBasicAAWrapperPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm34initializeAAResultsWrapperPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+}
+{
+   auto-suppress-146
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   fun:_ZNSt6vectorINSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEESaIS5_EE17_M_realloc_insertIJRKS5_EEEvN9__gnu_cxx17__normal_iteratorIPS5_S7_EEDpOT_
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:call_init.part.0
+   fun:call_init
+   fun:_dl_init
+   fun:_dl_catch_exception
+   fun:dl_open_worker
+   fun:_dl_catch_exception
+   fun:_dl_open
+   fun:dlopen_doit
+}
+{
+   auto-suppress-147
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm33initializeLoopInfoWrapperPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm40initializeScalarEvolutionWrapperPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm31initializeSCEVAAWrapperPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+}
+{
+   auto-suppress-148
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:pa_xmalloc
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+   fun:pa_cstrerror
+   fun:pa_config_parse
+   fun:pa_config_parse
+   fun:pa_client_conf_load
+   fun:pa_context_new_with_proplist
+   fun:ma_init_pa_mainloop_and_pa_context__pulse
+   fun:ma_device_init__pulse
+   fun:ma_device_init
+   fun:ma_engine_init
+}
+{
+   auto-suppress-149
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:pa_xmalloc
+   fun:pa_xmemdup
+   fun:pa_flist_new_with_name
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+   fun:pa_run_once
+   fun:pa_queue_push
+   fun:pa_pstream_send_packet
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+   fun:pa_pstream_send_tagstruct_with_creds
+   obj:/usr/lib/x86_64-linux-gnu/libpulse.so.0.21.2
+   obj:/usr/lib/x86_64-linux-gnu/libpulse.so.0.21.2
+}
+{
+   auto-suppress-150
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:_ZN4llvm12PassRegistry12registerPassERKNS_8PassInfoEb
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm40initializeScopedNoAliasAAWrapperPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm34initializeAAResultsWrapperPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm32initializeScopInfoRegionPassPassERNS_12PassRegistryE
+}
+{
+   auto-suppress-151
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:calloc
+   fun:pa_xmalloc0
+   fun:pa_flist_new_with_name
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+   fun:pa_run_once
+   fun:pa_pstream_send_packet
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+   fun:pa_pstream_send_tagstruct_with_creds
+   obj:/usr/lib/x86_64-linux-gnu/libpulse.so.0.21.2
+   obj:/usr/lib/x86_64-linux-gnu/libpulse.so.0.21.2
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+   fun:pa_mainloop_dispatch
+}
+{
+   auto-suppress-152
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:pa_xmalloc
+   fun:pa_xmemdup
+   fun:pa_flist_new_with_name
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+   fun:pa_run_once
+   fun:pa_pstream_send_packet
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+   fun:pa_pstream_send_tagstruct_with_creds
+   obj:/usr/lib/x86_64-linux-gnu/libpulse.so.0.21.2
+   obj:/usr/lib/x86_64-linux-gnu/libpulse.so.0.21.2
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+}
+{
+   auto-suppress-153
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:pa_xmalloc
+   fun:pa_xmemdup
+   fun:pa_flist_new_with_name
+   obj:/usr/lib/x86_64-linux-gnu/libpulse.so.0.21.2
+   fun:pa_run_once
+   obj:/usr/lib/x86_64-linux-gnu/libpulse.so.0.21.2
+   fun:pa_context_get_sink_info_by_name
+   fun:ma_context_get_sink_info__pulse
+   fun:ma_device_init__pulse
+   fun:ma_device_init
+   fun:ma_engine_init
+}
+{
+   auto-suppress-154
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm24initializeDumpModulePassERNS_12PassRegistryE
+   fun:_ZN5polly21initializePollyPassesERN4llvm12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:call_init.part.0
+   fun:call_init
+   fun:_dl_init
+   fun:_dl_catch_exception
+   fun:dl_open_worker
+   fun:_dl_catch_exception
+   fun:_dl_open
+}
+{
+   auto-suppress-155
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:_ZN4llvm12PassRegistry12registerPassERKNS_8PassInfoEb
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm29initializeFlattenSchedulePassERNS_12PassRegistryE
+   fun:_ZN5polly21initializePollyPassesERN4llvm12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:call_init.part.0
+   fun:call_init
+   fun:_dl_init
+   fun:_dl_catch_exception
+}
+{
+   auto-suppress-156
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:_XlcAddCharSet
+   fun:_XlcAddCT
+   fun:_XlcInitCTInfo
+   obj:/usr/lib/x86_64-linux-gnu/libX11.so.6.3.0
+   obj:/usr/lib/x86_64-linux-gnu/libX11.so.6.3.0
+   fun:_XlcCreateLC
+   fun:_XlcUtf8Loader
+   fun:_XOpenLC
+   fun:_XrmInitParseInfo
+   obj:/usr/lib/x86_64-linux-gnu/libX11.so.6.3.0
+   fun:XrmGetStringDatabase
+}
+{
+   auto-suppress-157
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:_ZN4llvm12PassRegistry12registerPassERKNS_8PassInfoEb
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm34initializeAAResultsWrapperPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm32initializeScopInfoRegionPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm28initializeDependenceInfoPassERNS_12PassRegistryE
+}
+{
+   auto-suppress-158
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:_XlcDefaultMapModifiers
+   fun:XSetLocaleModifiers
+   obj:/usr/lib/x86_64-linux-gnu/libglfw.so.3.3
+   fun:glfwInit
+   fun:drawer_new
+   fun:main
+}
+{
+   auto-suppress-159
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm40initializeScalarEvolutionWrapperPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm31initializeSCEVAAWrapperPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm34initializeAAResultsWrapperPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+}
+{
+   auto-suppress-160
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:pa_xmalloc
+   fun:pa_semaphore_new
+   fun:pa_aupdate_new
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+   fun:pa_memtrap_add
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+   fun:pa_memimport_attach_memfd
+   fun:pa_pstream_attach_memfd_shmid
+   fun:pa_pstream_register_memfd_mempool
+   obj:/usr/lib/x86_64-linux-gnu/libpulse.so.0.21.2
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+}
+{
+   auto-suppress-161
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:_ZN4llvm12PassRegistry12registerPassERKNS_8PassInfoEb
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm36initializeCFLAndersAAWrapperPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm34initializeAAResultsWrapperPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm32initializeScopInfoRegionPassPassERNS_12PassRegistryE
+}
+{
+   auto-suppress-162
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm31initializePollyCanonicalizePassERNS_12PassRegistryE
+   fun:_ZN5polly21initializePollyPassesERN4llvm12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:call_init.part.0
+   fun:call_init
+   fun:_dl_init
+   fun:_dl_catch_exception
+   fun:dl_open_worker
+   fun:_dl_catch_exception
+   fun:_dl_open
+}
+{
+   auto-suppress-163
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:_ZNK4llvm17ManagedStaticBase21RegisterManagedStaticEPFPvvEPFvS1_E
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:_ZNK4llvm17ManagedStaticBase21RegisterManagedStaticEPFPvvEPFvS1_E
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:call_init.part.0
+   fun:call_init
+   fun:_dl_init
+   fun:_dl_catch_exception
+   fun:dl_open_worker
+   fun:_dl_catch_exception
+   fun:_dl_open
+}
+{
+   auto-suppress-164
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:pa_xmalloc
+   fun:pa_hashmap_put
+   fun:pa_proplist_set
+   fun:pa_tagstruct_get_proplist
+   obj:/usr/lib/x86_64-linux-gnu/libpulse.so.0.21.2
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+   fun:pa_pdispatch_run
+   obj:/usr/lib/x86_64-linux-gnu/libpulse.so.0.21.2
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+}
+{
+   auto-suppress-165
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:_ZN4llvm12PassRegistry12registerPassERKNS_8PassInfoEb
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm31initializeSCEVAAWrapperPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm34initializeAAResultsWrapperPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm32initializeScopInfoRegionPassPassERNS_12PassRegistryE
+}
+{
+   auto-suppress-166
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:_ZN4llvm12PassRegistry12registerPassERKNS_8PassInfoEb
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm34initializePhiValuesWrapperPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm32initializeBasicAAWrapperPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm34initializeAAResultsWrapperPassPassERNS_12PassRegistryE
+}
+{
+   auto-suppress-167
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:_ZN4llvm12PassRegistry12registerPassERKNS_8PassInfoEb
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm29initializeCodePreparationPassERNS_12PassRegistryE
+   fun:_ZN5polly21initializePollyPassesERN4llvm12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:call_init.part.0
+   fun:call_init
+   fun:_dl_init
+   fun:_dl_catch_exception
+   fun:dl_open_worker
+}
+{
+   auto-suppress-168
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:_XlcSetConverter
+   fun:_XlcAddUtf8Converters
+   fun:_XlcDefaultLoader
+   fun:_XOpenLC
+   fun:_XrmInitParseInfo
+   obj:/usr/lib/x86_64-linux-gnu/libX11.so.6.3.0
+   fun:XrmGetStringDatabase
+   obj:/usr/lib/x86_64-linux-gnu/libglfw.so.3.3
+   fun:glfwInit
+   fun:drawer_new
+   fun:main
+}
+{
+   auto-suppress-169
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   obj:/usr/lib/x86_64-linux-gnu/libX11.so.6.3.0
+   obj:/usr/lib/x86_64-linux-gnu/libX11.so.6.3.0
+   fun:XrmGetStringDatabase
+   obj:/usr/lib/x86_64-linux-gnu/libglfw.so.3.3
+   fun:glfwInit
+   fun:drawer_new
+   fun:main
+}
+{
+   auto-suppress-170
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:pa_xmalloc
+   fun:pa_xmemdup
+   fun:pa_flist_new_with_name
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+   fun:pa_run_once
+   fun:pa_hashmap_put
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+   fun:pa_memimport_attach_memfd
+   fun:pa_pstream_attach_memfd_shmid
+   fun:pa_pstream_register_memfd_mempool
+   obj:/usr/lib/x86_64-linux-gnu/libpulse.so.0.21.2
+}
+{
+   auto-suppress-171
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm28initializeCodegenCleanupPassERNS_12PassRegistryE
+   fun:_ZN5polly21initializePollyPassesERN4llvm12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:call_init.part.0
+   fun:call_init
+   fun:_dl_init
+   fun:_dl_catch_exception
+   fun:dl_open_worker
+   fun:_dl_catch_exception
+   fun:_dl_open
+}
+{
+   auto-suppress-172
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm38initializeDominatorTreeWrapperPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm32initializeBasicAAWrapperPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm34initializeAAResultsWrapperPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+}
+{
+   auto-suppress-173
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:_ZN4llvm12PassRegistry12registerPassERKNS_8PassInfoEb
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm34initializeObjCARCAAWrapperPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm34initializeAAResultsWrapperPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm32initializeScopInfoRegionPassPassERNS_12PassRegistryE
+}
+{
+   auto-suppress-174
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:_ZN4llvm12PassRegistry12registerPassERKNS_8PassInfoEb
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm40initializeScalarEvolutionWrapperPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm31initializeSCEVAAWrapperPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm34initializeAAResultsWrapperPassPassERNS_12PassRegistryE
+}
+{
+   auto-suppress-175
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:_dl_new_object
+   fun:_dl_map_object_from_fd
+   fun:_dl_map_object
+   fun:openaux
+   fun:_dl_catch_exception
+   fun:_dl_map_object_deps
+   fun:dl_open_worker
+   fun:_dl_catch_exception
+   fun:_dl_open
+   fun:dlopen_doit
+   fun:_dl_catch_exception
+}
+{
+   auto-suppress-176
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:pa_xmalloc
+   fun:pa_mutex_new
+   fun:pa_static_mutex_get
+   fun:pa_once_begin
+   fun:pa_run_once
+   fun:pa_cstrerror
+   fun:pa_config_parse
+   fun:pa_config_parse
+   fun:pa_client_conf_load
+   fun:pa_context_new_with_proplist
+   fun:ma_init_pa_mainloop_and_pa_context__pulse
+}
+{
+   auto-suppress-177
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm44initializeTargetTransformInfoWrapperPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm34initializeIslScheduleOptimizerPassERNS_12PassRegistryE
+   fun:_ZN5polly21initializePollyPassesERN4llvm12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:call_init.part.0
+   fun:call_init
+   fun:_dl_init
+   fun:_dl_catch_exception
+}
+{
+   auto-suppress-178
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm26initializeDeadCodeElimPassERNS_12PassRegistryE
+   fun:_ZN5polly21initializePollyPassesERN4llvm12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:call_init.part.0
+   fun:call_init
+   fun:_dl_init
+   fun:_dl_catch_exception
+   fun:dl_open_worker
+   fun:_dl_catch_exception
+   fun:_dl_open
+}
+{
+   auto-suppress-179
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm42initializeTargetLibraryInfoWrapperPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm32initializeBasicAAWrapperPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm34initializeAAResultsWrapperPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+}
+{
+   auto-suppress-180
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:XInitThreads
+   obj:/usr/lib/x86_64-linux-gnu/libglfw.so.3.3
+   fun:glfwInit
+   fun:drawer_new
+   fun:main
+}
+{
+   auto-suppress-181
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:_ZN4llvm12PassRegistry12registerPassERKNS_8PassInfoEb
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm20initializeDeLICMPassERNS_12PassRegistryE
+   fun:_ZN5polly21initializePollyPassesERN4llvm12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:call_init.part.0
+   fun:call_init
+   fun:_dl_init
+   fun:_dl_catch_exception
+   fun:dl_open_worker
+}
+{
+   auto-suppress-182
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:_ZN4llvm12PassRegistry12registerPassERKNS_8PassInfoEb
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm26initializeJSONImporterPassERNS_12PassRegistryE
+   fun:_ZN5polly21initializePollyPassesERN4llvm12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:call_init.part.0
+   fun:call_init
+   fun:_dl_init
+   fun:_dl_catch_exception
+   fun:dl_open_worker
+}
+{
+   auto-suppress-183
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:_ZN4llvm12PassRegistry12registerPassERKNS_8PassInfoEb
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm25initializeLazyBPIPassPassERNS_12PassRegistryE
+   fun:_ZN4llvm25initializeLazyBFIPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm50initializeOptimizationRemarkEmitterWrapperPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+}
+{
+   auto-suppress-184
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:_ZN4llvm12PassRegistry12registerPassERKNS_8PassInfoEb
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm32initializeScopInfoRegionPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm28initializeDependenceInfoPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm28initializeCodeGenerationPassERNS_12PassRegistryE
+}
+{
+   auto-suppress-185
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:calloc
+   obj:/usr/lib/x86_64-linux-gnu/dri/nouveau_dri.so
+   obj:/usr/lib/x86_64-linux-gnu/dri/nouveau_dri.so
+   obj:/usr/lib/x86_64-linux-gnu/dri/nouveau_dri.so
+   obj:/usr/lib/x86_64-linux-gnu/dri/nouveau_dri.so
+   obj:/usr/lib/x86_64-linux-gnu/dri/nouveau_dri.so
+   obj:/usr/lib/x86_64-linux-gnu/dri/nouveau_dri.so
+   obj:/usr/lib/x86_64-linux-gnu/dri/nouveau_dri.so
+   obj:/usr/lib/x86_64-linux-gnu/dri/nouveau_dri.so
+   obj:/usr/lib/x86_64-linux-gnu/dri/nouveau_dri.so
+   obj:/usr/lib/x86_64-linux-gnu/dri/nouveau_dri.so
+   obj:/usr/lib/x86_64-linux-gnu/dri/nouveau_dri.so
+}
+{
+   auto-suppress-186
+   Memcheck:Cond
+   obj:/usr/lib/x86_64-linux-gnu/libluajit-5.1.so.2.1.0
+   fun:lua_pushstring
+   obj:/usr/lib/x86_64-linux-gnu/libluajit-5.1.so.2.1.0
+   obj:/usr/lib/x86_64-linux-gnu/libluajit-5.1.so.2.1.0
+   obj:/usr/lib/x86_64-linux-gnu/libluajit-5.1.so.2.1.0
+   obj:/usr/lib/x86_64-linux-gnu/libluajit-5.1.so.2.1.0
+   fun:lua_pcall
+   fun:script_run
+   fun:main
+}
+{
+   auto-suppress-187
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:pa_xmalloc
+   fun:pa_hashmap_put
+   fun:pa_proplist_sets
+   fun:pa_init_proplist
+   obj:/usr/lib/x86_64-linux-gnu/libpulse.so.0.21.2
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+   fun:pa_pdispatch_run
+   obj:/usr/lib/x86_64-linux-gnu/libpulse.so.0.21.2
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+   fun:pa_mainloop_dispatch
+}
+{
+   auto-suppress-188
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:_XOpenLC
+   fun:_XrmInitParseInfo
+   obj:/usr/lib/x86_64-linux-gnu/libX11.so.6.3.0
+   fun:XrmGetStringDatabase
+   obj:/usr/lib/x86_64-linux-gnu/libX11.so.6.3.0
+   fun:XGetDefault
+   obj:*
+   obj:*
+   obj:*
+   obj:/usr/lib/x86_64-linux-gnu/libglfw.so.3.3
+   obj:/usr/lib/x86_64-linux-gnu/libglfw.so.3.3
+}
+{
+   auto-suppress-189
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:pa_xmalloc
+   fun:pa_aupdate_new
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+   fun:pa_memtrap_add
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+   fun:pa_memimport_attach_memfd
+   fun:pa_pstream_attach_memfd_shmid
+   fun:pa_pstream_register_memfd_mempool
+   obj:/usr/lib/x86_64-linux-gnu/libpulse.so.0.21.2
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+   fun:pa_pdispatch_run
+}
+{
+   auto-suppress-190
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:_ZN4llvm12PassRegistry12registerPassERKNS_8PassInfoEb
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm36initializeAssumptionCacheTrackerPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm32initializeBasicAAWrapperPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm34initializeAAResultsWrapperPassPassERNS_12PassRegistryE
+}
+{
+   auto-suppress-191
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:pa_xmalloc
+   fun:pa_pstream_send_packet
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+   fun:pa_pstream_send_tagstruct_with_creds
+   obj:/usr/lib/x86_64-linux-gnu/libpulse.so.0.21.2
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+   fun:pa_pdispatch_run
+   obj:/usr/lib/x86_64-linux-gnu/libpulse.so.0.21.2
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+   fun:pa_mainloop_dispatch
+}
+{
+   auto-suppress-192
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:strdup
+   obj:/usr/lib/x86_64-linux-gnu/libX11.so.6.3.0
+   obj:/usr/lib/x86_64-linux-gnu/libX11.so.6.3.0
+   fun:_XlcCreateLC
+   fun:_XlcDefaultLoader
+   fun:_XOpenLC
+   fun:_XrmInitParseInfo
+   obj:/usr/lib/x86_64-linux-gnu/libX11.so.6.3.0
+   fun:XrmGetStringDatabase
+   obj:/usr/lib/x86_64-linux-gnu/libX11.so.6.3.0
+   fun:XGetDefault
+}
+{
+   auto-suppress-193
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:pa_xmalloc
+   fun:pa_packet_new
+   fun:pa_packet_new_data
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+   fun:pa_pstream_send_tagstruct_with_creds
+   obj:/usr/lib/x86_64-linux-gnu/libpulse.so.0.21.2
+   obj:/usr/lib/x86_64-linux-gnu/libpulse.so.0.21.2
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+   fun:pa_mainloop_dispatch
+   fun:pa_mainloop_iterate
+   fun:ma_wait_for_pa_context_to_connect__pulse
+}
+{
+   auto-suppress-194
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm32initializeScopInfoRegionPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm28initializeDependenceInfoPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm28initializeCodeGenerationPassERNS_12PassRegistryE
+   fun:_ZN5polly21initializePollyPassesERN4llvm12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+}
+{
+   auto-suppress-195
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:_ZN4llvm12PassRegistry12registerPassERKNS_8PassInfoEb
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm42initializeTargetLibraryInfoWrapperPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm32initializeBasicAAWrapperPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm34initializeAAResultsWrapperPassPassERNS_12PassRegistryE
+}
+{
+   auto-suppress-196
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:calloc
+   fun:_XlcCreateDefaultCharSet
+   fun:_XlcAddCT
+   fun:_XlcInitCTInfo
+   obj:/usr/lib/x86_64-linux-gnu/libX11.so.6.3.0
+   obj:/usr/lib/x86_64-linux-gnu/libX11.so.6.3.0
+   fun:_XlcCreateLC
+   fun:_XlcUtf8Loader
+   fun:_XOpenLC
+   fun:_XrmInitParseInfo
+   obj:/usr/lib/x86_64-linux-gnu/libX11.so.6.3.0
+   fun:XrmGetStringDatabase
+}
+{
+   auto-suppress-197
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:pa_xmalloc
+   fun:pa_tagstruct_new
+   fun:pa_pstream_register_memfd_mempool
+   obj:/usr/lib/x86_64-linux-gnu/libpulse.so.0.21.2
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+   fun:pa_pdispatch_run
+   obj:/usr/lib/x86_64-linux-gnu/libpulse.so.0.21.2
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+   fun:pa_mainloop_dispatch
+   fun:pa_mainloop_iterate
+}
+{
+   auto-suppress-198
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   obj:/usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.28
+   fun:call_init.part.0
+   fun:call_init
+   fun:_dl_init
+   fun:_dl_catch_exception
+   fun:dl_open_worker
+   fun:_dl_catch_exception
+   fun:_dl_open
+   fun:dlopen_doit
+   fun:_dl_catch_exception
+   fun:_dl_catch_error
+   fun:_dlerror_run
+}
+{
+   auto-suppress-199
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm34initializeCallGraphWrapperPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm34initializeGlobalsAAWrapperPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm34initializeAAResultsWrapperPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+}
+{
+   auto-suppress-200
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   obj:/usr/lib/x86_64-linux-gnu/libX11.so.6.3.0
+   obj:/usr/lib/x86_64-linux-gnu/libX11.so.6.3.0
+   obj:/usr/lib/x86_64-linux-gnu/libX11.so.6.3.0
+   fun:_XlcCreateLocaleDataBase
+   obj:/usr/lib/x86_64-linux-gnu/libX11.so.6.3.0
+   obj:/usr/lib/x86_64-linux-gnu/libX11.so.6.3.0
+   fun:_XlcCreateLC
+   fun:_XlcDefaultLoader
+   fun:_XOpenLC
+   fun:_XrmInitParseInfo
+   obj:/usr/lib/x86_64-linux-gnu/libX11.so.6.3.0
+}
+{
+   auto-suppress-201
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:_dl_new_object
+   fun:_dl_map_object_from_fd
+   fun:_dl_map_object
+   fun:dl_open_worker
+   fun:_dl_catch_exception
+   fun:_dl_open
+   fun:dlopen_doit
+   fun:_dl_catch_exception
+   fun:_dl_catch_error
+   fun:_dlerror_run
+   fun:dlopen@@GLIBC_2.2.5
+}
+{
+   auto-suppress-202
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm26initializeJSONImporterPassERNS_12PassRegistryE
+   fun:_ZN5polly21initializePollyPassesERN4llvm12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:call_init.part.0
+   fun:call_init
+   fun:_dl_init
+   fun:_dl_catch_exception
+   fun:dl_open_worker
+   fun:_dl_catch_exception
+   fun:_dl_open
+}
+{
+   auto-suppress-203
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:call_init.part.0
+   fun:call_init
+   fun:_dl_init
+   fun:_dl_catch_exception
+   fun:dl_open_worker
+   fun:_dl_catch_exception
+   fun:_dl_open
+}
+{
+   auto-suppress-204
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm25initializeLazyBFIPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm50initializeOptimizationRemarkEmitterWrapperPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm38initializeScopDetectionWrapperPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+}
+{
+   auto-suppress-205
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   fun:_ZNSt6vectorISt10unique_ptrIKN4llvm8PassInfoESt14default_deleteIS3_EESaIS6_EE17_M_realloc_insertIJS6_EEEvN9__gnu_cxx17__normal_iteratorIPS6_S8_EEDpOT_
+   fun:_ZN4llvm12PassRegistry12registerPassERKNS_8PassInfoEb
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm26initializeJSONExporterPassERNS_12PassRegistryE
+   fun:_ZN5polly21initializePollyPassesERN4llvm12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:call_init.part.0
+   fun:call_init
+   fun:_dl_init
+   fun:_dl_catch_exception
+   fun:dl_open_worker
+}
+{
+   auto-suppress-206
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:calloc
+   fun:pa_xmalloc0
+   fun:pa_flist_new_with_name
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+   fun:pa_run_once
+   fun:pa_memimport_get
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+   fun:pa_mainloop_dispatch
+   fun:pa_mainloop_iterate
+   fun:ma_wait_for_pa_context_to_connect__pulse
+   fun:ma_init_pa_mainloop_and_pa_context__pulse
+}
+{
+   auto-suppress-207
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:_ZN4llvm12PassRegistry12registerPassERKNS_8PassInfoEb
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm32initializeBasicAAWrapperPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm34initializeAAResultsWrapperPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm32initializeScopInfoRegionPassPassERNS_12PassRegistryE
+}
+{
+   auto-suppress-208
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:_ZN4llvm12PassRegistry12registerPassERKNS_8PassInfoEb
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm34initializeGlobalsAAWrapperPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm34initializeAAResultsWrapperPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm32initializeScopInfoRegionPassPassERNS_12PassRegistryE
+}
+{
+   auto-suppress-209
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:_XlcSetConverter
+   fun:_XlcInitCTInfo
+   obj:/usr/lib/x86_64-linux-gnu/libX11.so.6.3.0
+   obj:/usr/lib/x86_64-linux-gnu/libX11.so.6.3.0
+   fun:_XlcCreateLC
+   fun:_XlcUtf8Loader
+   fun:_XOpenLC
+   fun:_XrmInitParseInfo
+   obj:/usr/lib/x86_64-linux-gnu/libX11.so.6.3.0
+   fun:XrmGetStringDatabase
+   obj:/usr/lib/x86_64-linux-gnu/libglfw.so.3.3
+}
+{
+   auto-suppress-210
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:_ZN4llvm12PassRegistry12registerPassERKNS_8PassInfoEb
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm42initializeDominanceFrontierWrapperPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm28initializeRegionInfoPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm32initializeScopInfoRegionPassPassERNS_12PassRegistryE
+}
+{
+   auto-suppress-211
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:_ZN4llvm12PassRegistry12registerPassERKNS_8PassInfoEb
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm34initializeIslScheduleOptimizerPassERNS_12PassRegistryE
+   fun:_ZN5polly21initializePollyPassesERN4llvm12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:call_init.part.0
+   fun:call_init
+   fun:_dl_init
+   fun:_dl_catch_exception
+   fun:dl_open_worker
+}
+{
+   auto-suppress-212
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm34initializeAAResultsWrapperPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm32initializeScopInfoRegionPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm28initializeDependenceInfoPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+}
+{
+   auto-suppress-213
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:calloc
+   fun:_dl_check_map_versions
+   fun:dl_open_worker
+   fun:_dl_catch_exception
+   fun:_dl_open
+   fun:dlopen_doit
+   fun:_dl_catch_exception
+   fun:_dl_catch_error
+   fun:_dlerror_run
+   fun:dlopen@@GLIBC_2.2.5
+   obj:/usr/lib/x86_64-linux-gnu/libGLX.so.0.0.0
+   obj:/usr/lib/x86_64-linux-gnu/libGLX.so.0.0.0
+}
+{
+   auto-suppress-214
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:_ZN4llvm12PassRegistry12registerPassERKNS_8PassInfoEb
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm42initializePostDominatorTreeWrapperPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm28initializeRegionInfoPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm32initializeScopInfoRegionPassPassERNS_12PassRegistryE
+}
+{
+   auto-suppress-215
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:strdup
+   fun:_dl_load_cache_lookup
+   fun:_dl_map_object
+   fun:openaux
+   fun:_dl_catch_exception
+   fun:_dl_map_object_deps
+   fun:dl_open_worker
+   fun:_dl_catch_exception
+   fun:_dl_open
+   fun:dlopen_doit
+   fun:_dl_catch_exception
+}
+{
+   auto-suppress-216
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:pa_xmalloc
+   fun:pa_memimport_get
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+   fun:pa_mainloop_dispatch
+   fun:pa_mainloop_iterate
+   fun:ma_wait_for_pa_context_to_connect__pulse
+   fun:ma_init_pa_mainloop_and_pa_context__pulse
+   fun:ma_context_init__pulse
+   fun:ma_context_init
+   fun:audio_init
+}
+{
+   auto-suppress-217
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:_XlcSetConverter
+   fun:_XlcDefaultLoader
+   fun:_XOpenLC
+   fun:_XrmInitParseInfo
+   obj:/usr/lib/x86_64-linux-gnu/libX11.so.6.3.0
+   fun:XrmGetStringDatabase
+   obj:/usr/lib/x86_64-linux-gnu/libglfw.so.3.3
+   fun:glfwInit
+   fun:drawer_new
+   fun:main
+}
+{
+   auto-suppress-218
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:pa_xmalloc
+   fun:pa_hashmap_put
+   fun:pa_memimport_get
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+   fun:pa_mainloop_dispatch
+   fun:pa_mainloop_iterate
+   fun:ma_wait_for_pa_context_to_connect__pulse
+   fun:ma_init_pa_mainloop_and_pa_context__pulse
+   fun:ma_context_init__pulse
+   fun:ma_context_init
+}
+{
+   auto-suppress-219
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm36initializeCFLAndersAAWrapperPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm34initializeAAResultsWrapperPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm32initializeScopInfoRegionPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+}
+{
+   auto-suppress-220
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm43initializeProfileSummaryInfoWrapperPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm50initializeOptimizationRemarkEmitterWrapperPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm38initializeScopDetectionWrapperPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+}
+{
+   auto-suppress-221
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm27initializeForwardOpTreePassERNS_12PassRegistryE
+   fun:_ZN5polly21initializePollyPassesERN4llvm12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:call_init.part.0
+   fun:call_init
+   fun:_dl_init
+   fun:_dl_catch_exception
+   fun:dl_open_worker
+   fun:_dl_catch_exception
+   fun:_dl_open
+}
+{
+   auto-suppress-222
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:_ZN4llvm12PassRegistry12registerPassERKNS_8PassInfoEb
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm32initializeRewriteByrefParamsPassERNS_12PassRegistryE
+   fun:_ZN5polly21initializePollyPassesERN4llvm12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:call_init.part.0
+   fun:call_init
+   fun:_dl_init
+   fun:_dl_catch_exception
+   fun:dl_open_worker
+}
+{
+   auto-suppress-223
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:pa_xmalloc
+   fun:pa_tagstruct_new
+   obj:/usr/lib/x86_64-linux-gnu/libpulse.so.0.21.2
+   obj:/usr/lib/x86_64-linux-gnu/libpulse.so.0.21.2
+   obj:/usr/lib/x86_64-linux-gnu/libpulse.so.0.21.2
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+   fun:pa_mainloop_dispatch
+   fun:pa_mainloop_iterate
+   fun:ma_wait_for_pa_context_to_connect__pulse
+   fun:ma_init_pa_mainloop_and_pa_context__pulse
+   fun:ma_context_init__pulse
+}
+{
+   auto-suppress-224
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:_ZN4llvm12PassRegistry12registerPassERKNS_8PassInfoEb
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm28initializeDependenceInfoPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm28initializeCodeGenerationPassERNS_12PassRegistryE
+   fun:_ZN5polly21initializePollyPassesERN4llvm12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:call_init.part.0
+}
+{
+   auto-suppress-225
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm33initializeScopInfoWrapperPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm39initializeDependenceInfoWrapperPassPassERNS_12PassRegistryE
+   fun:_ZN5polly21initializePollyPassesERN4llvm12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:call_init.part.0
+   fun:call_init
+   fun:_dl_init
+   fun:_dl_catch_exception
+}
+{
+   auto-suppress-226
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:pa_xmalloc
+   fun:pa_xmemdup
+   fun:pa_flist_new_with_name
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+   fun:pa_run_once
+   fun:pa_packet_new
+   fun:pa_packet_new_data
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+   fun:pa_pstream_send_tagstruct_with_creds
+   obj:/usr/lib/x86_64-linux-gnu/libpulse.so.0.21.2
+   obj:/usr/lib/x86_64-linux-gnu/libpulse.so.0.21.2
+}
+{
+   auto-suppress-227
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:pa_xmalloc
+   fun:pa_queue_push
+   fun:pa_pstream_send_memblock
+   fun:pa_stream_write_ext_free
+   fun:pa_stream_write
+   fun:ma_device_write_to_stream__pulse
+   fun:ma_device_on_write__pulse
+   obj:/usr/lib/x86_64-linux-gnu/libpulse.so.0.21.2
+   fun:pa_pdispatch_run
+   obj:/usr/lib/x86_64-linux-gnu/libpulse.so.0.21.2
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+}
+{
+   auto-suppress-228
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   obj:/usr/lib/x86_64-linux-gnu/libX11.so.6.3.0
+   obj:/usr/lib/x86_64-linux-gnu/libX11.so.6.3.0
+   fun:_XlcCreateLC
+   fun:_XlcDefaultLoader
+   fun:_XOpenLC
+   fun:_XrmInitParseInfo
+   obj:/usr/lib/x86_64-linux-gnu/libX11.so.6.3.0
+   fun:XrmGetStringDatabase
+   obj:/usr/lib/x86_64-linux-gnu/libX11.so.6.3.0
+   fun:XGetDefault
+   obj:*
+}
+{
+   auto-suppress-229
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:pa_xmalloc
+   fun:pa_hashmap_put
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+   fun:pa_memimport_attach_memfd
+   fun:pa_pstream_attach_memfd_shmid
+   fun:pa_common_command_register_memfd_shmid
+   obj:/usr/lib/x86_64-linux-gnu/libpulse.so.0.21.2
+   fun:pa_pdispatch_run
+   obj:/usr/lib/x86_64-linux-gnu/libpulse.so.0.21.2
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+}
+{
+   auto-suppress-230
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZNK4llvm17ManagedStaticBase21RegisterManagedStaticEPFPvvEPFvS1_E
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:call_init.part.0
+   fun:call_init
+   fun:_dl_init
+   fun:_dl_catch_exception
+   fun:dl_open_worker
+   fun:_dl_catch_exception
+   fun:_dl_open
+   fun:dlopen_doit
+}
+{
+   auto-suppress-231
+   Memcheck:Param
+   ioctl(generic)
+   fun:ioctl
+   fun:drmIoctl
+   fun:drmCommandWriteRead
+   obj:/usr/lib/x86_64-linux-gnu/libdrm_nouveau.so.2.0.0
+   fun:nouveau_device_new
+   fun:nouveau_drm_screen_create
+   obj:/usr/lib/x86_64-linux-gnu/dri/nouveau_dri.so
+   obj:/usr/lib/x86_64-linux-gnu/dri/nouveau_dri.so
+   obj:/usr/lib/x86_64-linux-gnu/dri/nouveau_dri.so
+   obj:/usr/lib/x86_64-linux-gnu/dri/nouveau_dri.so
+   obj:/usr/lib/x86_64-linux-gnu/libGLX_mesa.so.0.0.0
+   obj:/usr/lib/x86_64-linux-gnu/libGLX_mesa.so.0.0.0
+}
+{
+   auto-suppress-232
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm40initializeScopedNoAliasAAWrapperPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm34initializeAAResultsWrapperPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm32initializeScopInfoRegionPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+}
+{
+   auto-suppress-233
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:call_init.part.0
+   fun:call_init
+   fun:_dl_init
+   fun:_dl_catch_exception
+   fun:dl_open_worker
+   fun:_dl_catch_exception
+}
+{
+   auto-suppress-234
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm34initializeAAResultsWrapperPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm32initializeScopInfoRegionPassPassERNS_12PassRegistryE
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:__pthread_once_slow
+   fun:_ZN4llvm28initializeDependenceInfoPassERNS_12PassRegistryE
+}
+{
+   auto-suppress-235
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:_ZN4llvm12PassRegistry12registerPassERKNS_8PassInfoEb
+   obj:/usr/lib/x86_64-linux-gnu/libLLVM-12.so.1
+   fun:call_init.part.0
+   fun:call_init
+   fun:_dl_init
+   fun:_dl_catch_exception
+   fun:dl_open_worker
+   fun:_dl_catch_exception
+   fun:_dl_open
+   fun:dlopen_doit
+   fun:_dl_catch_exception
+}
+{
+   auto-suppress-236
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:pa_xmalloc
+   fun:pa_idxset_put
+   fun:pa_pstream_attach_memfd_shmid
+   fun:pa_common_command_register_memfd_shmid
+   obj:/usr/lib/x86_64-linux-gnu/libpulse.so.0.21.2
+   fun:pa_pdispatch_run
+   obj:/usr/lib/x86_64-linux-gnu/libpulse.so.0.21.2
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+   obj:/usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+   fun:pa_mainloop_dispatch
+   fun:pa_mainloop_iterate
 }
