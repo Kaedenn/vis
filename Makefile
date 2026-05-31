@@ -179,9 +179,6 @@ test/test_kstring: test/test_kstring.c kstring.c helper.c
 test/test_klist: test/test_klist.c klist.c helper.c
 	$(CC) -o $@ $^ $(CFLAGS) $(CFLAGS_DEBUG) $(LDFLAGS)
 
-test/test_audio: test/test_audio.c
-	$(CC) -o $@ $^ $(CFLAGS) $(CFLAGS_DEBUG) $(LDFLAGS)
-
 LUA_TEST_TARGETS := $(patsubst $(DIR)/test/%.lua,%,$(LUA_TESTS))
 .PHONY: $(LUA_TEST_TARGETS)
 $(LUA_TEST_TARGETS): $(VIS)
