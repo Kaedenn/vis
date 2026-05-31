@@ -33,6 +33,8 @@ typedef struct emit {
     force_id force;         /* force function */
     limit_id limit;         /* limit function */
     blend_id blender;       /* blending function */
+    int vertices;           /* number of vertices */
+    float angle;            /* rotation angle */
     union particle_tag tag; /* initial particle tag */
 } emit_desc;
 
@@ -53,6 +55,7 @@ void emit_set_color(emit_desc* e, float r, float g, float b,
 void emit_set_force(emit_desc* e, force_id force);
 void emit_set_limit(emit_desc* e, limit_id limit);
 void emit_set_blender(emit_desc* e, blend_id blender);
+void emit_set_shape(emit_desc* e, int vertices, float angle);
 
 void emit_set_tag(emit_desc* e, uint64_t tag);
 

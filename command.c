@@ -201,7 +201,7 @@ static void cmd_emit(struct commands* cmds, const char* buffer) {
             if (p) particle_init_full(p, x, y, ux, uy, 0, 0, 0, 0, rad, urad, ds, uds,
                 theta, utheta, 0, life, ulife,
                 (force_id)force, (limit_id)limit,
-                rgba, (blend_id)blender, tag);
+                rgba, (blend_id)blender, 4, 0.0f, tag);
         }
     } else {
         EPRINTF("%s", "usage: emit n x y ux uy rad urad ds uds theta utheta "

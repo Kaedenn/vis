@@ -22,6 +22,8 @@ struct particle {
     limit_id limit;
     float r, g, b, a;
     blend_id blender;
+    int vertices;
+    float angle;
     union particle_tag tag;
 };
 
@@ -39,6 +41,7 @@ void particle_init_full(particle_t p, double x, double y, double ux, double uy,
                              float depth, int life, int ulife,
                              force_id force, limit_id limit,
                              float rgba[4], blend_id blender,
+                             int vertices, float angle,
                              union particle_tag tag);
 
 /* specific mutation functions */

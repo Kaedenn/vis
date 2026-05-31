@@ -76,6 +76,11 @@ void emit_set_blender(emit_desc* e, blend_id blender) {
     e->blender = blender;
 }
 
+void emit_set_shape(emit_desc* e, int vertices, float angle) {
+    e->vertices = vertices;
+    e->angle = angle;
+}
+
 void emit_set_tag(emit_desc* e, uint64_t tag) {
     e->tag.ul = tag;
 }
@@ -84,9 +89,10 @@ void dbprintf_emit_desc(emit_desc* e) {
     DBPRINTF("struct emit_desc { n=%d, x=%g, y=%g, ux=%g, uy=%g, "
              "s=%g us=%g, rad=%g, urad=%g, depth=%g, life=%d, ulife=%d, "
              "ds=%g, uds=%g, theta=%g, utheta=%g, r=%f, g=%f, b=%f, "
-             "ur=%f, ug=%f, ub=%f, force=%d, limit=%d, blender=%d };",
+             "ur=%f, ug=%f, ub=%f, force=%d, limit=%d, blender=%d, "
+             "vertices=%d, angle=%f };",
         e->n, e->x, e->y, e->ux, e->uy, e->s, e->us, e->rad, e->urad,
         e->depth, e->life, e->ulife, e->ds, e->uds, e->theta, e->utheta,
         e->r, e->g, e->b, e->ur, e->ug, e->ub, e->force, e->limit,
-        e->blender);
+        e->blender, e->vertices, e->angle);
 }

@@ -38,6 +38,8 @@ void mutate_opacity(particle_t p, mutate_method* method);
 void mutate_set_dx(particle_t p, mutate_method* method);
 void mutate_set_dy(particle_t p, mutate_method* method);
 void mutate_set_radius(particle_t p, mutate_method* method);
+void mutate_set_vertices(particle_t p, mutate_method* method);
+void mutate_set_angle(particle_t p, mutate_method* method);
 
 void mutate_tag_set(particle_t p, mutate_method* method);
 void mutate_tag_inc(particle_t p, mutate_method* method);
@@ -60,6 +62,8 @@ void mutate_opacity_if(particle_t p, mutate_method* method);
 void mutate_set_dx_if(particle_t p, mutate_method* method);
 void mutate_set_dy_if(particle_t p, mutate_method* method);
 void mutate_set_radius_if(particle_t p, mutate_method* method);
+void mutate_set_vertices_if(particle_t p, mutate_method* method);
+void mutate_set_angle_if(particle_t p, mutate_method* method);
 
 void mutate_none(particle_t p, mutate_method* method);
 
@@ -76,6 +80,8 @@ static const mutate_fn MUTATE_MAP[VIS_NMUTATES+1] = {
     [VIS_MUTATE_SET_DX] = mutate_set_dx,
     [VIS_MUTATE_SET_DY] = mutate_set_dy,
     [VIS_MUTATE_SET_RADIUS] = mutate_set_radius,
+    [VIS_MUTATE_SET_VERTICES] = mutate_set_vertices,
+    [VIS_MUTATE_SET_ANGLE] = mutate_set_angle,
     [VIS_MUTATE_TAG_SET] = mutate_tag_set,
     [VIS_MUTATE_TAG_INC] = mutate_tag_inc,
     [VIS_MUTATE_TAG_DEC] = mutate_tag_dec,
@@ -95,6 +101,8 @@ static const mutate_fn MUTATE_MAP[VIS_NMUTATES+1] = {
     [VIS_MUTATE_SET_DX_IF] = mutate_set_dx_if,
     [VIS_MUTATE_SET_DY_IF] = mutate_set_dy_if,
     [VIS_MUTATE_SET_RADIUS_IF] = mutate_set_radius_if,
+    [VIS_MUTATE_SET_VERTICES_IF] = mutate_set_vertices_if,
+    [VIS_MUTATE_SET_ANGLE_IF] = mutate_set_angle_if,
     [VIS_NMUTATES] = mutate_none
 };
 

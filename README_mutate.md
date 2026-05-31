@@ -28,6 +28,8 @@ The following mutates are available:
 * `Vis.MUTATE_SET_DX` - `particle->dx = factor1`
 * `Vis.MUTATE_SET_DY` - `particle->dy = factor1`
 * `Vis.MUTATE_SET_RADIUS` - `particle->radius = factor1`
+* `Vis.MUTATE_SET_VERTICES` - `particle->vertices = factor1`
+* `Vis.MUTATE_SET_ANGLE` - `particle->angle = factor1`
 
 ### Tag mutation
 
@@ -74,6 +76,8 @@ The following conditional mutates are available:
 * `Vis.MUTATE_SET_DX_IF`
 * `Vis.MUTATE_SET_DY_IF`
 * `Vis.MUTATE_SET_RADIUS_IF`
+* `Vis.MUTATE_SET_VERTICES_IF`
+* `Vis.MUTATE_SET_ANGLE_IF`
 
 The following mutate conditions are available:
 

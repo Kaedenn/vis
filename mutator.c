@@ -145,6 +145,18 @@ void mutate_set_radius(particle_t p, mutate_method* method) {
                            method->factor[0] + method->factor[1]);
 }
 
+void mutate_set_vertices(particle_t p, mutate_method* method) {
+    DEBUG_EXPRESSION(dbg_ctr.particles_mutated += 1);
+    p->vertices = (int)randdouble(method->factor[0] - method->factor[1],
+                                  method->factor[0] + method->factor[1]);
+}
+
+void mutate_set_angle(particle_t p, mutate_method* method) {
+    DEBUG_EXPRESSION(dbg_ctr.particles_mutated += 1);
+    p->angle = (float)randdouble(method->factor[0] - method->factor[1],
+                                 method->factor[0] + method->factor[1]);
+}
+
 void mutate_tag_set(particle_t p, mutate_method* method) {
     DEBUG_EXPRESSION(dbg_ctr.particle_tags_modified += 1);
     p->tag.l = method->newtag.l;
@@ -205,6 +217,8 @@ GEN_COND_MUTATE_FN(mutate_opacity)
 GEN_COND_MUTATE_FN(mutate_set_dx)
 GEN_COND_MUTATE_FN(mutate_set_dy)
 GEN_COND_MUTATE_FN(mutate_set_radius)
+GEN_COND_MUTATE_FN(mutate_set_vertices)
+GEN_COND_MUTATE_FN(mutate_set_angle)
 
 #undef GEN_COND_MUTATE_FN
 

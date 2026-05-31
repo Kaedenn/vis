@@ -199,6 +199,8 @@ void emit_frame(emit_desc* frame) {
                 frame->depth,
                 frame->life, frame->ulife,
                 frame->force, frame->limit,
-                rgba, frame->blender, frame->tag);
+                rgba, frame->blender,
+                frame->vertices, frame->angle,
+                frame->tag);
     }
 }

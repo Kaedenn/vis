@@ -237,8 +237,8 @@ int drawer_add_particle(drawer_t drawer, particle_t p) {
         v->b = (GLfloat)p->b;
         v->a = (GLfloat)sqrt(calculate_blend(p));
         v->depth = (GLfloat)p->depth;
-        v->vertices = 4;
-        v->angle = 0.0f;
+        v->vertices = (GLuint)p->vertices;
+        v->angle = (GLfloat)p->angle;
 
         drawer->vertex_curr += 1;
         return 0;

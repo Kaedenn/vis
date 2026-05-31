@@ -4,8 +4,8 @@ VisUtil = require("visutil")
 math = require("math")
 
 Vis.on_quit(function()
-    assert(Vis.get_debug(Vis.script, "NUM-MUTATES") == 4,
-           "performed four mutates")
+    assert(Vis.get_debug(Vis.script, "NUM-MUTATES") == 12,
+           "performed twelve mutates")
 end)
 
 random = math.random
@@ -39,4 +39,23 @@ do_emit_table(Vis.frames2msec(30))
 Vis.mutate(Vis.flist, Vis.frames2msec(30), Vis.MUTATE_PUSH_DX, 2)
 Vis.mutate(Vis.flist, Vis.frames2msec(40), Vis.MUTATE_PUSH_DY, 2)
 
-Vis.exit(Vis.flist, Vis.frames2msec(60))
+-- Shape/Angle test
+local t2 = VisUtil.make_emit_table()
+t2.count = 1000
+t2.when = Vis.frames2msec(60)
+VisUtil.center_emit_table(t2, Vis.WIDTH/2, Vis.HEIGHT/2)
+t2.radius = 10
+t2.life = Vis.frames2msec(100)
+VisUtil.emit_table(t2)
+
+Vis.mutate(Vis.flist, Vis.frames2msec(70), Vis.MUTATE_SET_VERTICES, 3, 0)
+Vis.mutate(Vis.flist, Vis.frames2msec(80), Vis.MUTATE_SET_VERTICES, 4, 0)
+Vis.mutate(Vis.flist, Vis.frames2msec(90), Vis.MUTATE_SET_VERTICES, 5, 0)
+Vis.mutate(Vis.flist, Vis.frames2msec(100), Vis.MUTATE_SET_VERTICES, 6, 0)
+
+Vis.mutate(Vis.flist, Vis.frames2msec(110), Vis.MUTATE_SET_ANGLE, math.pi/4, 0)
+Vis.mutate(Vis.flist, Vis.frames2msec(120), Vis.MUTATE_SET_ANGLE, math.pi/2, 0)
+Vis.mutate(Vis.flist, Vis.frames2msec(130), Vis.MUTATE_SET_ANGLE, math.pi, 0)
+Vis.mutate(Vis.flist, Vis.frames2msec(140), Vis.MUTATE_SET_ANGLE, math.pi*1.5, 0)
+
+Vis.exit(Vis.flist, Vis.frames2msec(160))

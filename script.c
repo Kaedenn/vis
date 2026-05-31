@@ -438,6 +438,8 @@ int initialize_vis_lib(lua_State* L) {
     NEW_VIS_CONST_INT(MUTATE_SET_DX);
     NEW_VIS_CONST_INT(MUTATE_SET_DY);
     NEW_VIS_CONST_INT(MUTATE_SET_RADIUS);
+    NEW_VIS_CONST_INT(MUTATE_SET_VERTICES);
+    NEW_VIS_CONST_INT(MUTATE_SET_ANGLE);
     /* tag mutators */
     NEW_VIS_CONST_INT(MUTATE_TAG_SET);
     NEW_VIS_CONST_INT(MUTATE_TAG_INC);
@@ -459,6 +461,8 @@ int initialize_vis_lib(lua_State* L) {
     NEW_VIS_CONST_INT(MUTATE_SET_DX_IF);
     NEW_VIS_CONST_INT(MUTATE_SET_DY_IF);
     NEW_VIS_CONST_INT(MUTATE_SET_RADIUS_IF);
+    NEW_VIS_CONST_INT(MUTATE_SET_VERTICES_IF);
+    NEW_VIS_CONST_INT(MUTATE_SET_ANGLE_IF);
     /* total number of mutators */
     NEW_VIS_CONST_INT(NMUTATES);
     /* mutate conditions */
@@ -708,6 +712,10 @@ static void merge_emit_table(lua_State* L, int arg, emit_desc* emit) {
             emit->limit = (limit_id)luaL_checknumber(L, -1);
         } else if (!strcmp(key, "blender")) {
             emit->blender = (blend_id)luaL_checknumber(L, -1);
+        } else if (!strcmp(key, "vertices")) {
+            emit->vertices = (int)luaL_checkinteger(L, -1);
+        } else if (!strcmp(key, "angle")) {
+            emit->angle = (float)luaL_checknumber(L, -1);
         } else if (!strcmp(key, "tag")) {
             int arg_type = lua_type(L, -1);
             if (arg_type == LUA_TNUMBER) {
@@ -762,6 +770,8 @@ emit_desc* emit_table_to_emit_desc(lua_State* L, int arg, fnum_t* when) {
     emit->force = VIS_DEFAULT_FORCE;
     emit->limit = VIS_DEFAULT_LIMIT;
     emit->blender = VIS_DEFAULT_BLEND;
+    emit->vertices = 4;
+    emit->angle = 0.0f;
 
     /* Pre-fill the table with default configuration */
     lua_getglobal(L, "Vis");

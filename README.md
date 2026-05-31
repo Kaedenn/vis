@@ -648,6 +648,8 @@ Operations:
 9. `VIS_MUTATE_SET_DX` - `p->dx = randdouble(num1-num2, num1+num2)`
 10. `VIS_MUTATE_SET_DY` - `p->dy = randdouble(num1-num2, num1+num2)`
 11. `VIS_MUTATE_SET_RADIUS` - `p->radius = randdouble(num1-num2, num1+num2)`
+12. `VIS_MUTATE_SET_VERTICES` - `p->vertices = randdouble(num1-num2, num1+num2)`
+13. `VIS_MUTATE_SET_ANGLE` - `p->angle = randdouble(num1-num2, num1+num2)`
 
 #### Tag modification
 
@@ -660,7 +662,12 @@ value of `5` will set all active particles' tags to the number 5.
 
 Operations:
 
-1.
+1. `VIS_MUTATE_TAG_SET` - `p->tag.l = num1`
+2. `VIS_MUTATE_TAG_INC` - `p->tag.l += 1`
+3. `VIS_MUTATE_TAG_DEC` - `p->tag.l -= 1`
+4. `VIS_MUTATE_TAG_ADD` - `p->tag.l += num1`
+5. `VIS_MUTATE_TAG_SUB` - `p->tag.l -= num1`
+6. `VIS_MUTATE_TAG_MUL` - `p->tag.l *= num1`
 
 #### Conditional mutate
 
@@ -701,6 +708,8 @@ Operations are the same as the ordinary mutate, but with `_IF` appended:
 9. `VIS_MUTATE_SET_DX_IF` - `p->dx = randdouble(num1-num2, num1+num2)`
 10. `VIS_MUTATE_SET_DY_IF` - `p->dy = randdouble(num1-num2, num1+num2)`
 11. `VIS_MUTATE_SET_RADIUS_IF` - `p->radius = randdouble(num1-num2, num1+num2)`
+12. `VIS_MUTATE_SET_VERTICES_IF` - `p->vertices = randdouble(num1-num2, num1+num2)`
+13. `VIS_MUTATE_SET_ANGLE_IF` - `p->angle = randdouble(num1-num2, num1+num2)`
 
 </details>
 

@@ -41,15 +41,16 @@ void particle_init_full(particle_t p, double x, double y,
                              float depth, int life, int ulife,
                              force_id force, limit_id limit,
                              float rgba[4], blend_id blender,
+                             int vertices, float angle,
                              union particle_tag tag)
 {
-    double angle = randdouble(theta-utheta, theta+utheta);
+    double spawn_angle = randdouble(theta-utheta, theta+utheta);
     double offset = randdouble(s-us, s+us);
-    p->x = randdouble(x-ux, x+ux) + offset * cos(angle);
-    p->y = randdouble(y-uy, y+uy) + offset * sin(angle);
+    p->x = randdouble(x-ux, x+ux) + offset * cos(spawn_angle);
+    p->y = randdouble(y-uy, y+uy) + offset * sin(spawn_angle);
     double speed = randdouble(ds-uds, ds+uds);
-    p->dx = dx + speed * cos(angle);
-    p->dy = dy + speed * sin(angle);
+    p->dx = dx + speed * cos(spawn_angle);
+    p->dy = dy + speed * sin(spawn_angle);
     p->radius = (int)randdouble(r-ur, r+ur);
     p->depth = depth;
     p->lifetime = randint(life-ulife, life+ulife);
@@ -61,6 +62,8 @@ void particle_init_full(particle_t p, double x, double y,
     p->force = force;
     p->limit = limit;
     p->blender = blender;
+    p->vertices = vertices;
+    p->angle = angle;
     p->tag = tag;
 }
 
