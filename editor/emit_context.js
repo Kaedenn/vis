@@ -60,6 +60,10 @@ export class EmitContext {
         this._r = 1; this._g = 1; this._b = 1;
         this._ur = 0; this._ug = 0; this._ub = 0;
 
+        // Shape properties
+        this._vertices = 4;
+        this._angle = 0;
+
         // Generic parameters
         this._depth = 0;
         this._force = ForceFunc.DEFAULT_FORCE;
@@ -81,6 +85,8 @@ export class EmitContext {
             life: this._life, ulife: this._ulife,
             r: this._r, g: this._g, b: this._b,
             ur: this._ur, ug: this._ug, ub: this._ub,
+            vertices: this._vertices,
+            angle: this._angle,
             depth: this._depth,
             force: this._force,
             limit: this._limit,
@@ -189,6 +195,17 @@ export class EmitContext {
         if (ub !== undefined) this._ub = ub;
     }
 
+    // --- Shape ---
+    get vertices() { return this._vertices; }
+    set vertices(v) { this._vertices = v; }
+    get angle() { return this._angle; }
+    set angle(v) { this._angle = v; }
+
+    updateShape(vertices, angle = this._angle) {
+        if (vertices !== undefined) this._vertices = vertices;
+        if (angle !== undefined) this._angle = angle;
+    }
+
     // --- Additional properties (depth, force, limit, blender, tag) ---
     get depth() { return this._depth; }
     set depth(v) { this._depth = v; }
@@ -217,6 +234,7 @@ export class EmitContext {
         lua += `    life = ${this._life}, ulife = ${this._ulife},\n`;
         lua += `    r = ${this._r}, g = ${this._g}, b = ${this._b},\n`;
         lua += `    ur = ${this._ur}, ug = ${this._ug}, ub = ${this._ub},\n`;
+        lua += `    vertices = ${this._vertices}, angle = ${this._angle},\n`;
         lua += `    depth = ${this._depth},\n`;
         lua += `    force = ${this._force},\n`;
         lua += `    limit = ${this._limit},\n`;
@@ -252,6 +270,8 @@ export class EmitContext {
         ctx.updateTheta(data.theta, data.utheta);
         ctx.updateLife(data.life, data.ulife);
         ctx.updateColor(data.r, data.g, data.b, data.ur, data.ug, data.ub);
+        if (data.vertices !== undefined) ctx.vertices = data.vertices;
+        if (data.angle !== undefined) ctx.angle = data.angle;
         if (data.depth !== undefined) ctx.depth = data.depth;
         if (data.force !== undefined) ctx.force = data.force;
         if (data.limit !== undefined) ctx.limit = data.limit;

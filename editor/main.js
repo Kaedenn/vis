@@ -28,6 +28,37 @@ local BASE = _G.BASE or 0 -- Update to the base offset to the first emit
 
 `;
 
+const LAYER_CONFIG = [
+    { name: 'count', min: 0, step: 1 },
+    { name: 'x', step: 1, dynamicBounds: 'canvasWHalf' },
+    { name: 'y', step: 1, dynamicBounds: 'canvasHHalf' },
+    { name: 'ux', min: 0, step: 1, dynamicBounds: 'canvasW' },
+    { name: 'uy', min: 0, step: 1, dynamicBounds: 'canvasH' },
+    { name: 's', min: 0, step: 1, dynamicBounds: 'canvasMax' },
+    { name: 'us', min: 0, step: 1, dynamicBounds: 'canvasMax' },
+    { name: 'ds', step: 0.1 },
+    { name: 'uds', step: 0.1 },
+    { name: 'dx', step: 0.1 },
+    { name: 'dy', step: 0.1 },
+    { name: 'radius', min: 1, step: 1 },
+    { name: 'uradius', min: 0, step: 1 },
+    { name: 'vertices', min: 3, step: 1 },
+    { name: 'angle', min: 0, max: 2 * Math.PI, step: 0.01 },
+    { name: 'theta', min: 0, max: 2 * Math.PI, step: 0.01 },
+    { name: 'utheta', min: 0, max: Math.PI, step: 0.01 },
+    { name: 'life', min: 0, step: 1 },
+    { name: 'ulife', min: 0, step: 1 },
+    { name: 'rgb', type: 'color' },
+    { name: 'ur', min: 0, max: 1, step: 0.01 },
+    { name: 'ug', min: 0, max: 1, step: 0.01 },
+    { name: 'ub', min: 0, max: 1, step: 0.01 },
+    { name: 'depth', step: 1 },
+    { name: 'force', type: 'select', options: Object.keys(ForceFunc).map(k => ({text: k, value: ForceFunc[k]})) },
+    { name: 'limit', type: 'select', options: Object.keys(LimitFunc).map(k => ({text: k, value: LimitFunc[k]})) },
+    { name: 'blender', type: 'select', options: Object.keys(BlendFunc).map(k => ({text: k, value: BlendFunc[k]})) },
+    { name: 'tag', min: 0, step: 1 }
+];
+
 document.addEventListener('DOMContentLoaded', () => {
     // Editor state
     let currentToolMode = ToolMode.SQUARE;
@@ -167,9 +198,8 @@ document.addEventListener('DOMContentLoaded', () => {
     function resizeCanvas() {
         canvas.width = workspace.clientWidth;
         canvas.height = workspace.clientHeight;
-        for (let emit of window.currentEmits) {
-            emit.canvasW = workspace.clientWidth;
-            emit.canvasH = workspace.clientHeight;
+        if (typeof draw === 'function') {
+            requestAnimationFrame(draw);
         }
     }
 
@@ -441,36 +471,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 controls.style.marginTop = '8px';
                 controls.style.gap = '4px';
 
-                const config = [
-                    { name: 'count', min: 0, step: 1 },
-                    { name: 'x', min: -canvasW/2, max: canvasW/2, step: 1 },
-                    { name: 'y', min: -canvasH/2, max: canvasH/2, step: 1 },
-                    { name: 'ux', min: 0, max: canvasW, step: 1 },
-                    { name: 'uy', min: 0, max: canvasH, step: 1 },
-                    { name: 's', min: 0, max: Math.max(canvasW, canvasH), step: 1 },
-                    { name: 'us', min: 0, max: Math.max(canvasW, canvasH), step: 1 },
-                    { name: 'ds', step: 0.1 },
-                    { name: 'uds', step: 0.1 },
-                    { name: 'dx', step: 0.1 },
-                    { name: 'dy', step: 0.1 },
-                    { name: 'radius', min: 1, step: 1 },
-                    { name: 'uradius', min: 0, step: 1 },
-                    { name: 'theta', min: 0, max: 2 * Math.PI, step: 0.01 },
-                    { name: 'utheta', min: 0, max: Math.PI, step: 0.01 },
-                    { name: 'life', min: 0, step: 1 },
-                    { name: 'ulife', min: 0, step: 1 },
-                    { name: 'rgb', type: 'color' },
-                    { name: 'ur', min: 0, max: 1, step: 0.01 },
-                    { name: 'ug', min: 0, max: 1, step: 0.01 },
-                    { name: 'ub', min: 0, max: 1, step: 0.01 },
-                    { name: 'depth', step: 1 },
-                    { name: 'force', type: 'select', options: Object.keys(ForceFunc).map(k => ({text: k, value: ForceFunc[k]})) },
-                    { name: 'limit', type: 'select', options: Object.keys(LimitFunc).map(k => ({text: k, value: LimitFunc[k]})) },
-                    { name: 'blender', type: 'select', options: Object.keys(BlendFunc).map(k => ({text: k, value: BlendFunc[k]})) },
-                    { name: 'tag', min: 0, step: 1 }
-                ];
-
-                for (const c of config) {
+                for (const c of LAYER_CONFIG) {
                     const row = document.createElement('div');
                     row.style.display = 'flex';
                     row.style.justifyContent = 'space-between';
@@ -489,13 +490,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     let inp;
 
+                    let isEditing = false;
+                    const resetEdit = () => { isEditing = false; };
+
                     if (c.type === 'color') {
                         inp = document.createElement('input');
                         inp.type = 'color';
                         const toHex = val => Math.round(Math.max(0, Math.min(1, val)) * 255).toString(16).padStart(2, '0');
                         inp.value = `#${toHex(layer.ctx.r)}${toHex(layer.ctx.g)}${toHex(layer.ctx.b)}`;
 
+                        inp.addEventListener('mousedown', resetEdit);
+                        inp.addEventListener('focus', resetEdit);
+                        inp.addEventListener('change', resetEdit);
+                        inp.addEventListener('blur', resetEdit);
+
                         inp.addEventListener('input', (e) => {
+                            if (!isEditing) {
+                                saveStateForUndo();
+                                isEditing = true;
+                            }
                             const hex = e.target.value;
                             layer.ctx.r = parseInt(hex.slice(1,3), 16) / 255.0;
                             layer.ctx.g = parseInt(hex.slice(3,5), 16) / 255.0;
@@ -518,6 +531,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         inp.value = layer.ctx[c.name];
 
                         inp.addEventListener('change', (e) => {
+                            saveStateForUndo();
                             layer.ctx[c.name] = e.target.value;
                             code.textContent = layer.ctx.serialize(
                                 nativeMode,
@@ -528,12 +542,21 @@ document.addEventListener('DOMContentLoaded', () => {
                         });
                     } else {
                         inp = document.createElement('input');
-                        if (c.min !== undefined) inp.min = c.min;
-                        if (c.max !== undefined) {
-                            if (inp.min === undefined) inp.min = 0;
-                            inp.max = c.max;
+
+                        let min = c.min;
+                        let max = c.max;
+                        if (c.dynamicBounds === 'canvasWHalf') { min = -canvasW; max = canvasW; }
+                        else if (c.dynamicBounds === 'canvasHHalf') { min = -canvasH; max = canvasH; }
+                        else if (c.dynamicBounds === 'canvasW') { max = canvasW; }
+                        else if (c.dynamicBounds === 'canvasH') { max = canvasH; }
+                        else if (c.dynamicBounds === 'canvasMax') { max = Math.max(canvasW, canvasH); }
+
+                        if (min !== undefined) inp.min = min;
+                        if (max !== undefined) {
+                            if (min === undefined) inp.min = 0;
+                            inp.max = max;
                             inp.type = 'range';
-                        } else if (c.min !== undefined) {
+                        } else if (min !== undefined) {
                             inp.type = 'number';
                         } else {
                             inp.type = 'text';
@@ -542,6 +565,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
                         inp.placeholder = c.name;
                         inp.value = layer.ctx[c.name] !== undefined ? layer.ctx[c.name] : 0;
+
+                        inp.addEventListener('mousedown', resetEdit);
+                        inp.addEventListener('focus', resetEdit);
+                        inp.addEventListener('change', resetEdit);
+                        inp.addEventListener('blur', resetEdit);
 
                         inp.addEventListener('input', (e) => {
                             let text = e.target.value;
@@ -556,6 +584,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
                             let val = parseFloat(text);
                             if (!isNaN(val)) {
+                                if (!isEditing) {
+                                    saveStateForUndo();
+                                    isEditing = true;
+                                }
                                 layer.ctx[c.name] = val;
                                 code.textContent = layer.ctx.serialize(
                                     nativeMode,
@@ -1364,7 +1396,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ctx.closePath();
         ctx.fillStyle = 'rgba(0, 255, 0, 0.3)';
         ctx.fill();
-        
+
         ctx.strokeStyle = 'var(--accent-color)';
         ctx.lineWidth = 2;
         ctx.stroke();
@@ -1400,7 +1432,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         activeThetaLayer.ctx[property] = rad;
-        
+
         const currentTheta = activeThetaLayer.ctx.theta || 0;
         const currentUTheta = activeThetaLayer.ctx.utheta || 0;
         drawThetaCanvas(currentTheta, currentUTheta);
@@ -1423,7 +1455,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const thetaAngle = layer.ctx.theta || 0;
         const uthetaAngle = layer.ctx.utheta || 0;
-        
+
         thetaSlider.value = thetaAngle;
         thetaRadians.value = thetaAngle;
         thetaDegrees.value = Math.round(thetaAngle * 180 / Math.PI);

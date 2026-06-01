@@ -24,7 +24,8 @@ void mat4_multiply(float* out, const float* a, const float* b) {
     memcpy(out, temp, 16 * sizeof(float));
 }
 
-void mat4_ortho(float* out, float left, float right, float bottom, float top, float near, float far) {
+void mat4_ortho(float* out, float left, float right, float bottom, float top,
+                float near, float far) {
     mat4_identity(out);
     out[0] = 2.0f / (right - left);
     out[5] = 2.0f / (top - bottom);
@@ -49,7 +50,8 @@ static void vec3_cross(float* out, const float* a, const float* b) {
     out[2] = a[0] * b[1] - a[1] * b[0];
 }
 
-void mat4_look_at(float* out, float ex, float ey, float ez, float cx, float cy, float cz, float ux, float uy, float uz) {
+void mat4_look_at(float* out, float ex, float ey, float ez,
+                  float cx, float cy, float cz, float ux, float uy, float uz) {
     float f[3] = { cx - ex, cy - ey, cz - ez };
     vec3_normalize(f);
 

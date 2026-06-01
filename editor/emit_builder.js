@@ -18,6 +18,7 @@ export class EmitBuilder {
         this._canvas = canvas;
         this._canvasW = canvasW;
         this._canvasH = canvasH;
+        console.log(canvasW, canvasH);
 
         this._clickOffset = { x: 0, y: 0 };
     }
@@ -42,7 +43,9 @@ export class EmitBuilder {
     }
 
     globalToLocal(offsetX, offsetY) {
-        const scale = Math.min(this._canvas.clientWidth / (2 * this._canvasW), this._canvas.clientHeight / (2 * this._canvasH));
+        const scale = Math.min(
+            this._canvas.clientWidth / (2 * this._canvasW),
+            this._canvas.clientHeight / (2 * this._canvasH));
         const padX = (this._canvas.clientWidth - 2 * this._canvasW * scale) / 2;
         const padY = (this._canvas.clientHeight - 2 * this._canvasH * scale) / 2;
         return {
@@ -52,7 +55,9 @@ export class EmitBuilder {
     }
 
     localToGlobal(mapX, mapY) {
-        const scale = Math.min(this._canvas.clientWidth / (2 * this._canvasW), this._canvas.clientHeight / (2 * this._canvasH));
+        const scale = Math.min(
+            this._canvas.clientWidth / (2 * this._canvasW),
+            this._canvas.clientHeight / (2 * this._canvasH));
         const padX = (this._canvas.clientWidth - 2 * this._canvasW * scale) / 2;
         const padY = (this._canvas.clientHeight - 2 * this._canvasH * scale) / 2;
         return {
@@ -87,6 +92,15 @@ export class EmitBuilder {
     }
 
     getPoints(emit) {
+        const stateKey = [
+            emit.count, emit.x, emit.y, emit.ux, emit.uy,
+            emit.s, emit.us, emit.theta, emit.utheta,
+            this.canvasW, this.canvasH
+        ].join(',');
+        if (this._cachedPoints && this._cachedStateKey === stateKey) {
+            return this._cachedPoints;
+        }
+
         let points = [];
         for (let i = 0; i < emit.count; ++i) {
             const px = randrange(emit.x - emit.ux, emit.x + emit.ux);
@@ -97,6 +111,9 @@ export class EmitBuilder {
                 px + Math.cos(ptheta) * ps,
                 py + Math.sin(ptheta) * ps));
         }
+
+        this._cachedPoints = points;
+        this._cachedStateKey = stateKey;
         return points;
     }
 
@@ -109,7 +126,22 @@ export class EmitBuilder {
             const b = randrange(emit.b - emit.ub, emit.b + emit.ub) * 255;
             ctx.fillStyle = `rgb(${Math.floor(r)}, ${Math.floor(g)}, ${Math.floor(b)})`;
             ctx.beginPath();
-            ctx.arc(p.x, p.y, emit.radius, 0, 2 * Math.PI);
+
+            if (emit.vertices < 3) {
+                ctx.arc(p.x, p.y, emit.radius, 0, 2 * Math.PI);
+            } else {
+                for (let i = 0; i < emit.vertices; i++) {
+                    const a = emit.angle + (i * 2 * Math.PI / emit.vertices);
+                    const vx = p.x + emit.radius * Math.cos(a);
+                    const vy = p.y + emit.radius * Math.sin(a);
+                    if (i === 0) {
+                        ctx.moveTo(vx, vy);
+                    } else {
+                        ctx.lineTo(vx, vy);
+                    }
+                }
+                ctx.closePath();
+            }
             ctx.fill();
         }
     }
