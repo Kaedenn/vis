@@ -281,7 +281,27 @@ void script_run_string(script_t s, const char* torun) {
 }
 
 void script_run_cb(script_t s, script_cb* cb, UNUSED_PARAM(void* args)) {
-    script_run_string(s, cb->fn_code);
+    if (cb->fn_code != NULL) {
+        script_run_string(s, cb->fn_code);
+    } else if (cb->func_ref != NULL) {
+        prepare_stack(s, s->args);
+        lua_rawgeti(s->L, LUA_REGISTRYINDEX, (int)(intptr_t)cb->func_ref);
+
+        int nargs = cb->nargs;
+        if (nargs > 0) {
+            lua_rawgeti(s->L, LUA_REGISTRYINDEX, (int)(intptr_t)cb->args_ref);
+            for (int i = 1; i <= nargs; ++i) {
+                lua_rawgeti(s->L, -i, i);
+            }
+            lua_remove(s->L, - (nargs + 1));
+        }
+
+        if (lua_pcall(s->L, nargs, LUA_MULTRET, s->debugidx) != LUA_OK) {
+            s->errors += 1;
+            EPRINTF("Call error in script callback function: %s", util_get_error(s->L));
+        }
+        cleanup_stack(s);
+    }
 }
 
 void script_set_drawer(script_t s, drawer_t drawer) {
@@ -294,6 +314,12 @@ void script_set_drawer(script_t s, drawer_t drawer) {
 void script_callback_free(script_cb* cb) {
     DZFREE(cb->fn_name);
     DZFREE(cb->fn_code);
+    if (cb->func_ref != NULL) {
+        luaL_unref(cb->owner->L, LUA_REGISTRYINDEX, (int)(intptr_t)cb->func_ref);
+    }
+    if (cb->args_ref != NULL) {
+        luaL_unref(cb->owner->L, LUA_REGISTRYINDEX, (int)(intptr_t)cb->args_ref);
+    }
     DZFREE(cb);
 }
 
@@ -488,6 +514,21 @@ int initialize_vis_lib(lua_State* L) {
     NEW_VIS_CONST_INT(AUDIO_FREQ);
     NEW_VIS_CONST_INT(AUDIO_SAMPLES);
     NEW_VIS_CONST_INT(AUDIO_CHANNELS);
+    /* frame types */
+    NEW_VIS_CONST_INT(FTYPE_EMIT);
+    NEW_VIS_CONST_INT(FTYPE_EXIT);
+    NEW_VIS_CONST_INT(FTYPE_PLAY);
+    NEW_VIS_CONST_INT(FTYPE_PAUSE);
+    NEW_VIS_CONST_INT(FTYPE_VOLUME);
+    NEW_VIS_CONST_INT(FTYPE_AUDIOSEEK);
+    NEW_VIS_CONST_INT(FTYPE_CMD);
+    NEW_VIS_CONST_INT(FTYPE_BGCOLOR);
+    NEW_VIS_CONST_INT(FTYPE_MUTATE);
+    NEW_VIS_CONST_INT(FTYPE_SCRIPTCB);
+    NEW_VIS_CONST_INT(FTYPE_FRAMESEEK);
+    NEW_VIS_CONST_INT(FTYPE_DELAY);
+    NEW_VIS_CONST_INT(FTYPE_AUDIOSYNC);
+    NEW_VIS_CONST_INT(MAX_FTYPE);
 #undef NEW_VIS_CONST_INT
 #undef NEW_VIS_CONST_NUM
     /* helpful non-Vis constants */
@@ -1135,17 +1176,43 @@ int viscmd_mutateif_fn(lua_State* L) {
     return 0;
 }
 
-/* TODO: Vis.callback(Vis.flist, when, Vis.script, func, ...args) */
-/* Vis.callback(Vis.flist, when, Vis.script, "lua") */
+/* Vis.callback(Vis.flist, when, Vis.script, func_or_str, ...args) */
 int viscmd_callback_fn(lua_State* L) {
     flist_t fl = *(flist_t*)luaL_checkudata(L, 1, "flist_t*");
     fnum_t when = do_msec2frames(L, (msec_t)luaL_checkinteger(L, 2));
     script_t s = util_checkscript(L, 3);
     script_cb* scb = DBMALLOC(sizeof(struct script_cb));
     scb->owner = s;
-    scb->fn_name = dupstr("<lua>");
-    scb->fn_code = escape_string(luaL_checkstring(L, 4));
-    DBPRINTF("Vis.callback(%p, %d, %p, %s)", fl, when, s, scb->fn_code);
+    if (lua_type(L, 4) == LUA_TSTRING) {
+        scb->fn_name = dupstr("<lua>");
+        scb->fn_code = escape_string(luaL_checkstring(L, 4));
+        scb->func_ref = NULL;
+        scb->args_ref = NULL;
+        scb->nargs = 0;
+        DBPRINTF("Vis.callback(%p, %d, %p, %s)", fl, when, s, scb->fn_code);
+    } else if (lua_type(L, 4) == LUA_TFUNCTION) {
+        scb->fn_name = dupstr("<func>");
+        scb->fn_code = NULL;
+        lua_pushvalue(L, 4);
+        scb->func_ref = (void*)(intptr_t)luaL_ref(L, LUA_REGISTRYINDEX);
+
+        int nargs = lua_gettop(L) - 4;
+        scb->nargs = nargs;
+        if (nargs > 0) {
+            lua_createtable(L, nargs, 0);
+            for (int i = 0; i < nargs; ++i) {
+                lua_pushvalue(L, 5 + i);
+                lua_rawseti(L, -2, i + 1);
+            }
+            scb->args_ref = (void*)(intptr_t)luaL_ref(L, LUA_REGISTRYINDEX);
+        } else {
+            scb->args_ref = NULL;
+        }
+        DBPRINTF("Vis.callback(%p, %d, %p, <function>)", fl, when, s);
+    } else {
+        DZFREE(scb);
+        return luaL_error(L, "Vis.callback requires string or function for arg 4");
+    }
     flist_insert_scriptcb(fl, when, scb);
     return 0;
 }

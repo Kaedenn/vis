@@ -46,8 +46,8 @@ function process_character(i)
     end
 
     if not Letters[ch] and lu then
-        local ch_str, ch_name = table.unpack(ASCII[i] or {})
-        local chu_str, chu_name = table.unpack(ASCII[numu] or {})
+        local ch_str, ch_name = unpack(ASCII[i] or {})
+        local chu_str, chu_name = unpack(ASCII[numu] or {})
         print(("Letter 0x%02x %s %s -> 0x%02x %s %s"):format(
             i, ch, ch_name, numu, chu_str, chu_name))
         print(dump_letter(lu))
@@ -57,7 +57,7 @@ function process_character(i)
     if Letters[ch] then
         local ch_str, ch_name = utf8.char(i), "<unnamed>"
         if ASCII[i] then
-            ch_str, ch_name = table.unpack(ASCII[i])
+            ch_str, ch_name = unpack(ASCII[i])
         end
         print(("Letter 0x%02x %s: %s"):format(i, ch_str, ch_name))
         print(dump_letter(Letters[ch]))
@@ -67,9 +67,9 @@ function process_character(i)
     local ch_str, ch_name = utf8.char(i), "<unnamed>"
     local chu_str, chu_name = utf8.char(i-0x20), "<unnamed>"
     if ASCII[i] then
-        ch_str, ch_name = table.unpack(ASCII[i])
+        ch_str, ch_name = unpack(ASCII[i])
     elseif ASCII[i-0x20] then
-        ch_str, ch_name = table.unpack(ASCII[i-0x20])
+        ch_str, ch_name = unpack(ASCII[i-0x20])
     end
     return ("No entry for letter 0x%02x '%s' %s"):format(
         i, ch_str, ch_name)
@@ -93,6 +93,8 @@ function main()
     for _, line in ipairs(notfound) do
         print(line)
     end
+
+    Vis.exit(Vis.flist, 100)
 end
 
 ASCII = {

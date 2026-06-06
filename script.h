@@ -13,6 +13,9 @@ typedef struct script_cb {
     struct script* owner;
     char* fn_name;
     char* fn_code;
+    void* func_ref;
+    void* args_ref;
+    int nargs;
 } script_cb;
 
 typedef struct script* script_t;

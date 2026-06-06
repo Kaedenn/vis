@@ -184,9 +184,16 @@ LUA_TEST_TARGETS := $(patsubst $(DIR)/test/%.lua,%,$(LUA_TESTS))
 $(LUA_TEST_TARGETS): $(VIS)
 	$(VIS) -i -l $(DIR)/test/$@.lua
 
-test: $(TESTS)
+.PHONY: testall
+testall: | $(TESTS)
 	test -x "$(VIS)" || $(MAKE) debug
 	for i in $(LUA_TESTS); do $(VIS) -i -l $$i || exit 1; done
+	for i in $(BIN_TESTS); do $$i --automated || exit 1; done
+
+.PHONY: test
+test: | $(TESTS)
+	test -x "$(VIS)" || $(MAKE) debug
+	for i in $(filter-out $(DIR)/test/test_4_kbmouse.lua,$(LUA_TESTS)); do $(VIS) -i -l $$i || exit 1; done
 	for i in $(BIN_TESTS); do $$i --automated || exit 1; done
 
 valgrind: debug

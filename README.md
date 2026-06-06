@@ -236,8 +236,12 @@ coefficient `coefficient` after `when` milliseconds have passed.
 Mutates affect all living particles on the screen.
 
 `function Vis.callback(Vis.flist, when, Vis.script, lua_script)`: Executes
-`lua_script` in the same context as the calling file after `when`
+the string `lua_script` in the same context as the calling file after `when`
 milliseconds have passed.
+
+`function Vis.callback(Vis.flist, when, Vis.script, func, ...args)`: Executes
+the Lua function `func` with the provided `...args` after `when` milliseconds
+have passed.
 
 `function Vis.fps()`: Returns the current derived frames per second, which
 should be fairly close to `Vis.FPS_LIMIT`.
@@ -390,8 +394,8 @@ than or equal to the tag given.
 `constant Vis.FORCE_GRAVITY_FACTOR`: The strength of gravity, from 0 to 1.
 
 `constant Vis.NFRAMES`: The maximum number of frames that can be
-scheduled. This is set to `1048576` which equates to a little over nine
-hours and forty-two minutes.
+scheduled. This is currently set equal to 15 minutes at 60 frames per
+second (900,000).
 
 `constant Vis.AUDIO_FREQ`: The frequency of audio playback, set to
 44.1KHz.

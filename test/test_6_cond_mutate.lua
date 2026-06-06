@@ -147,4 +147,4 @@ desired_nmutates = desired_nmutates + 1
 desired_nmutated = desired_nmutated + e:get('count') * 2
 --]]
 
---Vis.exit(Vis.flist, 2000)
+Vis.exit(Vis.flist, 4000)

@@ -47,7 +47,7 @@ function assert_field_ne1(e1, field, value, s)
 end
 
 raw_et = VisUtil.make_emit_table()
-e1 = Emit:new()
+e1 = Emit:new({tag=0})
 
 -- Test block 1: special functions
 
