@@ -12,6 +12,7 @@
 
 export const ForceFunc = Object.freeze({
     DEFAULT_FORCE: 'Vis.DEFAULT_FORCE',
+    FORCE_FRICTION: 'Vis.FORCE_FRICTION',
     FORCE_GRAVITY: 'Vis.FORCE_GRAVITY',
 });
 
