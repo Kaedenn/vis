@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 
+"""Module for parsing MIDI files and extracting note events."""
+
 import csv
 import contextlib
 import struct
 import sys
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 import argparse
@@ -15,6 +17,7 @@ DEFAULT_TEMPO = 500_000  # 120 BPM in microseconds/beat
 PHDR_SIZE = 38
 
 def iter_chunks(data: bytes, start: int, end: int):
+    """Iterate over RIFF chunks in data."""
     pos = start
     while pos + 8 <= end:
         chunk_id = data[pos:pos+4]
@@ -28,6 +31,7 @@ def iter_chunks(data: bytes, start: int, end: int):
         pos = body_end + (size & 1)
 
 def find_phdr(data: bytes) -> bytes:
+    """Find the phdr chunk in a RIFF SoundFont file."""
     if data[0:4] != b"RIFF" or data[8:12] != b"sfbk":
         raise ValueError("not a RIFF SoundFont file")
 
@@ -49,9 +53,11 @@ def find_phdr(data: bytes) -> bytes:
     raise ValueError("no pdta/phdr chunk found")
 
 def clean_name(raw: bytes) -> str:
+    """Clean null-terminated strings from SF2."""
     return raw.split(b"\x00", 1)[0].decode("latin1", errors="replace").strip()
 
 def parse_sf2_presets(sf2_path: Path) -> Dict[Tuple[int, int], str]:
+    """Parse SF2 file to extract preset names mapping."""
     data = sf2_path.read_bytes()
     phdr = find_phdr(data)
 
@@ -65,7 +71,7 @@ def parse_sf2_presets(sf2_path: Path) -> Dict[Tuple[int, int], str]:
         rec = phdr[i * PHDR_SIZE:(i + 1) * PHDR_SIZE]
 
         name = clean_name(rec[0:20])
-        preset, bank, bag_index = struct.unpack_from("<HHH", rec, 20)
+        preset, bank, _ = struct.unpack_from("<HHH", rec, 20)
 
         # Final terminal record; not a real playable preset.
         if i == records - 1:
@@ -77,6 +83,7 @@ def parse_sf2_presets(sf2_path: Path) -> Dict[Tuple[int, int], str]:
 
 @dataclass(frozen=True)
 class NoteEvent:
+    """Represents a single parsed MIDI note event."""
     index: int
     track: int
     channel: int
@@ -89,16 +96,18 @@ class NoteEvent:
     bank_lsb: int = 0
     bank: int = 0
     program: int = 0
-    source: Optional[str] = None
+    preset: Optional[str] = None
     duration_ticks: Optional[int] = None
     duration_seconds: Optional[float] = None
 
     @property
     def start_msec(self):
+        """Get start time in milliseconds."""
         return int(self.start_seconds * 1000)
 
     @property
     def duration_msec(self):
+        """Get duration in milliseconds."""
         return int(self.duration_seconds * 1000)
 
 NOTE_NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
@@ -134,7 +143,11 @@ def build_tempo_segments(mid: mido.MidiFile) -> List[Tuple[int, int]]:
             collapsed.append((t, tempo))
     return collapsed
 
-def ticks_to_seconds(ticks: int, ticks_per_beat: int, tempo_segments: List[Tuple[int, int]]) -> float:
+def ticks_to_seconds(
+    ticks: int,
+    ticks_per_beat: int,
+    tempo_segments: List[Tuple[int, int]]
+) -> float:
     """
     Convert an absolute tick value to absolute seconds from time 0,
     accounting for tempo changes.
@@ -158,14 +171,20 @@ def ticks_to_seconds(ticks: int, ticks_per_beat: int, tempo_segments: List[Tuple
 
     return total_seconds
 
-def extract_notes(mid: mido.MidiFile, limit: Optional[int] = None, presets: Optional[Dict[Tuple[int, int], str]] = None) -> List[NoteEvent]:
+def extract_notes(
+    mid: mido.MidiFile,
+    limit: Optional[int] = None,
+    presets: Optional[Dict[Tuple[int, int], str]] = None
+) -> List[NoteEvent]:
+    """Extract note events from a MIDI file."""
     tpb = mid.ticks_per_beat
     tempo_segments = build_tempo_segments(mid)
 
     results: List[NoteEvent] = []
     note_index = 0
 
-    # For durations, track active notes per (track, channel, note) -> (start_ticks, start_seconds)
+    # For durations, track active notes per
+    # (track, channel, note) -> (start_ticks, start_seconds, velocity)
     active: Dict[Tuple[int, int, int], Tuple[int, float, int]] = {}
 
     for ti, track in enumerate(mid.tracks):
@@ -197,7 +216,7 @@ def extract_notes(mid: mido.MidiFile, limit: Optional[int] = None, presets: Opti
                 lsb = bank_lsb.get(msg.channel, 0)
                 bank = msb
                 prog = programs.get(msg.channel, 0)
-                source = presets.get((bank, prog)) if presets else None
+                preset = presets.get((bank, prog)) if presets else None
 
                 note_index += 1
                 results.append(
@@ -214,7 +233,7 @@ def extract_notes(mid: mido.MidiFile, limit: Optional[int] = None, presets: Opti
                         bank_lsb=lsb,
                         bank=bank,
                         program=prog,
-                        source=source,
+                        preset=preset,
                     )
                 )
 
@@ -227,7 +246,7 @@ def extract_notes(mid: mido.MidiFile, limit: Optional[int] = None, presets: Opti
             elif is_note_off:
                 key = (ti, msg.channel, msg.note)
                 if key in active:
-                    start_tick, start_sec, start_vel = active.pop(key)
+                    start_tick, start_sec, _ = active.pop(key)
                     end_sec = ticks_to_seconds(abs_tick, tpb, tempo_segments)
                     dur_ticks = abs_tick - start_tick
                     dur_sec = end_sec - start_sec
@@ -236,14 +255,16 @@ def extract_notes(mid: mido.MidiFile, limit: Optional[int] = None, presets: Opti
                     # (same track/channel/note/start_tick)
                     for i in range(len(results) - 1, -1, -1):
                         ev = results[i]
-                        if ev.track == ti and ev.channel == msg.channel and ev.note == msg.note and ev.start_ticks == start_tick:
-                            results[i] = NoteEvent(
-                                **{**ev.__dict__, "duration_ticks": dur_ticks, "duration_seconds": dur_sec}
+                        if (ev.track == ti and ev.channel == msg.channel and
+                                ev.note == msg.note and ev.start_ticks == start_tick):
+                            results[i] = replace(
+                                ev, duration_ticks=dur_ticks, duration_seconds=dur_sec
                             )
                             break
 
-            # If we already have enough results and all their durations are filled (optional),
-            # we could stop. For simplicity, stop once we have 'limit' note-ons and we're past them a bit.
+            # If we already have enough results and all their durations are filled
+            # (optional), we could stop. For simplicity, stop once we have 'limit'
+            # note-ons and we're past them a bit.
             if limit is not None:
                 if len(results) >= limit and abs_tick > results[-1].start_ticks:
                     # If you don't care about durations, you can break earlier.
@@ -254,7 +275,8 @@ def extract_notes(mid: mido.MidiFile, limit: Optional[int] = None, presets: Opti
             if len(results) >= limit:
                 # continue scanning other tracks only if you need cross-track earliest notes.
                 # Many MIDI files store melody in one track; but not always.
-                # We'll keep going to collect earliest per-track note-ons; you can change this behavior.
+                # We'll keep going to collect earliest per-track note-ons;
+                # you can change this behavior.
                 pass
 
     # If the file has multiple tracks, the "first notes of the song" are usually by global time.
@@ -268,13 +290,15 @@ def extract_notes(mid: mido.MidiFile, limit: Optional[int] = None, presets: Opti
 def open_output_file(name: Optional[Path]):
     """Open a file for writing, or use stdout if no name is provided."""
     if name:
-        with open(name, "wt") as fobj:
+        with open(name, "wt", encoding="utf-8") as fobj:
             yield fobj
     else:
         yield sys.stdout
 
 def main() -> None:
-    p = argparse.ArgumentParser(description="Print first N note-on events with absolute timestamps.")
+    p = argparse.ArgumentParser(
+        description="Print first N note-on events with absolute timestamps."
+    )
     p.add_argument("midi_file", type=Path)
     p.add_argument("-n", "--num", type=int)
     p.add_argument("-o", "--output", type=Path, help="write to file instead of stdout")
@@ -299,7 +323,7 @@ def main() -> None:
             "blsb",
             "bank",
             "prog",
-            "source",
+            "preset",
             "note",
             "name",
             "vel",
@@ -317,12 +341,13 @@ def main() -> None:
                 ev.bank_lsb,
                 ev.bank,
                 ev.program,
-                ev.source,
+                ev.preset,
                 ev.note,
                 ev.note_name,
                 ev.velocity,
             ))
 
-
 if __name__ == "__main__":
     main()
+
+# vim: set ts=4 sts=4 sw=4:
