@@ -1,12 +1,17 @@
-/**
- * Configuration file for vis
- */
+/* Configuration file for vis */
 {
+    /* Should script.c print debug output? */
     "DEBUG_SCRIPT_C": 0,
+
+    /* Should script.c print progress output? */
     "DEBUG_SCRIPT_PROGRESS": 1,
-    /* Bit flag:
+
+    /* DEBUG_EMITTER is a bit flag:
      * 1 << 0: Debug plist size every frame
      * 1 << 1: Debug every emit call */
     "DEBUG_EMITTER": 1,
+
+    /* Should the drawer print FPS analysis? */
+    "DEBUG_FPS": 1
 }
-/* vim: set filetype=javascript: */
+/* vim: set filetype=jsonc: */

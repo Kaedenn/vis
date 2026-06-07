@@ -61,6 +61,9 @@ void script_callback_free(script_cb* cb);
 int script_get_status(script_t s);
 void script_clear_status(script_t s);
 
+/* Returns TRUE if Vis.exit() was called with no arguments */
+BOOL script_should_exit(script_t s);
+
 /* Set debug value for given debug flag */
 void script_set_debug(script_t s, enum script_debug_id what, uint64_t n);
 
@@ -89,6 +92,11 @@ void script_run_cb(script_t state, script_cb* func, void* args);
 /* Tell the scripting engine about the drawer. Assigns:
  *  Vis.FPS_LIMIT = get_configured_fps() */
 void script_set_drawer(script_t script, drawer_t drawer);
+
+/* REPL handling functions */
+void script_repl_setup(script_t script, BOOL interactive);
+void script_repl_teardown(script_t script);
+void script_repl_async(script_t script);
 
 /* Callback functions for various events */
 void script_mousescroll(script_t script, int xoffset, int yoffset);

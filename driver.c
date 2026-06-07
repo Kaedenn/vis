@@ -3,7 +3,6 @@
 
 #include "audio.h"
 #include "clargs.h"
-#include "command.h"
 #include "drawer.h"
 #include "emit.h"
 #include "emitter.h"
@@ -31,7 +30,6 @@ struct global_ctx {
     plist_t particles;
     drawer_t drawer;
     clargs* args;
-    struct commands* cmds;
     script_t script;
     BOOL paused;
     BOOL steponce;
@@ -180,15 +178,14 @@ int main(int argc, char* argv[]) {
     }
     script_set_drawer(g.script, g.drawer);
 
-    g.cmds = command_setup(g.drawer, g.particles, g.script, g.args->interactive);
-
-    emitter_setup(g.cmds, g.particles, g.drawer, g.args);
+    script_repl_setup(g.script, g.args->interactive);
+    emitter_setup(g.script, g.particles, g.drawer, g.args);
 
     if (!audio_init()) {
         clargs_free(g.args);
         drawer_free(g.drawer);
         plist_free(g.particles);
-        command_teardown(g.cmds);
+        script_repl_teardown(g.script);
         emitter_free();
         script_free(g.script);
         exit(1);
@@ -230,7 +227,7 @@ int main(int argc, char* argv[]) {
     clargs_free(g.args);
     drawer_free(g.drawer);
     plist_free(g.particles);
-    command_teardown(g.cmds);
+    script_repl_teardown(g.script);
     emitter_free();
     audio_free();
     script_free(g.script);
@@ -287,6 +284,8 @@ void mainloop(struct global_ctx* ctx) {
 
         if ((ctx->exit_status = script_get_status(ctx->script)) != 0) {
             ctx->should_exit = TRUE;
+        } else if (script_should_exit(ctx->script)) {
+            ctx->should_exit = TRUE;
         } else {
             if (ctx->steponce && ctx->paused) {
                 ctx->paused = FALSE;
@@ -330,13 +329,12 @@ void advance(struct global_ctx* ctx) {
     static int delayctr = 0;
     if (ctx->args->interactive) {
         if (++delayctr % VIS_CMD_DELAY_NSTEPS == 0) {
-            command_async(ctx->cmds);
+            script_repl_async(ctx->script);
             delayctr = 0;
         }
     }
-    if (command_should_exit(ctx->cmds)) {
+    if (emitter_should_exit()) {
         ctx->should_exit = TRUE;
-        ctx->exit_status = (int)command_get_error(ctx->cmds);
     }
     if (!ctx->paused) {
         emitter_tick();

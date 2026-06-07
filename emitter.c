@@ -4,7 +4,7 @@
 #include "emitter.h"
 
 #include "audio.h"
-#include "command.h"
+#include "script.h"
 #include "drawer.h"
 #include "helper.h"
 #include "particle.h"
@@ -19,7 +19,7 @@ enum emitter_debug {
 };
 
 static struct emitter {
-    struct commands* commands;              /* pointer to commands object */
+    script_t script;                        /* pointer to script object */
     plist_t particles;                      /* pointer to plist object */
     flist_t fl;                             /* pointer to flist object */
     clargs_t args;                          /* pointer to args */
@@ -28,11 +28,12 @@ static struct emitter {
     uint32_t delay_counter;                 /* delay frames counter */
     BOOL do_sync;                           /* re-sync audio after delay */
     uint64_t debug_mode;                    /* what debugging to show */
+    BOOL should_exit;                       /* set if VIS_FTYPE_EXIT is hit */
 } emitter;
 
-void emitter_setup(struct commands* cmds, plist_t plist, drawer_t drawer, clargs_t args) {
+void emitter_setup(script_t script, plist_t plist, drawer_t drawer, clargs_t args) {
     ZEROINIT(&emitter);
-    emitter.commands = cmds;
+    emitter.script = script;
     emitter.particles = plist;
     emitter.drawer = drawer;
     emitter.args = args;
@@ -48,6 +49,10 @@ void emitter_free(void) {
         flist_free(emitter.fl);
         emitter.fl = NULL;
     }
+}
+
+BOOL emitter_should_exit(void) {
+    return emitter.should_exit;
 }
 
 uint32_t emitter_get_frame_count(ftype_id ft) {
@@ -104,7 +109,7 @@ void emitter_tick(void) {
             break;
         case VIS_FTYPE_EXIT:
             DBPRINTF("Ticking flist: %s at frame %d", ftype_str, curr_frame);
-            command_str(emitter.commands, "exit");
+            emitter.should_exit = TRUE;
             break;
         case VIS_FTYPE_PLAY:
             DBPRINTF("Ticking flist: %s at frame %d", ftype_str, curr_frame);
@@ -124,7 +129,7 @@ void emitter_tick(void) {
             break;
         case VIS_FTYPE_CMD:
             DBPRINTF("Ticking flist: %s at frame %d", ftype_str, curr_frame);
-            command_str(emitter.commands, fn->data.cmd);
+            script_run_string(emitter.script, fn->data.cmd);
             break;
         case VIS_FTYPE_BGCOLOR:
             DBPRINTF("Ticking flist: %s at frame %d", ftype_str, curr_frame);

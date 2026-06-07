@@ -11,11 +11,11 @@
 
 typedef struct drawer* drawer_t;
 
-drawer_t drawer_new(const clargs* args);
+drawer_t drawer_new(const clargs_t args);
 void drawer_free(drawer_t drawer);
 GLFWwindow* drawer_get_window(drawer_t drawer);
 
-void drawer_config(drawer_t drawer, const clargs* args);
+void drawer_config(drawer_t drawer, const clargs_t args);
 void drawer_bgcolor(drawer_t drawer, float r, float g, float b);
 int drawer_add_particle(drawer_t drawer, particle_t p);
 int drawer_draw_to_screen(drawer_t drawer);

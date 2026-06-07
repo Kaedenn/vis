@@ -64,6 +64,7 @@ struct drawer {
     emit_desc* trace_emit;
     BOOL verbose_trace;
     char* dump_file_fmt;
+    BOOL debug_fps;
 };
 
 const GLchar* GEOM_SOURCE = "glsl/geom.glsl";
@@ -75,7 +76,7 @@ void glfw_error_callback(int error, const char* description) {
     EPRINTF("GLFW Error (%d): %s\n", error, description);
 }
 
-drawer_t drawer_new(const clargs* args) {
+drawer_t drawer_new(const clargs_t args) {
     drawer_t drawer = DBMALLOC(sizeof(struct drawer));
     drawer_config(drawer, args);
 
@@ -188,11 +189,13 @@ void drawer_free(drawer_t drawer) {
     double runtime = glfwGetTime() - drawer->fps.start_time;
     double fc_want = runtime * drawer->frames_per_second;
     double fc_have = (double)drawer->fps.framecount;
-    DBPRINTF("%s", "fps analysis:");
-    DBPRINTF("S=%g, F=%g, F/S=%g", runtime, fc_have, fc_have / runtime);
-    DBPRINTF("frame error:   (S*FPS-F) %g frames (%g seconds)", fc_want - fc_have,
-        (fc_want - fc_have) / drawer->frames_per_second);
-    DBPRINTF("error ratio: 1-(S*FPS/F) %g", 1 - fc_want / fc_have);
+    if (drawer->debug_fps) {
+        DBPRINTF("%s", "fps analysis:");
+        DBPRINTF("S=%g, F=%g, F/S=%g", runtime, fc_have, fc_have / runtime);
+        DBPRINTF("frame error:   (S*FPS-F) %g frames (%g seconds)", fc_want - fc_have,
+            (fc_want - fc_have) / drawer->frames_per_second);
+        DBPRINTF("error ratio: 1-(S*FPS/F) %g", 1 - fc_want / fc_have);
+    }
 
     DZFREE(drawer->vertex_array);
     if (drawer->dump_file_fmt) {
@@ -366,7 +369,7 @@ float drawer_get_fps(drawer_t drawer) {
                    (glfwGetTime() - drawer->fps.start_time));
 }
 
-void drawer_config(drawer_t drawer, const clargs* args) {
+void drawer_config(drawer_t drawer, const clargs_t args) {
     drawer->frames_per_second = args->frames_per_second;
     drawer->frame_skip = (uint32_t)args->frameskip;
     drawer->verbose_trace = args->dumptrace ? TRUE : FALSE;
@@ -384,6 +387,12 @@ void drawer_config(drawer_t drawer, const clargs* args) {
     }
     drawer->wsize[0] = args->wsize[0];
     drawer->wsize[1] = args->wsize[1];
+
+    if (clargs_config_has(args, "DEBUG_FPS")) {
+        drawer->debug_fps = clargs_config_get_int(args, "DEBUG_FPS") != 0;
+    } else {
+        drawer->debug_fps = FALSE;
+    }
 }
 
 void drawer_set_dumpfile_template(drawer_t drawer, const char* path) {
