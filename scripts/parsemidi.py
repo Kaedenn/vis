@@ -2,6 +2,7 @@
 
 import csv
 import contextlib
+import struct
 import sys
 from dataclasses import dataclass
 from pathlib import Path
@@ -11,6 +12,68 @@ import argparse
 import mido
 
 DEFAULT_TEMPO = 500_000  # 120 BPM in microseconds/beat
+PHDR_SIZE = 38
+
+def iter_chunks(data: bytes, start: int, end: int):
+    pos = start
+    while pos + 8 <= end:
+        chunk_id = data[pos:pos+4]
+        size = struct.unpack_from("<I", data, pos + 4)[0]
+        body_start = pos + 8
+        body_end = body_start + size
+
+        yield chunk_id, body_start, body_end
+
+        # RIFF chunks are word-aligned
+        pos = body_end + (size & 1)
+
+def find_phdr(data: bytes) -> bytes:
+    if data[0:4] != b"RIFF" or data[8:12] != b"sfbk":
+        raise ValueError("not a RIFF SoundFont file")
+
+    riff_size = struct.unpack_from("<I", data, 4)[0]
+    riff_end = 8 + riff_size
+
+    for chunk_id, body_start, body_end in iter_chunks(data, 12, riff_end):
+        if chunk_id != b"LIST":
+            continue
+
+        list_type = data[body_start:body_start+4]
+        if list_type != b"pdta":
+            continue
+
+        for sub_id, sub_start, sub_end in iter_chunks(data, body_start + 4, body_end):
+            if sub_id == b"phdr":
+                return data[sub_start:sub_end]
+
+    raise ValueError("no pdta/phdr chunk found")
+
+def clean_name(raw: bytes) -> str:
+    return raw.split(b"\x00", 1)[0].decode("latin1", errors="replace").strip()
+
+def parse_sf2_presets(sf2_path: Path) -> Dict[Tuple[int, int], str]:
+    data = sf2_path.read_bytes()
+    phdr = find_phdr(data)
+
+    if len(phdr) % PHDR_SIZE != 0:
+        raise ValueError(f"bad phdr size: {len(phdr)}")
+
+    records = len(phdr) // PHDR_SIZE
+    presets: Dict[Tuple[int, int], str] = {}
+
+    for i in range(records):
+        rec = phdr[i * PHDR_SIZE:(i + 1) * PHDR_SIZE]
+
+        name = clean_name(rec[0:20])
+        preset, bank, bag_index = struct.unpack_from("<HHH", rec, 20)
+
+        # Final terminal record; not a real playable preset.
+        if i == records - 1:
+            continue
+
+        presets[(bank, preset)] = name
+
+    return presets
 
 @dataclass(frozen=True)
 class NoteEvent:
@@ -26,6 +89,7 @@ class NoteEvent:
     bank_lsb: int = 0
     bank: int = 0
     program: int = 0
+    source: Optional[str] = None
     duration_ticks: Optional[int] = None
     duration_seconds: Optional[float] = None
 
@@ -94,7 +158,7 @@ def ticks_to_seconds(ticks: int, ticks_per_beat: int, tempo_segments: List[Tuple
 
     return total_seconds
 
-def extract_notes(mid: mido.MidiFile, limit: Optional[int] = None) -> List[NoteEvent]:
+def extract_notes(mid: mido.MidiFile, limit: Optional[int] = None, presets: Optional[Dict[Tuple[int, int], str]] = None) -> List[NoteEvent]:
     tpb = mid.ticks_per_beat
     tempo_segments = build_tempo_segments(mid)
 
@@ -132,6 +196,8 @@ def extract_notes(mid: mido.MidiFile, limit: Optional[int] = None) -> List[NoteE
                 msb = bank_msb.get(msg.channel, 0)
                 lsb = bank_lsb.get(msg.channel, 0)
                 bank = msb
+                prog = programs.get(msg.channel, 0)
+                source = presets.get((bank, prog)) if presets else None
 
                 note_index += 1
                 results.append(
@@ -147,7 +213,8 @@ def extract_notes(mid: mido.MidiFile, limit: Optional[int] = None) -> List[NoteE
                         bank_msb=msb,
                         bank_lsb=lsb,
                         bank=bank,
-                        program=programs.get(msg.channel, 0),
+                        program=prog,
+                        source=source,
                     )
                 )
 
@@ -211,10 +278,12 @@ def main() -> None:
     p.add_argument("midi_file", type=Path)
     p.add_argument("-n", "--num", type=int)
     p.add_argument("-o", "--output", type=Path, help="write to file instead of stdout")
+    p.add_argument("-f", "--font", type=Path, help="soundfont to parse for preset names")
     args = p.parse_args()
 
+    presets = parse_sf2_presets(args.font) if args.font else None
     mid = mido.MidiFile(str(args.midi_file))
-    events = extract_notes(mid, args.num)
+    events = extract_notes(mid, args.num, presets)
 
     with open_output_file(args.output) as fobj:
         csvw = csv.writer(fobj)
@@ -230,6 +299,7 @@ def main() -> None:
             "blsb",
             "bank",
             "prog",
+            "source",
             "note",
             "name",
             "vel",
@@ -247,6 +317,7 @@ def main() -> None:
                 ev.bank_lsb,
                 ev.bank,
                 ev.program,
+                ev.source,
                 ev.note,
                 ev.note_name,
                 ev.velocity,
