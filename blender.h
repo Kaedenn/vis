@@ -45,17 +45,6 @@ static inline double easing_blend(double current, double max) {
     return exp(-500*pow(current/max - 1.0/2.0, 6));
 }
 
-/* following are in order of increasing execution time (or so I hope) */
-static const blend_fn blend_fns[VIS_NBLENDS] = {
-    no_blend,
-    linear_blend,
-    parabolic_blend,
-    quadratic_blend,
-    sine_blend,
-    neggamma_blend,
-    easing_blend
-};
-
 static const blend_id default_blender = VIS_BLEND_LINEAR;
 
 #endif

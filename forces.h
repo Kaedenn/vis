@@ -6,18 +6,18 @@
 #include "particle.h"
 
 /* default */
-void no_force(particle_t p);
+static inline void no_force(UNUSED_PARAM(particle_t p)) {}
 
 /* frictional force */
-void friction(particle_t p);
+static inline void friction(particle_t p) {
+    p->dx *= VIS_FORCE_FRICTION_COEFF;
+    p->dy *= VIS_FORCE_FRICTION_COEFF;
+}
 
 /* gravity */
-void gravity(particle_t p);
-
-static const force_fn FORCE_MAP[] = {
-    no_force, friction, gravity
-};
-
+static inline void gravity(particle_t p) {
+    p->dy += VIS_FORCE_GRAVITY_FACTOR;
+}
 
 #endif
 

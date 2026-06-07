@@ -92,8 +92,18 @@ void particle_tick(particle_t p) {
     p->y += p->dy;
     VIS_ASSERT(0 <= p->force && p->force < VIS_NFORCES);
     VIS_ASSERT(0 <= p->limit && p->limit < VIS_NLIMITS);
-    FORCE_MAP[p->force](p);
-    LIMIT_MAP[p->limit](p);
+    switch (p->force) {
+        case VIS_FORCE_FRICTION: friction(p); break;
+        case VIS_FORCE_GRAVITY: gravity(p); break;
+        case VIS_DEFAULT_FORCE: break;
+        case VIS_NFORCES: break;
+    }
+    switch (p->limit) {
+        case VIS_LIMIT_BOX: box(p); break;
+        case VIS_LIMIT_SPRINGBOX: springbox(p); break;
+        case VIS_DEFAULT_LIMIT: break;
+        case VIS_NLIMITS: break;
+    }
     p->life -= 1;
 }
 

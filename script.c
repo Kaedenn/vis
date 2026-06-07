@@ -1085,10 +1085,10 @@ int viscmd_bgcolor_fn(lua_State* L) {
     return 0;
 }
 
-/* See README.md for mutate arguments
- * <mutate-optional-args>: factor, offset, offset
- * Vis.mutate(Vis.flist, when, func, factor[, <mutate-optional-args>])
+/* Vis.mutate(Vis.flist, when, func, factor, [factor, [offset, [offset]]])
  * Vis.mutate(Vis.flist, when, Vis.MUTATE_TAG_*, tag)
+ * If func is a tag mutate, only 'tag' is expected. Otherwise 'factor' and
+ * [optional] factor2, offset, offset are expected
  * @param func is a valid Vis.MUTATE_*
  */
 int viscmd_mutate_fn(lua_State* L) {
@@ -1097,7 +1097,7 @@ int viscmd_mutate_fn(lua_State* L) {
     fnum_t when = do_msec2frames(L, (msec_t)luaL_checkinteger(L, 2));
     mutate_id fnid = (mutate_id)luaL_checkinteger(L, 3);
     method->id = fnid;
-    if (fnid >= VIS_MUTATE_PUSH && fnid < VIS_MUTATE_TAG_SET) {
+    if (mutate_is_unconditional(fnid)) {
         /* case 1: normal mutate */
         method->factor[0] = luaL_checknumber(L, 4);
         method->factor[1] = luaL_optnumber(L, 5, 0);
@@ -1107,12 +1107,12 @@ int viscmd_mutate_fn(lua_State* L) {
                 fl, (int)when, genlua_mutate(fnid),
                 method->factor[0], method->factor[1],
                 method->offset[0], method->offset[1]);
-    } else if (fnid >= VIS_MUTATE_TAG_SET && fnid < VIS_MUTATE_TAG_SET_IF) {
+    } else if (mutate_is_tag(fnid)) {
         /* case 2: tag modification */
         method->newtag.l = luaL_optinteger(L, 4, 0);
         DBPRINTF("Vis.mutate(%p, %d, %s, %ld)",
                 fl, (int)when, genlua_mutate(fnid), method->tag.l);
-    } else if (fnid >= VIS_MUTATE_PUSH_IF && fnid < VIS_NMUTATES) {
+    } else if (mutate_is_conditional(fnid)) {
         DZFREE(method);
         return luaL_error(L, "Conditional mutates must be made through Vis.mutateif");
     } else {
@@ -1128,9 +1128,10 @@ int viscmd_mutate_fn(lua_State* L) {
  *      tag,                        -- only if cond is EQ, NE, LT, LE, GT, GE
  *      newtag,                     -- only if func Vis.MUTATE_TAG_SET_IF
  *      factor1, factor2,           -- assigned
- *      check_factor1, check_factor2,   -- checked
+ *      checkfactor1, checkfactor2, -- checked
  *      offset1, offset2)           -- compared
- *  if a factor is to be checked (eg. Vis.MUTATE_IF_NEAR), then:
+ *
+ *  If a factor is to be checked (eg. Vis.MUTATE_IF_NEAR), then:
  *      factor1 is assigned
  *      factor2 is checked
  */
@@ -1139,11 +1140,11 @@ int viscmd_mutateif_fn(lua_State* L) {
     flist_t fl = *(flist_t*)luaL_checkudata(L, 1, "flist_t*");
     fnum_t when = do_msec2frames(L, (msec_t)luaL_checkinteger(L, 2));
     mutate_id fnid = (mutate_id)luaL_checkinteger(L, 3);
-    if (fnid >= VIS_MUTATE_PUSH && fnid < VIS_MUTATE_TAG_SET_IF) {
+    if (mutate_is_unconditional(fnid) || mutate_is_tag(fnid)) {
         DZFREE(method);
         return luaL_error(L, "Unconditional mutate must be made through Vis.mutate");
     }
-    if (fnid >= VIS_NMUTATES) {
+    if (!mutate_is_conditional(fnid)) {
         DZFREE(method);
         return luaL_error(L, "Invalid conditional mutate ID %d", fnid);
     }
@@ -1176,7 +1177,9 @@ int viscmd_mutateif_fn(lua_State* L) {
     return 0;
 }
 
-/* Vis.callback(Vis.flist, when, Vis.script, func_or_str, ...args) */
+/* Vis.callback(Vis.flist, when, Vis.script, func, ...args)
+ * Vis.callback(Vis.flist, when, Vis.script, "code as a string")
+ */
 int viscmd_callback_fn(lua_State* L) {
     flist_t fl = *(flist_t*)luaL_checkudata(L, 1, "flist_t*");
     fnum_t when = do_msec2frames(L, (msec_t)luaL_checkinteger(L, 2));
@@ -1208,7 +1211,6 @@ int viscmd_callback_fn(lua_State* L) {
         } else {
             scb->args_ref = NULL;
         }
-        DBPRINTF("Vis.callback(%p, %d, %p, <function>)", fl, when, s);
     } else {
         DZFREE(scb);
         return luaL_error(L, "Vis.callback requires string or function for arg 4");

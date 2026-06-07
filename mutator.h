@@ -106,5 +106,62 @@ static const mutate_fn MUTATE_MAP[VIS_NMUTATES+1] = {
     [VIS_NMUTATES] = mutate_none
 };
 
-#endif
+static inline BOOL mutate_is_conditional(mutate_id id) {
+    switch ((int)id) {
+    case VIS_MUTATE_TAG_SET_IF:
+    case VIS_MUTATE_PUSH_IF:
+    case VIS_MUTATE_PUSH_DX_IF:
+    case VIS_MUTATE_PUSH_DY_IF:
+    case VIS_MUTATE_SLOW_IF:
+    case VIS_MUTATE_SHRINK_IF:
+    case VIS_MUTATE_GROW_IF:
+    case VIS_MUTATE_AGE_IF:
+    case VIS_MUTATE_OPACITY_IF:
+    case VIS_MUTATE_SET_DX_IF:
+    case VIS_MUTATE_SET_DY_IF:
+    case VIS_MUTATE_SET_RADIUS_IF:
+    case VIS_MUTATE_SET_VERTICES_IF:
+    case VIS_MUTATE_SET_ANGLE_IF:
+        return TRUE;
+    default:
+        return FALSE;
+    }
+}
 
+static inline BOOL mutate_is_tag(mutate_id id) {
+    switch ((int)id) {
+    case VIS_MUTATE_TAG_SET:
+    case VIS_MUTATE_TAG_INC:
+    case VIS_MUTATE_TAG_DEC:
+    case VIS_MUTATE_TAG_ADD:
+    case VIS_MUTATE_TAG_SUB:
+    case VIS_MUTATE_TAG_MUL:
+    case VIS_MUTATE_TAG_DIV:
+        return TRUE;
+    default:
+        return FALSE;
+    }
+}
+
+static inline BOOL mutate_is_unconditional(mutate_id id) {
+    switch ((int)id) {
+    case VIS_MUTATE_PUSH:
+    case VIS_MUTATE_PUSH_DX:
+    case VIS_MUTATE_PUSH_DY:
+    case VIS_MUTATE_SLOW:
+    case VIS_MUTATE_SHRINK:
+    case VIS_MUTATE_GROW:
+    case VIS_MUTATE_AGE:
+    case VIS_MUTATE_OPACITY:
+    case VIS_MUTATE_SET_DX:
+    case VIS_MUTATE_SET_DY:
+    case VIS_MUTATE_SET_RADIUS:
+    case VIS_MUTATE_SET_VERTICES:
+    case VIS_MUTATE_SET_ANGLE:
+        return TRUE;
+    default:
+        return FALSE;
+    }
+}
+
+#endif

@@ -444,7 +444,16 @@ double calculate_blend(particle_t p) {
     double life = particle_get_life(p);
     double lifetime = particle_get_lifetime(p);
     if (p->blender >= VIS_BLEND_NONE && p->blender < VIS_NBLENDS) {
-        alpha *= blend_fns[p->blender](life, lifetime);
+        switch (p->blender) {
+            case VIS_BLEND_NONE: alpha *= no_blend(life, lifetime); break;
+            case VIS_BLEND_LINEAR: alpha *= linear_blend(life, lifetime); break;
+            case VIS_BLEND_PARABOLIC: alpha *= parabolic_blend(life, lifetime); break;
+            case VIS_BLEND_QUADRATIC: alpha *= quadratic_blend(life, lifetime); break;
+            case VIS_BLEND_SINE: alpha *= sine_blend(life, lifetime); break;
+            case VIS_BLEND_NEGGAMMA: alpha *= neggamma_blend(life, lifetime); break;
+            case VIS_BLEND_EASING: alpha *= easing_blend(life, lifetime); break;
+            case VIS_NBLENDS: break;
+        }
     }
     return alpha;
 }
