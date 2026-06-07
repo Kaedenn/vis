@@ -217,7 +217,10 @@ GLFWwindow* drawer_get_window(drawer_t drawer) {
     return drawer->window;
 }
 
-void drawer_set_lookat(drawer_t drawer, float ex, float ey, float ez, float cx, float cy, float cz, float ux, float uy, float uz) {
+void drawer_set_lookat(drawer_t drawer,
+                       float ex, float ey, float ez,
+                       float cx, float cy, float cz,
+                       float ux, float uy, float uz) {
     mat4_look_at(drawer->view_matrix, ex, ey, ez, cx, cy, cz, ux, uy, uz);
 }
 

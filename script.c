@@ -14,11 +14,15 @@
 #include <string.h>
 #include <errno.h>
 
+#ifdef HAVE_READLINE
+#include <readline/readline.h>
+#include <readline/history.h>
+#include <sys/select.h>
+#endif
+
 #include <lauxlib.h>
 #include <lua.h>
 #include <lualib.h>
-
-/* TODO: Vis.callback(Vis.flist, when, Vis.script, func, ...args) */
 
 /** LuaJIT Shims */
 #ifndef lua_absindex
@@ -409,24 +413,146 @@ void script_on_audio_ended(script_t s) {
     script_run_string(s, "Vis._do_on_event(Vis._on_songends)");
 }
 
+static void evaluate_repl_buffer(script_t script) {
+    /* Check if user just typed 'exit' */
+    kstr chk = kstring_newfrom(kstring_content(script->repl_buffer));
+    kstring_strip(chk);
+    if (!strcmp(kstring_content(chk), "exit")) {
+        kstring_free(chk);
+        script_run_string(script, "Vis.exit()");
+        return;
+    }
+    kstring_free(chk);
+
+    /* Attempt to compile */
+    kstr stmt = kstring_newfromvf("return %s", kstring_content(script->repl_buffer));
+    BOOL executed = FALSE;
+
+    /* Attempt as expression */
+    if (luaL_loadbuffer(script->L, kstring_content(stmt), kstring_length(stmt), "stdin") == LUA_OK) {
+        if (lua_pcall(script->L, 0, LUA_MULTRET, script->debugidx) == LUA_OK) {
+            int nres = lua_gettop(script->L);
+            if (nres > 0) {
+                for (int i = 1; i <= nres; ++i) {
+                    kstr vs = do_inspect_value(script->L, i);
+                    printf("%s\t", kstring_content(vs));
+                    kstring_free(vs);
+                }
+                printf("\n");
+                lua_settop(script->L, 0);
+            }
+            executed = TRUE;
+        } else {
+            lua_pop(script->L, 1); /* pop runtime error to fall back to statement */
+        }
+    } else {
+        lua_pop(script->L, 1); /* pop compile error */
+    }
+    kstring_free(stmt);
+
+    if (!executed) {
+        /* Attempt as statement */
+        if (luaL_loadbuffer(script->L, kstring_content(script->repl_buffer), kstring_length(script->repl_buffer), "stdin") == LUA_OK) {
+            if (lua_pcall(script->L, 0, LUA_MULTRET, script->debugidx) == LUA_OK) {
+                int nres = lua_gettop(script->L);
+                if (nres > 0) {
+                    for (int i = 1; i <= nres; ++i) {
+                        kstr vs = do_inspect_value(script->L, i);
+                        printf("%s\t", kstring_content(vs));
+                        kstring_free(vs);
+                    }
+                    printf("\n");
+                    lua_settop(script->L, 0); /* clean stack */
+                }
+                executed = TRUE;
+            } else {
+                EPRINTF("Error: %s", util_get_error(script->L));
+                executed = TRUE; /* Error handled, reset buffer */
+            }
+        } else {
+            const char* err = lua_tostring(script->L, -1);
+            if (err && strstr(err, "<eof>") != NULL) {
+                /* Incomplete chunk */
+                lua_pop(script->L, 1);
+#ifdef HAVE_READLINE
+                rl_set_prompt("... ");
+#else
+                async_write_stdout("... ");
+#endif
+                return;
+            } else {
+                /* Syntax error */
+                EPRINTF("Error: %s", util_get_error(script->L));
+                executed = TRUE; /* Error handled, reset buffer */
+            }
+        }
+    }
+
+    if (executed) {
+        kstring_free(script->repl_buffer);
+        script->repl_buffer = kstring_new(1024);
+#ifdef HAVE_READLINE
+        rl_set_prompt(">>> ");
+#else
+        async_write_stdout(">>> ");
+#endif
+    }
+}
+
+#ifdef HAVE_READLINE
+static void repl_line_handler(char* line) {
+    if (line == NULL) {
+        /* EOF */
+        script_run_string(g_host, "Vis.exit()");
+        return;
+    }
+    if (*line) {
+        add_history(line);
+    }
+    kstring_appendvf(g_host->repl_buffer, "%s\n", line);
+    evaluate_repl_buffer(g_host);
+    free(line);
+}
+#endif
+
 void script_repl_setup(script_t script, BOOL interactive) {
     script->interactive = interactive;
     if (interactive) {
+#ifdef HAVE_READLINE
+        rl_callback_handler_install(">>> ", repl_line_handler);
+#else
         async_setup_stdin();
         async_setup_stdout();
         async_write_stdout(">>> ");
+#endif
     }
 }
 
 void script_repl_teardown(script_t script) {
     if (script->interactive) {
+#ifdef HAVE_READLINE
+        rl_callback_handler_remove();
+#else
         async_write_stdout("\n");
+#endif
     }
 }
 
 void script_repl_async(script_t script) {
     if (!script->interactive) return;
 
+#ifdef HAVE_READLINE
+    fd_set readfds;
+    struct timeval tv = {0, 0};
+    FD_ZERO(&readfds);
+    FD_SET(STDIN_FILENO, &readfds);
+
+    if (select(STDIN_FILENO + 1, &readfds, NULL, NULL, &tv) > 0) {
+        if (FD_ISSET(STDIN_FILENO, &readfds)) {
+            rl_callback_read_char();
+        }
+    }
+#else
     static char buffer[1024];
     ssize_t bytes = async_read_stdin(buffer, sizeof(buffer) - 1);
 
@@ -444,83 +570,10 @@ void script_repl_async(script_t script) {
         kstring_append(script->repl_buffer, buffer);
 
         if (strchr(buffer, '\n') != NULL) {
-            /* Check if user just typed 'exit' */
-            kstr chk = kstring_newfrom(kstring_content(script->repl_buffer));
-            kstring_strip(chk);
-            if (!strcmp(kstring_content(chk), "exit")) {
-                kstring_free(chk);
-                script_run_string(script, "Vis.exit()");
-                return;
-            }
-            kstring_free(chk);
-
-            /* User pressed enter. Attempt to compile. */
-            kstr stmt = kstring_newfromvf("return %s", kstring_content(script->repl_buffer));
-            BOOL executed = FALSE;
-
-            /* Attempt as expression */
-            if (luaL_loadbuffer(script->L, kstring_content(stmt), kstring_length(stmt), "stdin") == LUA_OK) {
-                if (lua_pcall(script->L, 0, LUA_MULTRET, script->debugidx) == LUA_OK) {
-                    int nres = lua_gettop(script->L);
-                    if (nres > 0) {
-                        for (int i = 1; i <= nres; ++i) {
-                            kstr vs = do_inspect_value(script->L, i);
-                            printf("%s\t", kstring_content(vs));
-                            kstring_free(vs);
-                        }
-                        printf("\n");
-                        lua_settop(script->L, 0);
-                    }
-                    executed = TRUE;
-                } else {
-                    lua_pop(script->L, 1); /* pop runtime error to fall back to statement */
-                }
-            } else {
-                lua_pop(script->L, 1); /* pop compile error */
-            }
-            kstring_free(stmt);
-
-            if (!executed) {
-                /* Attempt as statement */
-                if (luaL_loadbuffer(script->L, kstring_content(script->repl_buffer), kstring_length(script->repl_buffer), "stdin") == LUA_OK) {
-                    if (lua_pcall(script->L, 0, LUA_MULTRET, script->debugidx) == LUA_OK) {
-                        int nres = lua_gettop(script->L);
-                        if (nres > 0) {
-                            for (int i = 1; i <= nres; ++i) {
-                                kstr vs = do_inspect_value(script->L, i);
-                                printf("%s\t", kstring_content(vs));
-                                kstring_free(vs);
-                            }
-                            printf("\n");
-                            lua_settop(script->L, 0); /* clean stack */
-                        }
-                        executed = TRUE;
-                    } else {
-                        EPRINTF("Error: %s", util_get_error(script->L));
-                        executed = TRUE; /* Error handled, reset buffer */
-                    }
-                } else {
-                    const char* err = lua_tostring(script->L, -1);
-                    if (err && strstr(err, "<eof>") != NULL) {
-                        /* Incomplete chunk */
-                        lua_pop(script->L, 1);
-                        async_write_stdout("... ");
-                        return;
-                    } else {
-                        /* Syntax error */
-                        EPRINTF("Error: %s", util_get_error(script->L));
-                        executed = TRUE; /* Error handled, reset buffer */
-                    }
-                }
-            }
-
-            if (executed) {
-                kstring_free(script->repl_buffer);
-                script->repl_buffer = kstring_new(1024);
-                async_write_stdout(">>> ");
-            }
+            evaluate_repl_buffer(script);
         }
     }
+#endif
 }
 /* end of public API */
 
@@ -967,6 +1020,7 @@ emit_desc* emit_table_to_emit_desc(lua_State* L, int arg, fnum_t* when) {
 /* end of private API */
 
 /* start of Lua API */
+
 /* Vis.debug(...) - Print inspect(arguments) to STDERR
  * TODO: Allow frame offset somehow (kwarg, first/last, ?) */
 int viscmd_debug_fn(lua_State* L) {
@@ -1030,7 +1084,8 @@ int viscmd_command_fn(lua_State* L) {
     return 0;
 }
 
-/* Vis.exit([Vis.flist, when]) */
+/* Vis.exit(Vis.flist, when)
+ * Vis.exit() */
 int viscmd_exit_fn(lua_State* L) {
     if (lua_gettop(L) == 0) {
         g_host->should_exit = TRUE;
@@ -1427,4 +1482,5 @@ int viscmd_get_debug_fn(lua_State* L) {
     }
     return 1;
 }
+
 /* end of Lua API */

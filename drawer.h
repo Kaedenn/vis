@@ -41,6 +41,9 @@ void drawer_end_trace(drawer_t drawer);
 
 void drawer_trace_scroll(drawer_t drawer, float xoffset, float yoffset);
 
-void drawer_set_lookat(drawer_t drawer, float ex, float ey, float ez, float cx, float cy, float cz, float ux, float uy, float uz);
+void drawer_set_lookat(drawer_t drawer,
+                       float ex, float ey, float ez,
+                       float cx, float cy, float cz,
+                       float ux, float uy, float uz);
 
 #endif

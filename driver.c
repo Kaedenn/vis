@@ -326,12 +326,8 @@ void display(struct global_ctx* ctx) {
 }
 
 void advance(struct global_ctx* ctx) {
-    static int delayctr = 0;
     if (ctx->args->interactive) {
-        if (++delayctr % VIS_CMD_DELAY_NSTEPS == 0) {
-            script_repl_async(ctx->script);
-            delayctr = 0;
-        }
+        script_repl_async(ctx->script);
     }
     if (emitter_should_exit()) {
         ctx->should_exit = TRUE;
