@@ -237,12 +237,6 @@ def extract_notes(
                     )
                 )
 
-                if limit is not None:
-                    if len(results) >= limit:
-                        # We still might want to compute durations for these first notes,
-                        # so we do NOT break early here; we'll fill durations as note-offs appear.
-                        pass
-
             elif is_note_off:
                 key = (ti, msg.channel, msg.note)
                 if key in active:
@@ -261,23 +255,6 @@ def extract_notes(
                                 ev, duration_ticks=dur_ticks, duration_seconds=dur_sec
                             )
                             break
-
-            # If we already have enough results and all their durations are filled
-            # (optional), we could stop. For simplicity, stop once we have 'limit'
-            # note-ons and we're past them a bit.
-            if limit is not None:
-                if len(results) >= limit and abs_tick > results[-1].start_ticks:
-                    # If you don't care about durations, you can break earlier.
-                    # We'll keep scanning a little to fill some durations naturally.
-                    pass
-
-        if limit is not None:
-            if len(results) >= limit:
-                # continue scanning other tracks only if you need cross-track earliest notes.
-                # Many MIDI files store melody in one track; but not always.
-                # We'll keep going to collect earliest per-track note-ons;
-                # you can change this behavior.
-                pass
 
     # If the file has multiple tracks, the "first notes of the song" are usually by global time.
     # Sort by absolute time (ticks), then by track to stabilize ordering.
