@@ -21,7 +21,7 @@ OBJDIR = $(DIR)/.o
 DEPDIR = $(DIR)/.d
 
 SRCS := async.c audio.c clargs.c command.c drawer.c driver.c emit.c \
-	emitter.c flist.c forces.c genlua.c helper.c klist.c kstring.c \
+	emitter.c flist.c genlua.c helper.c klist.c kstring.c \
 	matrix.c mutator.c particle.c pextra.c plimits.c plist.c \
 	random.c script.c shader.c
 SOURCES = $(patsubst %,$(DIR)/%,$(CSRC)) Makefile
