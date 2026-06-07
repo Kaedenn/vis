@@ -6,7 +6,7 @@ from pathlib import Path
 
 PHDR_SIZE = 38
 
-def iter_chunks(data, start, end):
+def iter_chunks(data: bytes, start: int, end: int):
     pos = start
     while pos + 8 <= end:
         chunk_id = data[pos:pos+4]

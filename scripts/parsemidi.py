@@ -94,7 +94,7 @@ def ticks_to_seconds(ticks: int, ticks_per_beat: int, tempo_segments: List[Tuple
 
     return total_seconds
 
-def extract_notes(mid: mido.MidiFile, limit: int = 32) -> List[NoteEvent]:
+def extract_notes(mid: mido.MidiFile, limit: Optional[int] = None) -> List[NoteEvent]:
     tpb = mid.ticks_per_beat
     tempo_segments = build_tempo_segments(mid)
 
@@ -106,9 +106,9 @@ def extract_notes(mid: mido.MidiFile, limit: int = 32) -> List[NoteEvent]:
 
     for ti, track in enumerate(mid.tracks):
         abs_tick = 0
-        programs = {}
-        bank_msb = {}
-        bank_lsb = {}
+        programs: Dict[int, int] = {}
+        bank_msb: Dict[int, int] = {}
+        bank_lsb: Dict[int, int] = {}
         for msg in track:
             abs_tick += msg.time  # delta ticks -> absolute ticks
 
