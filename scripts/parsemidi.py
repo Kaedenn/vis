@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 
 import csv
+import contextlib
+import sys
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
@@ -20,6 +22,10 @@ class NoteEvent:
     velocity: int
     start_ticks: int
     start_seconds: float
+    bank_msb: int = 0
+    bank_lsb: int = 0
+    bank: int = 0
+    program: int = 0
     duration_ticks: Optional[int] = None
     duration_seconds: Optional[float] = None
 
@@ -100,8 +106,19 @@ def extract_notes(mid: mido.MidiFile, limit: int = 32) -> List[NoteEvent]:
 
     for ti, track in enumerate(mid.tracks):
         abs_tick = 0
+        programs = {}
+        bank_msb = {}
+        bank_lsb = {}
         for msg in track:
             abs_tick += msg.time  # delta ticks -> absolute ticks
+
+            if msg.type == "control_change":
+                if msg.control == 0:
+                    bank_msb[msg.channel] = msg.value
+                elif msg.control == 32:
+                    bank_lsb[msg.channel] = msg.value
+            elif msg.type == "program_change":
+                programs[msg.channel] = msg.program
 
             # Treat "note_on velocity=0" as note_off
             is_note_on = msg.type == "note_on" and msg.velocity > 0
@@ -111,6 +128,10 @@ def extract_notes(mid: mido.MidiFile, limit: int = 32) -> List[NoteEvent]:
                 start_sec = ticks_to_seconds(abs_tick, tpb, tempo_segments)
                 key = (ti, msg.channel, msg.note)
                 active[key] = (abs_tick, start_sec, msg.velocity)
+
+                msb = bank_msb.get(msg.channel, 0)
+                lsb = bank_lsb.get(msg.channel, 0)
+                bank = msb
 
                 note_index += 1
                 results.append(
@@ -123,6 +144,10 @@ def extract_notes(mid: mido.MidiFile, limit: int = 32) -> List[NoteEvent]:
                         velocity=msg.velocity,
                         start_ticks=abs_tick,
                         start_seconds=start_sec,
+                        bank_msb=msb,
+                        bank_lsb=lsb,
+                        bank=bank,
+                        program=programs.get(msg.channel, 0),
                     )
                 )
 
@@ -172,37 +197,60 @@ def extract_notes(mid: mido.MidiFile, limit: int = 32) -> List[NoteEvent]:
         return results[:limit]
     return results
 
+@contextlib.contextmanager
+def open_output_file(name: Optional[Path]):
+    """Open a file for writing, or use stdout if no name is provided."""
+    if name:
+        with open(name, "wt") as fobj:
+            yield fobj
+    else:
+        yield sys.stdout
+
 def main() -> None:
     p = argparse.ArgumentParser(description="Print first N note-on events with absolute timestamps.")
     p.add_argument("midi_file", type=Path)
     p.add_argument("-n", "--num", type=int)
-    p.add_argument("-o", "--output", type=Path, help="write to csv")
+    p.add_argument("-o", "--output", type=Path, help="write to file instead of stdout")
     args = p.parse_args()
 
     mid = mido.MidiFile(str(args.midi_file))
     events = extract_notes(mid, args.num)
 
-    if args.output:
-        with open(args.output, "wt") as fobj:
-            csvw = csv.writer(fobj)
-            csvw.writerow(("idx", "t(msec)", "t(ticks)", "dur(msec)", "dur(ticks)", "trk", "ch", "note", "name", "vel"))
-            for ev in events:
-                csvw.writerow((ev.index, ev.start_msec, ev.start_ticks, ev.duration_msec, ev.duration_ticks,
-                    ev.track, ev.channel, ev.note, ev.note_name, ev.velocity))
-        print(f"wrote {len(events)} notes to {args.output}")
-    else:
-        print(f"ticks_per_beat: {mid.ticks_per_beat}")
-        print()
-        print(" idx  t(msec) t(ticks)  dur(msec) dur(ticks)  trk ch note name  vel")
-        print("----  ------- --------  --------  ---------   --- -- ---- ----  ---")
+    with open_output_file(args.output) as fobj:
+        csvw = csv.writer(fobj)
+        csvw.writerow((
+            "idx",
+            "t(msec)",
+            "t(ticks)",
+            "dur(msec)",
+            "dur(ticks)",
+            "trk",
+            "ch",
+            "bmsb",
+            "blsb",
+            "bank",
+            "prog",
+            "note",
+            "name",
+            "vel",
+        ))
         for ev in events:
-            dur_s = f"{ev.duration_msec:d}" if ev.duration_seconds is not None else "-"
-            dur_t = f"{ev.duration_ticks}" if ev.duration_ticks is not None else "-"
-            print(
-                f"{ev.index:>4}  {ev.start_msec:>7d} {ev.start_ticks:>8}  "
-                f"{dur_s:>8}  {dur_t:>9}  "
-                f"{ev.track:>3} {ev.channel:>2} {ev.note:>4} {ev.note_name:>4}  {ev.velocity:>3}"
-            )
+            csvw.writerow((
+                ev.index,
+                ev.start_msec,
+                ev.start_ticks,
+                ev.duration_msec,
+                ev.duration_ticks,
+                ev.track,
+                ev.channel,
+                ev.bank_msb,
+                ev.bank_lsb,
+                ev.bank,
+                ev.program,
+                ev.note,
+                ev.note_name,
+                ev.velocity,
+            ))
 
 
 if __name__ == "__main__":
