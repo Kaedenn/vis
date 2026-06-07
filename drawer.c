@@ -1,5 +1,7 @@
 
+#ifndef _DEFAULT_SOURCE
 #define _DEFAULT_SOURCE /* for setenv */
+#endif
 
 #include "defines.h"
 
