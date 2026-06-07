@@ -13,8 +13,8 @@
 typedef struct clargs {
     const char* configfile;
     const char* execname;
-    const char* scriptfile;
-    const char* scriptstring;
+    klist scriptfiles;
+    klist scriptstrings;
     const char* dumpfile;
     const char* commandfile;
     int frameskip;

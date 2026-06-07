@@ -209,12 +209,12 @@ int main(int argc, char* argv[]) {
     emit->blender = VIS_BLEND_QUADRATIC;
     drawer_set_trace(g.drawer, emit);
 
-    if (g.args->scriptfile) {
-        script_run(g.script, g.args->scriptfile);
+    for (size_t i = 0; i < klist_length(g.args->scriptfiles); ++i) {
+        script_run(g.script, klist_getn(g.args->scriptfiles, i));
     }
 
-    if (g.args->scriptstring) {
-        script_run_string(g.script, g.args->scriptstring);
+    for (size_t i = 0; i < klist_length(g.args->scriptstrings); ++i) {
+        script_run_string(g.script, klist_getn(g.args->scriptstrings, i));
     }
 
     emitter_schedule(script_get_flist(g.script));

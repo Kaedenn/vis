@@ -48,8 +48,8 @@ clargs_t argparse(int argc, char** argv) {
     clargs_t args = DBMALLOC(sizeof(struct clargs));
     args->execname = argv[0];
     args->configfile = NULL;
-    args->scriptfile = NULL;
-    args->scriptstring = NULL;
+    args->scriptfiles = klist_new();
+    args->scriptstrings = klist_new();
     args->dumpfile = NULL;
     args->commandfile = NULL;
     args->scriptargs = klist_new();
@@ -118,7 +118,7 @@ clargs_t argparse(int argc, char** argv) {
             break;
         case 'l':
             if (argi + 1 < argc) {
-                args->scriptfile = argv[++argi];
+                klist_append(args->scriptfiles, argv[++argi]);
             } else {
                 EPRINTF("Argument -%c requires value", argv[argi][1]);
                 mark_error(args, 1);
@@ -126,7 +126,7 @@ clargs_t argparse(int argc, char** argv) {
             break;
         case 'L':
             if (argi + 1 < argc) {
-                args->scriptstring = argv[++argi];
+                klist_append(args->scriptstrings, argv[++argi]);
             } else {
                 EPRINTF("Argument -%c requires value", argv[argi][1]);
                 mark_error(args, 1);
@@ -209,9 +209,12 @@ clargs_t argparse(int argc, char** argv) {
         mark_error(args, 1);
     }
 
-    if (args->scriptfile && !fexists(args->scriptfile)) {
-        EPRINTF("Script file %s not found or not readable", args->scriptfile);
-        mark_error(args, 1);
+    for (size_t i = 0; i < klist_length(args->scriptfiles); ++i) {
+        const char* scriptfile = klist_getn(args->scriptfiles, i);
+        if (!fexists(scriptfile)) {
+            EPRINTF("Script file %s not found or not readable", scriptfile);
+            mark_error(args, 1);
+        }
     }
 
     if (args->commandfile && !fexists(args->commandfile)) {
@@ -243,6 +246,10 @@ void clargs_free(clargs_t args) {
         args->configobj = NULL;
     }
 #endif
+    if (args) {
+        klist_free(args->scriptfiles);
+        klist_free(args->scriptstrings);
+    }
     DZFREE(args);
 }
 
