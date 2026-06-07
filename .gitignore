@@ -26,6 +26,7 @@ ref
 *.obj
 .o
 .o/*
+__pycache__
 
 # Precompiled Headers
 *.gch
