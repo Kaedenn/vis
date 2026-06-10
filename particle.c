@@ -10,17 +10,17 @@
 #include <math.h>
 
 void particle_init_full(particle_t p, double x, double y,
-                             double ux, double uy,
-                             double dx, double dy,
-                             double s, double us,
-                             double r, double ur,
-                             double ds, double uds,
-                             double theta, double utheta,
-                             float depth, int life, int ulife,
-                             force_id force, limit_id limit,
-                             float rgba[4], blend_id blender,
-                             int vertices, float angle,
-                             union particle_tag tag)
+                        double ux, double uy,
+                        double dx, double dy,
+                        double s, double us,
+                        double r, double ur,
+                        double ds, double uds,
+                        double theta, double utheta,
+                        float depth, int life, int ulife,
+                        force_id force, limit_id limit,
+                        float rgba[4], blend_id blender,
+                        int vertices, float angle,
+                        union particle_tag tag)
 {
     double spawn_angle = randdouble(theta-utheta, theta+utheta);
     double offset = randdouble(s-us, s+us);

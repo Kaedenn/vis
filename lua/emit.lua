@@ -86,8 +86,8 @@ end
 function Emit:move(dx, dy, udx, udy)
     self._t.x = self._t.x + dx
     self._t.y = self._t.y + dy
-    self._t.ux = self._t.ux + udx or 0
-    self._t.uy = self._t.uy + udy or 0
+    self._t.ux = (self._t.ux or 0) + (udx or 0)
+    self._t.uy = (self._t.uy or 0) + (udy or 0)
 end
 
 function Emit:velocity(dx, dy)

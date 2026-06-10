@@ -641,6 +641,7 @@ int initialize_vis_lib(lua_State* L) {
     NEW_VIS_CONST_INT(MUTATE_PUSH);
     NEW_VIS_CONST_INT(MUTATE_PUSH_DX);
     NEW_VIS_CONST_INT(MUTATE_PUSH_DY);
+    NEW_VIS_CONST_INT(MUTATE_PUSH_DZ);
     NEW_VIS_CONST_INT(MUTATE_SLOW);
     NEW_VIS_CONST_INT(MUTATE_SHRINK);
     NEW_VIS_CONST_INT(MUTATE_GROW);
@@ -648,6 +649,7 @@ int initialize_vis_lib(lua_State* L) {
     NEW_VIS_CONST_INT(MUTATE_OPACITY);
     NEW_VIS_CONST_INT(MUTATE_SET_DX);
     NEW_VIS_CONST_INT(MUTATE_SET_DY);
+    NEW_VIS_CONST_INT(MUTATE_SET_DZ);
     NEW_VIS_CONST_INT(MUTATE_SET_RADIUS);
     NEW_VIS_CONST_INT(MUTATE_SET_VERTICES);
     NEW_VIS_CONST_INT(MUTATE_SET_ANGLE);
@@ -664,6 +666,7 @@ int initialize_vis_lib(lua_State* L) {
     NEW_VIS_CONST_INT(MUTATE_PUSH_IF);
     NEW_VIS_CONST_INT(MUTATE_PUSH_DX_IF);
     NEW_VIS_CONST_INT(MUTATE_PUSH_DY_IF);
+    NEW_VIS_CONST_INT(MUTATE_PUSH_DZ_IF);
     NEW_VIS_CONST_INT(MUTATE_SLOW_IF);
     NEW_VIS_CONST_INT(MUTATE_SHRINK_IF);
     NEW_VIS_CONST_INT(MUTATE_GROW_IF);
@@ -671,6 +674,7 @@ int initialize_vis_lib(lua_State* L) {
     NEW_VIS_CONST_INT(MUTATE_OPACITY_IF);
     NEW_VIS_CONST_INT(MUTATE_SET_DX_IF);
     NEW_VIS_CONST_INT(MUTATE_SET_DY_IF);
+    NEW_VIS_CONST_INT(MUTATE_SET_DZ_IF);
     NEW_VIS_CONST_INT(MUTATE_SET_RADIUS_IF);
     NEW_VIS_CONST_INT(MUTATE_SET_VERTICES_IF);
     NEW_VIS_CONST_INT(MUTATE_SET_ANGLE_IF);
@@ -886,63 +890,65 @@ static void merge_emit_table(lua_State* L, int arg, emit_desc* emit) {
 
         /* avert ye eyes, ye sensitive of constitution */
 
-        if (!strcmp(key, "x")) {
+        if (!strcmp(key, "x")) { /* x position */
             emit->x = luaL_checknumber(L, -1);
-        } else if (!strcmp(key, "y")) {
+        } else if (!strcmp(key, "y")) { /* y position */
             emit->y = luaL_checknumber(L, -1);
-        } else if (!strcmp(key, "ux")) {
+        } else if (!strcmp(key, "ux")) { /* x variance */
             emit->ux = luaL_checknumber(L, -1);
-        } else if (!strcmp(key, "uy")) {
+        } else if (!strcmp(key, "uy")) { /* y variance */
             emit->uy = luaL_checknumber(L, -1);
-        } else if (!strcmp(key, "dx")) {
+        } else if (!strcmp(key, "dx")) { /* x velocity */
             emit->dx = luaL_checknumber(L, -1);
-        } else if (!strcmp(key, "dy")) {
+        } else if (!strcmp(key, "dy")) { /* y velocity */
             emit->dy = luaL_checknumber(L, -1);
-        } else if (!strcmp(key, "s")) {
+        } else if (!strcmp(key, "dz")) { /* z velocity */
+            emit->dz = luaL_checknumber(L, -1);
+        } else if (!strcmp(key, "s")) { /* radial position */
             emit->s = luaL_checknumber(L, -1);
-        } else if (!strcmp(key, "us")) {
+        } else if (!strcmp(key, "us")) { /* radial position variance */
             emit->us = luaL_checknumber(L, -1);
-        } else if (!strcmp(key, "ds")) {
+        } else if (!strcmp(key, "ds")) { /* radial velocity */
             emit->ds = luaL_checknumber(L, -1);
-        } else if (!strcmp(key, "uds")) {
+        } else if (!strcmp(key, "uds")) { /* radial velocity variance */
             emit->uds = luaL_checknumber(L, -1);
-        } else if (!strcmp(key, "rad") || !strcmp(key, "radius")) {
+        } else if (!strcmp(key, "rad") || !strcmp(key, "radius")) { /* radius */
             emit->rad = luaL_checknumber(L, -1);
-        } else if (!strcmp(key, "urad") || !strcmp(key, "uradius")) {
+        } else if (!strcmp(key, "urad") || !strcmp(key, "uradius")) { /* radius variance */
             emit->urad = luaL_checknumber(L, -1);
-        } else if (!strcmp(key, "depth")) {
+        } else if (!strcmp(key, "depth") || !strcmp(key, "z")) { /* depth */
             emit->depth = (float)luaL_checknumber(L, -1);
-        } else if (!strcmp(key, "theta")) {
+        } else if (!strcmp(key, "theta")) { /* theta */
             emit->theta = luaL_checknumber(L, -1);
-        } else if (!strcmp(key, "utheta")) {
+        } else if (!strcmp(key, "utheta")) { /* theta variance */
             emit->utheta = luaL_checknumber(L, -1);
-        } else if (!strcmp(key, "life")) {
+        } else if (!strcmp(key, "life")) { /* life */
             emit->life = (int)do_msec2frames(L, (msec_t)luaL_checkinteger(L, -1));
-        } else if (!strcmp(key, "ulife")) {
+        } else if (!strcmp(key, "ulife")) { /* life variance */
             emit->ulife = (int)do_msec2frames(L, (msec_t)luaL_checkinteger(L, -1));
-        } else if (!strcmp(key, "r")) {
+        } else if (!strcmp(key, "r")) { /* red */
             emit->r = (float)luaL_checknumber(L, -1);
-        } else if (!strcmp(key, "g")) {
+        } else if (!strcmp(key, "g")) { /* green */
             emit->g = (float)luaL_checknumber(L, -1);
-        } else if (!strcmp(key, "b")) {
+        } else if (!strcmp(key, "b")) { /* blue */
             emit->b = (float)luaL_checknumber(L, -1);
-        } else if (!strcmp(key, "ur")) {
+        } else if (!strcmp(key, "ur")) { /* red variance */
             emit->ur = (float)luaL_checknumber(L, -1);
-        } else if (!strcmp(key, "ug")) {
+        } else if (!strcmp(key, "ug")) { /* green variance */
             emit->ug = (float)luaL_checknumber(L, -1);
-        } else if (!strcmp(key, "ub")) {
+        } else if (!strcmp(key, "ub")) { /* blue variance */
             emit->ub = (float)luaL_checknumber(L, -1);
-        } else if (!strcmp(key, "force")) {
+        } else if (!strcmp(key, "force")) { /* force */
             emit->force = (force_id)luaL_checknumber(L, -1);
-        } else if (!strcmp(key, "limit")) {
+        } else if (!strcmp(key, "limit")) { /* limit */
             emit->limit = (limit_id)luaL_checknumber(L, -1);
-        } else if (!strcmp(key, "blender")) {
+        } else if (!strcmp(key, "blender")) { /* blender */
             emit->blender = (blend_id)luaL_checknumber(L, -1);
-        } else if (!strcmp(key, "vertices")) {
+        } else if (!strcmp(key, "vertices")) { /* vertices */
             emit->vertices = (int)luaL_checkinteger(L, -1);
-        } else if (!strcmp(key, "angle")) {
+        } else if (!strcmp(key, "angle")) { /* angle */
             emit->angle = (float)luaL_checknumber(L, -1);
-        } else if (!strcmp(key, "tag")) {
+        } else if (!strcmp(key, "tag")) { /* tag */
             int arg_type = lua_type(L, -1);
             if (arg_type == LUA_TNUMBER) {
                 emit->tag.ul = (unsigned long)luaL_checkinteger(L, -1);

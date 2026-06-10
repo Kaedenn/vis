@@ -90,6 +90,8 @@ const char* genlua_mutate(mutate_id fnid) {
         return "Vis.MUTATE_PUSH_DX";
     case VIS_MUTATE_PUSH_DY:
         return "Vis.MUTATE_PUSH_DY";
+    case VIS_MUTATE_PUSH_DZ:
+        return "Vis.MUTATE_PUSH_DZ";
     case VIS_MUTATE_SLOW:
         return "Vis.MUTATE_SLOW";
     case VIS_MUTATE_SHRINK:
@@ -104,6 +106,8 @@ const char* genlua_mutate(mutate_id fnid) {
         return "Vis.MUTATE_SET_DX";
     case VIS_MUTATE_SET_DY:
         return "Vis.MUTATE_SET_DY";
+    case VIS_MUTATE_SET_DZ:
+        return "Vis.MUTATE_SET_DZ";
     case VIS_MUTATE_SET_RADIUS:
         return "Vis.MUTATE_SET_RADIUS";
     case VIS_MUTATE_SET_VERTICES:
@@ -132,6 +136,8 @@ const char* genlua_mutate(mutate_id fnid) {
         return "Vis.MUTATE_PUSH_DX_IF";
     case VIS_MUTATE_PUSH_DY_IF:
         return "Vis.MUTATE_PUSH_DY_IF";
+    case VIS_MUTATE_PUSH_DZ_IF:
+        return "Vis.MUTATE_PUSH_DZ_IF";
     case VIS_MUTATE_SLOW_IF:
         return "Vis.MUTATE_SLOW_IF";
     case VIS_MUTATE_SHRINK_IF:
@@ -146,6 +152,8 @@ const char* genlua_mutate(mutate_id fnid) {
         return "Vis.MUTATE_SET_DX_IF";
     case VIS_MUTATE_SET_DY_IF:
         return "Vis.MUTATE_SET_DY_IF";
+    case VIS_MUTATE_SET_DZ_IF:
+        return "Vis.MUTATE_SET_DZ_IF";
     case VIS_MUTATE_SET_RADIUS_IF:
         return "Vis.MUTATE_SET_RADIUS_IF";
     case VIS_MUTATE_SET_VERTICES_IF:

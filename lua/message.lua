@@ -76,7 +76,7 @@ function Message:emit_message(when, message, anchorx, anchory)
     for _, ord in utf8.codes(message) do
         local char = string.char(ord)
         local letterx = (idx-1)*(Letters.LETTER_WIDTH+1)
-        self:emit_char(when, char, anchorx, anchory, letterx, 0, zoom)
+        self:emit_char(when, char, anchorx, anchory, letterx, 0)
         idx = idx + 1
     end
 end

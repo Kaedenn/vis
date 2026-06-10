@@ -22,6 +22,7 @@ typedef struct emit {
     int n;                  /* number of particles to emit */
     double x, y, ux, uy;    /* where to emit from (in pixel coords) */
     double dx, dy;          /* initial velocity (same for all particles) */
+    double dz;              /* initial z velocity (same for all particles) */
     double s, us;           /* radial position (added to x, y) */
     double rad, urad;       /* radius (size) */
     float depth;            /* z depth; also used for draw order */

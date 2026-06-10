@@ -100,6 +100,11 @@ void mutate_push_dy(particle_t p, mutate_method* method) {
     p->dy = p->dy * method->factor[0];
 }
 
+void mutate_push_dz(particle_t p, mutate_method* method) {
+    DEBUG_EXPRESSION(dbg_ctr.particles_mutated += 1);
+    p->dz = p->dz * method->factor[0];
+}
+
 void mutate_slow(particle_t p, mutate_method* method) {
     DEBUG_EXPRESSION(dbg_ctr.particles_mutated += 1);
     p->dx = p->dx / method->factor[0];
@@ -135,6 +140,12 @@ void mutate_set_dx(particle_t p, mutate_method* method) {
 void mutate_set_dy(particle_t p, mutate_method* method) {
     DEBUG_EXPRESSION(dbg_ctr.particles_mutated += 1);
     p->dy = randdouble(method->factor[0] - method->factor[1],
+                       method->factor[0] + method->factor[1]);
+}
+
+void mutate_set_dz(particle_t p, mutate_method* method) {
+    DEBUG_EXPRESSION(dbg_ctr.particles_mutated += 1);
+    p->dz = randdouble(method->factor[0] - method->factor[1],
                        method->factor[0] + method->factor[1]);
 }
 
@@ -208,6 +219,7 @@ void mutate_tag_set_if(particle_t p, mutate_method* method) {
 GEN_COND_MUTATE_FN(mutate_push)
 GEN_COND_MUTATE_FN(mutate_push_dx)
 GEN_COND_MUTATE_FN(mutate_push_dy)
+GEN_COND_MUTATE_FN(mutate_push_dz)
 GEN_COND_MUTATE_FN(mutate_slow)
 GEN_COND_MUTATE_FN(mutate_shrink)
 GEN_COND_MUTATE_FN(mutate_grow)
@@ -215,6 +227,7 @@ GEN_COND_MUTATE_FN(mutate_age)
 GEN_COND_MUTATE_FN(mutate_opacity)
 GEN_COND_MUTATE_FN(mutate_set_dx)
 GEN_COND_MUTATE_FN(mutate_set_dy)
+GEN_COND_MUTATE_FN(mutate_set_dz)
 GEN_COND_MUTATE_FN(mutate_set_radius)
 GEN_COND_MUTATE_FN(mutate_set_vertices)
 GEN_COND_MUTATE_FN(mutate_set_angle)

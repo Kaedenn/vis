@@ -1,3 +1,4 @@
+---@diagnostic disable: deprecated
 Vis = require("Vis")
 VisUtil = require("visutil")
 Emit = require("emit")
@@ -40,6 +41,7 @@ blend = Vis.BLEND_LINEAR
 life = 1000
 ds_scale = .5
 radius = 1
+limit = Vis.DEFAULT_LIMIT
 
 function clamp(val, low, high)
     if low == nil then low = 0 end

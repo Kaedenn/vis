@@ -1,3 +1,4 @@
+---@diagnostic disable: unbalanced-assignments, cast-local-type
 --- Read a comma or tab (or other delimiter) separated file.
 --  This version of a CSV reader differs from others I've seen in that it
 --

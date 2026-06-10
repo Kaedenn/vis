@@ -269,6 +269,7 @@ function inspect.inspect(rootObject, options)
 
   -- putvalue is forward-declared before putTable & putKey
   putValue = function(v, path)
+---@diagnostic disable-next-line: redundant-parameter
     if filter(v, path) then
       puts('<filtered>')
     else
