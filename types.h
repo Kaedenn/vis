@@ -135,6 +135,7 @@ typedef enum {
     VIS_FTYPE_FRAMESEEK,
     VIS_FTYPE_DELAY,
     VIS_FTYPE_AUDIOSYNC,
+    VIS_FTYPE_ROTATE,
     VIS_MAX_FTYPE,
 } ftype_id;
 

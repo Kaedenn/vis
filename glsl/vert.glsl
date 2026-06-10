@@ -1,10 +1,9 @@
 #version 330 core
-layout(location = 0) in vec2 position;
+layout(location = 0) in vec3 position;
 layout(location = 1) in float radius;
 layout(location = 2) in vec4 color;
-layout(location = 3) in float depth;
-layout(location = 4) in uint vertices;
-layout(location = 5) in float angle;
+layout(location = 3) in uint vertices;
+layout(location = 4) in float angle;
 
 uniform mat4 projection;
 uniform mat4 view;
@@ -17,7 +16,7 @@ void main() {
     vColor = color;
     vVertices = vertices;
     vAngle = angle;
-    gl_Position = projection * view * vec4(position, depth, 1.0);
+    gl_Position = projection * view * vec4(position, 1.0);
     gl_PointSize = radius;
 }
 

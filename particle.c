@@ -9,28 +9,6 @@
 
 #include <math.h>
 
-void particle_init(particle_t p, double x, double y, double r, int life, pextra* extra) {
-    p->x = x;
-    p->y = y;
-    p->dx = 0.0;
-    p->dy = 0.0;
-    p->radius = r;
-    p->depth = 0;
-    p->force = VIS_DEFAULT_FORCE;
-    p->limit = VIS_DEFAULT_LIMIT;
-    p->lifetime = life;
-    p->life = life;
-    if (extra) {
-        p->r = extra->r;
-        p->g = extra->g;
-        p->b = extra->b;
-        p->a = extra->a;
-        p->blender = extra->blender;
-        p->tag = extra->tag;
-        free_pextra(extra);
-    }
-}
-
 void particle_init_full(particle_t p, double x, double y,
                              double ux, double uy,
                              double dx, double dy,

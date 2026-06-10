@@ -169,6 +169,11 @@ void emitter_tick(void) {
                 audio_pause();
             }
             break;
+        case VIS_FTYPE_ROTATE:
+            DBPRINTF("Ticking flist: %s %g %g at frame %d",
+                    ftype_str, fn->data.rotation[0], fn->data.rotation[1], curr_frame);
+            drawer_set_camera_rotation(emitter.drawer, fn->data.rotation[0], fn->data.rotation[1]);
+            break;
         case VIS_MAX_FTYPE:
             break;
         }

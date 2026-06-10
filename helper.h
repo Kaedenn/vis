@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
 
 /* open or print the appropriate error */
 FILE* try_fopen(const char* path, const char* mode);
@@ -97,5 +98,8 @@ double lerpd(double v0, double v1, double t);
 
 double distance(double x1, double y1, double x2, double y2);
 float distancef(float x1, float y1, float x2, float y2);
+
+/* calculate particle tag from a string */
+uint64_t hash_string(const char* string);
 
 #endif

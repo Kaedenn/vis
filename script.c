@@ -148,6 +148,7 @@ static int viscmd_emitnow_fn(lua_State* L);
 static int viscmd_f2ms_fn(lua_State* L);
 static int viscmd_ms2f_fn(lua_State* L);
 static int viscmd_get_debug_fn(lua_State* L);
+static int viscmd_rotate_fn(lua_State* L);
 
 #define SCRIPT_RUN_STRINGVF(s, fmt, ...) do { \
     kstr script_run_kstring_temp = kstring_newfromvf((fmt), __VA_ARGS__); \
@@ -606,6 +607,7 @@ int initialize_vis_lib(lua_State* L) {
         {"msec2frames", viscmd_ms2f_fn},
         {"emitnow", viscmd_emitnow_fn},
         {"get_debug", viscmd_get_debug_fn},
+        {"rotate", viscmd_rotate_fn},
         {NULL, NULL}};
 
     luaL_newlib(L, vis_lib);
@@ -946,7 +948,7 @@ static void merge_emit_table(lua_State* L, int arg, emit_desc* emit) {
                 emit->tag.ul = (unsigned long)luaL_checkinteger(L, -1);
             } else if (arg_type == LUA_TSTRING) {
                 const char* value = luaL_checkstring(L, -1);
-                emit->tag.ul = pextra_hash_string(value);
+                emit->tag.ul = hash_string(value);
 #if DEBUG >= DEBUG_TRACE || defined(DEBUG_SCRIPT_C)
                 DBPRINTF("Hashed string \"%s\" to %llx", value, emit->tag.ul);
 #endif
@@ -1481,6 +1483,17 @@ int viscmd_get_debug_fn(lua_State* L) {
         return luaL_error(L, "Debug token \"%s\" invalid", what);
     }
     return 1;
+}
+
+/* Vis.rotate(Vis.flist, when, theta, phi) */
+int viscmd_rotate_fn(lua_State* L) {
+    flist_t fl = *(flist_t*)luaL_checkudata(L, 1, "flist_t*");
+    fnum_t when = do_msec2frames(L, (msec_t)luaL_checkinteger(L, 2));
+    float theta = (float)luaL_checknumber(L, 3);
+    float phi = (float)luaL_checknumber(L, 4);
+    DBPRINTF("Vis.rotate(%p, [frame]%d, %g, %g)", fl, when, theta, phi);
+    flist_insert_rotate(fl, when, theta, phi);
+    return 0;
 }
 
 /* end of Lua API */

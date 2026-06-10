@@ -5,6 +5,7 @@
 #include <math.h>
 #include <stdarg.h>
 #include <stdio.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -299,6 +300,14 @@ float distancef(float x1, float y1, float x2, float y2) {
     float x = x2 - x1;
     float y = y2 - y1;
     return sqrtf(x*x + y*y);
+}
+
+uint64_t hash_string(const char* string) {
+    uint64_t result = 0;
+    for (unsigned i = 0; string[i] != '\0'; ++i) {
+        result = (result << 8) | (unsigned char)string[i];
+    }
+    return result;
 }
 
 

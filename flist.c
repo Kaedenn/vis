@@ -31,6 +31,8 @@ const char* ftype_to_string(ftype_id ftype) {
         return "VIS_FTYPE_DELAY";
     case VIS_FTYPE_AUDIOSYNC:
         return "VIS_FTYPE_AUDIOSYNC";
+    case VIS_FTYPE_ROTATE:
+        return "VIS_FTYPE_ROTATE";
     case VIS_MAX_FTYPE:
         return "VIS_MAX_FTYPE";
     default:
@@ -219,6 +221,16 @@ void flist_insert_audiosync(flist_t fl, fnum_t when, fnum_t length) {
     fn = flist_node_new();
     fn->type = VIS_FTYPE_AUDIOSYNC;
     fn->data.delay = length;
+    flist_insert(fl, when, fn);
+}
+
+void flist_insert_rotate(flist_t fl, fnum_t when, float theta, float phi) {
+    flist_node* fn = NULL;
+    if (!fl || when >= VIS_NFRAMES) return;
+    fn = flist_node_new();
+    fn->type = VIS_FTYPE_ROTATE;
+    fn->data.rotation[0] = theta;
+    fn->data.rotation[1] = phi;
     flist_insert(fl, when, fn);
 }
 

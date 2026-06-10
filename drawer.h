@@ -46,4 +46,6 @@ void drawer_set_lookat(drawer_t drawer,
                        float cx, float cy, float cz,
                        float ux, float uy, float uz);
 
+void drawer_set_camera_rotation(drawer_t drawer, float theta, float phi);
+
 #endif

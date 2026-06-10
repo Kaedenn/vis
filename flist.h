@@ -27,6 +27,7 @@ typedef struct flist_node {
         fnum_t frameseek;      /* FRAMESEEK: go-to-frame-num frame */
         float volume;          /* VOLUME: set volume frame */
         fnum_t delay;          /* DELAY|AUDIOSYNC: number of frames to wait */
+        float rotation[2];     /* ROTATE: rotation theta and phi */
     } data;
     struct flist_node* next;
 } flist_node;
@@ -65,5 +66,6 @@ void flist_insert_scriptcb(flist_t fl, fnum_t when, script_cb* func);
 void flist_insert_seekframe(flist_t fl, fnum_t when, fnum_t where);
 void flist_insert_delay(flist_t fl, fnum_t when, fnum_t length);
 void flist_insert_audiosync(flist_t fl, fnum_t when, fnum_t length);
+void flist_insert_rotate(flist_t fl, fnum_t when, float theta, float phi);
 
 #endif

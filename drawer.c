@@ -28,10 +28,9 @@ static void drawer_ensure_fps_absolute(drawer_t drawer);
 
 /* Vertex structure for GPU (TODO: replace with geometry shader) */
 typedef struct {
-    GLfloat x, y;
+    GLfloat x, y, z;
     GLfloat radius;
     GLfloat r, g, b, a;
-    GLfloat depth;
     GLuint vertices;
     GLfloat angle;
 } vertex_t;
@@ -132,8 +131,8 @@ drawer_t drawer_new(const clargs_t args) {
     glBindBuffer(GL_ARRAY_BUFFER, drawer->vbo);
 
     /* Define VAO attributes */
-    /* 0: position (vec2) */
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(vertex_t),
+    /* 0: position (vec3) */
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(vertex_t),
         (GLvoid*)offsetof(vertex_t, x));
     glEnableVertexAttribArray(0);
     /* 1: radius (float) */
@@ -144,18 +143,14 @@ drawer_t drawer_new(const clargs_t args) {
     glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(vertex_t),
         (GLvoid*)offsetof(vertex_t, r));
     glEnableVertexAttribArray(2);
-    /* 3: depth (float) */
-    glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, sizeof(vertex_t),
-        (GLvoid*)offsetof(vertex_t, depth));
-    glEnableVertexAttribArray(3);
-    /* 4: vertices (uint) */
-    glVertexAttribIPointer(4, 1, GL_UNSIGNED_INT, sizeof(vertex_t),
+    /* 3: vertices (uint) */
+    glVertexAttribIPointer(3, 1, GL_UNSIGNED_INT, sizeof(vertex_t),
         (GLvoid*)offsetof(vertex_t, vertices));
-    glEnableVertexAttribArray(4);
-    /* 5: angle (float) */
-    glVertexAttribPointer(5, 1, GL_FLOAT, GL_FALSE, sizeof(vertex_t),
+    glEnableVertexAttribArray(3);
+    /* 4: angle (float) */
+    glVertexAttribPointer(4, 1, GL_FLOAT, GL_FALSE, sizeof(vertex_t),
         (GLvoid*)offsetof(vertex_t, angle));
-    glEnableVertexAttribArray(5);
+    glEnableVertexAttribArray(4);
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
@@ -226,6 +221,52 @@ void drawer_set_lookat(drawer_t drawer,
     mat4_look_at(drawer->view_matrix, ex, ey, ez, cx, cy, cz, ux, uy, uz);
 }
 
+void drawer_set_camera_rotation(drawer_t drawer, float theta, float phi) {
+    if (fabsf(theta) < 1e-6f && fabsf(phi) < 1e-6f) {
+        mat4_identity(drawer->view_matrix);
+        return;
+    }
+
+    float cx = (float)drawer->wsize[0] / 2.0f;
+    float cy = (float)drawer->wsize[1] / 2.0f;
+
+    /* Camera rotation: yaw (Ry) then pitch (Rx) -> Camera = Ry(theta) * Rx(phi)
+     * View matrix is the inverse: View = Rx(-phi) * Ry(-theta) */
+    float th = -theta * (float)(M_PI / 180.0);
+    float ph = -phi * (float)(M_PI / 180.0);
+
+    float T1[16];
+    mat4_identity(T1);
+    T1[12] = -cx;
+    T1[13] = -cy;
+
+    float Ry[16];
+    mat4_identity(Ry);
+    Ry[0] = cosf(th);
+    Ry[2] = -sinf(th);
+    Ry[8] = sinf(th);
+    Ry[10] = cosf(th);
+
+    float Rx[16];
+    mat4_identity(Rx);
+    Rx[5] = cosf(ph);
+    Rx[6] = sinf(ph);
+    Rx[9] = -sinf(ph);
+    Rx[10] = cosf(ph);
+
+    float R[16];
+    mat4_multiply(R, Rx, Ry);
+
+    float T2[16];
+    mat4_identity(T2);
+    T2[12] = cx;
+    T2[13] = cy;
+
+    float temp[16];
+    mat4_multiply(temp, R, T1);
+    mat4_multiply(drawer->view_matrix, T2, temp);
+}
+
 void drawer_bgcolor(drawer_t drawer, float r, float g, float b) {
     if (r >= 0) drawer->bgcolor[0] = r;
     if (g >= 0) drawer->bgcolor[1] = g;
@@ -252,7 +293,7 @@ int drawer_add_particle(drawer_t drawer, particle_t p) {
     v->g = (GLfloat)p->g;
     v->b = (GLfloat)p->b;
     v->a = (GLfloat)sqrt(calculate_blend(p));
-    v->depth = (GLfloat)p->depth;
+    v->z = (GLfloat)p->depth;
     v->vertices = (GLuint)p->vertices;
     v->angle = (GLfloat)p->angle;
 

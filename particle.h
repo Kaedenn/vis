@@ -3,7 +3,6 @@
 #define VIS_PARTICLE_HEADER_INCLUDED_ 1
 
 #include "defines.h"
-#include "pextra.h"
 #include "types.h"
 
 struct particle;
@@ -28,9 +27,6 @@ struct particle {
 };
 
 typedef struct particle* particle_t;
-
-/* initialize a simple particle with default values */
-void particle_init(particle_t p, double x, double y, double r, int life, pextra* extra);
 
 /* initialize a particle with both X/Y position and circle offset */
 void particle_init_full(particle_t p, double x, double y, double ux, double uy,
@@ -66,7 +62,6 @@ double particle_get_radius(particle_t p);
 float particle_get_depth(particle_t p);
 int particle_get_lifetime(particle_t p);
 int particle_get_life(particle_t p);
-pextra* particle_get_extra(particle_t p);
 #else
 #define particle_is_alive(p) ((p)->life > 0)
 #define particle_get_x(p) ((p)->x)
