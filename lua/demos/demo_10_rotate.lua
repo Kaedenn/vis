@@ -32,6 +32,7 @@ function emit_random(start)
     t.force = forces[math.random(1,3)]
     t.limit = Vis.LIMIT_SPRINGBOX
     t.blender = Vis.BLEND_QUADRATIC
+    t.tag = start
     VisUtil.emit_table(t)
 end
 
@@ -45,10 +46,11 @@ i = 0
 local total_frames = 200
 while i < total_frames do
     local theta = (i / total_frames) * 180.0
-    local phi = 0.0
-    Vis.rotate(Vis.flist, Vis.frames2msec(i), theta, phi)
+    Vis.rotate(Vis.flist, Vis.frames2msec(i), theta, 0.0)
     i = i + 1
 end
+Vis.mutate(Vis.flist, 100, Vis.MUTATE_SET_DZ, 0, 100)
+--Vis.rotate(Vis.flist, 0, 90.0, 0)
 
 i = 50
 while i < 200 do

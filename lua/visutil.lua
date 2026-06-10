@@ -272,7 +272,8 @@ function VisUtil.Args:parse_args(args)
         for _, argdef in ipairs(self._arg_defs) do
             if self:_check_match(argdef, argv) then
                 matched = true
-                local arg_value = true
+                local arg_value = nil
+                if argdef.argtype == "flag" then arg_value = true end
 
                 self:_debug(("%s matches argdef %s"):format(argv,
                     self:_arg_to_string(argdef)))

@@ -1,3 +1,4 @@
+---@diagnostic disable: deprecated
 -- This script is standalone
 --
 -- lua test/test_letters.lua

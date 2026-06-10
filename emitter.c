@@ -15,7 +15,8 @@
 enum emitter_debug {
     E_DEBUG_PLIST = 1 << 0, /* Dump particle counts each frame */
     E_DEBUG_EMIT = 1 << 1,  /* Dump every emit (immensely noisy) */
-    E_DEBUG_ALL = E_DEBUG_PLIST | E_DEBUG_EMIT
+    E_DEBUG_FRAME = 1 << 2, /* Dump every emitted frame */
+    E_DEBUG_ALL = E_DEBUG_PLIST | E_DEBUG_EMIT | E_DEBUG_FRAME
 };
 
 static struct emitter {
@@ -108,19 +109,27 @@ void emitter_tick(void) {
             emit_frame(fn->data.frame);
             break;
         case VIS_FTYPE_EXIT:
-            DBPRINTF("Ticking flist: %s at frame %d", ftype_str, curr_frame);
+            if ((emitter.debug_mode & E_DEBUG_FRAME) != 0) {
+                DBPRINTF("Ticking flist: %s at frame %d", ftype_str, curr_frame);
+            }
             emitter.should_exit = TRUE;
             break;
         case VIS_FTYPE_PLAY:
-            DBPRINTF("Ticking flist: %s at frame %d", ftype_str, curr_frame);
+            if ((emitter.debug_mode & E_DEBUG_FRAME) != 0) {
+                DBPRINTF("Ticking flist: %s at frame %d", ftype_str, curr_frame);
+            }
             audio_play();
             break;
         case VIS_FTYPE_PAUSE:
-            DBPRINTF("Ticking flist: %s at frame %d", ftype_str, curr_frame);
+            if ((emitter.debug_mode & E_DEBUG_FRAME) != 0) {
+                DBPRINTF("Ticking flist: %s at frame %d", ftype_str, curr_frame);
+            }
             audio_pause();
             break;
         case VIS_FTYPE_VOLUME:
-            DBPRINTF("Ticking flist: %s at frame %d", ftype_str, curr_frame);
+            if ((emitter.debug_mode & E_DEBUG_FRAME) != 0) {
+                DBPRINTF("Ticking flist: %s at frame %d", ftype_str, curr_frame);
+            }
             audio_set_volume(fn->data.volume);
             break;
         case VIS_FTYPE_AUDIOSEEK:
@@ -128,40 +137,54 @@ void emitter_tick(void) {
             audio_seek(fn->data.audioseek);
             break;
         case VIS_FTYPE_CMD:
-            DBPRINTF("Ticking flist: %s at frame %d", ftype_str, curr_frame);
+            if ((emitter.debug_mode & E_DEBUG_FRAME) != 0) {
+                DBPRINTF("Ticking flist: %s at frame %d", ftype_str, curr_frame);
+            }
             script_run_string(emitter.script, fn->data.cmd);
             break;
         case VIS_FTYPE_BGCOLOR:
-            DBPRINTF("Ticking flist: %s at frame %d", ftype_str, curr_frame);
+            if ((emitter.debug_mode & E_DEBUG_FRAME) != 0) {
+                DBPRINTF("Ticking flist: %s at frame %d", ftype_str, curr_frame);
+            }
             drawer_bgcolor(emitter.drawer,
                     fn->data.color[0], fn->data.color[1], fn->data.color[2]);
             break;
         case VIS_FTYPE_MUTATE:
-            DBPRINTF("Ticking flist: %s at frame %d", ftype_str, curr_frame);
+            if ((emitter.debug_mode & E_DEBUG_FRAME) != 0) {
+                DBPRINTF("Ticking flist: %s at frame %d", ftype_str, curr_frame);
+            }
             plist_foreach(emitter.particles, do_mutate_fn, fn->data.method);
             break;
         case VIS_FTYPE_SCRIPTCB:
-            DBPRINTF("Ticking flist: %s %s %s at frame %d",
-                    ftype_str,
-                    fn->data.scriptcb->fn_name,
-                    fn->data.scriptcb->fn_code,
-                    curr_frame);
+            if ((emitter.debug_mode & E_DEBUG_FRAME) != 0) {
+                DBPRINTF("Ticking flist: %s %s %s at frame %d",
+                        ftype_str,
+                        fn->data.scriptcb->fn_name,
+                        fn->data.scriptcb->fn_code,
+                        curr_frame);
+            }
             script_run_cb(fn->data.scriptcb->owner, fn->data.scriptcb, NULL);
             break;
         case VIS_FTYPE_FRAMESEEK:
-            DBPRINTF("Ticking flist: %s to %d at %d",
-                    ftype_str, fn->data.frameseek, curr_frame);
+            if ((emitter.debug_mode & E_DEBUG_FRAME) != 0) {
+                DBPRINTF("Ticking flist: %s to %d at %d",
+                        ftype_str, fn->data.frameseek, curr_frame);
+            }
             flist_goto_frame(emitter.fl, fn->data.frameseek);
             break;
         case VIS_FTYPE_DELAY:
-            DBPRINTF("Ticking flist: %s %d at frame %d",
-                    ftype_str, fn->data.delay, curr_frame);
+            if ((emitter.debug_mode & E_DEBUG_FRAME) != 0) {
+                DBPRINTF("Ticking flist: %s %d at frame %d",
+                        ftype_str, fn->data.delay, curr_frame);
+            }
             emitter.delay_counter = fn->data.delay;
             emitter.do_sync = FALSE;
             break;
         case VIS_FTYPE_AUDIOSYNC:
-            DBPRINTF("Ticking flist: %s %d at frame %d",
-                    ftype_str, fn->data.delay, curr_frame);
+            if ((emitter.debug_mode & E_DEBUG_FRAME) != 0) {
+                DBPRINTF("Ticking flist: %s %d at frame %d",
+                        ftype_str, fn->data.delay, curr_frame);
+            }
             emitter.delay_counter = fn->data.delay;
             emitter.do_sync = TRUE;
             audio_mute();
@@ -170,8 +193,10 @@ void emitter_tick(void) {
             }
             break;
         case VIS_FTYPE_ROTATE:
-            DBPRINTF("Ticking flist: %s %g %g at frame %d",
+            if ((emitter.debug_mode & E_DEBUG_FRAME) != 0) {
+                DBPRINTF("Ticking flist: %s %g %g at frame %d",
                     ftype_str, fn->data.rotation[0], fn->data.rotation[1], curr_frame);
+            }
             drawer_set_camera_rotation(emitter.drawer, fn->data.rotation[0], fn->data.rotation[1]);
             break;
         case VIS_MAX_FTYPE:

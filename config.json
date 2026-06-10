@@ -8,7 +8,8 @@
 
     /* DEBUG_EMITTER is a bit flag:
      * 1 << 0: Debug plist size every frame
-     * 1 << 1: Debug every emit call */
+     * 1 << 1: Debug every emit call
+     * 1 << 2: Debug every frame call */
     "DEBUG_EMITTER": 1,
 
     /* Should the drawer print FPS analysis? */

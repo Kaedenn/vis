@@ -29,6 +29,7 @@ void particle_init_full(particle_t p, double x, double y,
     double speed = randdouble(ds-uds, ds+uds);
     p->dx = dx + speed * cos(spawn_angle);
     p->dy = dy + speed * sin(spawn_angle);
+    p->dz = 0.0;
     p->radius = (int)randdouble(r-ur, r+ur);
     p->depth = depth;
     p->lifetime = randint(life-ulife, life+ulife);
@@ -68,18 +69,19 @@ void particle_set_color(particle_t p, float r, float g, float b, float a) {
 void particle_tick(particle_t p) {
     p->x += p->dx;
     p->y += p->dy;
+    p->depth += (float)(p->dz / 100.0f);
     VIS_ASSERT(0 <= p->force && p->force < VIS_NFORCES);
     VIS_ASSERT(0 <= p->limit && p->limit < VIS_NLIMITS);
     switch (p->force) {
+        case VIS_DEFAULT_FORCE: break;
         case VIS_FORCE_FRICTION: friction(p); break;
         case VIS_FORCE_GRAVITY: gravity(p); break;
-        case VIS_DEFAULT_FORCE: break;
         case VIS_NFORCES: break;
     }
     switch (p->limit) {
+        case VIS_DEFAULT_LIMIT: break;
         case VIS_LIMIT_BOX: box(p); break;
         case VIS_LIMIT_SPRINGBOX: springbox(p); break;
-        case VIS_DEFAULT_LIMIT: break;
         case VIS_NLIMITS: break;
     }
     p->life -= 1;

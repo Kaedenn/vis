@@ -1276,9 +1276,6 @@ int viscmd_bgcolor_fn(lua_State* L) {
         (float)luaL_checknumber(L, 5)
     };
     flist_insert_bgcolor(fl, when, c);
-    if (DEBUG > DEBUG_DEBUG) {
-        DBPRINTF("Vis.bgcolor(%p, %d, %g, %g, %g)", fl, when, c[0], c[1], c[2]);
-    }
     return 0;
 }
 
@@ -1300,15 +1297,9 @@ int viscmd_mutate_fn(lua_State* L) {
         method->factor[1] = luaL_optnumber(L, 5, 0);
         method->offset[0] = luaL_optnumber(L, 6, 0);
         method->offset[1] = luaL_optnumber(L, 7, 0);
-        DBPRINTF("Vis.mutate(%p, %d, %s, %g, %g, %f, %f)",
-                fl, (int)when, genlua_mutate(fnid),
-                method->factor[0], method->factor[1],
-                method->offset[0], method->offset[1]);
     } else if (mutate_is_tag(fnid)) {
         /* case 2: tag modification */
         method->newtag.l = luaL_optinteger(L, 4, 0);
-        DBPRINTF("Vis.mutate(%p, %d, %s, %ld)",
-                fl, (int)when, genlua_mutate(fnid), method->tag.l);
     } else if (mutate_is_conditional(fnid)) {
         DZFREE(method);
         return luaL_error(L, "Conditional mutates must be made through Vis.mutateif");
@@ -1364,11 +1355,6 @@ int viscmd_mutateif_fn(lua_State* L) {
     method->check_factor[1] = luaL_optnumber(L, arg++, 0);
     method->offset[0] = luaL_optnumber(L, arg++, 0);
     method->offset[1] = luaL_optnumber(L, arg++, 0);
-    DBPRINTF("Vis.mutateif(%p, %d, %s, %s, [tag]%ld, [newtag]%ld, %g, %g, %f, %f)",
-            fl, (int)when, genlua_mutate(fnid), genlua_mutate_cond(method->cond),
-            method->tag.l, method->newtag.l,
-            method->factor[0], method->factor[1],
-            method->offset[0], method->offset[1]);
     method->func = MUTATE_MAP[fnid];
     flist_insert_mutate(fl, when, method);
     return 0;
@@ -1389,7 +1375,6 @@ int viscmd_callback_fn(lua_State* L) {
         scb->func_ref = NULL;
         scb->args_ref = NULL;
         scb->nargs = 0;
-        DBPRINTF("Vis.callback(%p, %d, %p, %s)", fl, when, s, scb->fn_code);
     } else if (lua_type(L, 4) == LUA_TFUNCTION) {
         scb->fn_name = dupstr("<func>");
         scb->fn_code = NULL;
@@ -1497,7 +1482,6 @@ int viscmd_rotate_fn(lua_State* L) {
     fnum_t when = do_msec2frames(L, (msec_t)luaL_checkinteger(L, 2));
     float theta = (float)luaL_checknumber(L, 3);
     float phi = (float)luaL_checknumber(L, 4);
-    DBPRINTF("Vis.rotate(%p, [frame]%d, %g, %g)", fl, when, theta, phi);
     flist_insert_rotate(fl, when, theta, phi);
     return 0;
 }
