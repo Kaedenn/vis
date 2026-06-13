@@ -1,5 +1,5 @@
 
-# The Vis.mutate and Vis.mutateif functions
+# The Vis.mutate function
 
 These functions allow you to perform various transformations on existing particles.
 
@@ -20,6 +20,7 @@ The following mutates are available:
 * `Vis.MUTATE_PUSH` - `particle->dx *= factor1` and `particle->dy *= factor1`
 * `Vis.MUTATE_PUSH_DX` - `particle->dx *= factor1`
 * `Vis.MUTATE_PUSH_DY` - `particle->dy *= factor1`
+* `Vis.MUTATE_PUSH_DZ` - `particle->dz *= factor1`
 * `Vis.MUTATE_SLOW` - `particle->dx /= factor1` and `particle->dy /= factor1`
 * `Vis.MUTATE_SHRINK` - `particle->radius /= factor1`
 * `Vis.MUTATE_GROW` - `particle->radius *= factor1`
@@ -27,13 +28,14 @@ The following mutates are available:
 * `Vis.MUTATE_OPACITY` - `particle->alpha = factor1`
 * `Vis.MUTATE_SET_DX` - `particle->dx = factor1`
 * `Vis.MUTATE_SET_DY` - `particle->dy = factor1`
+* `Vis.MUTATE_SET_DZ` - `particle->dz = factor1`
 * `Vis.MUTATE_SET_RADIUS` - `particle->radius = factor1`
 * `Vis.MUTATE_SET_VERTICES` - `particle->vertices = factor1`
 * `Vis.MUTATE_SET_ANGLE` - `particle->angle = factor1`
 
 ### Tag mutation
 
-Every particle has its own `tag`, or 32-bit number. These are set via the `tag` field in the emit table. These mutate functions exist to adjust the tag for all active particles. For conditional tag modification, see `Vis.MUTATE_TAG_SET_IF` <a href="#vismutateif">below</a>.
+Every particle has its own `tag`, or 32-bit number. These are set via the `tag` field in the emit table. These mutate functions exist to adjust the tag for all active particles. For conditional tag modification, see `Vis.MUTATE_TAG_SET_IF` below.
 
 ```lua
 Vis.mutate(Vis.flist, when, mutate_tag_func_id[, tag])
@@ -51,7 +53,7 @@ The following tag mutates are available:
 * `Vis.MUTATE_TAG_MUL` - `particle->tag *= tag`
 * `Vis.MUTATE_TAG_DIV` - `particle->tag /= tag`
 
-## <code>Vis.mutateif</code>
+### Conditional mutation
 
 These functions allow you to modify certain particle properties only if the specified condition holds.
 
@@ -59,7 +61,12 @@ These functions allow you to modify certain particle properties only if the spec
 breaks conditional mutation (as factor2 is checked) -->
 
 ```lua
-Vis.mutateif(Vis.flist, when, ...)
+Vis.mutate(Vis.flist, when, mutate_func_id, cond,
+      tag,                        -- only if cond is EQ, NE, LT, LE, GT, GE
+      newtag,                     -- only if mutate_func_id is Vis.MUTATE_TAG_SET_IF
+      factor1, factor2,           -- assigned
+      checkfactor1, checkfactor2, -- checked
+      offset1, offset2)           -- compared
 ```
 
 The following conditional mutates are available:
@@ -68,6 +75,7 @@ The following conditional mutates are available:
 * `Vis.MUTATE_PUSH_IF`
 * `Vis.MUTATE_PUSH_DX_IF`
 * `Vis.MUTATE_PUSH_DY_IF`
+* `Vis.MUTATE_PUSH_DZ_IF`
 * `Vis.MUTATE_SLOW_IF`
 * `Vis.MUTATE_SHRINK_IF`
 * `Vis.MUTATE_GROW_IF`
@@ -75,6 +83,7 @@ The following conditional mutates are available:
 * `Vis.MUTATE_OPACITY_IF`
 * `Vis.MUTATE_SET_DX_IF`
 * `Vis.MUTATE_SET_DY_IF`
+* `Vis.MUTATE_SET_DZ_IF`
 * `Vis.MUTATE_SET_RADIUS_IF`
 * `Vis.MUTATE_SET_VERTICES_IF`
 * `Vis.MUTATE_SET_ANGLE_IF`

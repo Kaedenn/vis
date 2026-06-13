@@ -58,9 +58,12 @@ do the trick just fine. If the program seems slow, try `make fast`.
 ### Dependencies:
 
 * LuaJIT 2.1 (5.1 compat) (with development libraries)
-* OpenGL 4.3, GLFW, GLEW
+* OpenGL 4.3, GLFW, GLEW (for core functionality)
+* clang (for optional luautf8.so)
 * libjson-c (optional, for config.json)
 * libpulse (optional, Linux only, for audio playback matching)
+* libfreetype2 (optional, for text)
+* libreadline (optional, for interactive commands)
 
 ## Running this thing
 
@@ -317,11 +320,29 @@ direction by the coefficient given.
 `constant Vis.MUTATE_PUSH_DY`: Accelerates the particles in the vertical
 direction by the coefficient given.
 
+`constant Vis.MUTATE_PUSH_DZ`: Accelerates the particles in the Z direction
+by the coefficient given.
+
 `constant Vis.MUTATE_AGE`: Sets the age of the particles to the product of
 their total lifetime and the coefficient given.
 
 `constant Vis.MUTATE_OPACITY`: Sets the particle base opacity to the
 coefficient given. The blending functions are multiplied by this value.
+
+`constant Vis.MUTATE_SET_DX`: Sets the particles' horizontal velocity to the
+coefficient given.
+
+`constant Vis.MUTATE_SET_DY`: Sets the particles' vertical velocity to the
+coefficient given.
+
+`constant Vis.MUTATE_SET_DZ`: Sets the particles' Z velocity to the
+coefficient given.
+
+`constant Vis.MUTATE_SET_RADIUS`: Sets the particle radius.
+
+`constant Vis.MUTATE_SET_VERTICES`: Sets the particle vertex count (e.g. 3 for triangle, 4 for square).
+
+`constant Vis.MUTATE_SET_ANGLE`: Sets the particle rotation angle.
 
 `constant Vis.MUTATE_TAG_SET`: Tags all particles by setting their tag
 value to the integer given.
@@ -342,6 +363,9 @@ given.
 `constant Vis.MUTATE_TAG_DIV`: Divides all particles' tags by the value
 given.
 
+`constant Vis.MUTATE_TAG_SET_IF`: Apply `Vis.MUTATE_TAG_SET` if the condition
+specified evaluates to true.
+
 `constant Vis.MUTATE_PUSH_IF`: Apply `Vis.MUTATE_PUSH` if the
 particles' tag and the tag value specified satisfies the condition specified
 (see `Vis.MUTATE_IF_*` below)
@@ -350,6 +374,8 @@ particles' tag and the tag value specified satisfies the condition specified
 condition specified evaluates to true against the particle and the tag given.
 
 `constant Vis.MUTATE_PUSH_DY_IF`: As above, with `Vis.MUTATE_PUSH_DY`
+
+`constant Vis.MUTATE_PUSH_DZ_IF`: As above, with `Vis.MUTATE_PUSH_DZ`
 
 `constant Vis.MUTATE_SLOW_IF`: As above, with `Vis.MUTATE_SLOW`
 
@@ -360,6 +386,18 @@ condition specified evaluates to true against the particle and the tag given.
 `constant Vis.MUTATE_AGE_IF`: As above, with `Vis.MUTATE_AGE`
 
 `constant Vis.MUTATE_OPACITY_IF`: As above, with `Vis.MUTATE_OPACITY`
+
+`constant Vis.MUTATE_SET_DX_IF`: As above, with `Vis.MUTATE_SET_DX`
+
+`constant Vis.MUTATE_SET_DY_IF`: As above, with `Vis.MUTATE_SET_DY`
+
+`constant Vis.MUTATE_SET_DZ_IF`: As above, with `Vis.MUTATE_SET_DZ`
+
+`constant Vis.MUTATE_SET_RADIUS_IF`: As above, with `Vis.MUTATE_SET_RADIUS`
+
+`constant Vis.MUTATE_SET_VERTICES_IF`: As above, with `Vis.MUTATE_SET_VERTICES`
+
+`constant Vis.MUTATE_SET_ANGLE_IF`: As above, with `Vis.MUTATE_SET_ANGLE`
 
 `constant Vis.NMUTATES`: Equal to the number of possible mutate choices
 listed above.
@@ -388,6 +426,18 @@ than or equal to the tag given.
 `constant Vis.MUTATE_IF_EVEN`: Satisfied when the particle's tag is even.
 
 `constant Vis.MUTATE_IF_ODD`: Satisfied when the particle's tag is odd.
+
+`constant Vis.MUTATE_IF_ABOVE`: Satisfied when the particle's Y coordinate is less than or equal to the condition parameter.
+
+`constant Vis.MUTATE_IF_BELOW`: Satisfied when the particle's Y coordinate is greater than or equal to the condition parameter.
+
+`constant Vis.MUTATE_IF_LEFT`: Satisfied when the particle's X coordinate is less than or equal to the condition parameter.
+
+`constant Vis.MUTATE_IF_RIGHT`: Satisfied when the particle's X coordinate is greater than or equal to the condition parameter.
+
+`constant Vis.MUTATE_IF_NEAR`: Satisfied when the particle's distance to the specified coordinate is less than or equal to the distance threshold.
+
+`constant Vis.MUTATE_IF_FAR`: Satisfied when the particle's distance to the specified coordinate is greater than or equal to the distance threshold.
 
 `constant Vis.FORCE_FRICTION_COEFF`: The strength of friction, from 0 to 1.
 
@@ -677,8 +727,13 @@ Operations:
 
 ```lua
 Vis.mutate(Vis.flist, <when>,
-    Vis.MUTATE_<op>_IF, <num1>,
-    Vis.MUTATE_IF_<cond>[, <tag>[, <num2>[, <num3>[, <num4>]]]])
+    Vis.MUTATE_<op>_IF,
+    <num1>,
+    Vis.MUTATE_IF_<cond>
+        [, <tag>
+            [, <num2>
+                [, <num3>
+                    [, <num4>]]]])
 ```
 
 This applies `MUTATE_<op>` to all particles on screen if (and only if)
@@ -714,46 +769,6 @@ Operations are the same as the ordinary mutate, but with `_IF` appended:
 11. `VIS_MUTATE_SET_RADIUS_IF` - `p->radius = randdouble(num1-num2, num1+num2)`
 12. `VIS_MUTATE_SET_VERTICES_IF` - `p->vertices = randdouble(num1-num2, num1+num2)`
 13. `VIS_MUTATE_SET_ANGLE_IF` - `p->angle = randdouble(num1-num2, num1+num2)`
-
-</details>
-
-<details>
-<summary><code>Vis.emit</code>: Implementation Details</summary>
-
-#### The emit function (implementation details)
-
-Old method:
-
-```lua
-Vis.emit(Vis.flist, count, when,
-    x, y[, ux, uy, rad, urad, ds, uds, theta, utheta, life, ulife,
-    r, g, b, ur, ug, ub, force, limit, blender])
-```
-
-New method:
-
-```lua
-Vis.emit(Vis.flist, count, when, {
-    x = number, y = number,                 -- position, 0,0 is upper left corner
-    ux = number, uy = number,               -- adjustment to position
-    dx = number, dy = number,               -- base initial velocity
-    s = number,                             -- radial position along theta
-    us = number,                            -- adjustment to radial position
-    ds = number,                            -- radial speed along theta
-    uds = number,                           -- adjustment to speed
-    rad = number,                           -- direction (affects s and ds)
-    urad = number,                          -- adjustment to direction
-    theta = number,                         -- 0 <= theta <= 2*math.pi
-    utheta = number,                        -- 0 <= utheta <= 2*math.pi
-    life = unsigned,                        -- in milliseconds
-    ulife = unsigned,                       -- in milliseconds
-    r = number, g = number, b = number,     -- 0 <= rgb <= 1
-    ur = number, ug = number, ub = number,  -- 0 <= urgb <= 1
-    force = number (force_id),
-    limit = number (limit_id),
-    blender = number (blend_id)
-})
-```
 
 </details>
 

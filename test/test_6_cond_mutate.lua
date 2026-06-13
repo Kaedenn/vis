@@ -89,15 +89,15 @@ for i = 1, 4 do
         e:emit_at(Vis.frames2msec(idx))
 
         m:emit_lines(1000 + Vis.frames2msec(12), {"radius=3 if even"}, MX, MY)
-        Vis.mutateif(Vis.flist, Vis.frames2msec(idx) + 1000, Vis.MUTATE_SET_RADIUS_IF, Vis.MUTATE_IF_EVEN, 3, 0, 0, 0)
-        Vis.mutateif(Vis.flist, Vis.frames2msec(idx) + 1000, Vis.MUTATE_SET_RADIUS_IF, Vis.MUTATE_IF_EQ, 1, 1, 0, 0, 0)
+        Vis.mutate(Vis.flist, Vis.frames2msec(idx) + 1000, Vis.MUTATE_SET_RADIUS_IF, Vis.MUTATE_IF_EVEN, 3, 0, 0, 0)
+        Vis.mutate(Vis.flist, Vis.frames2msec(idx) + 1000, Vis.MUTATE_SET_RADIUS_IF, Vis.MUTATE_IF_EQ, 1, 1, 0, 0, 0)
 
         m:emit_lines(2000 + Vis.frames2msec(12), {
             "age=0 if y<0",
             "age=1 if dist(p, center) < 10"}, MX, MY)
-        Vis.mutateif(Vis.flist, Vis.frames2msec(idx) + 2000,
+        Vis.mutate(Vis.flist, Vis.frames2msec(idx) + 2000,
             Vis.MUTATE_AGE_IF, Vis.MUTATE_IF_ABOVE, 1.0, 0, 0, 0, 0, Vis.HEIGHT / 2)
-        Vis.mutateif(Vis.flist, Vis.frames2msec(idx) + 2000,
+        Vis.mutate(Vis.flist, Vis.frames2msec(idx) + 2000,
             Vis.MUTATE_AGE_IF, Vis.MUTATE_IF_NEAR, 0, 0, Vis.WIDTH/10, 0, Vis.WIDTH/2, Vis.HEIGHT/2)
     end
 end

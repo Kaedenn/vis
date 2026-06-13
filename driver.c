@@ -18,14 +18,6 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
-/* dependencies
- *
- *  drawer -> particles
- *  script -> drawer
- *  command -> drawer, particles, script
- *  emitter -> command, particles
- */
-
 struct global_ctx {
     plist_t particles;
     drawer_t drawer;

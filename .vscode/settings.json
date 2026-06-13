@@ -1,5 +1,14 @@
 {
     "Lua.diagnostics.disable": [
         "lowercase-global"
+    ],
+    "Lua.workspace.ignoreDir": [
+        "lua/badapple",
+        "lua/taimer"
+    ],
+    "Lua.runtime.path": [
+        "?.lua",
+        "?/init.lua",
+        "lua/?/?.lua"
     ]
 }
