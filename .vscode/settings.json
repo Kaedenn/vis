@@ -10,5 +10,20 @@
         "?.lua",
         "?/init.lua",
         "lua/?/?.lua"
-    ]
+    ],
+    "[markdown]": {
+        "editor.rulers": [
+            80
+        ]
+    },
+    "[c]": {
+        "editor.rulers": [
+            120
+        ]
+    },
+    "[python]": {
+        "editor.rulers": [
+            88
+        ]
+    }
 }

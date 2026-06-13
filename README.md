@@ -3,8 +3,8 @@
 
 ## Background information
 
-This project was created to investigate the question, "can you simulate
-synesthesia for someone who does not have synesthesia?"
+This project was originally created to investigate the question, "can you
+simulate synesthesia for someone who does not have synesthesia?"
 
 Synesthesia, specifically chromesthesia, is the perception of shapes when
 listening to music. The exact shapes, their positions, colors, and behaviors
@@ -15,9 +15,9 @@ experience.
 Chromesthesia has been described as "a fireworks display for the mind" and can
 be genuinely enjoyable.
 
-Unfortunately, I do not have Chromesthesia. However, I do have a form of
-"music-shape" synesthesia where music triggers shapes in my mind, though
-without color information.
+Unfortunately, I do not have chromesthesia. However, I do have a form of
+"music-location-shape" synesthesia where music triggers shapes at various
+locations in my mind, but without color information.
 
 <details>
 <summary><strong>Rules of Chromesthesia</strong></summary>
@@ -25,11 +25,11 @@ without color information.
 To ensure the experience I create closely matches real chromesthesia, I have
 decided to abide by the following two arbitrary rules:
 
-1. Shape Duration: Shapes should only appear on-screen for the duration of the
-   note, instrument, or chord. Once the sound stops or changes, the shape should
-   cease or change.
-2. Shape Consistency: The same sound on the same instrument should give the same
-   shape regardless of when it's played.
+1.  **Duration**: Shapes should only appear on-screen for the duration of
+    the note, instrument, chord, or lyric. Once the sound stops or changes,
+    the shape should cease or change.
+2.  **Consistency**: The same sound on the same instrument should give the
+    same shape regardless of when it's played.
 
 </details>
 
@@ -59,7 +59,7 @@ do the trick just fine. If the program seems slow, try `make fast`.
 
 * LuaJIT 2.1 (5.1 compat) (with development libraries)
 * OpenGL 4.3, GLFW, GLEW (for core functionality)
-* clang (for optional luautf8.so)
+* clang (optional, for luautf8.so)
 * libjson-c (optional, for config.json)
 * libpulse (optional, Linux only, for audio playback matching)
 * libfreetype2 (optional, for text)
@@ -90,17 +90,19 @@ default emit rule. This rule can be changed via `Vis.settrace`.
 
 ### Other invocations
 
-There are several ways to run this thing: <br/>
-1) With no arguments, using click-and-drag <br/>
-2) With the `-l` argument and a path to a `.lua` script <br/>
-3) With no arguments, using stdin for commands <br/>
+There are two main ways to run this thing:
+
+1.  With no arguments, using click-and-drag
+2.  With the `-l` argument and a path to a `.lua` script
 
 #### Click-and-drag method
 
 First, run the program with no arguments. Then, click and hold with the left
 mouse button and move the mouse around the screen. This will cause small circles
 of particles to appear. It is possible to change the parameters of this
-emission, but that requires a script file (the second method)
+emission, but that requires a script file (the second method).
+
+The size of the particles can be changed using the scroll wheel.
 
 #### Script mode
 
@@ -115,40 +117,6 @@ This gives you a good taste of what the particle engine can do, although it
 leaves out a good number of details.
 
 The full documentation of script mode is below, see *Writing your own scripts*
-
-<details>
-<summary><strong>Command Mode</strong></summary>
-
-This mode exists for historical reasons and really isn't intended to be used
-outside of debugging. That said, there are a number of commands supported:
-
-`command "help" [argument] `: Invoked as either `help` or
-`help <command>`, this command lists all valid commands and a small
-description of each. As a special case, `help emit` lists extended
-information on the emit function.
-
-`command "emit" <arguments>`: Emits a bundle of particles specified by the
-arguments given. Type `help emit` to see the arguments; there are too many
-to list here.
-
-`command "kick" <n>`: Generates a preconfigured emit of `<n>` particles.
-
-`command "snare" <n>`: Generates a preconfigured emit of `<n>` particles.
-
-`command "strum" <n>`: Generates a preconfigured emit of `<n>` particles.
-
-`command "rain" <n>`: Generates a preconfigured emit of `<n>` particles.
-
-`command "lua" <file>`: Loads and executes the lua script `<file>`.
-
-`command "audio" <file>`: Loads and plays the sound file `<file>`,
-which unfortunately must be a path to a WAV file. No other formats are
-supported yet.
-
-`command "exit"`: Terminates the application. Pressing either `^D` or
-`ESC` also terminates the application.
-
-</details>
 
 ### Writing your own scripts
 
@@ -176,9 +144,7 @@ This is that location.
 
 `userdata Vis.script`: This field is present in order to perform advanced
 operations, such as scheduling callbacks (strings of Lua script to be executed
-after a certain amount of time has passed). This field is `nil` when the
-advanced features are not available, which is only when loading scripts via
-the `load <scriptfile>` command in interactive mode.
+after a certain amount of time has passed).
 
 `function Vis.debug(...)`: For debugging purposes, this function prints
 out its arguments to the debugging stream if and only if the program was
@@ -233,6 +199,10 @@ begins.
 `function Vis.bgcolor(Vis.script, r, g, b)`: Sets the background color to
 the values given. Each value is between 0 and 1.
 
+`function Vis.rotate(Vis.flist, when, theta, phi)`: Schedules a global camera
+rotation around the Y (`theta`) and X (`phi`) axes after `when` milliseconds
+have passed.
+
 `function Vis.mutate(Vis.flist, when, func, coefficient)`: Schedules the
 mutation given by `func` (see constants `Vis.MUTATE_*`) with
 coefficient `coefficient` after `when` milliseconds have passed.
@@ -250,14 +220,42 @@ have passed.
 should be fairly close to `Vis.FPS_LIMIT`.
 
 `function Vis.settrace(Vis.script, emit_table)`: Change what happens when the
-user clicks and drags on the screen. The `emit_table` must be a native Lua
-`table` and not an `Emit` instance.
+user clicks and drags on the screen. The `emit_table` can be a native Lua
+`table` or an `Emit` instance.
 
 `function Vis.frames2msec(frame_number)`: Converts argument `frame_number` to
 milliseconds.
 
 `function Vis.msec2frames(milliseconds)`: Converts argument `milliseconds` to
 a frame number.
+
+`function Vis.exit()`: Terminates the application immediately.
+
+`function Vis.exit(Vis.flist, when)`: Schedules the application to terminate
+after `when` milliseconds have passed.
+
+`function Vis.gotoframe(Vis.flist, whereto)`: Immediately changes the
+application's current frame state to `whereto`.
+
+`function Vis.get_audio_delay()`: Returns the audio delay offset in milliseconds.
+Note that this relies on the latency measurement system, which currently only
+works if `libpulse` support is present. If it is not present, this function
+is a no-op and will return 0.
+
+`function Vis.emitnow(Vis.script, ...)`: Immediately executes an emission
+using the provided arguments, bypassing the scheduler. Arguments are identical
+to those of `Vis.emit()`.
+
+`function Vis.get_debug(Vis.script, what)`: Returns internal debug values based
+on the string `what`. The supported strings and their return values are:
+* `"PARTICLES-EMITTED"`: Total particles emitted so far.
+* `"PARTICLE-COUNT"`: The current number of active/living particles.
+* `"TIME-NOW"`: The current internal elapsed time in milliseconds.
+* `"FRAMES-EMITTED"`: Total number of scheduled frames emitted.
+* `"NUM-MUTATES"`: The number of scheduled mutates processed.
+* `"PARTICLES-MUTATED"`: The total number of times particles have been mutated.
+* `"PARTICLE-TAGS-MODIFIED"`: The total number of particle tag modifications applied.
+* `"FRAME-EMIT-COUNTS"`: A table containing the count for each emitted frame type.
 
 `constant Vis.FPS_LIMIT`: The intended frames-per-second at which this
 program runs. At the time of writing, this is set to 30.
@@ -340,7 +338,8 @@ coefficient given.
 
 `constant Vis.MUTATE_SET_RADIUS`: Sets the particle radius.
 
-`constant Vis.MUTATE_SET_VERTICES`: Sets the particle vertex count (e.g. 3 for triangle, 4 for square).
+`constant Vis.MUTATE_SET_VERTICES`: Sets the particle vertex count (e.g.
+3 for triangle, 4 for square).
 
 `constant Vis.MUTATE_SET_ANGLE`: Sets the particle rotation angle.
 
@@ -427,17 +426,23 @@ than or equal to the tag given.
 
 `constant Vis.MUTATE_IF_ODD`: Satisfied when the particle's tag is odd.
 
-`constant Vis.MUTATE_IF_ABOVE`: Satisfied when the particle's Y coordinate is less than or equal to the condition parameter.
+`constant Vis.MUTATE_IF_ABOVE`: Satisfied when the particle's Y coordinate is
+less than or equal to the condition parameter.
 
-`constant Vis.MUTATE_IF_BELOW`: Satisfied when the particle's Y coordinate is greater than or equal to the condition parameter.
+`constant Vis.MUTATE_IF_BELOW`: Satisfied when the particle's Y coordinate
+is greater than or equal to the condition parameter.
 
-`constant Vis.MUTATE_IF_LEFT`: Satisfied when the particle's X coordinate is less than or equal to the condition parameter.
+`constant Vis.MUTATE_IF_LEFT`: Satisfied when the particle's X coordinate is
+less than or equal to the condition parameter.
 
-`constant Vis.MUTATE_IF_RIGHT`: Satisfied when the particle's X coordinate is greater than or equal to the condition parameter.
+`constant Vis.MUTATE_IF_RIGHT`: Satisfied when the particle's X coordinate is
+greater than or equal to the condition parameter.
 
-`constant Vis.MUTATE_IF_NEAR`: Satisfied when the particle's distance to the specified coordinate is less than or equal to the distance threshold.
+`constant Vis.MUTATE_IF_NEAR`: Satisfied when the particle's distance to the
+specified coordinate is less than or equal to the distance threshold.
 
-`constant Vis.MUTATE_IF_FAR`: Satisfied when the particle's distance to the specified coordinate is greater than or equal to the distance threshold.
+`constant Vis.MUTATE_IF_FAR`: Satisfied when the particle's distance to the
+specified coordinate is greater than or equal to the distance threshold.
 
 `constant Vis.FORCE_FRICTION_COEFF`: The strength of friction, from 0 to 1.
 
@@ -545,7 +550,8 @@ emit. As a special case, a particle with a radius of 1 will be a single pixel
 unless argument `-e` is passed to `vis` on the command-line.
 
 `floats dx, dy`: The base initial velocity of the particles to emit, measured in
-pixels per frame. This is added to the radial velocity defined by `ds` and `theta`.
+pixels per frame. This is added to the radial velocity defined by `ds` and
+`theta`.
 
 `floats ds, uds`: The initial radial speed of the particles to emit, measured in
 pixels per frame.
@@ -623,7 +629,8 @@ Omitting `x` and `y` will place the emit at the center of the screen.
 parameter can be omitted and defaults to zero.
 
 `e:velocity(dx, dy)`: Configure the emit's base initial velocity. These values
-are added to the radial velocity defined by `ds` and `theta`. Any omitted value defaults to zero.
+are added to the radial velocity defined by `ds` and `theta`. Any omitted value
+defaults to zero.
 
 `e:ds(ds, uds)`: Configure the emit's initial radial speed. The second
 parameter defaults to zero.

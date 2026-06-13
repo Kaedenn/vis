@@ -883,6 +883,17 @@ static void merge_emit_table(lua_State* L, int arg, emit_desc* emit) {
     VIS_ASSERT(emit);
 
     int argi = lua_absindex(L, arg);
+    BOOL is_emit_instance = FALSE;
+
+    /* Check if it's an Emit instance by looking for the _t field */
+    lua_getfield(L, argi, "_t");
+    if (lua_istable(L, -1)) {
+        argi = lua_absindex(L, -1);
+        is_emit_instance = TRUE;
+    } else {
+        lua_pop(L, 1);
+    }
+
     lua_pushnil(L);
     while (lua_next(L, argi) != 0) {
         const char* key = lua_tostring(L, -2);
@@ -963,7 +974,11 @@ static void merge_emit_table(lua_State* L, int arg, emit_desc* emit) {
             EPRINTF("Unknown key in emit table %s (type %s)",
                     key, lua_typename(L, valtype));
         }
-        lua_pop(L, 1); /* emit table */
+        lua_pop(L, 1); /* emit table value */
+    }
+
+    if (is_emit_instance) {
+        lua_pop(L, 1); /* pop the _t table */
     }
 }
 
