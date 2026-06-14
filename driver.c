@@ -321,10 +321,10 @@ void advance(struct global_ctx* ctx) {
     if (ctx->args->interactive) {
         script_repl_async(ctx->script);
     }
-    if (emitter_should_exit()) {
-        ctx->should_exit = TRUE;
-    }
     if (!ctx->paused) {
         emitter_tick();
+    }
+    if (emitter_should_exit()) {
+        ctx->should_exit = TRUE;
     }
 }

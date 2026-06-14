@@ -11,11 +11,13 @@ uniform mat4 view;
 out vec4 vColor;
 flat out uint vVertices;
 out float vAngle;
+out vec3 vPosWorld;
 
 void main() {
     vColor = color;
     vVertices = vertices;
     vAngle = angle;
+    vPosWorld = position;
     gl_Position = projection * view * vec4(position, 1.0);
     gl_PointSize = radius;
 }

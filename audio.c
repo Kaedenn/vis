@@ -4,7 +4,7 @@
 
 #include "3rdparty/miniaudio.h"
 
-#ifdef __linux__
+#ifdef HAVE_PULSEAUDIO
 #include "audio/pa_latency_probe.h"
 #endif
 

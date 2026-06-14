@@ -10,7 +10,6 @@ BOOL audio_init(void);
 BOOL audio_open(const char* file);
 void audio_free(void);
 
-/* determine audio latency, if possible */
 msec_t audio_get_delay_msec(void);
 
 void audio_play(void);
