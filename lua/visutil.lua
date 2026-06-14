@@ -3,10 +3,10 @@ Vis = require("Vis")
 VisUtil = {}
 
 VisUtil.EMIT_FIELDS = {
-    "count", "when", "x", "y", "ux", "uy", "dx", "dy",
-    "s", "us", "radius", "uradius", "ds", "uds", "theta", "utheta",
-    "depth", "life", "ulife", "r", "g", "b", "ur", "ug", "ub",
-    "force", "limit", "blender", "tag"
+    "count", "when", "x", "y", "ux", "uy", "dx", "dy", "dz",
+    "s", "us", "ds", "uds", "radius", "uradius", "depth", "theta", "utheta",
+    "life", "ulife", "r", "g", "b", "ur", "ug", "ub",
+    "force", "limit", "blender", "vertices", "angle", "tag"
 }
 
 VisUtil.Debug = {}
