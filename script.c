@@ -55,6 +55,10 @@ static void luaL_requiref(lua_State *L, const char *modname,
 }
 #endif
 
+#ifndef LUA_FILEHANDLE
+#define LUA_FILEHANDLE "FILE*"
+#endif
+
 /* Static initialization script */
 static const char* const LUA_INIT_SCRIPT =
     /* Adjust default Lua search path */
@@ -149,6 +153,7 @@ static int viscmd_f2ms_fn(lua_State* L);
 static int viscmd_ms2f_fn(lua_State* L);
 static int viscmd_get_debug_fn(lua_State* L);
 static int viscmd_rotate_fn(lua_State* L);
+static int viscmd_dump_particles_fn(lua_State* L);
 
 #define SCRIPT_RUN_STRINGVF(s, fmt, ...) do { \
     kstr script_run_kstring_temp = kstring_newfromvf((fmt), __VA_ARGS__); \
@@ -166,6 +171,7 @@ struct script {
     klist args;
     flist_t fl;
     drawer_t drawer;
+    plist_t plist;
     int errors;
     BOOL interactive;
     kstr repl_buffer;
@@ -326,6 +332,10 @@ void script_set_drawer(script_t s, drawer_t drawer) {
     lua_getglobal(s->L, "Vis");
     table_assign_int(s->L, "FPS_LIMIT", drawer_get_configured_fps(drawer), -1);
     lua_pop(s->L, 1); /* getglobal("Vis") */
+}
+
+void script_set_plist(script_t s, plist_t plist) {
+    s->plist = plist;
 }
 
 void script_callback_free(script_cb* cb) {
@@ -599,7 +609,6 @@ int initialize_vis_lib(lua_State* L) {
         {"delay", viscmd_delay_fn},
         {"bgcolor", viscmd_bgcolor_fn},
         {"mutate", viscmd_mutate_fn},
-
         {"callback", viscmd_callback_fn},
         {"fps", viscmd_fps_fn},
         {"settrace", viscmd_settrace_fn},
@@ -608,6 +617,7 @@ int initialize_vis_lib(lua_State* L) {
         {"emitnow", viscmd_emitnow_fn},
         {"get_debug", viscmd_get_debug_fn},
         {"rotate", viscmd_rotate_fn},
+        {"dump_particles", viscmd_dump_particles_fn},
         {NULL, NULL}};
 
     luaL_newlib(L, vis_lib);
@@ -748,10 +758,6 @@ int initialize_vis_lib(lua_State* L) {
 
 /* Assign _G.Arguments = {args...} */
 void prepare_stack(script_t s, klist args) {
-    /* TODO: Determine why we do this
-    lua_getglobal(s->L, "debug");
-    lua_getfield(s->L, -1, "traceback");
-    lua_call(s->L, 0, 1);*/
     s->debugidx = lua_gettop(s->L);
     lua_pushvalue(s->L, LUA_GLOBALSINDEX);
     lua_pushstring(s->L, "Arguments");
@@ -767,7 +773,7 @@ void prepare_stack(script_t s, klist args) {
     }
     lua_settable(s->L, -3);
     lua_pop(s->L, 1); /* lua_pushvalue(s->L, LUA_GLOBALSINDEX) */
-    VIS_ASSERT(lua_gettop(s->L) == 0); /* was 2 */
+    VIS_ASSERT(lua_gettop(s->L) == 0);
 }
 
 void cleanup_stack(script_t s) {
@@ -1480,6 +1486,59 @@ int viscmd_rotate_fn(lua_State* L) {
     float phi = (float)luaL_checknumber(L, 4);
     flist_insert_rotate(fl, when, theta, phi);
     return 0;
+}
+
+/* Helper callback for dumping particles to a file */
+static plist_action_id dump_particle_cb(struct particle* p, void* userdata) {
+    FILE* handle = (FILE*)userdata;
+    fprintf(handle, "%f,%f,%f,%f,%f,%f,%f,%d,%d,%d,%d,%f,%f,%f,%f,%d,%d,%f,%lld\n",
+        p->x, p->y, p->dx, p->dy, p->dz, p->radius, (double)p->depth,
+        p->lifetime, p->life, (int)p->force, (int)p->limit,
+        (double)p->r, (double)p->g, (double)p->b, (double)p->a,
+        (int)p->blender, p->vertices, (double)p->angle, (long long)p->tag.l);
+    return ACTION_NEXT;
+}
+
+/* Vis.dump_particles(Vis.script, string/file, [string], [bool]) */
+int viscmd_dump_particles_fn(lua_State* L) {
+    script_t s = util_checkscript(L, 1);
+    FILE* handle = NULL;
+    BOOL should_close = FALSE;
+    BOOL include_header = FALSE;
+
+    if (lua_type(L, 2) == LUA_TSTRING) {
+        const char* path = luaL_checkstring(L, 2);
+        const char* mode = luaL_optstring(L, 3, "w");
+        include_header = lua_toboolean(L, 4);
+        handle = fopen(path, mode);
+        if (!handle) {
+            return luaL_error(L, "Failed to open file: %s", path);
+        }
+        should_close = TRUE;
+    } else if (lua_type(L, 2) == LUA_TUSERDATA) {
+        FILE** p_handle = (FILE**)luaL_checkudata(L, 2, LUA_FILEHANDLE);
+        if (p_handle && *p_handle) {
+            handle = *p_handle;
+            include_header = lua_toboolean(L, 3);
+        } else {
+            return luaL_error(L, "Invalid file handle");
+        }
+    } else {
+        return luaL_error(L, "Expected string or file handle as argument 2");
+    }
+
+    if (include_header) {
+        fprintf(handle, "x,y,dx,dy,dz,radius,depth,lifetime,life,force,limit,r,g,b,a,blender,vertices,angle,tag\n");
+    }
+
+    plist_foreach(s->plist, dump_particle_cb, (void*)handle);
+
+    if (should_close) {
+        fclose(handle);
+    }
+
+    lua_pushnumber(L, (lua_Number)plist_get_size(s->plist));
+    return 1;
 }
 
 /* end of Lua API */

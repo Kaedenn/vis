@@ -169,6 +169,7 @@ int main(int argc, char* argv[]) {
         g.args->scriptargs = NULL;
     }
     script_set_drawer(g.script, g.drawer);
+    script_set_plist(g.script, g.particles);
 
     script_repl_setup(g.script, g.args->interactive);
     emitter_setup(g.script, g.particles, g.drawer, g.args);

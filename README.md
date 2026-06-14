@@ -257,14 +257,24 @@ on the string `what`. The supported strings and their return values are:
 * `"PARTICLE-TAGS-MODIFIED"`: The total number of particle tag modifications applied.
 * `"FRAME-EMIT-COUNTS"`: A table containing the count for each emitted frame type.
 
+`function Vis.dump_particles(Vis.script, path, [mode], [header])`: Dumps all
+active particles to the file specified by `path` in CSV format. The `mode`
+defaults to `"w"`. If `header` is `true`, a row containing the column names is
+output first. Returns the number of particles written.
+
+`function Vis.dump_particles(Vis.script, file_handle, [header])`: Dumps all
+active particles to the open Lua `file_handle` in CSV format. If `header` is
+`true`, a row containing the column names is output first. Returns the number
+of particles written.
+
 `constant Vis.FPS_LIMIT`: The intended frames-per-second at which this
 program runs. At the time of writing, this is set to 30.
 
 `constant Vis.WIDTH`: The width of the program window. Currently set to 800
 but can be changed on the command-line.
 
-`constant Vis.HEIGHT`: The height of the program window. Currently set to
-600 but can be changed on the command-line.
+`constant Vis.HEIGHT`: The height of the program window. Currently set to 600
+but can be changed on the command-line.
 
 `constant Vis.DEFAULT_BLEND`: Equal to `Vis.BLEND_NONE`.
 
@@ -350,24 +360,22 @@ value to the integer given.
 
 `constant Vis.MUTATE_TAG_DEC`: Decreases all particles' tags by one.
 
-`constant Vis.MUTATE_TAG_ADD`: Adds the value given to all particles'
-tags.
+`constant Vis.MUTATE_TAG_ADD`: Adds the value given to all particles' tags.
 
-`constant Vis.MUTATE_TAG_SUB`: Subtracts the value given from all
-particles' tags.
+`constant Vis.MUTATE_TAG_SUB`: Subtracts the value given from all particles'
+tags.
 
 `constant Vis.MUTATE_TAG_MUL`: Multiplies all particles' tags by the value
 given.
 
-`constant Vis.MUTATE_TAG_DIV`: Divides all particles' tags by the value
-given.
+`constant Vis.MUTATE_TAG_DIV`: Divides all particles' tags by the value given.
 
 `constant Vis.MUTATE_TAG_SET_IF`: Apply `Vis.MUTATE_TAG_SET` if the condition
 specified evaluates to true.
 
-`constant Vis.MUTATE_PUSH_IF`: Apply `Vis.MUTATE_PUSH` if the
-particles' tag and the tag value specified satisfies the condition specified
-(see `Vis.MUTATE_IF_*` below)
+`constant Vis.MUTATE_PUSH_IF`: Apply `Vis.MUTATE_PUSH` if the particles' tag
+and the tag value specified satisfies the condition specified (see
+`Vis.MUTATE_IF_*` below)
 
 `constant Vis.MUTATE_PUSH_DX_IF`: Apply `Vis.MUTATE_PUSH_DX` if the
 condition specified evaluates to true against the particle and the tag given.

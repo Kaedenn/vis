@@ -827,4 +827,30 @@ function VisUtil.genlua_blender(blender)
     return "<invalid-blend>"
 end
 
+function VisUtil.export_particles()
+    local csv = require('csv')
+    local tmpname = os.tmpname()
+
+    -- Call Vis.dump_particles to the temporary file, with headers enabled
+    Vis.dump_particles(Vis.script, tmpname, "w", true)
+
+    local f = csv.open(tmpname, {header = true})
+    local result = {}
+    if f then
+        for fields in f:lines() do
+            local particle = {}
+            for k, v in pairs(fields) do
+                particle[k] = tonumber(v) or v
+            end
+            table.insert(result, particle)
+        end
+        f:close()
+    end
+
+    -- Delete the temporary file
+    os.remove(tmpname)
+
+    return result
+end
+
 return VisUtil

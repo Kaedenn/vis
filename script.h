@@ -4,6 +4,7 @@
 
 #include "drawer.h"
 #include "klist.h"
+#include "plist.h"
 #include <stdint.h>
 
 struct flist;
@@ -92,6 +93,9 @@ void script_run_cb(script_t state, script_cb* func, void* args);
 /* Tell the scripting engine about the drawer. Assigns:
  *  Vis.FPS_LIMIT = get_configured_fps() */
 void script_set_drawer(script_t script, drawer_t drawer);
+
+/* Give the scripting engine access to the particle list */
+void script_set_plist(script_t script, plist_t plist);
 
 /* REPL handling functions */
 void script_repl_setup(script_t script, BOOL interactive);

@@ -39,30 +39,26 @@ uint64_t mutate_debug_get_particle_tags_modified(void) {
 #endif
 }
 
-static int64_t get_tag_l(particle_t p) {
-    return p->tag.l;
-}
-
 BOOL mutate_cond_apply(particle_t p, mutate_method* method) {
     switch (method->cond) {
     case VIS_MUTATE_IF_TRUE:
         return TRUE;
     case VIS_MUTATE_IF_EQ:
-        return get_tag_l(p) == method->tag.l;
+        return p->tag.l == method->tag.l;
     case VIS_MUTATE_IF_NE:
-        return get_tag_l(p) != method->tag.l;
+        return p->tag.l != method->tag.l;
     case VIS_MUTATE_IF_LT:
-        return get_tag_l(p) < method->tag.l;
+        return p->tag.l < method->tag.l;
     case VIS_MUTATE_IF_LE:
-        return get_tag_l(p) <= method->tag.l;
+        return p->tag.l <= method->tag.l;
     case VIS_MUTATE_IF_GT:
-        return get_tag_l(p) > method->tag.l;
+        return p->tag.l > method->tag.l;
     case VIS_MUTATE_IF_GE:
-        return get_tag_l(p) >= method->tag.l;
+        return p->tag.l >= method->tag.l;
     case VIS_MUTATE_IF_EVEN:
-        return (get_tag_l(p) % 2) == 0;
+        return (p->tag.l % 2) == 0;
     case VIS_MUTATE_IF_ODD:
-        return (get_tag_l(p) % 2) == 1;
+        return (p->tag.l % 2) == 1;
 
     case VIS_MUTATE_IF_ABOVE:
         return p->y <= method->offset[1];
