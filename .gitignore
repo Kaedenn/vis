@@ -9,6 +9,7 @@ run_venv.sh
 
 # Reference material
 ref
+*.csv
 
 # Generated materials
 3rdparty/luautf8-0.2.0/
@@ -65,4 +66,5 @@ media/raw
 media/copyrighted
 docs/lua-5.2.3*
 output
-media/bowser-*.mp3
+media/bowser/
+media/royalty/
