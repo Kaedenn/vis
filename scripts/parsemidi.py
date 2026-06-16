@@ -108,6 +108,8 @@ class NoteEvent:
     @property
     def duration_msec(self):
         """Get duration in milliseconds."""
+        if not self.duration_seconds:
+            return None
         return int(self.duration_seconds * 1000)
 
 NOTE_NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
