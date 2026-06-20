@@ -251,7 +251,7 @@ export class EmitContext {
         if (isNativeMode) {
             result = `Vis.emit(Vis.flist, ${this._count}, BASE + ${Math.floor(timeMs)}, ${lua})`;
         } else {
-            result = `Emit:new(${lua}):emit_at(BASE + ${Math.floor(timeMs)})`;
+            result = `Emit:new(${lua}):emit(BASE + ${Math.floor(timeMs)})`;
         }
 
         if (frameName) {

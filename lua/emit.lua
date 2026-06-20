@@ -47,8 +47,15 @@ end
 
 function Emit:copy() return Emit:new(self) end
 function Emit:clone() return self:copy() end
-function Emit:emit() VisUtil.emit_table(self._t) end
-function Emit:emit_at(t) self:when(t); return self:emit() end
+function Emit:emit(t)
+    if t ~= nil then
+        self:when(t)
+    end
+    return VisUtil.emit_table(self._t)
+end
+function Emit:emit_at(t)
+    self:emit(t)
+end
 function Emit:emit_now() return VisUtil.emit_table_now(self._t) end
 function Emit:set_trace() return VisUtil.set_trace_table(self._t) end
 function Emit:str() return VisUtil.stremit(self) end
@@ -69,9 +76,12 @@ function Emit:when(t)
 end
 
 function Emit:center(x, y, ux, uy, s, us)
+    self._t.x = x or Vis.WIDTH / 2
+    self._t.y = y or Vis.HEIGHT / 2
+    self._t.ux = ux or 0
+    self._t.uy = uy or 0
     self._t.s = s or 0
     self._t.us = us or 0
-    return VisUtil.center_emit_table(self._t, x, y, ux or 0, uy or 0)
 end
 
 function Emit:place(x, y, ux, uy, s, us)
@@ -145,14 +155,13 @@ function Emit:color(r, g, b, ur, ug, ub)
     self._t.ub = urgb[3]
 end
 
-function Emit:fadeto(r, g, b, ur, ug, ub)
-    local rgb, urgb = self:_parse_color(r, g, b, ur, ug, ub)
-    self._t.r = self._t.r + r
-    self._t.g = self._t.g + g
-    self._t.b = self._t.b + b
-    self._t.ur = self._t.ur + ur
-    self._t.ug = self._t.ug + ug
-    self._t.ub = self._t.ub + ub
+function Emit:blend_to(r, g, b, threshold)
+    local rgb = self:_parse_color(r, g, b, 0, 0, 0)
+    local currentrgb = {self._t.r, self._t.g, self._t.b}
+    local newrgb = VisUtil.blend_rgb(currentrgb, rgb, threshold)
+    self._t.r = newrgb[1]
+    self._t.g = newrgb[2]
+    self._t.b = newrgb[3]
 end
 
 function Emit:force(force)

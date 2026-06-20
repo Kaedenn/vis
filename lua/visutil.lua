@@ -853,4 +853,163 @@ function VisUtil.export_particles()
     return result
 end
 
+local function srgb_to_linear(c)
+    if c >= 0.04045 then
+        return ((c + 0.055)/(1 + 0.055)) ^ 2.4
+    else
+        return c / 12.92
+    end
+end
+
+local function linear_to_srgb(c)
+    if c >= 0.0031308 then
+        return 1.055 * (c ^ (1.0/2.4)) - 0.055
+    else
+        return 12.92 * c
+    end
+end
+
+function VisUtil.rgb2hsl(r, g, b)
+    local max, min = math.max(r, g, b), math.min(r, g, b)
+    local h, s, l = 0, 0, (max + min) / 2
+
+    if max == min then
+        h, s = 0, 0
+    else
+        local d = max - min
+        s = l > 0.5 and d / (2 - max - min) or d / (max + min)
+        if max == r then
+            h = (g - b) / d + (g < b and 6 or 0)
+        elseif max == g then
+            h = (b - r) / d + 2
+        elseif max == b then
+            h = (r - g) / d + 4
+        end
+        h = h / 6
+    end
+    return h * 360, s, l
+end
+
+function VisUtil.hsl2rgb(h, s, l)
+    h = (h % 360) / 360
+    local r, g, b
+
+    if s == 0 then
+        r, g, b = l, l, l
+    else
+        local function hue2rgb(p, q, t)
+            if t < 0 then t = t + 1 end
+            if t > 1 then t = t - 1 end
+            if t < 1/6 then return p + (q - p) * 6 * t end
+            if t < 1/2 then return q end
+            if t < 2/3 then return p + (q - p) * (2/3 - t) * 6 end
+            return p
+        end
+
+        local q = l < 0.5 and l * (1 + s) or l + s - l * s
+        local p = 2 * l - q
+        r = hue2rgb(p, q, h + 1/3)
+        g = hue2rgb(p, q, h)
+        b = hue2rgb(p, q, h - 1/3)
+    end
+    return r, g, b
+end
+
+function VisUtil.rgb2hsv(r, g, b)
+    local max, min = math.max(r, g, b), math.min(r, g, b)
+    local h, s, v = 0, 0, max
+
+    local d = max - min
+    s = max == 0 and 0 or d / max
+
+    if max == min then
+        h = 0
+    else
+        if max == r then
+            h = (g - b) / d + (g < b and 6 or 0)
+        elseif max == g then
+            h = (b - r) / d + 2
+        elseif max == b then
+            h = (r - g) / d + 4
+        end
+        h = h / 6
+    end
+    return h * 360, s, v
+end
+
+function VisUtil.hsv2rgb(h, s, v)
+    h = (h % 360) / 360
+    local r, g, b
+
+    local i = math.floor(h * 6)
+    local f = h * 6 - i
+    local p = v * (1 - s)
+    local q = v * (1 - f * s)
+    local t = v * (1 - (1 - f) * s)
+
+    i = i % 6
+
+    if i == 0 then r, g, b = v, t, p
+    elseif i == 1 then r, g, b = q, v, p
+    elseif i == 2 then r, g, b = p, v, t
+    elseif i == 3 then r, g, b = p, q, v
+    elseif i == 4 then r, g, b = t, p, v
+    elseif i == 5 then r, g, b = v, p, q
+    end
+
+    return r, g, b
+end
+
+function VisUtil.rgb2oklab(r, g, b)
+    local lr = srgb_to_linear(r)
+    local lg = srgb_to_linear(g)
+    local lb = srgb_to_linear(b)
+
+    local l = 0.4122214708 * lr + 0.5363325363 * lg + 0.0514459929 * lb
+    local m = 0.2119034982 * lr + 0.6806995451 * lg + 0.1073969566 * lb
+    local s = 0.0883024619 * lr + 0.2817188376 * lg + 0.6299787005 * lb
+
+    local l_ = (l >= 0 and l ^ (1/3) or -((-l) ^ (1/3)))
+    local m_ = (m >= 0 and m ^ (1/3) or -((-m) ^ (1/3)))
+    local s_ = (s >= 0 and s ^ (1/3) or -((-s) ^ (1/3)))
+
+    local L = 0.2104542553 * l_ + 0.7936177850 * m_ - 0.0040720468 * s_
+    local a = 1.9779984951 * l_ - 2.4285922050 * m_ + 0.4505937099 * s_
+    local b_ = 0.0259040371 * l_ + 0.7827717662 * m_ - 0.8086757660 * s_
+
+    return L, a, b_
+end
+
+function VisUtil.oklab2rgb(L, a, b_)
+    local l_ = L + 0.3963377774 * a + 0.2158037573 * b_
+    local m_ = L - 0.1055613458 * a - 0.0638541728 * b_
+    local s_ = L - 0.0894841775 * a - 1.2914855480 * b_
+
+    local l = l_ * l_ * l_
+    local m = m_ * m_ * m_
+    local s = s_ * s_ * s_
+
+    local lr =  4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s
+    local lg = -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s
+    local lb = -0.0041960863 * l - 0.7034186147 * m + 1.7076147010 * s
+
+    local r = linear_to_srgb(lr)
+    local g = linear_to_srgb(lg)
+    local b = linear_to_srgb(lb)
+
+    return r, g, b
+end
+
+function VisUtil.blend_rgb(rgb1, rgb2, threshold)
+    local L1, a1, b1 = VisUtil.rgb2oklab(rgb1[1], rgb1[2], rgb1[3])
+    local L2, a2, b2 = VisUtil.rgb2oklab(rgb2[1], rgb2[2], rgb2[3])
+
+    local L = L1 + (L2 - L1) * threshold
+    local a = a1 + (a2 - a1) * threshold
+    local b = b1 + (b2 - b1) * threshold
+
+    local r, g, bl = VisUtil.oklab2rgb(L, a, b)
+    return {r, g, bl}
+end
+
 return VisUtil
