@@ -24,6 +24,8 @@ struct particle {
     int vertices;
     float angle;
     union particle_tag tag;
+    double friction_coeff;
+    double gravity_coeff;
 };
 
 typedef struct particle* particle_t;
@@ -47,7 +49,9 @@ void particle_init_full(particle_t p,
                         blend_id blender,
                         int vertices,
                         float angle,
-                        union particle_tag tag);
+                        union particle_tag tag,
+                        double friction_coeff,
+                        double gravity_coeff);
 
 /* specific mutation functions */
 void particle_push(particle_t p, double dx, double dy);

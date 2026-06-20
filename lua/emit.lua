@@ -179,6 +179,14 @@ function Emit:force(force)
     self._t.force = force
 end
 
+function Emit:gravity(coeff)
+    self._t.gravity_coeff = coeff
+end
+
+function Emit:friction(coeff)
+    self._t.friction_coeff = coeff
+end
+
 function Emit:limit(limit)
     self._t.limit = limit
 end

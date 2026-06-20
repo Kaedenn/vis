@@ -440,7 +440,9 @@ static void evaluate_repl_buffer(script_t script) {
     BOOL executed = FALSE;
 
     /* Attempt as expression */
-    if (luaL_loadbuffer(script->L, kstring_content(stmt), kstring_length(stmt), "stdin") == LUA_OK) {
+    const char* stmt_content = kstring_content(stmt);
+    const size_t stmt_size = kstring_length(stmt);
+    if (luaL_loadbuffer(script->L, stmt_content, stmt_size, "stdin") == LUA_OK) {
         if (lua_pcall(script->L, 0, LUA_MULTRET, script->debugidx) == LUA_OK) {
             int nres = lua_gettop(script->L);
             if (nres > 0) {
@@ -463,7 +465,9 @@ static void evaluate_repl_buffer(script_t script) {
 
     if (!executed) {
         /* Attempt as statement */
-        if (luaL_loadbuffer(script->L, kstring_content(script->repl_buffer), kstring_length(script->repl_buffer), "stdin") == LUA_OK) {
+        const char* content = kstring_content(script->repl_buffer);
+        const size_t content_size = kstring_length(script->repl_buffer);
+        if (luaL_loadbuffer(script->L, content, content_size, "stdin") == LUA_OK) {
             if (lua_pcall(script->L, 0, LUA_MULTRET, script->debugidx) == LUA_OK) {
                 int nres = lua_gettop(script->L);
                 if (nres > 0) {
@@ -663,6 +667,8 @@ int initialize_vis_lib(lua_State* L) {
     NEW_VIS_CONST_INT(MUTATE_SET_RADIUS);
     NEW_VIS_CONST_INT(MUTATE_SET_VERTICES);
     NEW_VIS_CONST_INT(MUTATE_SET_ANGLE);
+    NEW_VIS_CONST_INT(MUTATE_SET_FRICTION);
+    NEW_VIS_CONST_INT(MUTATE_SET_GRAVITY);
     /* tag mutators */
     NEW_VIS_CONST_INT(MUTATE_TAG_SET);
     NEW_VIS_CONST_INT(MUTATE_TAG_INC);
@@ -688,6 +694,8 @@ int initialize_vis_lib(lua_State* L) {
     NEW_VIS_CONST_INT(MUTATE_SET_RADIUS_IF);
     NEW_VIS_CONST_INT(MUTATE_SET_VERTICES_IF);
     NEW_VIS_CONST_INT(MUTATE_SET_ANGLE_IF);
+    NEW_VIS_CONST_INT(MUTATE_SET_FRICTION_IF);
+    NEW_VIS_CONST_INT(MUTATE_SET_GRAVITY_IF);
     /* total number of mutators */
     NEW_VIS_CONST_INT(NMUTATES);
     /* mutate conditions */
@@ -980,6 +988,10 @@ static void merge_emit_table(lua_State* L, int arg, emit_desc* emit) {
                 DBPRINTF("Hashed string \"%s\" to %llx", value, emit->tag.ul);
 #endif
             }
+        } else if (!strcmp(key, "friction_coeff") || !strcmp(key, "friction")) { /* friction coeff */
+            emit->friction_coeff = luaL_checknumber(L, -1);
+        } else if (!strcmp(key, "gravity_coeff") || !strcmp(key, "gravity")) { /* gravity coeff */
+            emit->gravity_coeff = luaL_checknumber(L, -1);
         } else {
             EPRINTF("Unknown key in emit table %s (type %s)",
                     key, lua_typename(L, valtype));
@@ -1029,6 +1041,8 @@ emit_desc* emit_table_to_emit_desc(lua_State* L, int arg, fnum_t* when) {
     emit->blender = VIS_DEFAULT_BLEND;
     emit->vertices = 4;
     emit->angle = 0.0f;
+    emit->friction_coeff = VIS_FORCE_FRICTION_COEFF;
+    emit->gravity_coeff = VIS_FORCE_GRAVITY_FACTOR;
 
     /* Pre-fill the table with default configuration */
     lua_getglobal(L, "Vis");
@@ -1073,7 +1087,7 @@ int viscmd_debug_fn(lua_State* L) {
     kstring_appendvf(s, "%s", " }");
 #if DEBUG >= DEBUG_DEBUG || defined(DEBUG_SCRIPT_C)
     DBPRINTF("[%s:%d:%s]: Vis.debug(%s)", ar.source, ar.currentline, ar.name,
-            kstring_content(s));
+             kstring_content(s));
 #else
     fprintf(stderr, "%s:%d: Debug: %s", ar.source, ar.currentline,
             kstring_content(s));
@@ -1099,7 +1113,7 @@ int viscmd_debugp_fn(lua_State* L) {
     kstring_append(s, "\"");
 #if DEBUG >= DEBUG_DEBUG || defined(DEBUG_SCRIPT_C)
     DBPRINTF("[%s:%d:%s]: Vis.debug(%s)", ar.source, ar.currentline, ar.name,
-            kstring_content(s));
+             kstring_content(s));
 #else
     fprintf(stderr, "%s:%d: Debug: %s", ar.source, ar.currentline,
             kstring_content(s));
@@ -1139,7 +1153,7 @@ int viscmd_emit_fn(lua_State* L) {
     emit_desc* frame = emit_table_to_emit_desc(L, arg, &when);
     if (when != last_when && g_host->showprogress > 0) {
         DBPROGRESS("Vis.emit(%p, %d, %d, {x=%2.0f, y=%2.0f, ...})",
-                fl, frame->n, when, frame->x, frame->y);
+                   fl, frame->n, when, frame->x, frame->y);
         last_when = when;
     }
     flist_insert_emit(fl, when, frame);

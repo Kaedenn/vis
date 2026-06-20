@@ -114,6 +114,10 @@ const char* genlua_mutate(mutate_id fnid) {
         return "Vis.MUTATE_SET_VERTICES";
     case VIS_MUTATE_SET_ANGLE:
         return "Vis.MUTATE_SET_ANGLE";
+    case VIS_MUTATE_SET_FRICTION:
+        return "Vis.MUTATE_SET_FRICTION";
+    case VIS_MUTATE_SET_GRAVITY:
+        return "Vis.MUTATE_SET_GRAVITY";
     case VIS_MUTATE_TAG_SET:
         return "Vis.MUTATE_TAG_SET";
     case VIS_MUTATE_TAG_INC:
@@ -160,6 +164,10 @@ const char* genlua_mutate(mutate_id fnid) {
         return "Vis.MUTATE_SET_VERTICES_IF";
     case VIS_MUTATE_SET_ANGLE_IF:
         return "Vis.MUTATE_SET_ANGLE_IF";
+    case VIS_MUTATE_SET_FRICTION_IF:
+        return "Vis.MUTATE_SET_FRICTION_IF";
+    case VIS_MUTATE_SET_GRAVITY_IF:
+        return "Vis.MUTATE_SET_GRAVITY_IF";
     case VIS_NMUTATES:
         return "Vis.NMUTATES";
     default:

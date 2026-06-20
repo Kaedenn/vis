@@ -45,6 +45,7 @@ e:radius(2, 0)
 e:theta(math.pi, math.pi)
 e:life(2000, 500)
 e:color(BLUE1)
+e:blender(Vis.BLEND_NONE)
 
 local colors = {
     BLUE1,
@@ -86,6 +87,8 @@ for i = 1, 4 do
             e:color(BLUE1)
         end
         e:place(x, y, Vis.WIDTH / 100, Vis.HEIGHT / 100, Vis.WIDTH/20, Vis.WIDTH/20)
+        e:force(Vis.FORCE_GRAVITY)
+        e:gravity(0)
         e:emit_at(Vis.frames2msec(idx))
 
         m:emit_lines(1000 + Vis.frames2msec(12), {"radius=3 if even"}, MX, MY)
@@ -99,6 +102,12 @@ for i = 1, 4 do
             Vis.MUTATE_AGE_IF, Vis.MUTATE_IF_ABOVE, 1.0, 0, 0, 0, 0, Vis.HEIGHT / 2)
         Vis.mutate(Vis.flist, Vis.frames2msec(idx) + 2000,
             Vis.MUTATE_AGE_IF, Vis.MUTATE_IF_NEAR, 0, 0, Vis.WIDTH/10, 0, Vis.WIDTH/2, Vis.HEIGHT/2)
+
+        m:emit_lines(3000 + Vis.frames2msec(12), { "gravity = +/-0.03" }, MX, MY)
+        Vis.mutate(Vis.flist, Vis.frames2msec(idx) + 3000,
+            Vis.MUTATE_SET_GRAVITY_IF, Vis.MUTATE_IF_LEFT, 0.03, 0, 0, 0, Vis.WIDTH/2, Vis.HEIGHT/2)
+        Vis.mutate(Vis.flist, Vis.frames2msec(idx) + 3000,
+            Vis.MUTATE_SET_GRAVITY_IF, Vis.MUTATE_IF_RIGHT, -0.03, 0, 0, 0, Vis.WIDTH/2, Vis.HEIGHT/2)
     end
 end
 
@@ -147,4 +156,4 @@ desired_nmutates = desired_nmutates + 1
 desired_nmutated = desired_nmutated + e:get('count') * 2
 --]]
 
-Vis.exit(Vis.flist, 4000)
+Vis.exit(Vis.flist, 5000)

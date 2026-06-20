@@ -20,7 +20,9 @@ void particle_init_full(particle_t p, double x, double y,
                         force_id force, limit_id limit,
                         float rgba[4], blend_id blender,
                         int vertices, float angle,
-                        union particle_tag tag)
+                        union particle_tag tag,
+                        double friction_coeff,
+                        double gravity_coeff)
 {
     double spawn_angle = randdouble(theta-utheta, theta+utheta);
     double offset = randdouble(s-us, s+us);
@@ -44,6 +46,8 @@ void particle_init_full(particle_t p, double x, double y,
     p->vertices = vertices;
     p->angle = angle;
     p->tag = tag;
+    p->friction_coeff = friction_coeff;
+    p->gravity_coeff = gravity_coeff;
 }
 
 void particle_push(particle_t p, double dx, double dy) {

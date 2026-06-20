@@ -163,6 +163,16 @@ void mutate_set_angle(particle_t p, mutate_method* method) {
                                  method->factor[0] + method->factor[1]);
 }
 
+void mutate_set_friction(particle_t p, mutate_method* method) {
+    DEBUG_EXPRESSION(dbg_ctr.particles_mutated += 1);
+    p->friction_coeff = method->factor[0];
+}
+
+void mutate_set_gravity(particle_t p, mutate_method* method) {
+    DEBUG_EXPRESSION(dbg_ctr.particles_mutated += 1);
+    p->gravity_coeff = method->factor[0];
+}
+
 void mutate_tag_set(particle_t p, mutate_method* method) {
     DEBUG_EXPRESSION(dbg_ctr.particle_tags_modified += 1);
     p->tag.l = method->newtag.l;
@@ -227,6 +237,8 @@ GEN_COND_MUTATE_FN(mutate_set_dz)
 GEN_COND_MUTATE_FN(mutate_set_radius)
 GEN_COND_MUTATE_FN(mutate_set_vertices)
 GEN_COND_MUTATE_FN(mutate_set_angle)
+GEN_COND_MUTATE_FN(mutate_set_friction)
+GEN_COND_MUTATE_FN(mutate_set_gravity)
 
 #undef GEN_COND_MUTATE_FN
 

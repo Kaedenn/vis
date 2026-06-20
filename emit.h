@@ -37,6 +37,8 @@ typedef struct emit {
     int vertices;           /* number of vertices */
     float angle;            /* rotation angle */
     union particle_tag tag; /* initial particle tag */
+    double friction_coeff;  /* friction coefficient */
+    double gravity_coeff;   /* gravity coefficient */
 } emit_desc;
 
 emit_desc* emit_new(void);
@@ -59,6 +61,8 @@ void emit_set_blender(emit_desc* e, blend_id blender);
 void emit_set_shape(emit_desc* e, int vertices, float angle);
 
 void emit_set_tag(emit_desc* e, uint64_t tag);
+void emit_set_friction(emit_desc* e, double friction_coeff);
+void emit_set_gravity(emit_desc* e, double gravity_coeff);
 
 void dbprintf_emit_desc(emit_desc* e);
 

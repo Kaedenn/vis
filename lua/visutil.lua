@@ -6,7 +6,8 @@ VisUtil.EMIT_FIELDS = {
     "count", "when", "x", "y", "ux", "uy", "dx", "dy", "dz",
     "s", "us", "ds", "uds", "radius", "uradius", "depth", "theta", "utheta",
     "life", "ulife", "r", "g", "b", "ur", "ug", "ub",
-    "force", "limit", "blender", "vertices", "angle", "tag"
+    "force", "limit", "blender", "vertices", "angle", "tag",
+    "friction_coeff", "gravity_coeff"
 }
 
 VisUtil.Debug = {}
@@ -657,59 +658,37 @@ function VisUtil.color_emit_table(t, r, g, b, ur, ug, ub)
     t.ub = ub and ub>1 and ub/255.0 or (ub or t.ub)
 end
 
-function VisUtil.emit_table(t)
+function VisUtil._build_emit_payload(t)
+    local out = {}
+    for _, k in ipairs(VisUtil.EMIT_FIELDS) do
+        if t[k] ~= nil and k ~= "count" and k ~= "when" then
+            out[k] = t[k]
+        end
+    end
     local x, y = VisUtil.wrap_coord(t.x, t.y)
-    Vis.emit(Vis.flist, t.count, t.when, {
-        x = x, y = y,
-        ux = t.ux, uy = t.uy,
-        dx = t.dx, dy = t.dy,
-        depth = t.depth,
-        s = t.s, us = t.us,
-        rad = t.radius, urad = t.uradius,
-        ds = t.ds, uds = t.uds,
-        theta = t.theta, utheta = t.utheta,
-        life = t.life, ulife = t.ulife,
-        r = t.r, g = t.g, b = t.b,
-        ur = t.ur, ug = t.ug, ub = t.ub,
-        force = t.force,
-        limit = t.limit,
-        blender = t.blender,
-        tag = math.floor(tonumber(t.tag) or 0)
-    })
+    out.x = x
+    out.y = y
+    if t.tag ~= nil then
+        out.tag = math.floor(tonumber(t.tag) or 0)
+    end
+    return out
+end
+
+function VisUtil.emit_table(t)
+    Vis.emit(Vis.flist, t.count, t.when, VisUtil._build_emit_payload(t))
 end
 
 function VisUtil.emit_table_now(t)
-    local x, y = VisUtil.wrap_coord(t.x, t.y)
-    Vis.emitnow(Vis.script, t.count, {
-        x = x, y = y,
-        ux = t.ux, uy = t.uy,
-        dx = t.dx, dy = t.dy,
-        depth = t.depth,
-        s = t.s, us = t.us,
-        rad = t.radius, urad = t.uradius,
-        ds = t.ds, uds = t.uds,
-        theta = t.theta, utheta = t.utheta,
-        life = t.life, ulife = t.ulife,
-        r = t.r, g = t.g, b = t.b,
-        ur = t.ur, ug = t.ug, ub = t.ub,
-        force = t.force,
-        limit = t.limit,
-        blender = t.blender,
-        tag = math.floor(tonumber(t.tag) or 0)
-    })
+    Vis.emitnow(Vis.script, t.count, VisUtil._build_emit_payload(t))
 end
 
 function VisUtil.seek_to(t)
-    Vis.seek(t / 10)
+    Vis.seek(t / 10) -- Because audio uses 100ths of a second, not milliseconds
     Vis.seekms(Vis.flist, 0, t)
 end
 
 function VisUtil.set_trace_table(t)
-    Vis.settrace(Vis.script, t.count, t.x, t.y, t.ux, t.uy,
-                 t.dx, t.dy,
-                 t.depth, t.s, t.us, t.rad, t.urad, t.ds, t.uds,
-                 t.theta, t.utheta, t.life, t.ulife, t.r, t.g, t.b,
-                 t.ur, t.ug, t.ub, t.force, t.limit, t.blender)
+    Vis.settrace(Vis.script, t.count, VisUtil._build_emit_payload(t))
 end
 
 function VisUtil.mutate_tag(when, tagop, tagval)

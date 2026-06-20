@@ -42,6 +42,8 @@ void mutate_set_dz(particle_t p, mutate_method* method);
 void mutate_set_radius(particle_t p, mutate_method* method);
 void mutate_set_vertices(particle_t p, mutate_method* method);
 void mutate_set_angle(particle_t p, mutate_method* method);
+void mutate_set_friction(particle_t p, mutate_method* method);
+void mutate_set_gravity(particle_t p, mutate_method* method);
 
 void mutate_tag_set(particle_t p, mutate_method* method);
 void mutate_tag_inc(particle_t p, mutate_method* method);
@@ -68,6 +70,8 @@ void mutate_set_dz_if(particle_t p, mutate_method* method);
 void mutate_set_radius_if(particle_t p, mutate_method* method);
 void mutate_set_vertices_if(particle_t p, mutate_method* method);
 void mutate_set_angle_if(particle_t p, mutate_method* method);
+void mutate_set_friction_if(particle_t p, mutate_method* method);
+void mutate_set_gravity_if(particle_t p, mutate_method* method);
 
 void mutate_none(particle_t p, mutate_method* method);
 
@@ -88,6 +92,8 @@ static const mutate_fn MUTATE_MAP[VIS_NMUTATES+1] = {
     [VIS_MUTATE_SET_RADIUS] = mutate_set_radius,
     [VIS_MUTATE_SET_VERTICES] = mutate_set_vertices,
     [VIS_MUTATE_SET_ANGLE] = mutate_set_angle,
+    [VIS_MUTATE_SET_FRICTION] = mutate_set_friction,
+    [VIS_MUTATE_SET_GRAVITY] = mutate_set_gravity,
     [VIS_MUTATE_TAG_SET] = mutate_tag_set,
     [VIS_MUTATE_TAG_INC] = mutate_tag_inc,
     [VIS_MUTATE_TAG_DEC] = mutate_tag_dec,
@@ -111,6 +117,8 @@ static const mutate_fn MUTATE_MAP[VIS_NMUTATES+1] = {
     [VIS_MUTATE_SET_RADIUS_IF] = mutate_set_radius_if,
     [VIS_MUTATE_SET_VERTICES_IF] = mutate_set_vertices_if,
     [VIS_MUTATE_SET_ANGLE_IF] = mutate_set_angle_if,
+    [VIS_MUTATE_SET_FRICTION_IF] = mutate_set_friction_if,
+    [VIS_MUTATE_SET_GRAVITY_IF] = mutate_set_gravity_if,
     [VIS_NMUTATES] = mutate_none
 };
 
@@ -132,6 +140,8 @@ static inline BOOL mutate_is_conditional(mutate_id id) {
     case VIS_MUTATE_SET_RADIUS_IF:
     case VIS_MUTATE_SET_VERTICES_IF:
     case VIS_MUTATE_SET_ANGLE_IF:
+    case VIS_MUTATE_SET_FRICTION_IF:
+    case VIS_MUTATE_SET_GRAVITY_IF:
         return TRUE;
     default:
         return FALSE;
@@ -170,6 +180,8 @@ static inline BOOL mutate_is_unconditional(mutate_id id) {
     case VIS_MUTATE_SET_RADIUS:
     case VIS_MUTATE_SET_VERTICES:
     case VIS_MUTATE_SET_ANGLE:
+    case VIS_MUTATE_SET_FRICTION:
+    case VIS_MUTATE_SET_GRAVITY:
         return TRUE;
     default:
         return FALSE;

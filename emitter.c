@@ -236,6 +236,7 @@ void emit_frame(emit_desc* frame) {
                 frame->force, frame->limit,
                 rgba, frame->blender,
                 frame->vertices, frame->angle,
-                frame->tag);
+                frame->tag,
+                frame->friction_coeff, frame->gravity_coeff);
     }
 }
