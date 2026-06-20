@@ -71,7 +71,6 @@ struct drawer {
 const GLchar* GEOM_SOURCE = "glsl/geom.glsl";
 const GLchar* VERT_SOURCE = "glsl/vert.glsl";
 const GLchar* FRAG_SOURCE = "glsl/frag.glsl";
-const GLchar* COMPUTE_SOURCE = "glsl/compute.glsl";
 
 void glfw_error_callback(int error, const char* description) {
     EPRINTF("GLFW Error (%d): %s\n", error, description);
@@ -116,10 +115,10 @@ drawer_t drawer_new(const clargs_t args) {
     glEnable(GL_DEPTH_TEST);
 
     /* Initialize shader */
-    drawer->shader = shader_create(GEOM_SOURCE, VERT_SOURCE,
-                                   FRAG_SOURCE, COMPUTE_SOURCE);
-    if (!drawer->shader) {
+    drawer->shader = shader_new(GEOM_SOURCE, VERT_SOURCE, FRAG_SOURCE);
+    if (!shader_load(drawer->shader)) {
         EPRINTF("%s\n", "Failed to compile shaders");
+        shader_free(drawer->shader);
         return NULL;
     }
 

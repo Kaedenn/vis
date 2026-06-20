@@ -58,63 +58,43 @@ GLuint compile_shader(const GLchar* shader_path, GLenum shader_type) {
     return shader_program;
 }
 
-shader_t* shader_create(const GLchar* geom_path, const GLchar* vertex_path,
-                        const GLchar* fragment_path, const GLchar* compute_path) {
+shader_t* shader_new(const GLchar* geom_path, const GLchar* vertex_path,
+                     const GLchar* fragment_path) {
     shader_t* shader = DBMALLOC(sizeof(shader_t));
-    shader->geom_path = stralloc(strlen(geom_path) + 1);
-    shader->vertex_path = stralloc(strlen(vertex_path) + 1);
-    shader->fragment_path = stralloc(strlen(fragment_path) + 1);
-    shader->compute_path = stralloc(strlen(compute_path) + 1);
+    shader->geom_path = dupstr(geom_path);
+    shader->vertex_path = dupstr(vertex_path);
+    shader->fragment_path = dupstr(fragment_path);
     shader->shader_id = 0;
-    strcpy(shader->geom_path, geom_path);
-    strcpy(shader->vertex_path, vertex_path);
-    strcpy(shader->fragment_path, fragment_path);
-    strcpy(shader->compute_path, compute_path);
+    return shader;
+}
 
-    GLuint geom_shader_id = compile_shader(geom_path, GL_GEOMETRY_SHADER);
+BOOL shader_load(shader_t* shader) {
+    GLuint geom_shader_id = compile_shader(shader->geom_path, GL_GEOMETRY_SHADER);
     if (geom_shader_id == (GLuint)-1) {
-        shader_free(shader);
-        return NULL;
+        return FALSE;
     }
-    GLuint vertex_shader_id = compile_shader(vertex_path, GL_VERTEX_SHADER);
+    GLuint vertex_shader_id = compile_shader(shader->vertex_path, GL_VERTEX_SHADER);
     if (vertex_shader_id == (GLuint)-1) {
         glDeleteShader(geom_shader_id);
-        shader_free(shader);
-        return NULL;
+        return FALSE;
     }
-    GLuint fragment_shader_id = compile_shader(fragment_path, GL_FRAGMENT_SHADER);
+    GLuint fragment_shader_id = compile_shader(shader->fragment_path, GL_FRAGMENT_SHADER);
     if (fragment_shader_id == (GLuint)-1) {
         glDeleteShader(geom_shader_id);
         glDeleteShader(vertex_shader_id);
-        shader_free(shader);
-        return NULL;
+        return FALSE;
     }
-    GLuint compute_shader_id = compile_shader(compute_path, GL_COMPUTE_SHADER);
-    if (compute_shader_id == (GLuint)-1) {
-        glDeleteShader(geom_shader_id);
-        glDeleteShader(vertex_shader_id);
-        glDeleteShader(fragment_shader_id);
-        shader_free(shader);
-        return NULL;
-    }
-
     GLuint vertex_program = glCreateProgram();
     glAttachShader(vertex_program, geom_shader_id);
     glAttachShader(vertex_program, vertex_shader_id);
     glAttachShader(vertex_program, fragment_shader_id);
     glLinkProgram(vertex_program);
 
-    GLuint compute_program = glCreateProgram();
-    glAttachShader(compute_program, compute_shader_id);
-    glLinkProgram(compute_program);
-
     shader->shader_id = vertex_program;
-    shader->compute_shader_id = compute_program;
 
     glDeleteShader(geom_shader_id);
     glDeleteShader(vertex_shader_id);
     glDeleteShader(fragment_shader_id);
-    glDeleteShader(compute_shader_id);
 
     GLint success;
     glGetProgramiv(vertex_program, GL_LINK_STATUS, &success);
@@ -122,32 +102,20 @@ shader_t* shader_create(const GLchar* geom_path, const GLchar* vertex_path,
         char info_log[1024] = {0};
         glGetProgramInfoLog(vertex_program, sizeof(info_log), NULL, info_log);
         EPRINTF("Linking shaders failed: %s\n", info_log);
-        shader_free(shader);
-        return NULL;
+        shader->shader_id = 0;
+        glDeleteProgram(vertex_program);
+        return FALSE;
     }
 
-    glGetProgramiv(compute_program, GL_LINK_STATUS, &success);
-    if (!success) {
-        char info_log[1024] = {0};
-        glGetProgramInfoLog(vertex_program, sizeof(info_log), NULL, info_log);
-        EPRINTF("Linking shaders failed: %s\n", info_log);
-        shader_free(shader);
-        return NULL;
-    }
-
-    return shader;
+    return TRUE;
 }
 
 void shader_free(shader_t* shader) {
     free(shader->geom_path);
     free(shader->vertex_path);
     free(shader->fragment_path);
-    free(shader->compute_path);
     if (shader->shader_id != 0) {
         glDeleteProgram(shader->shader_id);
-    }
-    if (shader->compute_shader_id != 0) {
-        glDeleteProgram(shader->compute_shader_id);
     }
     free(shader);
 }
@@ -156,15 +124,6 @@ void shader_use(const shader_t* shader) {
     glUseProgram(shader->shader_id);
 }
 
-void shader_compute_use(const shader_t* shader) {
-    glUseProgram(shader->compute_shader_id);
-}
-
 GLint shader_get_uniform(const shader_t* shader, const GLchar* variable_name) {
     return glGetUniformLocation(shader->shader_id, variable_name);
-}
-
-GLint shader_compute_get_uniform(const shader_t* shader,
-                                 const GLchar* variable_name) {
-    return glGetUniformLocation(shader->compute_shader_id, variable_name);
 }
