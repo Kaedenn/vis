@@ -42,9 +42,13 @@ Vis.on_quit(function()
     fec = Vis.get_debug(Vis.script, 'FRAME-EMIT-COUNTS')
     for id,count in pairs(fec) do
         if count > 0 then
-            print(("Vis.%s = %d"):format(ftype_names[id], count))
+            print(("Vis.%s invoked %d time(s)"):format(ftype_names[id], count))
         end
     end
+    assert(fec[Vis.FTYPE_EMIT] == 1,
+           ("%d == %d"):format(fec[Vis.FTYPE_EMIT], 1))
+    assert(fec[Vis.FTYPE_EXIT] == 1,
+           ("%d == %d"):format(fec[Vis.FTYPE_EXIT], 1))
     assert(fec[Vis.FTYPE_BGCOLOR] == nframes,
            ("%d == %d"):format(fec[Vis.FTYPE_BGCOLOR], nframes))
 end)
