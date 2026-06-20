@@ -11,29 +11,34 @@
 #include <GL/gl.h>
 #include <GL/glew.h>
 
-GLuint compile_shader(const GLchar* shader_path, GLenum shader_type) {
-    FILE* fobj = fopen(shader_path, "r");
+static char* read_file_full(const char* file_path) {
+    FILE* fobj = fopen(file_path, "r");
     if (!fobj) {
-        EPRINTF("Error %d opening \"%s\": %s\n", errno, strerror(errno),
-                shader_path);
-        return (GLuint)-1;
+        EPRINTF("Error %d opening \"%s\": %s\n", errno, strerror(errno), file_path);
+        return NULL;
     }
 
     size_t bufsize = 4096;
     char* buffer = stralloc(bufsize);
     char line[1024] = {0};
-    while (!feof(fobj)) {
-        fgets(line, sizeof(line), fobj);
-        if (ferror(fobj)) {
-            EPRINTF("read(\"%s\") error %d %s\n", shader_path, errno,
-                    strerror(errno));
-            fclose(fobj);
-            free(buffer);
-            return (GLuint)-1;
-        }
+    while (fgets(line, sizeof(line), fobj) != NULL) {
         allocat(buffer, line, &bufsize);
     }
+    if (ferror(fobj)) {
+        EPRINTF("read(\"%s\") error %d %s\n", file_path, errno, strerror(errno));
+        fclose(fobj);
+        free(buffer);
+        return NULL;
+    }
     fclose(fobj);
+    return buffer;
+}
+
+GLuint compile_shader(const GLchar* shader_path, GLenum shader_type) {
+    char* buffer = read_file_full(shader_path);
+    if (!buffer) {
+        return (GLuint)-1;
+    }
 
     GLuint shader_program = glCreateShader(shader_type);
     glShaderSource(shader_program, 1, (const GLchar* const*)&buffer, NULL);
@@ -55,7 +60,7 @@ GLuint compile_shader(const GLchar* shader_path, GLenum shader_type) {
 
 shader_t* shader_create(const GLchar* geom_path, const GLchar* vertex_path,
                         const GLchar* fragment_path, const GLchar* compute_path) {
-    shader_t* shader = (shader_t*)malloc(sizeof(shader_t));
+    shader_t* shader = DBMALLOC(sizeof(shader_t));
     shader->geom_path = stralloc(strlen(geom_path) + 1);
     shader->vertex_path = stralloc(strlen(vertex_path) + 1);
     shader->fragment_path = stralloc(strlen(fragment_path) + 1);
