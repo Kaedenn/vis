@@ -96,8 +96,23 @@ endif
 LDFLAGS_FAST = -O3 -flto
 LDFLAGS_PROF = -pg
 
-CFLAGS_LIBS = -I/usr/include/luajit-2.1
-LDFLAGS_LIBS = -lluajit-5.1 -lglfw -lGL -lGLEW
+USE_LUAJIT ?= 1
+
+ifeq ($(USE_LUAJIT),1)
+LUA_PKG = luajit
+else
+LUA_PKG = lua5.3
+endif
+
+CFLAGS_LUA = $(call pkg_cflags,$(LUA_PKG))
+LDFLAGS_LUA = $(call pkg_ldflags,$(LUA_PKG))
+
+ifeq ($(CFLAGS_LUA),)
+$(error Could not find package $(LUA_PKG))
+endif
+
+CFLAGS_LIBS = $(CFLAGS_LUA)
+LDFLAGS_LIBS = $(LDFLAGS_LUA) -lglfw -lGL -lGLEW
 
 CFLAGS := $(CFLAGS) $(CFLAGS_LIBS) $(EXTRA_CFLAGS) $(CFLAGS_AUDIO) $(CFLAGS_FREETYPE)
 LDFLAGS := $(LDFLAGS) $(LDFLAGS_LIBS) $(EXTRA_LDFLAGS) $(LDFLAGS_AUDIO) $(LDFLAGS_FREETYPE)
@@ -201,57 +216,74 @@ test/test_klist: test/test_klist.c klist.c helper.c
 
 LUA_TEST_TARGETS := $(patsubst $(DIR)/test/%.lua,%,$(LUA_TESTS))
 .PHONY: $(LUA_TEST_TARGETS)
-$(LUA_TEST_TARGETS): $(VIS)
+$(LUA_TEST_TARGETS): | $(VIS)
 	$(VIS) -i -l $(DIR)/test/$@.lua
 
+BIN_TEST_TARGETS := $(patsubst $(DIR)/test/%,run_%,$(BIN_TESTS))
+.PHONY: $(BIN_TEST_TARGETS)
+$(BIN_TEST_TARGETS): run_%: | $(BIN_TESTS)
+	$(DIR)/test/$* --automated
+
+.PHONY: testbin
+testbin: $(BIN_TEST_TARGETS)
+
+.PHONY: testlua
+testlua: $(filter-out test_4_kbmouse,$(LUA_TEST_TARGETS))
+
 .PHONY: testall
-testall: | $(TESTS)
-	test -x "$(VIS)" || $(MAKE) debug
-	for i in $(LUA_TESTS); do $(VIS) -i -l $$i || exit 1; done
-	for i in $(BIN_TESTS); do $$i --automated || exit 1; done
+testall: $(LUA_TEST_TARGETS) $(BIN_TEST_TARGETS)
 
 .PHONY: test
-test: | $(TESTS)
-	test -x "$(VIS)" || $(MAKE) debug
-	for i in $(filter-out $(DIR)/test/test_4_kbmouse.lua,$(LUA_TESTS)); do $(VIS) -i -l $$i || exit 1; done
-	for i in $(BIN_TESTS); do $$i --automated || exit 1; done
+test: testlua testbin
 
+.PHONY: valgrind
 valgrind: debug
 	$(VALGRIND) $(VIS) $(EXEC_ARGS)
 
+.PHONY: leakcheck
 leakcheck: debug
 	$(VALGRIND) $(VG_LEAKCHECK) $(VIS) $(EXEC_ARGS)
 
+.PHONY: leakcheck-reachable
 leakcheck-reachable: debug
 	$(VALGRIND) $(VG_REACHABLE) $(VIS) $(EXEC_ARGS)
 
+.PHONY: clean
 clean:
 	- $(RM) $(OBJDIR)/*.o $(DEPDIR)/*.d 2>$(DEVNULL)
 
+.PHONY: cleaner
 cleaner:
 	- $(RM) -r $(DEPDIR) 2>$(DEVNULL)
 	- $(RM) -r $(OBJDIR) 2>$(DEVNULL)
 	- $(RM) $(VIS) .cflags 2>$(DEVNULL)
 	- $(RM) $(BIN_TESTS) 2>$(DEVNULL)
 
+.PHONY: distclean
 distclean: cleaner fp-prep
 	- $(RM) -r 3rdparty/luautf8-0.2.0/ 2>$(DEVNULL)
 
+.PHONY: encode
 encode:
 	python3 $(SCR_PROCESS) "$(FP_BASE)" "$(FP_AVI)" -i "$(FP_AUDIO)" $(SCR_ARGS)
 
+.PHONY: fp-prep
 fp-prep:
 	- $(MAKE) fp-cleanup
 
+.PHONY: fp-makeframes
 fp-makeframes: fp-prep
 	$(VIS) -l $(FP_SCRIPT) -d $(FP_BASE) -i -q -s 4
 
+.PHONY: fp-encode
 fp-encode:
 	$(MAKE) encode
 
+.PHONY: fp-cleanup
 fp-cleanup:
 	$(RM) $(FP_BASE)_*.png 2>$(DEVNULL)
 
+.PHONY: finalproduct
 finalproduct: all fp-prep fp-makeframes fp-encode fp-cleanup
 
 include $(DEPFILES)

@@ -30,7 +30,7 @@
   ((idx) > 0 || (idx) <= LUA_REGISTRYINDEX ? (idx) : lua_gettop(L) + (idx) + 1)
 #endif
 
-#ifndef luaL_requiref
+#if LUA_VERSION_NUM < 502
 static void luaL_requiref(lua_State *L, const char *modname,
                           lua_CFunction openf, int glb) {
     lua_getglobal(L, "package");
@@ -759,7 +759,11 @@ int initialize_vis_lib(lua_State* L) {
 /* Assign _G.Arguments = {args...} */
 void prepare_stack(script_t s, klist args) {
     s->debugidx = lua_gettop(s->L);
+#if LUA_VERSION_NUM >= 502
+    lua_pushglobaltable(s->L);
+#else
     lua_pushvalue(s->L, LUA_GLOBALSINDEX);
+#endif
     lua_pushstring(s->L, "Arguments");
     if (args != NULL) {
         lua_createtable(s->L, (int)klist_length(args), 0);
@@ -772,7 +776,7 @@ void prepare_stack(script_t s, klist args) {
         lua_createtable(s->L, 0, 0);
     }
     lua_settable(s->L, -3);
-    lua_pop(s->L, 1); /* lua_pushvalue(s->L, LUA_GLOBALSINDEX) */
+    lua_pop(s->L, 1); /* lua_pushglobaltable/lua_pushvalue */
     VIS_ASSERT(lua_gettop(s->L) == 0);
 }
 

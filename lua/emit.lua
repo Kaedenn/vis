@@ -51,11 +51,9 @@ function Emit:emit(t)
     if t ~= nil then
         self:when(t)
     end
-    return VisUtil.emit_table(self._t)
+    VisUtil.emit_table(self._t)
 end
-function Emit:emit_at(t)
-    self:emit(t)
-end
+function Emit:emit_at(t) self:emit(t) end
 function Emit:emit_now() return VisUtil.emit_table_now(self._t) end
 function Emit:set_trace() return VisUtil.set_trace_table(self._t) end
 function Emit:str() return VisUtil.stremit(self) end
@@ -155,8 +153,21 @@ function Emit:color(r, g, b, ur, ug, ub)
     self._t.ub = urgb[3]
 end
 
-function Emit:blend_to(r, g, b, threshold)
-    local rgb = self:_parse_color(r, g, b, 0, 0, 0)
+function Emit:blend_to(...)
+    local num_args = select("#", ...)
+    local args = {...}
+    local rgb, threshold
+
+    if num_args == 1 or num_args == 2 then
+        rgb = args[1]
+        threshold = args[2]
+    elseif num_args == 3 or num_args == 4 then
+        rgb = {args[1], args[2], args[3]}
+        threshold = args[4]
+    else
+        error("Emit:blend_to expects (rgb, threshold) or (r, g, b, threshold)")
+    end
+
     local currentrgb = {self._t.r, self._t.g, self._t.b}
     local newrgb = VisUtil.blend_rgb(currentrgb, rgb, threshold)
     self._t.r = newrgb[1]
