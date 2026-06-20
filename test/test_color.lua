@@ -163,7 +163,7 @@ end
 local function test_blend()
     local c1 = {1, 0, 0}
     local c2 = {0, 0, 1}
-    
+
     local b0 = VisUtil.blend_rgb(c1, c2, 0)
     assert_approx(b0[1], 1, EPS, "Blend 0 R")
     assert_approx(b0[2], 0, EPS, "Blend 0 G")
@@ -173,7 +173,7 @@ local function test_blend()
     assert_approx(b1[1], 0, EPS, "Blend 1 R")
     assert_approx(b1[2], 0, EPS, "Blend 1 G")
     assert_approx(b1[3], 1, EPS, "Blend 1 B")
-    
+
     local b05 = VisUtil.blend_rgb(c1, c2, 0.5)
     assert(b05[1] > 0.0, "Blend 0.5 R")
     assert(b05[3] > 0.0, "Blend 0.5 B")

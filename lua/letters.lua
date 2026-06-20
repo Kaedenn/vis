@@ -3,6 +3,7 @@ _, utf8 = pcall(require, "utf8")
 
 if not utf8 then
     utf8 = {}
+    ---@diagnostic disable-next-line: duplicate-set-field
     utf8.codes = function(s)
         local i = 1
         return function()
@@ -57,6 +58,46 @@ function unpack_hex(...)
         end
     end
     return result
+end
+
+function Letters.top_partial(t)
+    local target_len = Letters.LETTER_WIDTH * Letters.LETTER_HEIGHT
+    local new_t = {}
+    for i = 1, #t do new_t[i] = t[i] end
+    while #new_t < target_len do
+        table.insert(new_t, 0)
+    end
+    return new_t
+end
+
+function Letters.bottom_partial(t)
+    local target_len = Letters.LETTER_WIDTH * Letters.LETTER_HEIGHT
+    local new_t = {}
+    for i = 1, #t do new_t[i] = t[i] end
+    while #new_t < target_len do
+        table.insert(new_t, 1, 0)
+    end
+    return new_t
+end
+
+function Letters.center_partial(t)
+    local target_len = Letters.LETTER_WIDTH * Letters.LETTER_HEIGHT
+    local diff = target_len - #t
+    local new_t = {}
+    for i = 1, #t do new_t[i] = t[i] end
+    if diff <= 0 then return new_t end
+
+    local diff_rows = math.floor(diff / Letters.LETTER_WIDTH)
+    local top_pad_rows = math.floor(diff_rows / 2)
+    local top_pad_elements = top_pad_rows * Letters.LETTER_WIDTH
+
+    for i = 1, top_pad_elements do
+        table.insert(new_t, 1, 0)
+    end
+    while #new_t < target_len do
+        table.insert(new_t, 0)
+    end
+    return new_t
 end
 
 -- Determine the width and height of a given string
@@ -130,7 +171,11 @@ Combiners = {
         0, 0, 1, 0, 0,
         0, 1, 0, 1, 0,
         0, 0, 1, 0, 0
-    }
+    },
+    ["MACRON"] = {
+        0, 1, 1, 1, 0,
+        0, 0, 0, 0, 0
+    },
 }
 
 Letters['\n'] = {}
@@ -860,7 +905,8 @@ Letters['\xa0'] = Letters[' ']
 
 -- 0xa7 § SECTION SIGN (TODO)
 
--- 0xa8 ¨ DIAERESIS (TODO)
+-- 0xa8 ¨ DIAERESIS
+Letters['\xa8'] = Letters.top_partial(Combiners["DIAERESIS"])
 
 -- 0xa9 © COPYRIGHT SIGN (TODO)
 
@@ -870,13 +916,16 @@ Letters['\xa0'] = Letters[' ']
 
 -- 0xac ¬ NOT SIGN (TODO)
 
--- 0xad ­ SOFT HYPHEN (TODO)
+-- 0xad ­ SOFT HYPHEN (Approximate)
+Letters['\xad'] = Letters[' ']
 
 -- 0xae ® REGISTERED SIGN (TODO)
 
--- 0xaf ¯ MACRON (TODO)
+-- 0xaf ¯ MACRON
+Letters['\xaf'] = Letters.bottom_partial(Combiners["MACRON"])
 
--- 0xb0 ° DEGREE SIGN (TODO)
+-- 0xb0 ° DEGREE SIGN
+Letters['\xb0'] = Letters.top_partial(Combiners["RING ABOVE"])
 
 -- 0xb1 ± PLUS-MINUS SIGN (TODO)
 
@@ -884,19 +933,23 @@ Letters['\xa0'] = Letters[' ']
 
 -- 0xb3 ³ SUPERSCRIPT THREE (TODO)
 
--- 0xb4 ´ ACUTE ACCENT (TODO)
+-- 0xb4 ´ ACUTE ACCENT
+Letters['\xb4'] = Letters.top_partial(Combiners["ACUTE"])
 
 -- 0xb5 µ MICRO SIGN (TODO)
 
 -- 0xb6 ¶ PILCROW SIGN (TODO)
 
--- 0xb7 · MIDDLE DOT (TODO)
+-- 0xb7 · MIDDLE DOT
+Letters['\xb7'] = Letters.center_partial({0, 0, 1, 0, 0})
 
--- 0xb8 ¸ CEDILLA (TODO)
+-- 0xb8 ¸ CEDILLA (Approximate)
+Letters['\xb8'] = Letters[',']
 
 -- 0xb9 ¹ SUPERSCRIPT ONE (TODO)
 
--- 0xba º MASCULINE ORDINAL INDICATOR (TODO)
+-- 0xba º MASCULINE ORDINAL INDICATOR
+Letters['\xba'] = Letters.top_partial(Combiners["RING ABOVE"])
 
 -- 0xbb » RIGHT-POINTING DOUBLE ANGLE QUOTATION MARK (TODO)
 

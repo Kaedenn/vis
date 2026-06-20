@@ -4,7 +4,7 @@
 -- lua test/test_letters.lua
 --
 
-Letters = require("lua.letters")
+Letters = require("letters")
 ASCII = {}
 
 function dump_letter(letter)

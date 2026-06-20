@@ -27,7 +27,7 @@ Vis.callback(Vis.flist, verify_time, Vis.script, function()
         end
         f:close()
     end
-    
+
     os.remove(tmpfile)
 
     -- We expect 101 lines: 1 header row + 100 particles

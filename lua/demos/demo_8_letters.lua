@@ -5,6 +5,10 @@ Emit = require("emit")
 math = require("math")
 table = require("table")
 
+local function pack(...)
+    return {n = select("#", ...), ...}
+end
+
 message = "What does this button do?"
 
 function assert_extents()
@@ -61,7 +65,7 @@ function emit_char(c, x, y, lx, ly, zoom)
 end
 
 function emit_message(msg, x, y, zoom)
-    for i,ord in ipairs(table.pack(msg:byte(1, #msg))) do
+    for i,ord in ipairs(pack(msg:byte(1, #msg))) do
         chr = string.char(ord)
         emit_char(chr, x, y, (i-1) * (Letters.LETTER_WIDTH+1), 0, zoom)
     end

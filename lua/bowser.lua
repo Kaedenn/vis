@@ -102,9 +102,14 @@ os = require("os")
 Debug = VisUtil.Debug
 
 -- TRACK_n constants
-for i = 1,8 do
-    _G['TRACK_'..i] = i
-end
+TRACK_1 = 1
+TRACK_2 = 2
+TRACK_3 = 3
+TRACK_4 = 4
+TRACK_5 = 5
+TRACK_6 = 6
+TRACK_7 = 7
+TRACK_8 = 8
 TRACKS = 8
 
 -- Important timekeeping variables
