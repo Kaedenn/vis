@@ -37,7 +37,7 @@ ifeq ($(UNAME_S),Linux)
 SRCS := $(SRCS) audio/pa_latency_probe.c
 endif
 
-LUA_TESTS := $(wildcard $(DIR)/test/test_*.lua)
+LUA_TESTS := $(sort $(wildcard $(DIR)/test/test_*.lua))
 C_TESTS := $(wildcard $(DIR)/test/test_*.c)
 BIN_TESTS := $(patsubst %.c,%,$(C_TESTS))
 TESTS := $(LUA_TESTS) $(BIN_TESTS)
