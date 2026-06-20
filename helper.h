@@ -8,9 +8,6 @@
 #include <string.h>
 #include <stdint.h>
 
-/* open or print the appropriate error */
-FILE* try_fopen(const char* path, const char* mode);
-
 /* malloc+assert */
 void* chmalloc(size_t nbytes);
 void* chrealloc(void* ptr, size_t nbytes);

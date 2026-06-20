@@ -1,7 +1,5 @@
 
-#include "defines.h"
 #include "shader.h"
-#include "helper.h"
 #include <errno.h>
 #include <stddef.h>
 #include <stdio.h>
@@ -37,7 +35,7 @@ static char* read_file_full(const char* file_path) {
 GLuint compile_shader(const GLchar* shader_path, GLenum shader_type) {
     char* buffer = read_file_full(shader_path);
     if (!buffer) {
-        return (GLuint)-1;
+        return GL_INVALID_INDEX;
     }
 
     GLuint shader_program = glCreateShader(shader_type);
@@ -48,17 +46,21 @@ GLuint compile_shader(const GLchar* shader_path, GLenum shader_type) {
     GLint success;
     glGetShaderiv(shader_program, GL_COMPILE_STATUS, &success);
     if (!success) {
-        char info_log[1024] = {0};
-        glGetShaderInfoLog(shader_program, sizeof(info_log), NULL, info_log);
+        GLint log_length = 0;
+        glGetShaderiv(shader_program, GL_INFO_LOG_LENGTH, &log_length);
+        char* info_log = stralloc((size_t)log_length + 1);
+        glGetShaderInfoLog(shader_program, log_length + 1, NULL, info_log);
         EPRINTF("Compiling \"%s\" failed: %s\n", shader_path, info_log);
+        DZFREE(info_log);
         glDeleteShader(shader_program);
-        return (GLuint)-1;
+        return GL_INVALID_INDEX;
     }
 
     return shader_program;
 }
 
-shader_t* shader_new(const GLchar* geom_path, const GLchar* vertex_path,
+shader_t* shader_new(const GLchar* geom_path,
+                     const GLchar* vertex_path,
                      const GLchar* fragment_path) {
     shader_t* shader = DBMALLOC(sizeof(shader_t));
     shader->geom_path = dupstr(geom_path);
@@ -70,16 +72,16 @@ shader_t* shader_new(const GLchar* geom_path, const GLchar* vertex_path,
 
 BOOL shader_load(shader_t* shader) {
     GLuint geom_shader_id = compile_shader(shader->geom_path, GL_GEOMETRY_SHADER);
-    if (geom_shader_id == (GLuint)-1) {
+    if (geom_shader_id == GL_INVALID_INDEX) {
         return FALSE;
     }
     GLuint vertex_shader_id = compile_shader(shader->vertex_path, GL_VERTEX_SHADER);
-    if (vertex_shader_id == (GLuint)-1) {
+    if (vertex_shader_id == GL_INVALID_INDEX) {
         glDeleteShader(geom_shader_id);
         return FALSE;
     }
     GLuint fragment_shader_id = compile_shader(shader->fragment_path, GL_FRAGMENT_SHADER);
-    if (fragment_shader_id == (GLuint)-1) {
+    if (fragment_shader_id == GL_INVALID_INDEX) {
         glDeleteShader(geom_shader_id);
         glDeleteShader(vertex_shader_id);
         return FALSE;
@@ -99,9 +101,12 @@ BOOL shader_load(shader_t* shader) {
     GLint success;
     glGetProgramiv(vertex_program, GL_LINK_STATUS, &success);
     if (!success) {
-        char info_log[1024] = {0};
-        glGetProgramInfoLog(vertex_program, sizeof(info_log), NULL, info_log);
+        GLint log_length = 0;
+        glGetProgramiv(vertex_program, GL_INFO_LOG_LENGTH, &log_length);
+        char* info_log = stralloc((size_t)log_length + 1);
+        glGetProgramInfoLog(vertex_program, log_length + 1, NULL, info_log);
         EPRINTF("Linking shaders failed: %s\n", info_log);
+        DZFREE(info_log);
         shader->shader_id = 0;
         glDeleteProgram(vertex_program);
         return FALSE;
@@ -111,9 +116,9 @@ BOOL shader_load(shader_t* shader) {
 }
 
 void shader_free(shader_t* shader) {
-    free(shader->geom_path);
-    free(shader->vertex_path);
-    free(shader->fragment_path);
+    DZFREE(shader->geom_path);
+    DZFREE(shader->vertex_path);
+    DZFREE(shader->fragment_path);
     if (shader->shader_id != 0) {
         glDeleteProgram(shader->shader_id);
     }

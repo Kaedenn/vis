@@ -19,6 +19,7 @@ pkg_ldflags = $(shell pkg-config --exists $(1) && pkg-config --libs $(1))
 DIR = .
 OBJDIR = $(DIR)/.o
 DEPDIR = $(DIR)/.d
+DEVNULL ?= /dev/null
 
 SRCS := async.c audio.c clargs.c drawer.c driver.c emit.c \
 	emitter.c flist.c genlua.c helper.c klist.c kstring.c \
@@ -123,7 +124,6 @@ VALGRIND_DEFAULT = valgrind $(VG_SUPP) --num-callers=64
 VALGRIND = $(VALGRIND_DEFAULT) $(VALGRIND_EXTRA)
 
 SCR_PROCESS = $(DIR)/scripts/process.py
-SCR_MAKEDEP = $(DIR)/scripts/makedep.sh
 SCR_ARGS ?=
 
 FP_DIR = output
@@ -144,12 +144,22 @@ fast release debug trace: $(DEPFILES) $(SOURCES) $(VIS)
 profile: $(SOURCES) $(VIS)
 	$(VIS) -i -l $(DIR)/lua/demos/demo_5_random.lua
 	gprof $(VIS)
-	- $(RM) $(DIR)/gmon.out 2>/dev/null
+	- $(RM) $(DIR)/gmon.out 2>$(DEVNULL)
 
-$(DEPDIR): $(SOURCES) $(SCR_MAKEDEP)
-	- test -d $(DEPDIR) || mkdir $(DEPDIR) 2>/dev/null
-	$(BASH) $(SCR_MAKEDEP)
-	touch $(DEPDIR)
+$(DEPDIR):
+	- test -d $(DEPDIR) || mkdir $(DEPDIR) 2>$(DEVNULL)
+
+$(DEPDIR)/3rdparty/%.d: $(DIR)/3rdparty/%.c .cflags | $(DEPDIR)
+	@mkdir -p $(dir $@)
+	$(CC) -MM -MT '$(OBJDIR)/3rdparty/$*.o $@' $< -msse2 $(CFLAGS) $(CFLAGS_3RDPARTY) > $@
+
+$(DEPDIR)/audio/%.d: $(DIR)/audio/%.c .cflags | $(DEPDIR)
+	@mkdir -p $(dir $@)
+	$(CC) -MM -MT '$(OBJDIR)/audio/$*.o $@' $< -msse2 $(CFLAGS) $(CFLAGS_AUDIO) > $@
+
+$(DEPDIR)/%.d: $(DIR)/%.c .cflags | $(DEPDIR)
+	@mkdir -p $(dir $@)
+	$(CC) -MM -MT '$(OBJDIR)/$*.o $@' $< $(CFLAGS) > $@
 
 CURRENT_FLAGS = $(strip $(CFLAGS) $(LDFLAGS))
 OLD_FLAGS := $(strip $(file < .cflags))
@@ -158,25 +168,24 @@ _DUMMY := $(file > .cflags,$(CURRENT_FLAGS))
 endif
 
 $(OBJDIR):
-	- test -d $(OBJDIR) || mkdir $(OBJDIR) 2>/dev/null
+	- test -d $(OBJDIR) || mkdir $(OBJDIR) 2>$(DEVNULL)
 
 $(OBJDIR)/3rdparty: | $(OBJDIR)
-	- test -d $(OBJDIR)/3rdparty || mkdir $(OBJDIR)/3rdparty 2>/dev/null
+	- test -d $(OBJDIR)/3rdparty || mkdir $(OBJDIR)/3rdparty 2>$(DEVNULL)
 
 $(OBJDIR)/audio: | $(OBJDIR)
-	- test -d $(OBJDIR)/audio || mkdir $(OBJDIR)/audio 2>/dev/null
+	- test -d $(OBJDIR)/audio || mkdir $(OBJDIR)/audio 2>$(DEVNULL)
 
 $(DEPFILES): | $(DEPDIR)
 $(OBJECTS): | $(OBJDIR)
 
-$(OBJDIR)/3rdparty/%.o: $(DIR)/3rdparty/%.c .cflags | $(OBJDIR)/3rdparty
-	$(CC) -c -o $@ $< -msse2 $(CFLAGS) $(CFLAGS_3RDPARTY)
+$(OBJDIR)/3rdparty/%.o: | $(OBJDIR)/3rdparty
+$(OBJDIR)/3rdparty/%.o: CFLAGS += -msse2 $(CFLAGS_3RDPARTY)
 
-$(OBJDIR)/audio/%.o: $(DIR)/audio/%.c .cflags | $(OBJDIR)/audio
-	$(CC) -c -o $@ $< -msse2 $(CFLAGS) $(CFLAGS_AUDIO)
+$(OBJDIR)/audio/%.o: | $(OBJDIR)/audio
+$(OBJDIR)/audio/%.o: CFLAGS += -msse2 $(CFLAGS_AUDIO)
 
-$(OBJDIR)/emitter.o: emitter.c .cflags | $(OBJDIR)
-	$(CC) -c -o $@ $< $(CFLAGS) -Wno-float-equal
+$(OBJDIR)/emitter.o: CFLAGS += -Wno-float-equal
 
 $(OBJDIR)/%.o: %.c .cflags | $(OBJDIR)
 	$(CC) -c -o $@ $< $(CFLAGS)
@@ -216,17 +225,17 @@ leakcheck: debug
 leakcheck-reachable: debug
 	$(VALGRIND) $(VG_REACHABLE) $(VIS) $(EXEC_ARGS)
 
-miniclean:
-	- $(RM) $(OBJDIR)/*.o $(DEPDIR)/*.d 2>/dev/null
-
 clean:
-	- $(RM) -r $(DEPDIR) 2>/dev/null
-	- $(RM) -r $(OBJDIR) 2>/dev/null
-	- $(RM) $(VIS) .cflags 2>/dev/null
-	- $(RM) $(BIN_TESTS) 2>/dev/null
+	- $(RM) $(OBJDIR)/*.o $(DEPDIR)/*.d 2>$(DEVNULL)
 
-distclean: clean fp-prep
-	- $(RM) -r 3rdparty/luautf8-0.2.0/ 2>/dev/null
+cleaner:
+	- $(RM) -r $(DEPDIR) 2>$(DEVNULL)
+	- $(RM) -r $(OBJDIR) 2>$(DEVNULL)
+	- $(RM) $(VIS) .cflags 2>$(DEVNULL)
+	- $(RM) $(BIN_TESTS) 2>$(DEVNULL)
+
+distclean: cleaner fp-prep
+	- $(RM) -r 3rdparty/luautf8-0.2.0/ 2>$(DEVNULL)
 
 encode:
 	python3 $(SCR_PROCESS) "$(FP_BASE)" "$(FP_AVI)" -i "$(FP_AUDIO)" $(SCR_ARGS)
@@ -241,7 +250,7 @@ fp-encode:
 	$(MAKE) encode
 
 fp-cleanup:
-	$(RM) $(FP_BASE)_*.png 2>/dev/null
+	$(RM) $(FP_BASE)_*.png 2>$(DEVNULL)
 
 finalproduct: all fp-prep fp-makeframes fp-encode fp-cleanup
 

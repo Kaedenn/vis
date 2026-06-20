@@ -9,14 +9,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-FILE* try_fopen(const char* path, const char* mode) {
-    FILE* fp = fopen(path, mode);
-    if (fp == NULL) {
-        fprintf(stderr, "unable to open `%s`: %s\n", path, strerror(errno));
-    }
-    return fp;
-}
-
 char* stralloc(size_t nchars) {
     char* buffer = calloc(nchars, 1);
     if (!buffer) {

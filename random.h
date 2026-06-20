@@ -2,8 +2,6 @@
 #ifndef VIS_RANDOM_HEADER_INCLUDED_
 #define VIS_RANDOM_HEADER_INCLUDED_ 1
 
-typedef struct random prng;
-
 /* seeds with the current time */
 void seed(void);
 
