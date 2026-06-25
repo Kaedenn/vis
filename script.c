@@ -128,7 +128,6 @@ static kstr do_inspect_value(lua_State* L, int arg);
 /* Functions exposed to Lua */
 static int viscmd_debug_fn(lua_State* L);
 static int viscmd_debugp_fn(lua_State* L);
-static int viscmd_command_fn(lua_State* L);
 static int viscmd_exit_fn(lua_State* L);
 static int viscmd_emit_fn(lua_State* L);
 static int viscmd_audio_fn(lua_State* L);
@@ -434,12 +433,10 @@ static void evaluate_repl_buffer(script_t script) {
         return;
     }
     kstring_free(chk);
-
-    /* Attempt to compile */
-    kstr stmt = kstring_newfromvf("return %s", kstring_content(script->repl_buffer));
     BOOL executed = FALSE;
 
     /* Attempt as expression */
+    kstr stmt = kstring_newfromvf("return %s", kstring_content(script->repl_buffer));
     const char* stmt_content = kstring_content(stmt);
     const size_t stmt_size = kstring_length(stmt);
     if (luaL_loadbuffer(script->L, stmt_content, stmt_size, "stdin") == LUA_OK) {
@@ -597,7 +594,6 @@ int initialize_vis_lib(lua_State* L) {
     static const struct luaL_Reg vis_lib[] = {
         {"debug", viscmd_debug_fn},
         {"debugp", viscmd_debugp_fn},
-        {"command", viscmd_command_fn},
         {"exit", viscmd_exit_fn},
         {"emit", viscmd_emit_fn},
         {"audio", viscmd_audio_fn},
@@ -1122,15 +1118,6 @@ int viscmd_debugp_fn(lua_State* L) {
     return 0;
 }
 
-/* Vis.command(Vis.flist, when, "command") */
-int viscmd_command_fn(lua_State* L) {
-    flist_t fl = *(flist_t*)luaL_checkudata(L, 1, "flist_t*");
-    fnum_t when = do_msec2frames(L, (msec_t)luaL_checkinteger(L, 2));
-    const char* cmd = luaL_checkstring(L, 3);
-    flist_insert_cmd(fl, when, cmd);
-    return 0;
-}
-
 /* Vis.exit(Vis.flist, when)
  * Vis.exit() */
 int viscmd_exit_fn(lua_State* L) {
@@ -1328,7 +1315,7 @@ int viscmd_bgcolor_fn(lua_State* L) {
  *      offset1, offset2)           -- compared
  *
  * If func is a tag mutate, only 'tag' is expected. Otherwise 'factor' and
- * [optional] factor2, offset, offset are expected.
+ * [optional] factor2, offset1, offset2 are expected.
  *
  * If a factor is to be checked (eg. Vis.MUTATE_IF_NEAR), then:
  *      factor1 is assigned

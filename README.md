@@ -154,10 +154,6 @@ compiled with debugging enabled (via `make debug`).
 out its arguments as a single concatenated string. Note that passing anything
 other than strings may result in errors.
 
-`function Vis.command(Vis.flist, when, command)`: Executes the
-interactive-mode command `command` after `when` milliseconds has
-passed.
-
 `function Vis.emit(...)`: Core emit function. Using this is discouraged unless
 performance is a massive concern. For alternatives, see
 `VisUtil.make_emit_table`, `VisUtil.emit_table`, the `Emit` class, as well as
