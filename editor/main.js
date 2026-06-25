@@ -40,6 +40,7 @@ const LAYER_CONFIG = [
     { name: 'uds', step: 0.1 },
     { name: 'dx', step: 0.1 },
     { name: 'dy', step: 0.1 },
+    { name: 'dz', step: 0.1 },
     { name: 'radius', min: 1, step: 1 },
     { name: 'uradius', min: 0, step: 1 },
     { name: 'vertices', min: 3, step: 1 },
@@ -52,10 +53,12 @@ const LAYER_CONFIG = [
     { name: 'ur', min: 0, max: 1, step: 0.01 },
     { name: 'ug', min: 0, max: 1, step: 0.01 },
     { name: 'ub', min: 0, max: 1, step: 0.01 },
-    { name: 'depth', step: 1 },
+    { name: 'depth', step: 0.1 },
     { name: 'force', type: 'select', options: Object.keys(ForceFunc).map(k => ({text: k, value: ForceFunc[k]})) },
     { name: 'limit', type: 'select', options: Object.keys(LimitFunc).map(k => ({text: k, value: LimitFunc[k]})) },
     { name: 'blender', type: 'select', options: Object.keys(BlendFunc).map(k => ({text: k, value: BlendFunc[k]})) },
+    { name: 'friction_coeff' },
+    { name: 'gravity_coeff' },
     { name: 'tag', min: 0, step: 1 }
 ];
 
@@ -74,6 +77,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let tempo = DEFAULT_TEMPO;
     let timeFormat = 'ms';
     let customScript = TEMPLATE_SCRIPT;
+    let previewAge = 0;
 
     // Sequence to store all generated emits mapped by time
     window.emitSequence = new EmitSequence();
@@ -93,7 +97,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const uthetaDegrees = document.getElementById('utheta-degrees');
 
     // The current array of emit contexts being edited/generated for the active frame
-    window.currentEmits = [new EmitBuilder(canvas, canvasW, canvasH)];
+    window.currentEmits = [new EmitBuilder(canvas, canvasW, canvasH, fps)];
     window.currentEmitIndex = 0; // Tracks which emit in currentEmits is actively being edited
 
     let undoStack = [];
@@ -117,6 +121,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const inputFrameOffset = document.getElementById('input-frame-offset');
     const inputTempo = document.getElementById('input-tempo');
     const selectTimeFormat = document.getElementById('select-time-format');
+    const inputPreviewAge = document.getElementById('input-preview-age');
+
+    function resetPreviewAge() {
+        previewAge = 0;
+        if (inputPreviewAge) inputPreviewAge.value = 0;
+    }
+
+    if (inputPreviewAge) {
+        inputPreviewAge.addEventListener('input', (e) => {
+            previewAge = parseFloat(e.target.value);
+            requestAnimationFrame(draw);
+        });
+    }
 
     function saveStateForUndo(customData = {}) {
         const state = {
@@ -148,7 +165,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         currentTimeMs = state.time;
         currentEmits = state.emits.map(data => {
-            const builder = new EmitBuilder(canvas, canvasW, canvasH);
+            const builder = new EmitBuilder(canvas, canvasW, canvasH, fps);
             builder.ctx = EmitContext.FromJSON(data);
             return builder;
         });
@@ -156,6 +173,7 @@ document.addEventListener('DOMContentLoaded', () => {
         emitSequence.setNameAt(currentTimeMs, state.name);
         inputFrameName.value = state.name || "";
         inputFrameOffset.value = Math.round(state.time);
+        resetPreviewAge();
         saveCurrentFrame();
         updateTimeUI();
         updateLayerDisplay();
@@ -180,7 +198,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         currentTimeMs = state.time;
         currentEmits = state.emits.map(data => {
-            const builder = new EmitBuilder(canvas, canvasW, canvasH);
+            const builder = new EmitBuilder(canvas, canvasW, canvasH, fps);
             builder.ctx = EmitContext.FromJSON(data);
             return builder;
         });
@@ -188,6 +206,7 @@ document.addEventListener('DOMContentLoaded', () => {
         emitSequence.setNameAt(currentTimeMs, state.name);
         inputFrameName.value = state.name || "";
         inputFrameOffset.value = Math.round(state.time);
+        resetPreviewAge();
         saveCurrentFrame();
         updateTimeUI();
         updateLayerDisplay();
@@ -223,7 +242,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const currentName = emitSequence.getNameAt(currentTimeMs);
         const copiedEmits = currentEmits.map(builder => {
-            const b = new EmitBuilder(canvas, canvasW, canvasH);
+            const b = new EmitBuilder(canvas, canvasW, canvasH, fps);
             b.ctx = EmitContext.FromJSON(builder.ctx.toJSON());
             return b;
         });
@@ -290,6 +309,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const index = currentEmitIndex;
                 currentEmits.splice(index, 1);
                 currentEmitIndex = Math.max(0, index - 1);
+                resetPreviewAge();
                 updateLayerDisplay();
                 requestAnimationFrame(draw);
             }
@@ -385,10 +405,11 @@ document.addEventListener('DOMContentLoaded', () => {
             duplicateBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
                 saveStateForUndo();
-                const newBuilder = new EmitBuilder(canvas, canvasW, canvasH);
+                const newBuilder = new EmitBuilder(canvas, canvasW, canvasH, fps);
                 newBuilder.ctx = EmitContext.FromJSON(layer.ctx.toJSON());
                 currentEmits.splice(idx + 1, 0, newBuilder);
                 currentEmitIndex = idx + 1;
+                resetPreviewAge();
                 updateLayerDisplay();
                 requestAnimationFrame(draw);
             });
@@ -417,6 +438,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 } else if (currentEmitIndex > idx) {
                     currentEmitIndex--;
                 }
+                resetPreviewAge();
                 updateLayerDisplay();
                 requestAnimationFrame(draw);
             });
@@ -518,6 +540,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 currentTimeMs,
                                 code.classList.contains('collapsed'),
                                 window.emitSequence.getNameAt(currentTimeMs));
+                            resetPreviewAge();
                             requestAnimationFrame(draw);
                         });
                     } else if (c.type === 'select') {
@@ -538,6 +561,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 currentTimeMs,
                                 code.classList.contains('collapsed'),
                                 window.emitSequence.getNameAt(currentTimeMs));
+                            resetPreviewAge();
                             requestAnimationFrame(draw);
                         });
                     } else {
@@ -594,6 +618,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                     currentTimeMs,
                                     code.classList.contains('collapsed'),
                                     window.emitSequence.getNameAt(currentTimeMs));
+                                resetPreviewAge();
                                 requestAnimationFrame(draw);
                             }
                         });
@@ -709,6 +734,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     selectFps.addEventListener('change', (e) => {
         fps = parseInt(e.target.value, 10);
+        for (const [time, builders] of emitSequence) {
+            for (const builder of builders) {
+                builder.fps = fps;
+            }
+        }
+        for (const builder of currentEmits) {
+            builder.fps = fps;
+        }
         updateTimeUI();
     });
 
@@ -725,6 +758,7 @@ document.addEventListener('DOMContentLoaded', () => {
             currentEmits = [];
             currentEmitIndex = null;
         }
+        resetPreviewAge();
         inputFrameName.value = emitSequence.getNameAt(currentTimeMs) || "";
         inputFrameOffset.value = Math.round(currentTimeMs);
     }
@@ -879,7 +913,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         for (const emit of currentEmits) {
-            emit.draw(ctx);
+            emit.draw(ctx, previewAge);
         }
     }
 
@@ -1029,7 +1063,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     for (const [timeStr, contexts] of Object.entries(data.frames)) {
                         const time = parseInt(timeStr, 10);
                         const builders = contexts.map(ctxData => {
-                            const builder = new EmitBuilder(canvas, canvasW, canvasH);
+                            const builder = new EmitBuilder(canvas, canvasW, canvasH, fps);
                             builder.ctx = EmitContext.FromJSON(ctxData);
                             return builder;
                         });
@@ -1126,7 +1160,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (currentEmitIndex !== null && currentEmits[currentEmitIndex]) {
             saveStateForUndo();
             const original = currentEmits[currentEmitIndex];
-            const mirrored = new EmitBuilder(canvas, canvasW, canvasH);
+            const mirrored = new EmitBuilder(canvas, canvasW, canvasH, fps);
             mirrored.ctx = EmitContext.FromJSON(original.ctx.toJSON());
 
             mirrored.ctx.x = -mirrored.ctx.x;
@@ -1146,9 +1180,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnAddLayer = document.getElementById('btn-add-layer');
     btnAddLayer.addEventListener('click', () => {
         saveStateForUndo();
-        currentEmits.push(new EmitBuilder(canvas, canvasW, canvasH));
+        currentEmits.push(new EmitBuilder(canvas, canvasW, canvasH, fps));
         currentEmitIndex = currentEmits.length - 1;
         console.log(`Added new emit layer. Now editing layer ${currentEmitIndex}`);
+        resetPreviewAge();
         updateLayerDisplay();
     });
 
@@ -1168,13 +1203,14 @@ document.addEventListener('DOMContentLoaded', () => {
         if (clipboardFrame) {
             saveStateForUndo();
             for (const data of clipboardFrame) {
-                const builder = new EmitBuilder(canvas, canvasW, canvasH);
+                const builder = new EmitBuilder(canvas, canvasW, canvasH, fps);
                 builder.ctx = EmitContext.FromJSON(data);
                 currentEmits.push(builder);
             }
             if (currentEmitIndex === null || currentEmits.length > 0) {
                 currentEmitIndex = currentEmits.length - 1;
             }
+            resetPreviewAge();
             updateLayerDisplay();
             requestAnimationFrame(draw);
             console.log(`Pasted ${clipboardFrame.length} emits from clipboard.`);
@@ -1189,6 +1225,7 @@ document.addEventListener('DOMContentLoaded', () => {
         window.emitSequence.deleteAt(currentTimeMs);
         currentEmits = [];
         currentEmitIndex = null;
+        resetPreviewAge();
 
         const times = Array.from(window.emitSequence._sequence.keys())
             .filter(t => window.emitSequence.getEmitsAt(t).length > 0)
@@ -1333,7 +1370,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                             if (!isNaN(t) && !isNaN(dur)) {
                                 if (!window.emitSequence.exists(t)) {
-                                    const builder = new EmitBuilder(canvas, canvasW, canvasH);
+                                    const builder = new EmitBuilder(canvas, canvasW, canvasH, fps);
                                     builder.ctx.life = dur;
                                     window.emitSequence.setEmitsAt(t, [builder]);
                                 } else {
@@ -1445,6 +1482,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 window.emitSequence.getNameAt(currentTimeMs));
         }
 
+        resetPreviewAge();
         requestAnimationFrame(draw);
     }
 

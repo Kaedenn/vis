@@ -10,13 +10,12 @@
 #include <json.h>
 #endif
 
-typedef struct clargs {
+struct clargs {
     const char* configfile;
     const char* execname;
     klist scriptfiles;
     klist scriptstrings;
     const char* dumpfile;
-    const char* commandfile;
     int frameskip;
     int frames_per_second;
     klist scriptargs;
@@ -34,11 +33,11 @@ typedef struct clargs {
 #ifdef HAVE_JSONC
     json_object* configobj;
 #endif
-} clargs;
-typedef clargs* clargs_t;
+};
+typedef struct clargs* clargs_t;
 
-clargs* argparse(int argc, char** argv);
-void clargs_free(clargs* args);
+clargs_t argparse(int argc, char** argv);
+void clargs_free(clargs_t args);
 
 /* Functions for extracting data from configobj */
 BOOL clargs_config_has(const clargs_t args, const char* key);

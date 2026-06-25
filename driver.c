@@ -21,7 +21,7 @@
 struct global_ctx {
     plist_t particles;
     drawer_t drawer;
-    clargs* args;
+    clargs_t args;
     script_t script;
     BOOL paused;
     BOOL steponce;
@@ -72,7 +72,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 
     if (ctx->args->debug_level > DEBUG_NONE) {
         DBPRINTF("Key %d (%s) scancode %d action %d mods %d", key, get_key_name(key),
-                scancode, action, mods);
+                 scancode, action, mods);
     }
 
     if (action == GLFW_PRESS) {

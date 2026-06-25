@@ -67,6 +67,8 @@ void emitter_schedule(flist_t frames) {
     } else if (emitter.fl && emitter.fl != frames) {
         flist_clear(emitter.fl);
         flist_free(emitter.fl);
+        emitter.fl = frames;
+        flist_restart(emitter.fl);
     } else if (emitter.fl == frames) {
         flist_restart(emitter.fl);
     } else {

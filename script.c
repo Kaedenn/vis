@@ -181,7 +181,7 @@ struct script {
 static script_t g_host = NULL;
 
 /* start of public API */
-script_t script_new(script_cfg_mask cfg, clargs* args) {
+script_t script_new(script_cfg_mask cfg, clargs_t args) {
     script_t s = DBMALLOC(sizeof(struct script));
     g_host = s;
     s->dbg = DBMALLOC(sizeof(struct script_debug));

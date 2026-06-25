@@ -10,6 +10,9 @@
  *
  */
 
+export const VIS_GRAVITY_FACTOR = 0.03;
+export const VIS_FRICTION_COEFF = 0.99;
+
 export const ForceFunc = Object.freeze({
     DEFAULT_FORCE: 'Vis.DEFAULT_FORCE',
     FORCE_FRICTION: 'Vis.FORCE_FRICTION',
@@ -47,6 +50,7 @@ export class EmitContext {
         // Velocity and velocity variance
         this._ds = 0; this._uds = 0;
         this._dx = 0; this._dy = 0;
+        this._dz = 0;
 
         // Radius and radius variance
         this._radius = 1; this._uradius = 0;
@@ -71,6 +75,8 @@ export class EmitContext {
         this._limit = LimitFunc.DEFAULT_LIMIT;
         this._blender = BlendFunc.DEFAULT_BLEND;
         this._tag = 0;
+        this._friction_coeff = VIS_FRICTION_COEFF;
+        this._gravity_coeff = VIS_GRAVITY_FACTOR;
     }
 
     toJSON() {
@@ -80,7 +86,7 @@ export class EmitContext {
             ux: this._ux, uy: this._uy,
             s: this._s, us: this._us,
             ds: this._ds, uds: this._uds,
-            dx: this._dx, dy: this._dy,
+            dx: this._dx, dy: this._dy, dz: this._dz,
             radius: this._radius, uradius: this._uradius,
             theta: this._theta, utheta: this._utheta,
             life: this._life, ulife: this._ulife,
@@ -92,7 +98,9 @@ export class EmitContext {
             force: this._force,
             limit: this._limit,
             blender: this._blender,
-            tag: this._tag
+            tag: this._tag,
+            friction_coeff: this._friction_coeff,
+            gravity_coeff: this._gravity_coeff
         };
     }
 
@@ -132,6 +140,8 @@ export class EmitContext {
     set dx(v) { this._dx = v; }
     get dy() { return this._dy; }
     set dy(v) { this._dy = v; }
+    get dz() { return this._dz; }
+    set dz(v) { this._dz = v; }
 
     updateDisplacement(s, us = this._us, ds = this._ds, uds = this._uds) {
         if (s !== undefined) this._s = s;
@@ -218,6 +228,10 @@ export class EmitContext {
     set blender(v) { this._blender = typeof v === 'string' ? v : BlendFunc.DEFAULT_BLEND; }
     get tag() { return this._tag; }
     set tag(v) { this._tag = typeof v === 'number' ? v : 0; }
+    get friction_coeff() { return this._friction_coeff; }
+    set friction_coeff(v) { this._friction_coeff = typeof v === 'number' ? v : VIS_FRICTION_COEFF; }
+    get gravity_coeff() { return this._gravity_coeff; }
+    set gravity_coeff(v) { this._gravity_coeff = typeof v === 'number' ? v : VIS_GRAVITY_FACTOR; }
 
     serialize(isNativeMode, timeMs, oneLine = false, frameName = null) {
         // Build a Lua table string that can be parsed by merge_emit_table
@@ -229,7 +243,7 @@ export class EmitContext {
         lua += `    ux = ${this._ux}, uy = ${this._uy},\n`;
         lua += `    s = ${this._s}, us = ${this._us},\n`;
         lua += `    ds = ${this._ds}, uds = ${this._uds},\n`;
-        lua += `    dx = ${this._dx}, dy = ${this._dy},\n`;
+        lua += `    dx = ${this._dx}, dy = ${this._dy}, dz = ${this._dz},\n`;
         lua += `    radius = ${this._radius}, uradius = ${this._uradius},\n`;
         lua += `    theta = ${this._theta}, utheta = ${this._utheta},\n`;
         lua += `    life = ${this._life}, ulife = ${this._ulife},\n`;
@@ -240,7 +254,9 @@ export class EmitContext {
         lua += `    force = ${this._force},\n`;
         lua += `    limit = ${this._limit},\n`;
         lua += `    blender = ${this._blender},\n`;
-        lua += `    tag = ${this._tag === 0 ? Math.floor(timeMs) : this._tag}\n`;
+        lua += `    tag = ${this._tag === 0 ? Math.floor(timeMs) : this._tag},\n`;
+        lua += `    friction_coeff = ${this._friction_coeff},\n`;
+        lua += `    gravity_coeff = ${this._gravity_coeff}\n`;
         lua += "}";
 
         if (oneLine) {
@@ -267,6 +283,7 @@ export class EmitContext {
         ctx.updateDisplacement(data.s, data.us, data.ds, data.uds);
         if (data.dx !== undefined) ctx.dx = data.dx;
         if (data.dy !== undefined) ctx.dy = data.dy;
+        if (data.dz !== undefined) ctx.dz = data.dz;
         ctx.updateRadius(data.radius, data.uradius);
         ctx.updateTheta(data.theta, data.utheta);
         ctx.updateLife(data.life, data.ulife);
@@ -278,6 +295,8 @@ export class EmitContext {
         if (data.limit !== undefined) ctx.limit = data.limit;
         if (data.blender !== undefined) ctx.blender = data.blender;
         if (data.tag !== undefined) ctx.tag = data.tag;
+        if (data.friction_coeff !== undefined) ctx.friction_coeff = data.friction_coeff;
+        if (data.gravity_coeff !== undefined) ctx.gravity_coeff = data.gravity_coeff;
         return ctx;
     }
 }

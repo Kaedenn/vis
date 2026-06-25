@@ -14,10 +14,9 @@ const char* help_string[] = {
     " Short options:",
     "  -C <FILE>    load configuration from JSON <FILE>",
     "  -d <FILE>    dump frames to <FILE>_000.png",
-    "  -l <FILE>    run lua script <FILE>",
-    "  -L <LUA>     run lua string <LUA>",
+    "  -l <FILE>    run lua script <FILE>; can be specified more than once",
+    "  -L <LUA>     run lua string <LUA>; can be specified more than once",
     "  -A <ARG>     pass <ARG> to Lua; can be specified more than once",
-    "  -f <FILE>    run commands from <FILE>",
     "  -s <NUM>     skip <NUM> frames when dumping with -d",
     "  -F <NUM>     change the framerate to <NUM>",
     "  -w <W>x<H>   set window size to <W>x<H>",
@@ -51,7 +50,6 @@ clargs_t argparse(int argc, char** argv) {
     args->scriptfiles = klist_new();
     args->scriptstrings = klist_new();
     args->dumpfile = NULL;
-    args->commandfile = NULL;
     args->scriptargs = klist_new();
     args->frameskip = 0;
     args->frames_per_second = VIS_FPS_LIMIT;
@@ -140,14 +138,6 @@ clargs_t argparse(int argc, char** argv) {
                 mark_error(args, 1);
             }
             break;
-        case 'f':
-            if (argi + 1 < argc) {
-                args->commandfile = argv[++argi];
-            } else {
-                EPRINTF("Argument -%c requires value", argv[argi][1]);
-                mark_error(args, 1);
-            }
-            break;
         case 's':
             if (argi + 1 < argc) {
                 args->frameskip = strtoi(argv[++argi]);
@@ -217,11 +207,6 @@ clargs_t argparse(int argc, char** argv) {
         }
     }
 
-    if (args->commandfile && !fexists(args->commandfile)) {
-        EPRINTF("Command file %s not found or not readable", args->commandfile);
-        mark_error(args, 1);
-    }
-
 #ifdef HAVE_JSONC
     if (args->configfile) {
         DBPRINTF("Loading configuration file from %s", args->configfile);
@@ -249,6 +234,7 @@ void clargs_free(clargs_t args) {
     if (args) {
         klist_free(args->scriptfiles);
         klist_free(args->scriptstrings);
+        klist_free(args->scriptargs);
     }
     DZFREE(args);
 }

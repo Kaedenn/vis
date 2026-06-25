@@ -54,7 +54,7 @@ static const script_cfg_mask SCRIPT_NO_EXIT = 1;   /* disable Vis.exit() */
  *  Vis.HEIGHT = screen_height
  *  Vis.flist = flist userdata pointer
  *  Vis.script = script_t userdata pointer */
-script_t script_new(script_cfg_mask cfg, clargs* args);
+script_t script_new(script_cfg_mask cfg, clargs_t args);
 void script_free(script_t s);
 void script_callback_free(script_cb* cb);
 
