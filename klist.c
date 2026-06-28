@@ -32,10 +32,12 @@ klist klist_new(void) {
 }
 
 void klist_free(klist l) {
-    while (!klist_empty(l)) {
-        DBFREE(klist_shift(l));
+    if (l != NULL) {
+        while (!klist_empty(l)) {
+            DBFREE(klist_shift(l));
+        }
+        DZFREE(l);
     }
-    DZFREE(l);
 }
 
 char* klist_shift(klist l) {
@@ -142,3 +144,4 @@ BOOL klist_empty(klist l) {
     }
     return l->length == 0;
 }
+
