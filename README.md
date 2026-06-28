@@ -19,11 +19,23 @@
   - [`module VisUtil = require("visutil")` - The Vis Utility Module](#visutil-module)
   - [The Emit Table](#the-emit-table)
   - [`module Emit = require("emit")` - The Emit Module](#emit-module)
-- [Mutation](#mutation)
-    - [Standard mutate](#standard-mutate)
-    - [Tag modification](#tag-modification)
-    - [Conditional mutate](#conditional-mutate)
-    - [New Mutate API](#new-mutate-api)
+  - [`Vis.mutate`](#vis-mutate)
+    - [Mutation Event Types](#mutation-event-types)
+      - [Unconditional Mutation Events](#unconditional-mutation-events)
+      - [Tag Mutation Events](#tag-mutation-events)
+      - [Conditional Mutation Events](#conditional-mutation-events)
+      - [Conditional Tag Mutation Event](#conditional-tag-mutation-event)
+    - [Mutate Conditions](#mutate-conditions)
+  - [`Vis.mutate` Examples](#vis-mutate-examples)
+    - [Direct Mutation](#direct-mutation)
+    - [Conditional Mutation](#conditional-mutation)
+    - [Conditional Mutation Using Tags](#conditional-mutation-using-tags)
+  - [`Vis.mutate` Old API](#vis-mutate-old-api)
+    - [Overloads](#overloads)
+      - [Normal mutation](#normal-mutation)
+      - [Tag mutation](#tag-mutation)
+      - [Conditional mutation](#conditional-mutation)
+  - [`module Message = require("message")` - The Message Module](#message-module)
 - [Planned Features](#planned-features)
 - [Credits](#credits)
 
@@ -135,14 +147,14 @@ The size of the particles can be changed using the scroll wheel.
 This is the most recommended way to run the program. I recommend running the
 following script:
 
-```
+```sh
 $ ./vis -l test/4_random_long.lua
 ```
 
 This gives you a good taste of what the particle engine can do, although it
 leaves out a good number of details.
 
-The full documentation of script mode is below, see *Writing your own scripts*
+The full documentation of script mode is below:
 
 ### Writing your own scripts
 
@@ -523,7 +535,6 @@ the following values:
 noise. This includes allocation and deallocation functions, for tracking down
 memory leaks.
 
-
 ### <a name="visutil-module"></a>`module VisUtil = require("visutil")` - The Vis Utility Module
 
 This module is pure Lua and resides in `lua/visutil.lua`. Have a look there
@@ -586,10 +597,9 @@ pixels per frame.
 
 `floats theta, utheta`: The angle at which to emit the particles, in radians.
 
-`integer depth`: Z-depth, currently only used for draw order. There are
-tentative plans to support 3D rendering (visible as distinct layers at an
-oblique angle), and this value would control which layer the particle belongs
-to.
+`integer depth`: Z-depth. This value affects both the draw order of the
+particles and their location along the perspective-projection vector. This is
+only visible when using `Vis.rotate(...)` to adjust the vector.
 
 `integers life, ulife`: The lifetime, in milliseconds, of the particles
 to emit.
@@ -700,158 +710,311 @@ Value must be one of the `Vis.LIMIT_` constants.
 `e:blender(blend)` Configure the emit's alpha-blending method to the
 method given, which must be one of the `Vis.BLEND_` constants.
 
-## Mutation
+### <a name="vis-mutate"></a><code>Vis.mutate</code>
 
-Mutates are a very powerful type of frame and provide a way to modify either
-all particles on screen or only a subset, using tag modification and
-conditional mutates. Mutates only affect particles already on screen; they do
-not affect particles yet to be emitted. There are three kinds of mutates,
-each with their own parameter list.
+This function allows you to modify certain properties for each particle. These
+modifications are unconditional and are applied to every particle currently
+alive.
 
-This function has multiple overloads:
+The `factor`, `check` and `offset` parameters can be either numbers or arrays
+of two numbers. If the parameter is a number, then the second value will default
+to zero.
 
 ```lua
-Vis.mutate(Vis.flist, <when>, Vis.MUTATE_<op>, <num1>[, <num2>[, <num3>[, <num4>]]])
-
-Vis.mutate(Vis.flist, <when>, Vis.MUTATE_TAG_<op>, <num>)
-
-Vis.mutate(Vis.flist, <when>, Vis.MUTATE_<op>_IF, <num1>, Vis.MUTATE_IF_<cond>, <tag>, <num>)
-
 Vis.mutate{
     Vis.flist,
-    when,
-    [func=]Vis.MUTATE_<func>,
-    cond=Vis.MUTATE_IF_<cond>,
-    tag=<check-tag>,
-    newtag=<new-tag>,
-    factor=<number-or-array-of-two-numbers>,
-    check=<number-or-array-of-two-numbers>,
-    offset=<number-or-array-of-two-numbers>
+    when,                                     -- When to apply the mutation event (in milliseconds)
+    [func=]Vis.MUTATE_<func>,                 -- Which mutation event to use
+    cond=Vis.MUTATE_IF_<cond>,                -- Only when using cond=Vis.MUTATE_IF_<cond>
+    tag=<check-tag>,                          -- Only when using cond=Vis.MUTATE_IF_<tag-cond>
+    newtag=<new-tag>,                         -- Only when using cond=Vis.MUTATE_TAG_<event>
+    factor=<number-or-array-of-two-numbers>,  -- Amount to mutate by
+    check=<number-or-array-of-two-numbers>,   -- Used with Vis.MUTATE_IF_{NEAR/FAR}
+    offset=<number-or-array-of-two-numbers>   -- Used with Vis.MUTATE_IF_{ABOVE/BELOW/LEFT/RIGHT}
 }
 ```
 
-#### Standard mutate
+#### Mutation Event Types
+
+The following mutation events are available.
+
+##### Unconditional Mutation Events
+
+For all these events, negative values for `factor` are permitted.
+
+* `Vis.MUTATE_PUSH` - `particle->dx *= factor[1]` and `particle->dy *= factor[1]`
+* `Vis.MUTATE_PUSH_DX` - `particle->dx *= factor[1]`
+* `Vis.MUTATE_PUSH_DY` - `particle->dy *= factor[1]`
+* `Vis.MUTATE_PUSH_DZ` - `particle->dz *= factor[1]`
+* `Vis.MUTATE_SLOW` - `particle->dx /= factor[1]` and `particle->dy /= factor[1]`
+* `Vis.MUTATE_SHRINK` - `particle->radius /= factor[1]`
+* `Vis.MUTATE_GROW` - `particle->radius *= factor[1]`
+* `Vis.MUTATE_AGE` - `particle->life = particle->lifetime * factor[1]`
+* `Vis.MUTATE_OPACITY` - `particle->alpha = factor[1]`
+* `Vis.MUTATE_SET_DX` - `particle->dx = random(factor[1] ± factor[2])`
+* `Vis.MUTATE_SET_DY` - `particle->dy = random(factor[1] ± factor[2])`
+* `Vis.MUTATE_SET_DZ` - `particle->dz = random(factor[1] ± factor[2])`
+* `Vis.MUTATE_SET_RADIUS` - `particle->radius = random(factor[1] ± factor[2])`
+* `Vis.MUTATE_SET_VERTICES` - `particle->vertices = random(factor[1] ± factor[2])`
+* `Vis.MUTATE_SET_ANGLE` - `particle->angle = random(factor[1] ± factor[2])`
+* `Vis.MUTATE_SET_FRICTION` - `particle->friction_coeff = factor[1]`
+* `Vis.MUTATE_SET_GRAVITY` - `particle->gravity_coeff = factor[1]`
+
+##### Tag Mutation Events
+* `Vis.MUTATE_TAG_SET` - `particle->tag.l = newtag`
+* `Vis.MUTATE_TAG_INC` - `particle->tag.l += 1`
+* `Vis.MUTATE_TAG_DEC` - `particle->tag.l -= 1`
+* `Vis.MUTATE_TAG_ADD` - `particle->tag.l += newtag`
+* `Vis.MUTATE_TAG_SUB` - `particle->tag.l -= newtag`
+* `Vis.MUTATE_TAG_MUL` - `particle->tag.l *= newtag`
+* `Vis.MUTATE_TAG_DIV` - `particle->tag.l /= newtag`
+
+##### Conditional Mutation Events
+
+These mutation events apply only if the specified condition is met. The mutation
+effects are identical to their unconditional counterparts.
+
+* `Vis.MUTATE_PUSH_IF`
+* `Vis.MUTATE_PUSH_DX_IF`
+* `Vis.MUTATE_PUSH_DY_IF`
+* `Vis.MUTATE_PUSH_DZ_IF`
+* `Vis.MUTATE_SLOW_IF`
+* `Vis.MUTATE_SHRINK_IF`
+* `Vis.MUTATE_GROW_IF`
+* `Vis.MUTATE_AGE_IF`
+* `Vis.MUTATE_OPACITY_IF`
+* `Vis.MUTATE_SET_DX_IF`
+* `Vis.MUTATE_SET_DY_IF`
+* `Vis.MUTATE_SET_DZ_IF`
+* `Vis.MUTATE_SET_RADIUS_IF`
+* `Vis.MUTATE_SET_VERTICES_IF`
+* `Vis.MUTATE_SET_ANGLE_IF`
+* `Vis.MUTATE_SET_FRICTION_IF`
+* `Vis.MUTATE_SET_GRAVITY_IF`
+
+##### Conditional Tag Mutation Event
+* `Vis.MUTATE_TAG_SET_IF` - `particle->tag = newtag` if condition is met
+
+#### Mutate Conditions
+
+This is the powerful mechanism that applies the above mutation events only if
+the particle meets the specified condition. When using a conditional mutate,
+you **must** provide a `cond` parameter.
+
+The following conditions are available:
+
+* `Vis.MUTATE_IF_TRUE` - always true
+* `Vis.MUTATE_IF_EQ` - `particle->tag == tag`
+* `Vis.MUTATE_IF_NE` - `particle->tag != tag`
+* `Vis.MUTATE_IF_LT` - `particle->tag < tag`
+* `Vis.MUTATE_IF_LE` - `particle->tag <= tag`
+* `Vis.MUTATE_IF_GT` - `particle->tag > tag`
+* `Vis.MUTATE_IF_GE` - `particle->tag >= tag`
+* `Vis.MUTATE_IF_EVEN` - `particle->tag % 2 == 0`
+* `Vis.MUTATE_IF_ODD` - `particle->tag % 2 == 1`
+* `Vis.MUTATE_IF_ABOVE` - `particle->y > offset[2]`
+* `Vis.MUTATE_IF_BELOW` - `particle->y < offset[2]`
+* `Vis.MUTATE_IF_LEFT` - `particle->x < offset[1]`
+* `Vis.MUTATE_IF_RIGHT` - `particle->x > offset[1]`
+* `Vis.MUTATE_IF_NEAR` - `dist(particle.xy, offset[1,2]) <= check[1]`
+* `Vis.MUTATE_IF_FAR` - `dist(particle.xy, offset[1,2]) >= check[1]`
+
+### <a name="vis-mutate-examples"></a><code>Vis.mutate</code> Examples
+
+#### Direct Mutation
+
+#### Conditional Mutation
+
+#### Conditional Mutation Using Tags
+
+### <a name="vis-mutate-old-api"></a><code>Vis.mutate</code> Old API
+
+There are presently two competing APIs for `Vis.mutate`. The arguments for the
+new API are generally the same as the old API. However, the old API uses
+positional arguments whereas the new API uses keyword arguments. The old API is
+kept around for legacy reasons, but the new API is recommended.
+
+#### Overloads
+
+* `Vis.mutate(Vis.flist, when, func, factor1, [factor2, [offset1, [offset2]]])`
+  * **Trigger:** `func` is an unconditional mutator (e.g., `Vis.MUTATE_PUSH`, `Vis.MUTATE_SLOW`, `Vis.MUTATE_SET_DX`).
+
+* `Vis.mutate(Vis.flist, when, func, [newtag])`
+  * **Trigger:** `func` is an unconditional tag mutator (e.g., `Vis.MUTATE_TAG_SET`, `Vis.MUTATE_TAG_INC`).
+
+* `Vis.mutate(Vis.flist, when, func, cond, tag, newtag, [factor1, [factor2, [check_factor1, [check_factor2, [offset1, [offset2]]]]]])`
+  * **Trigger:** `func` is `Vis.MUTATE_TAG_SET_IF` and `cond` is a tag-checking condition (`Vis.MUTATE_IF_TRUE` up to `Vis.MUTATE_IF_GE`).
+
+* `Vis.mutate(Vis.flist, when, func, cond, tag, [factor1, [factor2, [check_factor1, [check_factor2, [offset1, [offset2]]]]]])`
+  * **Trigger:** `func` is a standard conditional mutator (e.g., `Vis.MUTATE_PUSH_IF`) and `cond` is a tag-checking condition (`Vis.MUTATE_IF_TRUE` up to `Vis.MUTATE_IF_GE`).
+
+* `Vis.mutate(Vis.flist, when, func, cond, newtag, [factor1, [factor2, [check_factor1, [check_factor2, [offset1, [offset2]]]]]])`
+  * **Trigger:** `func` is `Vis.MUTATE_TAG_SET_IF` and `cond` is a non-tag condition (e.g., spatial checks like `Vis.MUTATE_IF_NEAR` or parity checks like `Vis.MUTATE_IF_EVEN`).
+
+* `Vis.mutate(Vis.flist, when, func, cond, [factor1, [factor2, [check_factor1, [check_factor2, [offset1, [offset2]]]]]])`
+  * **Trigger:** `func` is a standard conditional mutator (e.g., `Vis.MUTATE_PUSH_IF`) and `cond` is a non-tag condition (e.g., spatial checks like `Vis.MUTATE_IF_NEAR` or parity checks like `Vis.MUTATE_IF_EVEN`).
+
+##### Normal mutation
 
 ```lua
-Vis.mutate(Vis.flist, <when>, Vis.MUTATE_<op>, <num1>[, <num2>[, <num3>[, <num4>]]])
+Vis.mutate(Vis.flist, when, mutate_func_id, factor1[, factor2, offset1, offset2])
 ```
 
-This applies `<operation>`, one of the `Vis.MUTATE_` values, to all
-living particles currently on screen. Nearly all the operations require
-one or more double-precision numbers. For example, the operation
-`Vis.MUTATE_GROW` multiples all particles' radii by the coefficient
-given. Note that this excludes the `Vis.MUTATE_TAG_` operations and the
-`Vis.MUTATE_IF_` values as those are covered below.
+Required parameters: `Vis.flist`, `when` (in milliseconds), `mutate_func_id`, and `factor1`. The remaining parameters default to 0 if not specified.
 
-Up to four numbers can be given. Most operations only need one or two
-numbers, but some may require all four.
+The following mutates are available:
 
-Operations:
+* `Vis.MUTATE_PUSH` - `particle->dx *= factor1` and `particle->dy *= factor1`
+* `Vis.MUTATE_PUSH_DX` - `particle->dx *= factor1`
+* `Vis.MUTATE_PUSH_DY` - `particle->dy *= factor1`
+* `Vis.MUTATE_PUSH_DZ` - `particle->dz *= factor1`
+* `Vis.MUTATE_SLOW` - `particle->dx /= factor1` and `particle->dy /= factor1`
+* `Vis.MUTATE_SHRINK` - `particle->radius /= factor1`
+* `Vis.MUTATE_GROW` - `particle->radius *= factor1`
+* `Vis.MUTATE_AGE` - `particle->life = particle->lifetime * factor1`
+* `Vis.MUTATE_OPACITY` - `particle->alpha = factor1`
+* `Vis.MUTATE_SET_DX` - `particle->dx = factor1`
+* `Vis.MUTATE_SET_DY` - `particle->dy = factor1`
+* `Vis.MUTATE_SET_DZ` - `particle->dz = factor1`
+* `Vis.MUTATE_SET_RADIUS` - `particle->radius = factor1`
+* `Vis.MUTATE_SET_VERTICES` - `particle->vertices = factor1`
+* `Vis.MUTATE_SET_ANGLE` - `particle->angle = factor1`
 
-1. `Vis.MUTATE_PUSH` - `p->dx *= num1; p->dy *= num1`
-2. `Vis.MUTATE_PUSH_DX` - `p->dx *= num1`
-3. `Vis.MUTATE_PUSH_DY` - `p->dy *= num1`
-4. `Vis.MUTATE_SLOW` - `p->dx /= num1; p->dy /= num1`
-5. `Vis.MUTATE_SHRINK` - `p->radius /= num1`
-6. `Vis.MUTATE_GROW` - `p->radius *= num1`
-7. `Vis.MUTATE_AGE` - `p->life = num1 * p->lifetime`
-8. `Vis.MUTATE_OPACITY` - `p->alpha = num1`
-9. `Vis.MUTATE_SET_DX` - `p->dx = randdouble(num1-num2, num1+num2)`
-10. `Vis.MUTATE_SET_DY` - `p->dy = randdouble(num1-num2, num1+num2)`
-11. `Vis.MUTATE_SET_RADIUS` - `p->radius = randdouble(num1-num2, num1+num2)`
-12. `Vis.MUTATE_SET_VERTICES` - `p->vertices = randdouble(num1-num2, num1+num2)`
-13. `Vis.MUTATE_SET_ANGLE` - `p->angle = randdouble(num1-num2, num1+num2)`
-14. `Vis.MUTATE_SET_FRICTION` - `p->friction_coeff = num1`
-15. `Vis.MUTATE_SET_GRAVITY` - `p->gravity_coeff = num1`
+##### Tag mutation
 
-#### Tag modification
-
-`Vis.mutate(Vis.flist, <when>, <operation>, <value>)` where
-`<operation>` is one of the `Vis.MUTATE_TAG_` values.
-
-This modifies all active particles currently on screen, adjusting their tag
-by the operation and value given. For example, `Vis.MUTATE_TAG_SET` with a
-value of `5` will set all active particles' tags to the number 5.
-
-Operations:
-
-1. `Vis.MUTATE_TAG_SET` - `p->tag.l = num1`
-2. `Vis.MUTATE_TAG_INC` - `p->tag.l += 1`
-3. `Vis.MUTATE_TAG_DEC` - `p->tag.l -= 1`
-4. `Vis.MUTATE_TAG_ADD` - `p->tag.l += num1`
-5. `Vis.MUTATE_TAG_SUB` - `p->tag.l -= num1`
-6. `Vis.MUTATE_TAG_MUL` - `p->tag.l *= num1`
-
-#### Conditional mutate
+Every particle has its own `tag`, or 32-bit number. These are set via the `tag` field in the emit table. These mutate functions exist to adjust the tag for all active particles. For conditional tag modification, see `Vis.MUTATE_TAG_SET_IF` below.
 
 ```lua
-Vis.mutate(Vis.flist, <when>,
-    Vis.MUTATE_<op>_IF,
-    <num1>,
-    Vis.MUTATE_IF_<cond>
-        [, <tag>
-            [, <num2>
-                [, <num3>
-                    [, <num4>]]]])
+Vis.mutate(Vis.flist, when, mutate_tag_func_id[, tag])
 ```
 
-This applies `Vis.MUTATE_<op>` to all particles on screen if (and only if)
-both the particle's tag and the `<tag>` value given satisfy the
-`Vis.MUTATE_IF_<cond>` given. For example,
-`Vis.mutate(Vis.flist, 50, Vis.MUTATE_PUSH_IF, 2, Vis.MUTATE_IF_EQ, 1)`
-will double the velocities of all particles having a tag of 1.
+Required parameters: `Vis.flist`, `when` (in milliseconds), and `mutate_tag_func_id`. `tag` defaults to 0 if not specified.
 
-Conditions:
+The following tag mutates are available:
 
-1. `Vis.MUTATE_IF_TRUE` - Default condition; always true
-2. `Vis.MUTATE_IF_EQ` - Mutate if the particle's tag is equal to `<tag>`
-3. `Vis.MUTATE_IF_NE` - Mutate if the particle's tag is not `<tag>`
-4. `Vis.MUTATE_IF_LT` - Mutate if the particle's tag is less than `<tag>`
-5. `Vis.MUTATE_IF_LE` - Mutate if the particle's tag is less than or equal to `<tag>`
-6. `Vis.MUTATE_IF_GT` - Mutate if the particle's tag is greater than `<tag>`
-7. `Vis.MUTATE_IF_GE` - Mutate if the particle's tag is greater than or equal to `<tag>`
-8. `Vis.MUTATE_IF_EVEN` - Mutate if the particle's tag is an even number
-9. `Vis.MUTATE_IF_ODD` - Mutate if the particle's tag is an odd number
-10. `Vis.MUTATE_IF_ABOVE` - Mutate if the particle's y-coordinate is above `<num2>`
-11. `Vis.MUTATE_IF_BELOW` - Mutate if the particle's y-coordinate is below `<num2>`
-12. `Vis.MUTATE_IF_LEFT` - Mutate if the particle's x-coordinate is to the left of `<num1>`
-13. `Vis.MUTATE_IF_RIGHT` - Mutate if the particle's x-coordinate is to the right of `<num1>`
-14. `Vis.MUTATE_IF_NEAR` - Mutate if the particle is near `<num1>, <num2>`
-15. `Vis.MUTATE_IF_FAR` - Mutate if the particle is far from `<num1>, <num2>`
+* `Vis.MUTATE_TAG_SET` - `particle->tag = tag`
+* `Vis.MUTATE_TAG_INC` - `particle->tag += 1`
+* `Vis.MUTATE_TAG_DEC` - `particle->tag -= 1`
+* `Vis.MUTATE_TAG_ADD` - `particle->tag += tag`
+* `Vis.MUTATE_TAG_SUB` - `particle->tag -= tag`
+* `Vis.MUTATE_TAG_MUL` - `particle->tag *= tag`
+* `Vis.MUTATE_TAG_DIV` - `particle->tag /= tag`
 
-Operations are the same as the ordinary mutate, but with `_IF` appended:
+##### Conditional mutation
 
-1. `Vis.MUTATE_PUSH_IF` - `p->dx *= num1; p->dy *= num1`
-2. `Vis.MUTATE_PUSH_DX_IF` - `p->dx *= num1`
-3. `Vis.MUTATE_PUSH_DY_IF` - `p->dy *= num1`
-4. `Vis.MUTATE_SLOW_IF` - `p->dx /= num1; p->dy /= num1`
-5. `Vis.MUTATE_SHRINK_IF` - `p->radius /= num1`
-6. `Vis.MUTATE_GROW_IF` - `p->radius *= num1`
-7. `Vis.MUTATE_AGE_IF` - `p->life = num1 * p->lifetime`
-8. `Vis.MUTATE_OPACITY_IF` - `p->alpha = num1`
-9. `Vis.MUTATE_SET_DX_IF` - `p->dx = randdouble(num1-num2, num1+num2)`
-10. `Vis.MUTATE_SET_DY_IF` - `p->dy = randdouble(num1-num2, num1+num2)`
-11. `Vis.MUTATE_SET_RADIUS_IF` - `p->radius = randdouble(num1-num2, num1+num2)`
-12. `Vis.MUTATE_SET_VERTICES_IF` - `p->vertices = randdouble(num1-num2, num1+num2)`
-13. `Vis.MUTATE_SET_ANGLE_IF` - `p->angle = randdouble(num1-num2, num1+num2)`
-14. `Vis.MUTATE_SET_FRICTION_IF` - `p->friction_coeff = num1`
-15. `Vis.MUTATE_SET_GRAVITY_IF` - `p->gravity_coeff = num1`
-
-#### New Mutate API
-
-This API is a work in progress and will replace the existing mutate APIs.
-
-For example, `Vis.MUTATE_PUSH_IF` can be used as:
+These functions allow you to modify certain particle properties only if the specified condition holds.
 
 ```lua
--- push particles with factor 2 if their tag is equal to 1
-Vis.mutate{Vis.flist, when, Vis.MUTATE_PUSH_IF, cond=Vis.MUTATE_IF_EQ, tag=1, factor=2}
+Vis.mutate(Vis.flist, when, mutate_func_id, cond,
+      tag,                        -- only if cond is EQ, NE, LT, LE, GT, GE
+      newtag,                     -- only if mutate_func_id is Vis.MUTATE_TAG_SET_IF
+      factor1, factor2,           -- assigned
+      checkfactor1, checkfactor2, -- checked
+      offset1, offset2)           -- compared
+```
 
--- equivalently
-Vis.mutate{Vis.flist, when, Vis.MUTATE_PUSH_IF, cond=Vis.MUTATE_IF_EQ, tag=1, factor={2}}
+The following conditional mutates are available:
 
--- push particles with factor 2 if their tag is even
-Vis.mutate{Vis.flist, when, Vis.MUTATE_PUSH_IF, cond=Vis.MUTATE_IF_EVEN, factor=2}
+* `Vis.MUTATE_TAG_SET_IF`
+* `Vis.MUTATE_PUSH_IF`
+* `Vis.MUTATE_PUSH_DX_IF`
+* `Vis.MUTATE_PUSH_DY_IF`
+* `Vis.MUTATE_PUSH_DZ_IF`
+* `Vis.MUTATE_SLOW_IF`
+* `Vis.MUTATE_SHRINK_IF`
+* `Vis.MUTATE_GROW_IF`
+* `Vis.MUTATE_AGE_IF`
+* `Vis.MUTATE_OPACITY_IF`
+* `Vis.MUTATE_SET_DX_IF`
+* `Vis.MUTATE_SET_DY_IF`
+* `Vis.MUTATE_SET_DZ_IF`
+* `Vis.MUTATE_SET_RADIUS_IF`
+* `Vis.MUTATE_SET_VERTICES_IF`
+* `Vis.MUTATE_SET_ANGLE_IF`
+
+The following mutate conditions are available:
+
+* `Vis.MUTATE_IF_TRUE`
+* `Vis.MUTATE_IF_EQ`
+* `Vis.MUTATE_IF_NE`
+* `Vis.MUTATE_IF_LT`
+* `Vis.MUTATE_IF_LE`
+* `Vis.MUTATE_IF_GT`
+* `Vis.MUTATE_IF_GE`
+* `Vis.MUTATE_IF_EVEN`
+* `Vis.MUTATE_IF_ODD`
+* `Vis.MUTATE_IF_ABOVE`
+* `Vis.MUTATE_IF_BELOW`
+* `Vis.MUTATE_IF_LEFT`
+* `Vis.MUTATE_IF_RIGHT`
+* `Vis.MUTATE_IF_NEAR`
+* `Vis.MUTATE_IF_FAR`
+
+### <a name="message-api"></a><code>module Message = require("message")</code>
+
+This API allows you to display text on the screen using particle emits. Each letter is a grid of on/off bits, where the on bits are where an emit is made. This module requires having an `Emit` class instance.
+
+```lua
+local msg = Message:new{emit=<emit-instance>, line_spacing=<optional-line-spacing>, zoom=<optional-zoom-multiplier>}
+```
+
+> [!NOTE]
+> The message instance does not make a copy of the emit object. Modifying the emit object will also modify the message's emit object (as they are the exact same object in memory). You can use this to your advantage to change the color or lifetime of text on the fly.
+
+#### Methods
+
+* `msg:emit_char(when, char, anchorx, anchory, letterx, lettery)`: Emit a single character at the given location. If `when` is `nil`, `e:emitnow()` is called instead of scheduling.
+* `msg:emit_message(when, message, anchorx, anchory)`: Emit a sequence of letters (a string) starting at the given location.
+* `msg:emit_center_message(when, message, anchorx, anchory)`: Emit a center-aligned string at the given location.
+* `msg:emit_lines(when, lines, anchorx, anchory)`: Emit a table of strings on consecutive lines.
+* `msg:emit_center_lines(when, lines, anchorx, anchory)`: Emit a table of strings on consecutive lines, center-aligned.
+* `msg:emit_text(when, text, anchorx, anchory)`: Emit arbitrary text (which may contain multiple lines) centered on consecutive lines.
+
+You can also update the message configuration dynamically:
+* `msg:set(emit_table_key, value)`: Set an emit table key
+* `value = msg:get(emit_table_key)`: Get an emit table key value
+* `msg:set_emit(obj)`: Set (or replace) the emit object
+* `msg:set_line_spacing(value)`: Set the line spacing
+* `msg:set_zoom(value)`: Set the zoom multiplier
+
+#### Example
+
+```lua
+-- Emitting a static centered title
+local zoom = 4  -- letter size
+local e = Emit:new({tag=1})
+e:count(zoom*4)
+e:radius(1)
+e:ds(0, 0)
+e:theta(0, math.pi)
+e:life(5000)
+e:color(0, 0.8, 0.4, 0.2, .1, 0)
+e:blender(Vis.BLEND_EASING)
+
+local m = Message:new{emit=e, line_spacing=1.5, zoom=zoom}
+
+-- Emit the text the instant the script begins
+m:emit_center_lines(1, {
+    "Une vie à t'aimer",
+    "Lorien Testard"
+}, W/2, H/2 + 50)
+
+
+-- Dynamically changing the emit object's properties
+local me = e:clone()
+local m2 = Message:new{emit=me, zoom=2}
+
+for onms, frame_info in pairs(MIDI.to_timing(intro)) do
+    -- Modify the underlying emit instance directly
+    me:life(frame_info.duration)
+
+    local msg = ("%d id %d %s"):format(
+        onms,
+        frame_info.frames[1].id,
+        frame_info.frames[1].lyric or "<none>")
+
+    m2:emit_lines(now + onms, { msg }, 0, 0)
+end
 ```
 
 ## Planned Features
