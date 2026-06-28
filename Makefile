@@ -147,12 +147,13 @@ FP_BASE ?= $(FP_DIR)/bowser
 FP_AUDIO ?= media/bowser-full.mp3
 FP_AVI ?= $(FP_DIR)/bowser.avi
 
+.PHONY: all fast release debug trace profile
 all: debug
 
 # If you plan to use lua/letters.lua with LuaJIT or Lua5.1, this is needed
 lua/utf8.so: 3rdparty/luautf8-0.2.0.tar.gz
 	tar xvfz $^ -C 3rdparty/
-	clang -g -fsanitize=fuzzer-no-link,address -fPIC $(CFLAGS_LIBS) 3rdparty/luautf8-0.2.0/lutf8lib.c -shared -o lua/utf8.so
+	$(CC) -g -fPIC $(CFLAGS_LIBS) 3rdparty/luautf8-0.2.0/lutf8lib.c -shared -o lua/utf8.so
 
 fast release debug trace: $(DEPFILES) $(SOURCES) $(VIS)
 
@@ -164,17 +165,6 @@ profile: $(SOURCES) $(VIS)
 $(DEPDIR):
 	- test -d $(DEPDIR) || mkdir $(DEPDIR) 2>$(DEVNULL)
 
-$(DEPDIR)/3rdparty/%.d: $(DIR)/3rdparty/%.c .cflags | $(DEPDIR)
-	@mkdir -p $(dir $@)
-	$(CC) -MM -MT '$(OBJDIR)/3rdparty/$*.o $@' $< -msse2 $(CFLAGS) $(CFLAGS_3RDPARTY) > $@
-
-$(DEPDIR)/audio/%.d: $(DIR)/audio/%.c .cflags | $(DEPDIR)
-	@mkdir -p $(dir $@)
-	$(CC) -MM -MT '$(OBJDIR)/audio/$*.o $@' $< -msse2 $(CFLAGS) $(CFLAGS_AUDIO) > $@
-
-$(DEPDIR)/%.d: $(DIR)/%.c .cflags | $(DEPDIR)
-	@mkdir -p $(dir $@)
-	$(CC) -MM -MT '$(OBJDIR)/$*.o $@' $< $(CFLAGS) > $@
 
 CURRENT_FLAGS = $(strip $(CFLAGS) $(LDFLAGS))
 OLD_FLAGS := $(strip $(file < .cflags))
@@ -202,8 +192,9 @@ $(OBJDIR)/audio/%.o: CFLAGS += -msse2 $(CFLAGS_AUDIO)
 
 $(OBJDIR)/emitter.o: CFLAGS += -Wno-float-equal
 
-$(OBJDIR)/%.o: %.c .cflags | $(OBJDIR)
-	$(CC) -c -o $@ $< $(CFLAGS)
+$(OBJDIR)/%.o: %.c .cflags | $(OBJDIR) $(DEPDIR)
+	@mkdir -p $(dir $(DEPDIR)/$*.d)
+	$(CC) -MMD -MP -MF $(DEPDIR)/$*.d -c -o $@ $< $(CFLAGS)
 
 $(VIS): $(OBJECTS) .cflags
 	$(CC) -o $@ $(filter %.o,$^) $(LDFLAGS)
@@ -286,4 +277,4 @@ fp-cleanup:
 .PHONY: finalproduct
 finalproduct: all fp-prep fp-makeframes fp-encode fp-cleanup
 
-include $(DEPFILES)
+-include $(DEPFILES)
