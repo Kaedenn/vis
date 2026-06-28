@@ -1,6 +1,32 @@
 
 # Hand-Crafted Particle Visualization to Music, via OpenGL and Lua
 
+## Table of Contents
+
+- [Background information](#background-information)
+- [Compiling this thing](#compiling-this-thing)
+  - [Make targets:](#make-targets)
+  - [Dependencies:](#dependencies)
+- [Running this thing](#running-this-thing)
+  - [Controls](#controls)
+  - [Other invocations](#other-invocations)
+    - [Click-and-drag method](#click-and-drag-method)
+    - [Script mode](#script-mode)
+  - [Writing your own scripts](#writing-your-own-scripts)
+  - [A note about uncertainty:](#a-note-about-uncertainty)
+- [Lua API Documentation](#lua-api-documentation)
+  - [`module Vis = require("Vis")` - The Vis Module](#vis-module)
+  - [`module VisUtil = require("visutil")` - The Vis Utility Module](#visutil-module)
+  - [The Emit Table](#the-emit-table)
+  - [`module Emit = require("emit")` - The Emit Module](#emit-module)
+- [Mutation](#mutation)
+    - [Standard mutate](#standard-mutate)
+    - [Tag modification](#tag-modification)
+    - [Conditional mutate](#conditional-mutate)
+    - [New Mutate API](#new-mutate-api)
+- [Planned Features](#planned-features)
+- [Credits](#credits)
+
 ## Background information
 
 This project was originally created to investigate the question, "can you
@@ -131,10 +157,9 @@ table will be positioned at a random spot between `x - ux` and
 `x + ux`.  Position, radius, angle, life, and color all have uncertainty
 values which all follow this rule.
 
-<details>
-<summary><strong>The <code>Vis</code> Module</strong></summary>
+## Lua API Documentation
 
-### `module Vis = require("Vis")`
+### <a name="vis-module"></a>`module Vis = require("Vis")` - The Vis Module
 
 This is the core library. Its fields are:
 
@@ -199,10 +224,10 @@ the values given. Each value is between 0 and 1.
 rotation around the Y (`theta`) and X (`phi`) axes after `when` milliseconds
 have passed.
 
-`function Vis.mutate(Vis.flist, when, func, coefficient)`: Schedules the
-mutation given by `func` (see constants `Vis.MUTATE_*`) with
-coefficient `coefficient` after `when` milliseconds have passed.
-Mutates affect all living particles on the screen.
+`function Vis.mutate(Vis.flist, when, func, ...)`: Schedules the
+mutation given by `func` (see constants `Vis.MUTATE_*`) after `when`
+milliseconds have passed. Additional parameters are passed to the
+function as needed. Mutates affect all living particles on the screen.
 
 `function Vis.callback(Vis.flist, when, Vis.script, lua_script)`: Executes
 the string `lua_script` in the same context as the calling file after `when`
@@ -349,6 +374,10 @@ coefficient given.
 
 `constant Vis.MUTATE_SET_ANGLE`: Sets the particle rotation angle.
 
+`constant Vis.MUTATE_SET_FRICTION`: Sets the particle friction.
+
+`constant Vis.MUTATE_SET_GRAVITY`: Sets the particle gravity.
+
 `constant Vis.MUTATE_TAG_SET`: Tags all particles by setting their tag
 value to the integer given.
 
@@ -401,6 +430,10 @@ condition specified evaluates to true against the particle and the tag given.
 `constant Vis.MUTATE_SET_VERTICES_IF`: As above, with `Vis.MUTATE_SET_VERTICES`
 
 `constant Vis.MUTATE_SET_ANGLE_IF`: As above, with `Vis.MUTATE_SET_ANGLE`
+
+`constant Vis.MUTATE_SET_FRICTION_IF`: As above, with `Vis.MUTATE_SET_FRICTION`
+
+`constant Vis.MUTATE_SET_GRAVITY_IF`: As above, with `Vis.MUTATE_SET_GRAVITY`
 
 `constant Vis.NMUTATES`: Equal to the number of possible mutate choices
 listed above.
@@ -490,12 +523,8 @@ the following values:
 noise. This includes allocation and deallocation functions, for tracking down
 memory leaks.
 
-</details>
 
-<details>
-<summary><strong>The <code>VisUtil</code> Module</strong></summary>
-
-### `module VisUtil = require("visutil")`
+### <a name="visutil-module"></a>`module VisUtil = require("visutil")` - The Vis Utility Module
 
 This module is pure Lua and resides in `lua/visutil.lua`. Have a look there
 to see how everything is implemented.  The emit table generated via the
@@ -527,12 +556,7 @@ table given by `table`.
 passing the table given. This is how you modify the click-and-drag emission
 parameters.
 
-</details>
-
-<details>
-<summary><strong>The Emit Table and <code>Emit</code> Module</strong></summary>
-
-#### The emit table
+### The Emit Table
 
 The keys of a valid emit table and the fields wrapped by an `Emit`
 instance are listed below.
@@ -574,19 +598,32 @@ to emit.
 emit. It is recommended to use `VisUtil.color_emit_table` or
 `Emit:color` over using these values directly. Values are between 0 and 1.
 
-`enumeration force`: One of the `Vis.FORCE_` values. Passing a value
-other than these will cause errors and, in certain circumstances, may cause
-the program to terminate.
+`enumeration force`: One of the `Vis.FORCE_` values. These values affect the
+particles' velocities each frame. The default force is no force.
 
-`enumeration limit`: One of the `Vis.LIMIT_` values. Passing a value
-other than these will cause errors and, in certain circumstances, may cause
-the program to terminate.
+`enumeration limit`: One of the `Vis.LIMIT_` values. These values affect how
+particles behave when approaching the edges of the screen.
 
-`enumeration blender`: One of the `Vis.BLEND_` values. As above,
-passing values other than these will cause errors and, in certain
-circumstances, may cause the program to terminate.
+`enumeration blender`: One of the `Vis.BLEND_` values. These control the
+evolution of particle transparency over time. `Vis.BLEND_LINEAR` is the
+default.
 
-#### `module Emit = require('emit')` and the `Emit` class
+`float friction`: Friction coefficient, if `force` is `Vis.FORCE_FRICTION`.
+Defaults to 0.99. The particle's velocity is multiplied by this value
+each frame.
+
+`float gravity`: Gravity coefficient, if `force` is `Vis.FORCE_GRAVITY`.
+Defaults to 0.03. The particle's Y velocity is increased by this value
+each frame.
+
+`integer vertices`: Number of vertices to use for the particle.
+Defaults to 4.
+
+`float angle`: Rotation angle of the particle in radians. Defaults to 0.
+
+`integer tag`: Tag to use for the particle. Defaults to 0.
+
+### <a name="emit-module"></a>`module Emit = require("emit")` - The Emit Module
 
 This module is also pure Lua and resides in `lua/emit.lua`. Have a look
 there to see how it works. Its purpose is to lessen the strain of working with
@@ -663,10 +700,7 @@ Value must be one of the `Vis.LIMIT_` constants.
 `e:blender(blend)` Configure the emit's alpha-blending method to the
 method given, which must be one of the `Vis.BLEND_` constants.
 
-</details>
-
-<details>
-<summary><strong>Mutation</strong></summary>
+## Mutation
 
 Mutates are a very powerful type of frame and provide a way to modify either
 all particles on screen or only a subset, using tag modification and
@@ -682,6 +716,18 @@ Vis.mutate(Vis.flist, <when>, Vis.MUTATE_<op>, <num1>[, <num2>[, <num3>[, <num4>
 Vis.mutate(Vis.flist, <when>, Vis.MUTATE_TAG_<op>, <num>)
 
 Vis.mutate(Vis.flist, <when>, Vis.MUTATE_<op>_IF, <num1>, Vis.MUTATE_IF_<cond>, <tag>, <num>)
+
+Vis.mutate{
+    Vis.flist,
+    when,
+    [func=]Vis.MUTATE_<func>,
+    cond=Vis.MUTATE_IF_<cond>,
+    tag=<check-tag>,
+    newtag=<new-tag>,
+    factor=<number-or-array-of-two-numbers>,
+    check=<number-or-array-of-two-numbers>,
+    offset=<number-or-array-of-two-numbers>
+}
 ```
 
 #### Standard mutate
@@ -702,19 +748,21 @@ numbers, but some may require all four.
 
 Operations:
 
-1. `VIS_MUTATE_PUSH` - `p->dx *= num1; p->dy *= num1`
-2. `VIS_MUTATE_PUSH_DX` - `p->dx *= num1`
-3. `VIS_MUTATE_PUSH_DY` - `p->dy *= num1`
-4. `VIS_MUTATE_SLOW` - `p->dx /= num1; p->dy /= num1`
-5. `VIS_MUTATE_SHRINK` - `p->radius /= num1`
-6. `VIS_MUTATE_GROW` - `p->radius *= num1`
-7. `VIS_MUTATE_AGE` - `p->life = num1 * p->lifetime`
-8. `VIS_MUTATE_OPACITY` - `p->alpha = num1`
-9. `VIS_MUTATE_SET_DX` - `p->dx = randdouble(num1-num2, num1+num2)`
-10. `VIS_MUTATE_SET_DY` - `p->dy = randdouble(num1-num2, num1+num2)`
-11. `VIS_MUTATE_SET_RADIUS` - `p->radius = randdouble(num1-num2, num1+num2)`
-12. `VIS_MUTATE_SET_VERTICES` - `p->vertices = randdouble(num1-num2, num1+num2)`
-13. `VIS_MUTATE_SET_ANGLE` - `p->angle = randdouble(num1-num2, num1+num2)`
+1. `Vis.MUTATE_PUSH` - `p->dx *= num1; p->dy *= num1`
+2. `Vis.MUTATE_PUSH_DX` - `p->dx *= num1`
+3. `Vis.MUTATE_PUSH_DY` - `p->dy *= num1`
+4. `Vis.MUTATE_SLOW` - `p->dx /= num1; p->dy /= num1`
+5. `Vis.MUTATE_SHRINK` - `p->radius /= num1`
+6. `Vis.MUTATE_GROW` - `p->radius *= num1`
+7. `Vis.MUTATE_AGE` - `p->life = num1 * p->lifetime`
+8. `Vis.MUTATE_OPACITY` - `p->alpha = num1`
+9. `Vis.MUTATE_SET_DX` - `p->dx = randdouble(num1-num2, num1+num2)`
+10. `Vis.MUTATE_SET_DY` - `p->dy = randdouble(num1-num2, num1+num2)`
+11. `Vis.MUTATE_SET_RADIUS` - `p->radius = randdouble(num1-num2, num1+num2)`
+12. `Vis.MUTATE_SET_VERTICES` - `p->vertices = randdouble(num1-num2, num1+num2)`
+13. `Vis.MUTATE_SET_ANGLE` - `p->angle = randdouble(num1-num2, num1+num2)`
+14. `Vis.MUTATE_SET_FRICTION` - `p->friction_coeff = num1`
+15. `Vis.MUTATE_SET_GRAVITY` - `p->gravity_coeff = num1`
 
 #### Tag modification
 
@@ -727,12 +775,12 @@ value of `5` will set all active particles' tags to the number 5.
 
 Operations:
 
-1. `VIS_MUTATE_TAG_SET` - `p->tag.l = num1`
-2. `VIS_MUTATE_TAG_INC` - `p->tag.l += 1`
-3. `VIS_MUTATE_TAG_DEC` - `p->tag.l -= 1`
-4. `VIS_MUTATE_TAG_ADD` - `p->tag.l += num1`
-5. `VIS_MUTATE_TAG_SUB` - `p->tag.l -= num1`
-6. `VIS_MUTATE_TAG_MUL` - `p->tag.l *= num1`
+1. `Vis.MUTATE_TAG_SET` - `p->tag.l = num1`
+2. `Vis.MUTATE_TAG_INC` - `p->tag.l += 1`
+3. `Vis.MUTATE_TAG_DEC` - `p->tag.l -= 1`
+4. `Vis.MUTATE_TAG_ADD` - `p->tag.l += num1`
+5. `Vis.MUTATE_TAG_SUB` - `p->tag.l -= num1`
+6. `Vis.MUTATE_TAG_MUL` - `p->tag.l *= num1`
 
 #### Conditional mutate
 
@@ -747,44 +795,66 @@ Vis.mutate(Vis.flist, <when>,
                     [, <num4>]]]])
 ```
 
-This applies `MUTATE_<op>` to all particles on screen if (and only if)
+This applies `Vis.MUTATE_<op>` to all particles on screen if (and only if)
 both the particle's tag and the `<tag>` value given satisfy the
-`MUTATE_IF_<cond>` given. For example,
+`Vis.MUTATE_IF_<cond>` given. For example,
 `Vis.mutate(Vis.flist, 50, Vis.MUTATE_PUSH_IF, 2, Vis.MUTATE_IF_EQ, 1)`
 will double the velocities of all particles having a tag of 1.
 
 Conditions:
 
-1. `VIS_MUTATE_IF_TRUE` - Default condition; always true
-2. `VIS_MUTATE_IF_EQ` - Mutate if the particle's tag is equal to `<tag>`
-3. `VIS_MUTATE_IF_NE` - Mutate if the particle's tag is not `<tag>`
-4. `VIS_MUTATE_IF_LT` - Mutate if the particle's tag is less than `<tag>`
-5. `VIS_MUTATE_IF_LE` - Mutate if the particle's tag is less than or equal to `<tag>`
-6. `VIS_MUTATE_IF_GT` - Mutate if the particle's tag is greater than `<tag>`
-7. `VIS_MUTATE_IF_GE` - Mutate if the particle's tag is greater than or equal to `<tag>`
-8. `VIS_MUTATE_IF_EVEN` - Mutate if the particle's tag is an even number
-9. `VIS_MUTATE_IF_ODD` - Mutate if the particle's tag is an odd number
+1. `Vis.MUTATE_IF_TRUE` - Default condition; always true
+2. `Vis.MUTATE_IF_EQ` - Mutate if the particle's tag is equal to `<tag>`
+3. `Vis.MUTATE_IF_NE` - Mutate if the particle's tag is not `<tag>`
+4. `Vis.MUTATE_IF_LT` - Mutate if the particle's tag is less than `<tag>`
+5. `Vis.MUTATE_IF_LE` - Mutate if the particle's tag is less than or equal to `<tag>`
+6. `Vis.MUTATE_IF_GT` - Mutate if the particle's tag is greater than `<tag>`
+7. `Vis.MUTATE_IF_GE` - Mutate if the particle's tag is greater than or equal to `<tag>`
+8. `Vis.MUTATE_IF_EVEN` - Mutate if the particle's tag is an even number
+9. `Vis.MUTATE_IF_ODD` - Mutate if the particle's tag is an odd number
+10. `Vis.MUTATE_IF_ABOVE` - Mutate if the particle's y-coordinate is above `<num2>`
+11. `Vis.MUTATE_IF_BELOW` - Mutate if the particle's y-coordinate is below `<num2>`
+12. `Vis.MUTATE_IF_LEFT` - Mutate if the particle's x-coordinate is to the left of `<num1>`
+13. `Vis.MUTATE_IF_RIGHT` - Mutate if the particle's x-coordinate is to the right of `<num1>`
+14. `Vis.MUTATE_IF_NEAR` - Mutate if the particle is near `<num1>, <num2>`
+15. `Vis.MUTATE_IF_FAR` - Mutate if the particle is far from `<num1>, <num2>`
 
 Operations are the same as the ordinary mutate, but with `_IF` appended:
 
-1. `VIS_MUTATE_PUSH_IF` - `p->dx *= num1; p->dy *= num1`
-2. `VIS_MUTATE_PUSH_DX_IF` - `p->dx *= num1`
-3. `VIS_MUTATE_PUSH_DY_IF` - `p->dy *= num1`
-4. `VIS_MUTATE_SLOW_IF` - `p->dx /= num1; p->dy /= num1`
-5. `VIS_MUTATE_SHRINK_IF` - `p->radius /= num1`
-6. `VIS_MUTATE_GROW_IF` - `p->radius *= num1`
-7. `VIS_MUTATE_AGE_IF` - `p->life = num1 * p->lifetime`
-8. `VIS_MUTATE_OPACITY_IF` - `p->alpha = num1`
-9. `VIS_MUTATE_SET_DX_IF` - `p->dx = randdouble(num1-num2, num1+num2)`
-10. `VIS_MUTATE_SET_DY_IF` - `p->dy = randdouble(num1-num2, num1+num2)`
-11. `VIS_MUTATE_SET_RADIUS_IF` - `p->radius = randdouble(num1-num2, num1+num2)`
-12. `VIS_MUTATE_SET_VERTICES_IF` - `p->vertices = randdouble(num1-num2, num1+num2)`
-13. `VIS_MUTATE_SET_ANGLE_IF` - `p->angle = randdouble(num1-num2, num1+num2)`
+1. `Vis.MUTATE_PUSH_IF` - `p->dx *= num1; p->dy *= num1`
+2. `Vis.MUTATE_PUSH_DX_IF` - `p->dx *= num1`
+3. `Vis.MUTATE_PUSH_DY_IF` - `p->dy *= num1`
+4. `Vis.MUTATE_SLOW_IF` - `p->dx /= num1; p->dy /= num1`
+5. `Vis.MUTATE_SHRINK_IF` - `p->radius /= num1`
+6. `Vis.MUTATE_GROW_IF` - `p->radius *= num1`
+7. `Vis.MUTATE_AGE_IF` - `p->life = num1 * p->lifetime`
+8. `Vis.MUTATE_OPACITY_IF` - `p->alpha = num1`
+9. `Vis.MUTATE_SET_DX_IF` - `p->dx = randdouble(num1-num2, num1+num2)`
+10. `Vis.MUTATE_SET_DY_IF` - `p->dy = randdouble(num1-num2, num1+num2)`
+11. `Vis.MUTATE_SET_RADIUS_IF` - `p->radius = randdouble(num1-num2, num1+num2)`
+12. `Vis.MUTATE_SET_VERTICES_IF` - `p->vertices = randdouble(num1-num2, num1+num2)`
+13. `Vis.MUTATE_SET_ANGLE_IF` - `p->angle = randdouble(num1-num2, num1+num2)`
+14. `Vis.MUTATE_SET_FRICTION_IF` - `p->friction_coeff = num1`
+15. `Vis.MUTATE_SET_GRAVITY_IF` - `p->gravity_coeff = num1`
 
-</details>
+#### New Mutate API
 
-<details>
-<summary>Planned Features</summary>
+This API is a work in progress and will replace the existing mutate APIs.
+
+For example, `Vis.MUTATE_PUSH_IF` can be used as:
+
+```lua
+-- push particles with factor 2 if their tag is equal to 1
+Vis.mutate{Vis.flist, when, Vis.MUTATE_PUSH_IF, cond=Vis.MUTATE_IF_EQ, tag=1, factor=2}
+
+-- equivalently
+Vis.mutate{Vis.flist, when, Vis.MUTATE_PUSH_IF, cond=Vis.MUTATE_IF_EQ, tag=1, factor={2}}
+
+-- push particles with factor 2 if their tag is even
+Vis.mutate{Vis.flist, when, Vis.MUTATE_PUSH_IF, cond=Vis.MUTATE_IF_EVEN, factor=2}
+```
+
+## Planned Features
 
 I plan to add a way to adjust emit frames according to the song. This involves
 calculating a fast-Fourier transform (FFT) in addition to querying absolute
@@ -792,8 +862,6 @@ volume (or envelope) information.
 
 Note that because the particle engine runs at a specific fame-rate (default 30),
 this reduces the resolution made available to the particles.
-
-</details>
 
 ## Credits
 

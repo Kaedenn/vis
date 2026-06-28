@@ -760,6 +760,26 @@ int initialize_vis_lib(lua_State* L) {
     return 1;
 }
 
+/* Read a numeric array (or scalar) from a table */
+static void get_table_double_array(lua_State* L, int table_index, const char* key, double* arr) {
+    lua_getfield(L, table_index, key);
+    if (lua_type(L, -1) == LUA_TNUMBER) {
+        arr[0] = lua_tonumber(L, -1);
+        arr[1] = 0.0;
+    } else if (lua_type(L, -1) == LUA_TTABLE) {
+        lua_rawgeti(L, -1, 1);
+        arr[0] = luaL_optnumber(L, -1, 0.0);
+        lua_pop(L, 1);
+        lua_rawgeti(L, -1, 2);
+        arr[1] = luaL_optnumber(L, -1, 0.0);
+        lua_pop(L, 1);
+    } else {
+        arr[0] = 0.0;
+        arr[1] = 0.0;
+    }
+    lua_pop(L, 1);
+}
+
 /* Assign _G.Arguments = {args...} */
 void prepare_stack(script_t s, klist args) {
     s->debugidx = lua_gettop(s->L);
@@ -1325,42 +1345,108 @@ int viscmd_bgcolor_fn(lua_State* L) {
  */
 int viscmd_mutate_fn(lua_State* L) {
     mutate_method* method = DBMALLOC(sizeof(struct mutate_method));
-    flist_t fl = *(flist_t*)luaL_checkudata(L, 1, "flist_t*");
-    fnum_t when = do_msec2frames(L, (msec_t)luaL_checkinteger(L, 2));
-    mutate_id fnid = (mutate_id)luaL_checkinteger(L, 3);
-    method->id = fnid;
-    if (mutate_is_unconditional(fnid)) {
-        /* case 1: normal mutate */
-        method->factor[0] = luaL_checknumber(L, 4);
-        method->factor[1] = luaL_optnumber(L, 5, 0);
-        method->offset[0] = luaL_optnumber(L, 6, 0);
-        method->offset[1] = luaL_optnumber(L, 7, 0);
-    } else if (mutate_is_tag(fnid)) {
-        /* case 2: tag modification */
-        method->newtag.l = luaL_optinteger(L, 4, 0);
-    } else if (mutate_is_conditional(fnid)) {
-        /* case 3: conditional mutate */
-        method->cond = (mutate_cond_id)luaL_checkinteger(L, 4);
-        if (method->cond < VIS_MUTATE_IF_TRUE || method->cond >= VIS_MUTATE_NCONDS) {
-            DZFREE(method);
-            return luaL_error(L, "Invalid mutate condition %d", method->cond);
+    flist_t fl;
+    fnum_t when;
+    mutate_id fnid = VIS_NMUTATES; /* Special value meaning "not initialized" */
+    int is_table = lua_type(L, 1) == LUA_TTABLE;
+
+    if (is_table) {
+        lua_rawgeti(L, 1, 1);
+        fl = *(flist_t*)luaL_checkudata(L, -1, "flist_t*");
+        lua_pop(L, 1);
+        lua_rawgeti(L, 1, 2);
+        when = do_msec2frames(L, (msec_t)luaL_checkinteger(L, -1));
+        lua_pop(L, 1);
+        lua_rawgeti(L, 1, 3);
+        fnid = (mutate_id)luaL_optinteger(L, -1, VIS_NMUTATES);
+        lua_pop(L, 1);
+        if (fnid == VIS_NMUTATES) {
+            lua_getfield(L, 1, "func");
+            fnid = (mutate_id)luaL_optinteger(L, -1, VIS_NMUTATES);
+            lua_pop(L, 1);
         }
-        int arg = 5;
-        if (method->cond >= VIS_MUTATE_IF_TRUE && method->cond <= VIS_MUTATE_IF_GE) {
-            method->tag.l = luaL_checkinteger(L, arg++);
-        }
-        if (fnid == VIS_MUTATE_TAG_SET_IF) {
-            method->newtag.l = luaL_checkinteger(L, arg++);
-        }
-        method->factor[0] = luaL_optnumber(L, arg++, 0);
-        method->factor[1] = luaL_optnumber(L, arg++, 0);
-        method->check_factor[0] = luaL_optnumber(L, arg++, 0);
-        method->check_factor[1] = luaL_optnumber(L, arg++, 0);
-        method->offset[0] = luaL_optnumber(L, arg++, 0);
-        method->offset[1] = luaL_optnumber(L, arg++, 0);
     } else {
+        fl = *(flist_t*)luaL_checkudata(L, 1, "flist_t*");
+        when = do_msec2frames(L, (msec_t)luaL_checkinteger(L, 2));
+        fnid = (mutate_id)luaL_checkinteger(L, 3);
+    }
+
+    if (fnid == VIS_NMUTATES) {
         DZFREE(method);
-        return luaL_error(L, "Invalid mutate ID %d", fnid);
+        return luaL_error(L, "Mutate function ID not specified or invalid");
+    }
+
+    method->id = fnid;
+    if (is_table) {
+        if (mutate_is_unconditional(fnid)) {
+            /* case 1: normal mutate */
+            get_table_double_array(L, 1, "factor", method->factor);
+            get_table_double_array(L, 1, "offset", method->offset);
+        } else if (mutate_is_tag(fnid)) {
+            /* case 2: tag modification */
+            lua_getfield(L, 1, "newtag");
+            method->newtag.l = luaL_optinteger(L, -1, 0);
+            lua_pop(L, 1);
+        } else if (mutate_is_conditional(fnid)) {
+            /* case 3: conditional mutate */
+            lua_getfield(L, 1, "cond");
+            method->cond = (mutate_cond_id)luaL_checkinteger(L, -1);
+            lua_pop(L, 1);
+            if (method->cond < VIS_MUTATE_IF_TRUE || method->cond >= VIS_MUTATE_NCONDS) {
+                DZFREE(method);
+                return luaL_error(L, "Invalid mutate condition %d", method->cond);
+            }
+            if (method->cond >= VIS_MUTATE_IF_TRUE && method->cond <= VIS_MUTATE_IF_GE) {
+                lua_getfield(L, 1, "tag");
+                method->tag.l = luaL_checkinteger(L, -1);
+                lua_pop(L, 1);
+            }
+            if (fnid == VIS_MUTATE_TAG_SET_IF) {
+                lua_getfield(L, 1, "newtag");
+                method->newtag.l = luaL_checkinteger(L, -1);
+                lua_pop(L, 1);
+            }
+            get_table_double_array(L, 1, "factor", method->factor);
+            get_table_double_array(L, 1, "check", method->check_factor);
+            get_table_double_array(L, 1, "offset", method->offset);
+        } else {
+            DZFREE(method);
+            return luaL_error(L, "Invalid mutate ID %d", fnid);
+        }
+    } else {
+        if (mutate_is_unconditional(fnid)) {
+            /* case 1: normal mutate */
+            method->factor[0] = luaL_checknumber(L, 4);
+            method->factor[1] = luaL_optnumber(L, 5, 0);
+            method->offset[0] = luaL_optnumber(L, 6, 0);
+            method->offset[1] = luaL_optnumber(L, 7, 0);
+        } else if (mutate_is_tag(fnid)) {
+            /* case 2: tag modification */
+            method->newtag.l = luaL_optinteger(L, 4, 0);
+        } else if (mutate_is_conditional(fnid)) {
+            /* case 3: conditional mutate */
+            method->cond = (mutate_cond_id)luaL_checkinteger(L, 4);
+            if (method->cond < VIS_MUTATE_IF_TRUE || method->cond >= VIS_MUTATE_NCONDS) {
+                DZFREE(method);
+                return luaL_error(L, "Invalid mutate condition %d", method->cond);
+            }
+            int arg = 5;
+            if (method->cond >= VIS_MUTATE_IF_TRUE && method->cond <= VIS_MUTATE_IF_GE) {
+                method->tag.l = luaL_checkinteger(L, arg++);
+            }
+            if (fnid == VIS_MUTATE_TAG_SET_IF) {
+                method->newtag.l = luaL_checkinteger(L, arg++);
+            }
+            method->factor[0] = luaL_optnumber(L, arg++, 0);
+            method->factor[1] = luaL_optnumber(L, arg++, 0);
+            method->check_factor[0] = luaL_optnumber(L, arg++, 0);
+            method->check_factor[1] = luaL_optnumber(L, arg++, 0);
+            method->offset[0] = luaL_optnumber(L, arg++, 0);
+            method->offset[1] = luaL_optnumber(L, arg++, 0);
+        } else {
+            DZFREE(method);
+            return luaL_error(L, "Invalid mutate ID %d", fnid);
+        }
     }
     method->func = MUTATE_MAP[fnid];
     flist_insert_mutate(fl, when, method);

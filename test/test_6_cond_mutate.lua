@@ -45,7 +45,7 @@ e:radius(2, 0)
 e:theta(math.pi, math.pi)
 e:life(2000, 500)
 e:color(BLUE1)
-e:blender(Vis.BLEND_NONE)
+e:blender(Vis.BLEND_LINEAR)
 
 local colors = {
     BLUE1,
