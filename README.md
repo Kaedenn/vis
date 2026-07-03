@@ -26,15 +26,11 @@
       - [Conditional Mutation Events](#conditional-mutation-events)
       - [Conditional Tag Mutation Event](#conditional-tag-mutation-event)
     - [Mutate Conditions](#mutate-conditions)
-  - [`Vis.mutate` Examples](#vis-mutate-examples)
-    - [Direct Mutation](#direct-mutation)
-    - [Conditional Mutation](#conditional-mutation)
-    - [Conditional Mutation Using Tags](#conditional-mutation-using-tags)
-  - [`Vis.mutate` Old API](#vis-mutate-old-api)
-    - [Overloads](#overloads)
-      - [Normal mutation](#normal-mutation)
-      - [Tag mutation](#tag-mutation)
-      - [Conditional mutation](#conditional-mutation)
+    - [`Vis.mutate` Old API](#vis-mutate-old-api)
+      - [Overloads](#overloads)
+        - [Normal mutation](#normal-mutation)
+        - [Tag mutation](#tag-mutation)
+        - [Conditional mutation](#conditional-mutation)
   - [`module Message = require("message")` - The Message Module](#message-module)
 - [Planned Features](#planned-features)
 - [Credits](#credits)
@@ -158,7 +154,15 @@ The full documentation of script mode is below:
 
 ### Writing your own scripts
 
-This is the fun part. There are three modules available: Vis, VisUtil, and Emit.
+This is the fun part. There are three core Lua modules available: Vis, VisUtil,
+and Emit. See the Lua API documentation below for more details.
+
+There are also a couple extra modules provided for convenience:
+* `letters.lua` - Functions for rendering text as particles.
+* `message.lua` - Functions for printing text.
+* `csv.lua` - Functions for reading CSV files.
+* `inspect.lua` - Functions for inspecting Lua tables (mostly for
+  debugging purposes).
 
 ### A note about uncertainty:
 
@@ -168,6 +172,9 @@ position `x` is denoted as `ux`, and every particle emitted by this
 table will be positioned at a random spot between `x - ux` and
 `x + ux`.  Position, radius, angle, life, and color all have uncertainty
 values which all follow this rule.
+
+The distribution between `x - ux` and `x + ux` is uniform. This is hard-coded
+and cannot be changed in Lua.
 
 ## Lua API Documentation
 
@@ -180,8 +187,8 @@ emits, the `vis` executable needs to know where the scheduling is stored.
 This is that location.
 
 `userdata Vis.script`: This field is present in order to perform advanced
-operations, such as scheduling callbacks (strings of Lua script to be executed
-after a certain amount of time has passed).
+operations, such as scheduling callbacks, i.e. Lua code to be executed after a
+certain amount of time has passed.
 
 `function Vis.debug(...)`: For debugging purposes, this function prints
 out its arguments to the debugging stream if and only if the program was
@@ -194,10 +201,10 @@ other than strings may result in errors.
 `function Vis.emit(...)`: Core emit function. Using this is discouraged unless
 performance is a massive concern. For alternatives, see
 `VisUtil.make_emit_table`, `VisUtil.emit_table`, the `Emit` class, as well as
-the documentation on emit tables. This function actually performs the particle
-logic.
+the documentation on emit tables.
 
-`function Vis.audio(path)`: Load the audio file given by `path`.
+`function Vis.audio(path)`: Load the audio file given by `path`. Audio does not
+begin playing until `Vis.play()` is called.
 
 `function Vis.play()`: Plays the current audio file.
 
@@ -206,11 +213,12 @@ logic.
 `function Vis.volume(float)`: Adjust the volume; values are between 0 and 1.
 
 `function Vis.seek(hundreths-of-a-second)`: Seeks the current audio file
-to the offset given by `hundredths-of-a-second`.
+to the offset given by `hundredths-of-a-second`. `Vis.seek(0)` effectively
+restarts the track.
 
 `function Vis.seekms(Vis.flist, when, milliseconds)`: Sets the current
 position of the schedule to `milliseconds` when `when` milliseconds
-have passed.
+have passed. This can be used to implement looping.
 
 `function Vis.seekframe(Vis.flist, when, frame_number)`: Sets the current
 position of the schedule to `frame_number` after `when` milliseconds
@@ -410,12 +418,11 @@ given.
 `constant Vis.MUTATE_TAG_SET_IF`: Apply `Vis.MUTATE_TAG_SET` if the condition
 specified evaluates to true.
 
-`constant Vis.MUTATE_PUSH_IF`: Apply `Vis.MUTATE_PUSH` if the particles' tag
-and the tag value specified satisfies the condition specified (see
-`Vis.MUTATE_IF_*` below)
+`constant Vis.MUTATE_PUSH_IF`: Apply `Vis.MUTATE_PUSH` if the particles' state
+satisfies the condition specified (see `Vis.MUTATE_IF_*` below).
 
 `constant Vis.MUTATE_PUSH_DX_IF`: Apply `Vis.MUTATE_PUSH_DX` if the
-condition specified evaluates to true against the particle and the tag given.
+condition specified evaluates to true against the particle.
 
 `constant Vis.MUTATE_PUSH_DY_IF`: As above, with `Vis.MUTATE_PUSH_DY`
 
@@ -493,9 +500,11 @@ specified coordinate is less than or equal to the distance threshold.
 `constant Vis.MUTATE_IF_FAR`: Satisfied when the particle's distance to the
 specified coordinate is greater than or equal to the distance threshold.
 
-`constant Vis.FORCE_FRICTION_COEFF`: The strength of friction, from 0 to 1.
+`constant Vis.FORCE_FRICTION_COEFF`: The default coefficient of friction,
+multiplied by the particle's velocity each frame, set to 0.99.
 
-`constant Vis.FORCE_GRAVITY_FACTOR`: The strength of gravity, from 0 to 1.
+`constant Vis.FORCE_GRAVITY_FACTOR`: The default coefficient of gravity,
+added to the particle's Y velocity each frame, set to 0.03.
 
 `constant Vis.NFRAMES`: The maximum number of frames that can be
 scheduled. This is currently set equal to 15 minutes at 60 frames per
@@ -710,6 +719,14 @@ Value must be one of the `Vis.LIMIT_` constants.
 `e:blender(blend)` Configure the emit's alpha-blending method to the
 method given, which must be one of the `Vis.BLEND_` constants.
 
+`e:friction(friction)`: Configure the emit's friction coefficient. Defaults to
+`Vis.FORCE_FRICTION_COEFF` (0.99). This only applies if the emit's force is set
+to `Vis.FORCE_FRICTION`.
+
+`e:gravity(gravity)`: Configure the emit's gravity coefficient. Defaults to
+`Vis.FORCE_GRAVITY_FACTOR` (0.03). This only applies if the emit's force is set
+to `Vis.FORCE_GRAVITY`.
+
 ### <a name="vis-mutate"></a><code>Vis.mutate</code>
 
 This function allows you to modify certain properties for each particle. These
@@ -725,12 +742,13 @@ Vis.mutate{
     Vis.flist,
     when,                                     -- When to apply the mutation event (in milliseconds)
     [func=]Vis.MUTATE_<func>,                 -- Which mutation event to use
-    cond=Vis.MUTATE_IF_<cond>,                -- Only when using cond=Vis.MUTATE_IF_<cond>
-    tag=<check-tag>,                          -- Only when using cond=Vis.MUTATE_IF_<tag-cond>
-    newtag=<new-tag>,                         -- Only when using cond=Vis.MUTATE_TAG_<event>
+    cond=Vis.MUTATE_IF_<cond>,                -- Mutate Condition. Required when func=Vis.MUTATE_<func>_IF
+    tag=<check-tag>,                          -- Particle Tag. Required when cond=Vis.MUTATE_IF_{EQ/NE/GT/GE/LT/LE/EVEN/ODD}
+    newtag=<new-tag>,                         -- New Tag. Required when cond=Vis.MUTATE_TAG_{SET/ADD/SUB/MUL/DIV}
     factor=<number-or-array-of-two-numbers>,  -- Amount to mutate by
-    check=<number-or-array-of-two-numbers>,   -- Used with Vis.MUTATE_IF_{NEAR/FAR}
-    offset=<number-or-array-of-two-numbers>   -- Used with Vis.MUTATE_IF_{ABOVE/BELOW/LEFT/RIGHT}
+    check=<number-or-array-of-two-numbers>,   -- Distance used by cond=Vis.MUTATE_IF_{NEAR/FAR}
+    offset=<number-or-array-of-two-numbers>,  -- Location used by cond=Vis.MUTATE_IF_{ABOVE/BELOW/LEFT/RIGHT/NEAR/FAR}
+    target=<number-or-array-of-two-numbers>   -- Location used by func=Vis.MUTATE_ATTRACT
 }
 ```
 
@@ -746,6 +764,10 @@ For all these events, negative values for `factor` are permitted.
 * `Vis.MUTATE_PUSH_DX` - `particle->dx *= factor[1]`
 * `Vis.MUTATE_PUSH_DY` - `particle->dy *= factor[1]`
 * `Vis.MUTATE_PUSH_DZ` - `particle->dz *= factor[1]`
+* `Vis.MUTATE_ATTRACT` -
+  * `particle->dx += (target[1] - particle->x) / dist * factor[1]`
+  * `particle->dy += (target[2] - particle->y) / dist * factor[1]`
+  * where `dist = max(distance(particle->x, particle->y, target[1], target[2]), 1.0)`
 * `Vis.MUTATE_SLOW` - `particle->dx /= factor[1]` and `particle->dy /= factor[1]`
 * `Vis.MUTATE_SHRINK` - `particle->radius /= factor[1]`
 * `Vis.MUTATE_GROW` - `particle->radius *= factor[1]`
@@ -778,6 +800,7 @@ effects are identical to their unconditional counterparts.
 * `Vis.MUTATE_PUSH_DX_IF`
 * `Vis.MUTATE_PUSH_DY_IF`
 * `Vis.MUTATE_PUSH_DZ_IF`
+* `Vis.MUTATE_ATTRACT_IF`
 * `Vis.MUTATE_SLOW_IF`
 * `Vis.MUTATE_SHRINK_IF`
 * `Vis.MUTATE_GROW_IF`
@@ -819,68 +842,42 @@ The following conditions are available:
 * `Vis.MUTATE_IF_NEAR` - `dist(particle.xy, offset[1,2]) <= check[1]`
 * `Vis.MUTATE_IF_FAR` - `dist(particle.xy, offset[1,2]) >= check[1]`
 
-### <a name="vis-mutate-examples"></a><code>Vis.mutate</code> Examples
-
-#### Direct Mutation
-
-#### Conditional Mutation
-
-#### Conditional Mutation Using Tags
-
-### <a name="vis-mutate-old-api"></a><code>Vis.mutate</code> Old API
+#### <a name="vis-mutate-old-api"></a><code>Vis.mutate</code> Old API
 
 There are presently two competing APIs for `Vis.mutate`. The arguments for the
 new API are generally the same as the old API. However, the old API uses
 positional arguments whereas the new API uses keyword arguments. The old API is
 kept around for legacy reasons, but the new API is recommended.
 
-#### Overloads
+##### Overloads
 
-* `Vis.mutate(Vis.flist, when, func, factor1, [factor2, [offset1, [offset2]]])`
+* `Vis.mutate(Vis.flist, when, func, factor1, [factor2, [offset1, [offset2, [target1, [target2]]]]])`
   * **Trigger:** `func` is an unconditional mutator (e.g., `Vis.MUTATE_PUSH`, `Vis.MUTATE_SLOW`, `Vis.MUTATE_SET_DX`).
 
 * `Vis.mutate(Vis.flist, when, func, [newtag])`
   * **Trigger:** `func` is an unconditional tag mutator (e.g., `Vis.MUTATE_TAG_SET`, `Vis.MUTATE_TAG_INC`).
 
-* `Vis.mutate(Vis.flist, when, func, cond, tag, newtag, [factor1, [factor2, [check_factor1, [check_factor2, [offset1, [offset2]]]]]])`
+* `Vis.mutate(Vis.flist, when, func, cond, tag, newtag, [factor1, [factor2, [check_factor1, [check_factor2, [offset1, [offset2, [target1, [target2]]]]]]]])`
   * **Trigger:** `func` is `Vis.MUTATE_TAG_SET_IF` and `cond` is a tag-checking condition (`Vis.MUTATE_IF_TRUE` up to `Vis.MUTATE_IF_GE`).
 
-* `Vis.mutate(Vis.flist, when, func, cond, tag, [factor1, [factor2, [check_factor1, [check_factor2, [offset1, [offset2]]]]]])`
+* `Vis.mutate(Vis.flist, when, func, cond, newtag, [factor1, [factor2, [check_factor1, [check_factor2, [offset1, [offset2, [target1, [target2]]]]]]]])`
+  * **Trigger:** `func` is `Vis.MUTATE_TAG_SET_IF` and `cond` is a non-tag-checking condition (e.g., spatial checks like `Vis.MUTATE_IF_NEAR`, `Vis.MUTATE_IF_FAR`).
+
+* `Vis.mutate(Vis.flist, when, func, cond, tag, [factor1, [factor2, [check_factor1, [check_factor2, [offset1, [offset2, [target1, [target2]]]]]]]])`
   * **Trigger:** `func` is a standard conditional mutator (e.g., `Vis.MUTATE_PUSH_IF`) and `cond` is a tag-checking condition (`Vis.MUTATE_IF_TRUE` up to `Vis.MUTATE_IF_GE`).
 
-* `Vis.mutate(Vis.flist, when, func, cond, newtag, [factor1, [factor2, [check_factor1, [check_factor2, [offset1, [offset2]]]]]])`
-  * **Trigger:** `func` is `Vis.MUTATE_TAG_SET_IF` and `cond` is a non-tag condition (e.g., spatial checks like `Vis.MUTATE_IF_NEAR` or parity checks like `Vis.MUTATE_IF_EVEN`).
+* `Vis.mutate(Vis.flist, when, func, cond, [factor1, [factor2, [check_factor1, [check_factor2, [offset1, [offset2, [target1, [target2]]]]]]]])`
+  * **Trigger:** `func` is a standard conditional mutator (e.g., `Vis.MUTATE_PUSH_IF`) and `cond` is a non-tag-checking condition (e.g., spatial checks like `Vis.MUTATE_IF_NEAR`, `Vis.MUTATE_IF_FAR`).
 
-* `Vis.mutate(Vis.flist, when, func, cond, [factor1, [factor2, [check_factor1, [check_factor2, [offset1, [offset2]]]]]])`
-  * **Trigger:** `func` is a standard conditional mutator (e.g., `Vis.MUTATE_PUSH_IF`) and `cond` is a non-tag condition (e.g., spatial checks like `Vis.MUTATE_IF_NEAR` or parity checks like `Vis.MUTATE_IF_EVEN`).
-
-##### Normal mutation
+###### Normal mutation
 
 ```lua
-Vis.mutate(Vis.flist, when, mutate_func_id, factor1[, factor2, offset1, offset2])
+Vis.mutate(Vis.flist, when, mutate_func_id, factor1[, factor2, offset1, offset2, target1, target2])
 ```
 
 Required parameters: `Vis.flist`, `when` (in milliseconds), `mutate_func_id`, and `factor1`. The remaining parameters default to 0 if not specified.
 
-The following mutates are available:
-
-* `Vis.MUTATE_PUSH` - `particle->dx *= factor1` and `particle->dy *= factor1`
-* `Vis.MUTATE_PUSH_DX` - `particle->dx *= factor1`
-* `Vis.MUTATE_PUSH_DY` - `particle->dy *= factor1`
-* `Vis.MUTATE_PUSH_DZ` - `particle->dz *= factor1`
-* `Vis.MUTATE_SLOW` - `particle->dx /= factor1` and `particle->dy /= factor1`
-* `Vis.MUTATE_SHRINK` - `particle->radius /= factor1`
-* `Vis.MUTATE_GROW` - `particle->radius *= factor1`
-* `Vis.MUTATE_AGE` - `particle->life = particle->lifetime * factor1`
-* `Vis.MUTATE_OPACITY` - `particle->alpha = factor1`
-* `Vis.MUTATE_SET_DX` - `particle->dx = factor1`
-* `Vis.MUTATE_SET_DY` - `particle->dy = factor1`
-* `Vis.MUTATE_SET_DZ` - `particle->dz = factor1`
-* `Vis.MUTATE_SET_RADIUS` - `particle->radius = factor1`
-* `Vis.MUTATE_SET_VERTICES` - `particle->vertices = factor1`
-* `Vis.MUTATE_SET_ANGLE` - `particle->angle = factor1`
-
-##### Tag mutation
+###### Tag mutation
 
 Every particle has its own `tag`, or 32-bit number. These are set via the `tag` field in the emit table. These mutate functions exist to adjust the tag for all active particles. For conditional tag modification, see `Vis.MUTATE_TAG_SET_IF` below.
 
@@ -890,17 +887,7 @@ Vis.mutate(Vis.flist, when, mutate_tag_func_id[, tag])
 
 Required parameters: `Vis.flist`, `when` (in milliseconds), and `mutate_tag_func_id`. `tag` defaults to 0 if not specified.
 
-The following tag mutates are available:
-
-* `Vis.MUTATE_TAG_SET` - `particle->tag = tag`
-* `Vis.MUTATE_TAG_INC` - `particle->tag += 1`
-* `Vis.MUTATE_TAG_DEC` - `particle->tag -= 1`
-* `Vis.MUTATE_TAG_ADD` - `particle->tag += tag`
-* `Vis.MUTATE_TAG_SUB` - `particle->tag -= tag`
-* `Vis.MUTATE_TAG_MUL` - `particle->tag *= tag`
-* `Vis.MUTATE_TAG_DIV` - `particle->tag /= tag`
-
-##### Conditional mutation
+###### Conditional mutation
 
 These functions allow you to modify certain particle properties only if the specified condition holds.
 
@@ -910,45 +897,9 @@ Vis.mutate(Vis.flist, when, mutate_func_id, cond,
       newtag,                     -- only if mutate_func_id is Vis.MUTATE_TAG_SET_IF
       factor1, factor2,           -- assigned
       checkfactor1, checkfactor2, -- checked
-      offset1, offset2)           -- compared
+      offset1, offset2,           -- compared for ABOVE/BELOW/LEFT/RIGHT/NEAR/FAR
+      target1, target2)           -- offset for ATTRACT
 ```
-
-The following conditional mutates are available:
-
-* `Vis.MUTATE_TAG_SET_IF`
-* `Vis.MUTATE_PUSH_IF`
-* `Vis.MUTATE_PUSH_DX_IF`
-* `Vis.MUTATE_PUSH_DY_IF`
-* `Vis.MUTATE_PUSH_DZ_IF`
-* `Vis.MUTATE_SLOW_IF`
-* `Vis.MUTATE_SHRINK_IF`
-* `Vis.MUTATE_GROW_IF`
-* `Vis.MUTATE_AGE_IF`
-* `Vis.MUTATE_OPACITY_IF`
-* `Vis.MUTATE_SET_DX_IF`
-* `Vis.MUTATE_SET_DY_IF`
-* `Vis.MUTATE_SET_DZ_IF`
-* `Vis.MUTATE_SET_RADIUS_IF`
-* `Vis.MUTATE_SET_VERTICES_IF`
-* `Vis.MUTATE_SET_ANGLE_IF`
-
-The following mutate conditions are available:
-
-* `Vis.MUTATE_IF_TRUE`
-* `Vis.MUTATE_IF_EQ`
-* `Vis.MUTATE_IF_NE`
-* `Vis.MUTATE_IF_LT`
-* `Vis.MUTATE_IF_LE`
-* `Vis.MUTATE_IF_GT`
-* `Vis.MUTATE_IF_GE`
-* `Vis.MUTATE_IF_EVEN`
-* `Vis.MUTATE_IF_ODD`
-* `Vis.MUTATE_IF_ABOVE`
-* `Vis.MUTATE_IF_BELOW`
-* `Vis.MUTATE_IF_LEFT`
-* `Vis.MUTATE_IF_RIGHT`
-* `Vis.MUTATE_IF_NEAR`
-* `Vis.MUTATE_IF_FAR`
 
 ### <a name="message-api"></a><code>module Message = require("message")</code>
 
@@ -1036,3 +987,6 @@ Music provided by NoCopyrightSounds
 Free Download/Stream: http://ncs.io/Royalty
 Watch: http://ncs.lnk.to/RoyaltyAT/youtube
 ```
+
+The `csv.lua` module is copyright Incremental IP Limited (http://incremental.io),
+Kevin Martin, and others, all available under the MIT license.

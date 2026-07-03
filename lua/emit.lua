@@ -123,6 +123,11 @@ function Emit:life(life, ulife)
     self._t.ulife = ulife or self._t.ulife or 0
 end
 
+-- Overloads:
+-- _parse_color(color_as_a_table)
+-- _parse_color(color_as_a_table, variance_as_table)
+-- _parse_color(r, g, b)
+-- _parse_color(r, g, b, ur, ug, ub)
 function Emit:_parse_color(r, g, b, ur, ug, ub)
     local rgb, urgb
     if type(r) == "table" then

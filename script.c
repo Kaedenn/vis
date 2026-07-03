@@ -130,6 +130,8 @@ static int viscmd_debug_fn(lua_State* L);
 static int viscmd_debugp_fn(lua_State* L);
 static int viscmd_exit_fn(lua_State* L);
 static int viscmd_emit_fn(lua_State* L);
+static int viscmd_pause_emitter_fn(lua_State* L);
+static int viscmd_resume_emitter_fn(lua_State* L);
 static int viscmd_audio_fn(lua_State* L);
 static int viscmd_play_fn(lua_State* L);
 static int viscmd_pause_fn(lua_State* L);
@@ -596,6 +598,8 @@ int initialize_vis_lib(lua_State* L) {
         {"debugp", viscmd_debugp_fn},
         {"exit", viscmd_exit_fn},
         {"emit", viscmd_emit_fn},
+        {"pause_emitter", viscmd_pause_emitter_fn},
+        {"resume_emitter", viscmd_resume_emitter_fn},
         {"audio", viscmd_audio_fn},
         {"play", viscmd_play_fn},
         {"pause", viscmd_pause_fn},
@@ -652,6 +656,7 @@ int initialize_vis_lib(lua_State* L) {
     NEW_VIS_CONST_INT(MUTATE_PUSH_DX);
     NEW_VIS_CONST_INT(MUTATE_PUSH_DY);
     NEW_VIS_CONST_INT(MUTATE_PUSH_DZ);
+    NEW_VIS_CONST_INT(MUTATE_ATTRACT);
     NEW_VIS_CONST_INT(MUTATE_SLOW);
     NEW_VIS_CONST_INT(MUTATE_SHRINK);
     NEW_VIS_CONST_INT(MUTATE_GROW);
@@ -679,6 +684,7 @@ int initialize_vis_lib(lua_State* L) {
     NEW_VIS_CONST_INT(MUTATE_PUSH_DX_IF);
     NEW_VIS_CONST_INT(MUTATE_PUSH_DY_IF);
     NEW_VIS_CONST_INT(MUTATE_PUSH_DZ_IF);
+    NEW_VIS_CONST_INT(MUTATE_ATTRACT_IF);
     NEW_VIS_CONST_INT(MUTATE_SLOW_IF);
     NEW_VIS_CONST_INT(MUTATE_SHRINK_IF);
     NEW_VIS_CONST_INT(MUTATE_GROW_IF);
@@ -1167,6 +1173,22 @@ int viscmd_emit_fn(lua_State* L) {
     return 0;
 }
 
+/* Vis.pause_emitter(Vis.flist)
+ * Pauses emitters in the flist */
+int viscmd_pause_emitter_fn(lua_State* L) {
+    flist_t fl = *(flist_t*)luaL_checkudata(L, 1, "flist_t*");
+    flist_pause(fl);
+    return 0;
+}
+
+/* Vis.resume_emitter(Vis.flist)
+ * Resumes emitters in the flist */
+int viscmd_resume_emitter_fn(lua_State* L) {
+    flist_t fl = *(flist_t*)luaL_checkudata(L, 1, "flist_t*");
+    flist_resume(fl);
+    return 0;
+}
+
 /* Vis.audio(Vis.flist, when, path)
  * Sets AudIO_PATH, AUDIO_LENGTH, AUDIO_LENGTH_MSEC */
 int viscmd_audio_fn(lua_State* L) {
@@ -1325,24 +1347,18 @@ int viscmd_bgcolor_fn(lua_State* L) {
     return 0;
 }
 
-/* Vis.mutate(Vis.flist, when, func, factor, [factor, [offset, [offset]]])
- * Vis.mutate(Vis.flist, when, Vis.MUTATE_TAG_*, tag)
- * Vis.mutate(Vis.flist, when, func_if, cond,
- *      tag,                        -- only if cond is EQ, NE, LT, LE, GT, GE
- *      newtag,                     -- only if func is Vis.MUTATE_TAG_SET_IF
- *      factor1, factor2,           -- assigned
- *      checkfactor1, checkfactor2, -- checked
- *      offset1, offset2)           -- compared
- *
- * If func is a tag mutate, only 'tag' is expected. Otherwise 'factor' and
- * [optional] factor2, offset1, offset2 are expected.
- *
- * If a factor is to be checked (eg. Vis.MUTATE_IF_NEAR), then:
- *      factor1 is assigned
- *      factor2 is checked
- *
- * @param func is a valid Vis.MUTATE_*
- */
+/* Vis.mutate{
+ *  Vis.flist,
+ *  when,                      -- When to apply the mutation event
+ *  [func=]Vis.MUTATE_<func>,  -- Which mutation event to use
+ *  cond=Vis.MUTATE_IF_<cond>, -- Only if func=Vis.MUTATE_<func>_IF
+ *  tag=<check-tag>,           -- Only if cond=Vis.MUTATE_IF_<tag-cond>
+ *  newtag=<new-tag>,          -- Only if cond=Vis.MUTATE_TAG_<event>
+ *  factor=<number-or-array-of-two-numbers>, -- Amount to mutate by
+ *  check=<number-or-array-of-two-numbers>,  -- distance used by Vis.MUTATE_IF_{NEAR/FAR}
+ *  offset=<number-or-array-of-two-numbers>, -- location used by Vis.MUTATE_IF_{ABOVE/BELOW/LEFT/RIGHT/NEAR/FAR}
+ *  target=<number-or-array-of-two-numbers>  -- location used by Vis.MUTATE_ATTRACT
+ * } */
 int viscmd_mutate_fn(lua_State* L) {
     mutate_method* method = DBMALLOC(sizeof(struct mutate_method));
     flist_t fl;
@@ -1377,11 +1393,12 @@ int viscmd_mutate_fn(lua_State* L) {
     }
 
     method->id = fnid;
-    if (is_table) {
+    if (is_table) { /* new mutate API */
         if (mutate_is_unconditional(fnid)) {
             /* case 1: normal mutate */
             get_table_double_array(L, 1, "factor", method->factor);
             get_table_double_array(L, 1, "offset", method->offset);
+            get_table_double_array(L, 1, "target", method->target);
         } else if (mutate_is_tag(fnid)) {
             /* case 2: tag modification */
             lua_getfield(L, 1, "newtag");
@@ -1409,17 +1426,20 @@ int viscmd_mutate_fn(lua_State* L) {
             get_table_double_array(L, 1, "factor", method->factor);
             get_table_double_array(L, 1, "check", method->check_factor);
             get_table_double_array(L, 1, "offset", method->offset);
+            get_table_double_array(L, 1, "target", method->target);
         } else {
             DZFREE(method);
             return luaL_error(L, "Invalid mutate ID %d", fnid);
         }
-    } else {
+    } else { /* fallback to old mutate API */
         if (mutate_is_unconditional(fnid)) {
             /* case 1: normal mutate */
             method->factor[0] = luaL_checknumber(L, 4);
             method->factor[1] = luaL_optnumber(L, 5, 0);
             method->offset[0] = luaL_optnumber(L, 6, 0);
             method->offset[1] = luaL_optnumber(L, 7, 0);
+            method->target[0] = luaL_optnumber(L, 8, 0);
+            method->target[1] = luaL_optnumber(L, 9, 0);
         } else if (mutate_is_tag(fnid)) {
             /* case 2: tag modification */
             method->newtag.l = luaL_optinteger(L, 4, 0);
@@ -1443,6 +1463,8 @@ int viscmd_mutate_fn(lua_State* L) {
             method->check_factor[1] = luaL_optnumber(L, arg++, 0);
             method->offset[0] = luaL_optnumber(L, arg++, 0);
             method->offset[1] = luaL_optnumber(L, arg++, 0);
+            method->target[0] = luaL_optnumber(L, arg++, 0);
+            method->target[1] = luaL_optnumber(L, arg++, 0);
         } else {
             DZFREE(method);
             return luaL_error(L, "Invalid mutate ID %d", fnid);

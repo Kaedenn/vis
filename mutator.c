@@ -101,6 +101,13 @@ void mutate_push_dz(particle_t p, mutate_method* method) {
     p->dz = p->dz * method->factor[0];
 }
 
+void mutate_attract(particle_t p, mutate_method* method) {
+    DEBUG_EXPRESSION(dbg_ctr.particles_mutated += 1);
+    double dist = fmax(distance(p->x, p->y, method->target[0], method->target[1]), 1.0);
+    p->dx += (method->target[0] - p->x) / dist * method->factor[0];
+    p->dy += (method->target[1] - p->y) / dist * method->factor[0];
+}
+
 void mutate_slow(particle_t p, mutate_method* method) {
     DEBUG_EXPRESSION(dbg_ctr.particles_mutated += 1);
     p->dx = p->dx / method->factor[0];
@@ -226,6 +233,7 @@ GEN_COND_MUTATE_FN(mutate_push)
 GEN_COND_MUTATE_FN(mutate_push_dx)
 GEN_COND_MUTATE_FN(mutate_push_dy)
 GEN_COND_MUTATE_FN(mutate_push_dz)
+GEN_COND_MUTATE_FN(mutate_attract)
 GEN_COND_MUTATE_FN(mutate_slow)
 GEN_COND_MUTATE_FN(mutate_shrink)
 GEN_COND_MUTATE_FN(mutate_grow)

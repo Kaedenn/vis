@@ -36,6 +36,7 @@ typedef struct flist {
     fnum_t total_frames;
     fnum_t curr_frame;
     flist_node* frames[VIS_NFRAMES]; /* with apologies to the hardware */
+    BOOL paused;
 } flist;
 
 typedef flist* flist_t;
@@ -47,6 +48,8 @@ void flist_free(flist_t fl);
 void flist_clear(flist_t fl);
 void flist_restart(flist_t fl);
 void flist_goto_frame(flist_t fl, fnum_t where);
+void flist_pause(flist_t fl);
+void flist_resume(flist_t fl);
 BOOL flist_at_end(flist_t fl);
 
 flist_node* flist_tick(flist_t fl);

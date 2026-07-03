@@ -18,7 +18,8 @@ typedef struct mutate_method {
     mutate_fn func;
     double check_factor[2]; /* for conditional mutates */
     double factor[2];       /* coefficient, amount, etc */
-    double offset[2];       /* location (x, y) in world space */
+    double offset[2];       /* location for conditional mutates */
+    double target[2];       /* location for forces */
     mutate_cond_id cond;
     union particle_tag tag;     /* for conditional mutates */
     union particle_tag newtag;
@@ -30,6 +31,7 @@ void mutate_push(particle_t p, mutate_method* method);
 void mutate_push_dx(particle_t p, mutate_method* method);
 void mutate_push_dy(particle_t p, mutate_method* method);
 void mutate_push_dz(particle_t p, mutate_method* method);
+void mutate_attract(particle_t p, mutate_method* method);
 void mutate_slow(particle_t p, mutate_method* method);
 void mutate_shrink(particle_t p, mutate_method* method);
 void mutate_grow(particle_t p, mutate_method* method);
@@ -58,6 +60,7 @@ void mutate_push_if(particle_t p, mutate_method* method);
 void mutate_push_dx_if(particle_t p, mutate_method* method);
 void mutate_push_dy_if(particle_t p, mutate_method* method);
 void mutate_push_dz_if(particle_t p, mutate_method* method);
+void mutate_attract_if(particle_t p, mutate_method* method);
 void mutate_slow_if(particle_t p, mutate_method* method);
 void mutate_shrink_if(particle_t p, mutate_method* method);
 void mutate_grow_if(particle_t p, mutate_method* method);
@@ -81,6 +84,7 @@ static const mutate_fn MUTATE_MAP[VIS_NMUTATES+1] = {
     [VIS_MUTATE_PUSH_DX] = mutate_push_dx,
     [VIS_MUTATE_PUSH_DY] = mutate_push_dy,
     [VIS_MUTATE_PUSH_DZ] = mutate_push_dz,
+    [VIS_MUTATE_ATTRACT] = mutate_attract,
     [VIS_MUTATE_SLOW] = mutate_slow,
     [VIS_MUTATE_SHRINK] = mutate_shrink,
     [VIS_MUTATE_GROW] = mutate_grow,
@@ -106,6 +110,7 @@ static const mutate_fn MUTATE_MAP[VIS_NMUTATES+1] = {
     [VIS_MUTATE_PUSH_DX_IF] = mutate_push_dx_if,
     [VIS_MUTATE_PUSH_DY_IF] = mutate_push_dy_if,
     [VIS_MUTATE_PUSH_DZ_IF] = mutate_push_dz_if,
+    [VIS_MUTATE_ATTRACT_IF] = mutate_attract_if,
     [VIS_MUTATE_SLOW_IF] = mutate_slow_if,
     [VIS_MUTATE_SHRINK_IF] = mutate_shrink_if,
     [VIS_MUTATE_GROW_IF] = mutate_grow_if,
@@ -129,6 +134,7 @@ static inline BOOL mutate_is_conditional(mutate_id id) {
     case VIS_MUTATE_PUSH_DX_IF:
     case VIS_MUTATE_PUSH_DY_IF:
     case VIS_MUTATE_PUSH_DZ_IF:
+    case VIS_MUTATE_ATTRACT_IF:
     case VIS_MUTATE_SLOW_IF:
     case VIS_MUTATE_SHRINK_IF:
     case VIS_MUTATE_GROW_IF:
@@ -169,6 +175,7 @@ static inline BOOL mutate_is_unconditional(mutate_id id) {
     case VIS_MUTATE_PUSH_DX:
     case VIS_MUTATE_PUSH_DY:
     case VIS_MUTATE_PUSH_DZ:
+    case VIS_MUTATE_ATTRACT:
     case VIS_MUTATE_SLOW:
     case VIS_MUTATE_SHRINK:
     case VIS_MUTATE_GROW:

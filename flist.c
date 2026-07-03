@@ -98,6 +98,16 @@ void flist_insert(flist_t fl, fnum_t when, flist_node* fn) {
     }
 }
 
+void flist_pause(flist_t fl) {
+    if (!fl) return;
+    fl->paused = TRUE;
+}
+
+void flist_resume(flist_t fl) {
+    if (!fl) return;
+    fl->paused = FALSE;
+}
+
 void flist_insert_emit(flist_t fl, fnum_t when, emit_desc* what) {
     flist_node* fn = NULL;
     if (!fl) return;

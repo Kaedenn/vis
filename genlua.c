@@ -92,6 +92,8 @@ const char* genlua_mutate(mutate_id fnid) {
         return "Vis.MUTATE_PUSH_DY";
     case VIS_MUTATE_PUSH_DZ:
         return "Vis.MUTATE_PUSH_DZ";
+    case VIS_MUTATE_ATTRACT:
+        return "Vis.MUTATE_ATTRACT";
     case VIS_MUTATE_SLOW:
         return "Vis.MUTATE_SLOW";
     case VIS_MUTATE_SHRINK:
@@ -158,6 +160,8 @@ const char* genlua_mutate(mutate_id fnid) {
         return "Vis.MUTATE_SET_DY_IF";
     case VIS_MUTATE_SET_DZ_IF:
         return "Vis.MUTATE_SET_DZ_IF";
+    case VIS_MUTATE_ATTRACT_IF:
+        return "Vis.MUTATE_ATTRACT_IF";
     case VIS_MUTATE_SET_RADIUS_IF:
         return "Vis.MUTATE_SET_RADIUS_IF";
     case VIS_MUTATE_SET_VERTICES_IF:

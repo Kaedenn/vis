@@ -46,6 +46,7 @@ typedef enum {
     VIS_MUTATE_PUSH_DX,
     VIS_MUTATE_PUSH_DY,
     VIS_MUTATE_PUSH_DZ,
+    VIS_MUTATE_ATTRACT,
     VIS_MUTATE_SLOW,
     VIS_MUTATE_SHRINK,
     VIS_MUTATE_GROW,
@@ -73,6 +74,7 @@ typedef enum {
     VIS_MUTATE_PUSH_DX_IF,
     VIS_MUTATE_PUSH_DY_IF,
     VIS_MUTATE_PUSH_DZ_IF,
+    VIS_MUTATE_ATTRACT_IF,
     VIS_MUTATE_SLOW_IF,
     VIS_MUTATE_SHRINK_IF,
     VIS_MUTATE_GROW_IF,
@@ -92,8 +94,10 @@ typedef enum {
 
 /* mutation conditions */
 typedef enum {
+    /* always mutate */
+    VIS_MUTATE_IF_TRUE,
+
     /* mutate based on value of particle tag */
-    VIS_MUTATE_IF_TRUE,     /* always mutate */
     VIS_MUTATE_IF_EQ,
     VIS_MUTATE_IF_NE,
     VIS_MUTATE_IF_LT,
@@ -102,12 +106,14 @@ typedef enum {
     VIS_MUTATE_IF_GE,
     VIS_MUTATE_IF_EVEN,
     VIS_MUTATE_IF_ODD,
+
     /* mutate based on particle location */
     VIS_MUTATE_IF_ABOVE,
     VIS_MUTATE_IF_BELOW,
     VIS_MUTATE_IF_LEFT,
     VIS_MUTATE_IF_RIGHT,
 
+    /* mutate based on distance from particle to offset */
     VIS_MUTATE_IF_NEAR,
     VIS_MUTATE_IF_FAR,
 
