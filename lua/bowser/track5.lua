@@ -1,4 +1,4 @@
-
+---@diagnostic disable: undefined-global
 --[[
 --
 -- Track 5 is an echo track for track 1 (at times) and track 2 (at

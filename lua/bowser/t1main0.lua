@@ -1,3 +1,4 @@
+---@diagnostic disable: undefined-global
 Emit = require('emit')
 
 -- MAIN TRACK: PART ZERO: INTRO TO MAIN TRACK
@@ -21,7 +22,7 @@ local function next_ey()
 end
 
 local function emit_pair(e, ds)
-    local e2 = Emit:copy(e)
+    local e2 = Emit:copy()
     if ds ~= nil then e2:ds(ds) end
     local x1, x2 = next_ex()
     local y1, y2 = next_ey()

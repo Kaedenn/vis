@@ -1,3 +1,4 @@
+---@diagnostic disable: undefined-global
 do
 
 T3.SCHEDULE = {

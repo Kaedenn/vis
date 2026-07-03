@@ -1,4 +1,4 @@
-
+---@diagnostic disable: undefined-global
 --[[
 --
 -- Track 2 is an echo track for track 1 during the intro.
