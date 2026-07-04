@@ -64,12 +64,7 @@ static void flist_node_free(flist_node* fn) {
 }
 
 flist_t flist_new(void) {
-    int i = 0;
     flist_t fl = DBMALLOC(sizeof(struct flist));
-    while (i < VIS_NFRAMES) {
-        fl->frames[i] = NULL;
-        ++i;
-    }
     fl->curr_frame = 0;
     return fl;
 }

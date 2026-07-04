@@ -164,6 +164,15 @@ There are also a couple extra modules provided for convenience:
 * `inspect.lua` - Functions for inspecting Lua tables (mostly for
   debugging purposes).
 
+### Coordinate Space
+
+The `Vis` API uses a standard upper-left origin coordinate space:
+
+- `(0, 0)` is the upper-left corner.
+- `(Vis.WIDTH, 0)` is the upper-right corner.
+- `(0, Vis.HEIGHT)` is the lower-left corner.
+- `(Vis.WIDTH, Vis.HEIGHT)` is the lower-right corner.
+
 ### A note about uncertainty:
 
 The vast majority of values have an uncertainty counterpart, which is used to
@@ -203,6 +212,12 @@ performance is a massive concern. For alternatives, see
 `VisUtil.make_emit_table`, `VisUtil.emit_table`, the `Emit` class, as well as
 the documentation on emit tables.
 
+`function Vis.emitter_pause(Vis.flist)`: Pauses the particle emitter. This ends
+up stopping the `flist` traversal. The action is immediate.
+
+`function Vis.emitter_resume(Vis.flist)`: Resumes the particle emitter. This
+restarts the `flist` traversal from where it left off. The action is immediate.
+
 `function Vis.audio(path)`: Load the audio file given by `path`. Audio does not
 begin playing until `Vis.play()` is called.
 
@@ -226,11 +241,10 @@ have passed. See `Vis.frames2msec` and `Vis.msec2frames` to convert
 between frames and milliseconds.
 
 `function Vis.audiosync(Vis.flist, when, frame_count)`: At the specific frame,
-stop processing visual effects, mute the audio, pause the audio, delay for the
-specified number of frames, then un-mute and restart the audio track at the
-beginning (0ms). This is needed when the audio track does not start playing
-immediately and ensures both the audio and visual effects have enough time to
-synchronize.
+mute the audio, pause the audio, delay for the specified number of frames,
+then un-mute and restart the audio track at the beginning (0ms). This is
+needed when the audio track does not start playing immediately and ensures
+both the audio and visual effects have enough time to synchronize.
 
 `function Vis.delay(Vis.flist, when, frame_count)`: Delays the visual effects
 for the specified number of frames, while allowing the audio to continue. Use
@@ -295,7 +309,7 @@ on the string `what`. The supported strings and their return values are:
 * `"FRAMES-EMITTED"`: Total number of scheduled frames emitted.
 * `"NUM-MUTATES"`: The number of scheduled mutates processed.
 * `"PARTICLES-MUTATED"`: The total number of times particles have been mutated.
-* `"PARTICLE-TAGS-MODIFIED"`: The total number of particle tag modifications applied.
+* `"PARTICLE-TAGS-MODIFIED"`: The total number of particle tags modified.
 * `"FRAME-EMIT-COUNTS"`: A table containing the count for each emitted frame type.
 
 `function Vis.dump_particles(Vis.script, path, [mode], [header])`: Dumps all
@@ -375,8 +389,13 @@ by the coefficient given.
 `constant Vis.MUTATE_AGE`: Sets the age of the particles to the product of
 their total lifetime and the coefficient given.
 
-`constant Vis.MUTATE_OPACITY`: Sets the particle base opacity to the
-coefficient given. The blending functions are multiplied by this value.
+`constant Vis.MUTATE_SET_RED`: Sets the particle red channel. Uses `factor[1]` as target and `factor[2]` as variance.
+
+`constant Vis.MUTATE_SET_GREEN`: Sets the particle green channel. Uses `factor[1]` as target and `factor[2]` as variance.
+
+`constant Vis.MUTATE_SET_BLUE`: Sets the particle blue channel. Uses `factor[1]` as target and `factor[2]` as variance.
+
+`constant Vis.MUTATE_SET_OPACITY`: Sets the particle base opacity. Uses `factor[1]` as target and `factor[2]` as variance. The blending functions are multiplied by this value.
 
 `constant Vis.MUTATE_SET_DX`: Sets the particles' horizontal velocity to the
 coefficient given.
@@ -436,7 +455,13 @@ condition specified evaluates to true against the particle.
 
 `constant Vis.MUTATE_AGE_IF`: As above, with `Vis.MUTATE_AGE`
 
-`constant Vis.MUTATE_OPACITY_IF`: As above, with `Vis.MUTATE_OPACITY`
+`constant Vis.MUTATE_SET_RED_IF`: As above, with `Vis.MUTATE_SET_RED`
+
+`constant Vis.MUTATE_SET_GREEN_IF`: As above, with `Vis.MUTATE_SET_GREEN`
+
+`constant Vis.MUTATE_SET_BLUE_IF`: As above, with `Vis.MUTATE_SET_BLUE`
+
+`constant Vis.MUTATE_SET_OPACITY_IF`: As above, with `Vis.MUTATE_SET_OPACITY`
 
 `constant Vis.MUTATE_SET_DX_IF`: As above, with `Vis.MUTATE_SET_DX`
 
@@ -658,6 +683,10 @@ convenience.
 `e:emit()`: Schedules the emit at the offset configured via
 `e:when()`. This is intended to replace `VisUtil.emit_table()`.
 
+`e:emit()`: Invokes the native `Vis.emit` C function.
+
+`e:emit(when)`: Convenience function which calls `e:emit_at(when)`.
+
 `e:emit_at(when)`: Convenience function which calls `e:when(when)` and
 then `e:emit()`.
 
@@ -704,10 +733,10 @@ in milliseconds. The second parameter defaults to zero.
 `e:color(r, g, b, ur, ug, ub)`: Configure the emit's color to the values
 given, which should be between 0 and 1. Any omitted value defaults to zero.
 
-`e:color2(rgb)`: Configure the emit's color to the entries of array
+`e:color(rgb)`: Configure the emit's color to the entries of array
 `rgb`, which should have six total entries.
 
-`e:color3(rgb, urgb)`: Configure the emit's color to the entries of both
+`e:color(rgb, urgb)`: Configure the emit's color to the entries of both
 arrays. The second array, if omitted, defaults to a sequence of three zeros.
 
 `e:force(force)`: Configure the emit's force method to the value given.
@@ -772,7 +801,10 @@ For all these events, negative values for `factor` are permitted.
 * `Vis.MUTATE_SHRINK` - `particle->radius /= factor[1]`
 * `Vis.MUTATE_GROW` - `particle->radius *= factor[1]`
 * `Vis.MUTATE_AGE` - `particle->life = particle->lifetime * factor[1]`
-* `Vis.MUTATE_OPACITY` - `particle->alpha = factor[1]`
+* `Vis.MUTATE_SET_RED` - `particle->r = round(random(factor[1] ± factor[2]) * 255) / 255`
+* `Vis.MUTATE_SET_GREEN` - `particle->g = round(random(factor[1] ± factor[2]) * 255) / 255`
+* `Vis.MUTATE_SET_BLUE` - `particle->b = round(random(factor[1] ± factor[2]) * 255) / 255`
+* `Vis.MUTATE_SET_OPACITY` - `particle->a = round(random(factor[1] ± factor[2]) * 255) / 255`
 * `Vis.MUTATE_SET_DX` - `particle->dx = random(factor[1] ± factor[2])`
 * `Vis.MUTATE_SET_DY` - `particle->dy = random(factor[1] ± factor[2])`
 * `Vis.MUTATE_SET_DZ` - `particle->dz = random(factor[1] ± factor[2])`
@@ -805,7 +837,10 @@ effects are identical to their unconditional counterparts.
 * `Vis.MUTATE_SHRINK_IF`
 * `Vis.MUTATE_GROW_IF`
 * `Vis.MUTATE_AGE_IF`
-* `Vis.MUTATE_OPACITY_IF`
+* `Vis.MUTATE_SET_RED_IF`
+* `Vis.MUTATE_SET_GREEN_IF`
+* `Vis.MUTATE_SET_BLUE_IF`
+* `Vis.MUTATE_SET_OPACITY_IF`
 * `Vis.MUTATE_SET_DX_IF`
 * `Vis.MUTATE_SET_DY_IF`
 * `Vis.MUTATE_SET_DZ_IF`

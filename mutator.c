@@ -129,9 +129,44 @@ void mutate_age(particle_t p, mutate_method* method) {
     p->life = (int)(p->lifetime * method->factor[0]);
 }
 
-void mutate_opacity(particle_t p, mutate_method* method) {
+void mutate_set_red(particle_t p, mutate_method* method) {
     DEBUG_EXPRESSION(dbg_ctr.particles_mutated += 1);
-    p->a = (float)method->factor[0];
+    double val = randdouble(method->factor[0] - method->factor[1],
+                            method->factor[0] + method->factor[1]);
+    if (val >= 0.0) {
+        if (val > 1.0) val = 1.0;
+        p->r = (float)(val);
+    }
+}
+
+void mutate_set_green(particle_t p, mutate_method* method) {
+    DEBUG_EXPRESSION(dbg_ctr.particles_mutated += 1);
+    double val = randdouble(method->factor[0] - method->factor[1],
+                            method->factor[0] + method->factor[1]);
+    if (val >= 0.0) {
+        if (val > 1.0) val = 1.0;
+        p->g = (float)(val);
+    }
+}
+
+void mutate_set_blue(particle_t p, mutate_method* method) {
+    DEBUG_EXPRESSION(dbg_ctr.particles_mutated += 1);
+    double val = randdouble(method->factor[0] - method->factor[1],
+                            method->factor[0] + method->factor[1]);
+    if (val >= 0.0) {
+        if (val > 1.0) val = 1.0;
+        p->b = (float)(val);
+    }
+}
+
+void mutate_set_opacity(particle_t p, mutate_method* method) {
+    DEBUG_EXPRESSION(dbg_ctr.particles_mutated += 1);
+    double val = randdouble(method->factor[0] - method->factor[1],
+                            method->factor[0] + method->factor[1]);
+    if (val >= 0.0) {
+        if (val > 1.0) val = 1.0;
+        p->a = (float)(val);
+    }
 }
 
 void mutate_set_dx(particle_t p, mutate_method* method) {
@@ -238,7 +273,10 @@ GEN_COND_MUTATE_FN(mutate_slow)
 GEN_COND_MUTATE_FN(mutate_shrink)
 GEN_COND_MUTATE_FN(mutate_grow)
 GEN_COND_MUTATE_FN(mutate_age)
-GEN_COND_MUTATE_FN(mutate_opacity)
+GEN_COND_MUTATE_FN(mutate_set_red)
+GEN_COND_MUTATE_FN(mutate_set_green)
+GEN_COND_MUTATE_FN(mutate_set_blue)
+GEN_COND_MUTATE_FN(mutate_set_opacity)
 GEN_COND_MUTATE_FN(mutate_set_dx)
 GEN_COND_MUTATE_FN(mutate_set_dy)
 GEN_COND_MUTATE_FN(mutate_set_dz)

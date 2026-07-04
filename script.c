@@ -112,6 +112,7 @@ static void prepare_stack(script_t s, klist args);
 static void cleanup_stack(script_t s);
 static script_t util_checkscript(lua_State* L, int pos);
 static const char* util_get_error(lua_State* L);
+static void parse_tag_arg(lua_State* L, int idx, union particle_tag* tag);
 static void merge_emit_table(lua_State* L, int arg, emit_desc* emit);
 static emit_desc* emit_table_to_emit_desc(lua_State* L, int arg, fnum_t* when);
 static void table_assign_num(lua_State* L, const char* k, double v, int idx);
@@ -661,7 +662,10 @@ int initialize_vis_lib(lua_State* L) {
     NEW_VIS_CONST_INT(MUTATE_SHRINK);
     NEW_VIS_CONST_INT(MUTATE_GROW);
     NEW_VIS_CONST_INT(MUTATE_AGE);
-    NEW_VIS_CONST_INT(MUTATE_OPACITY);
+    NEW_VIS_CONST_INT(MUTATE_SET_RED);
+    NEW_VIS_CONST_INT(MUTATE_SET_GREEN);
+    NEW_VIS_CONST_INT(MUTATE_SET_BLUE);
+    NEW_VIS_CONST_INT(MUTATE_SET_OPACITY);
     NEW_VIS_CONST_INT(MUTATE_SET_DX);
     NEW_VIS_CONST_INT(MUTATE_SET_DY);
     NEW_VIS_CONST_INT(MUTATE_SET_DZ);
@@ -689,7 +693,10 @@ int initialize_vis_lib(lua_State* L) {
     NEW_VIS_CONST_INT(MUTATE_SHRINK_IF);
     NEW_VIS_CONST_INT(MUTATE_GROW_IF);
     NEW_VIS_CONST_INT(MUTATE_AGE_IF);
-    NEW_VIS_CONST_INT(MUTATE_OPACITY_IF);
+    NEW_VIS_CONST_INT(MUTATE_SET_RED_IF);
+    NEW_VIS_CONST_INT(MUTATE_SET_GREEN_IF);
+    NEW_VIS_CONST_INT(MUTATE_SET_BLUE_IF);
+    NEW_VIS_CONST_INT(MUTATE_SET_OPACITY_IF);
     NEW_VIS_CONST_INT(MUTATE_SET_DX_IF);
     NEW_VIS_CONST_INT(MUTATE_SET_DY_IF);
     NEW_VIS_CONST_INT(MUTATE_SET_DZ_IF);
@@ -919,6 +926,21 @@ kstr do_inspect_value(lua_State* L, int arg) {
     return s;
 }
 
+static void parse_tag_arg(lua_State* L, int idx, union particle_tag* tag) {
+    int arg_type = lua_type(L, idx);
+    if (arg_type == LUA_TNUMBER) {
+        tag->ul = (unsigned long)luaL_checkinteger(L, idx);
+    } else if (arg_type == LUA_TSTRING) {
+        const char* value = luaL_checkstring(L, idx);
+        tag->ul = hash_string(value);
+#if DEBUG >= DEBUG_TRACE || defined(DEBUG_SCRIPT_C)
+        DBPRINTF("Hashed string \"%s\" to %llx", value, tag->ul);
+#endif
+    } else {
+        luaL_error(L, "Tag must be a number or string, got %s", lua_typename(L, arg_type));
+    }
+}
+
 static void merge_emit_table(lua_State* L, int arg, emit_desc* emit) {
     VIS_ASSERT(emit);
 
@@ -1000,16 +1022,7 @@ static void merge_emit_table(lua_State* L, int arg, emit_desc* emit) {
         } else if (!strcmp(key, "angle")) { /* angle */
             emit->angle = (float)luaL_checknumber(L, -1);
         } else if (!strcmp(key, "tag")) { /* tag */
-            int arg_type = lua_type(L, -1);
-            if (arg_type == LUA_TNUMBER) {
-                emit->tag.ul = (unsigned long)luaL_checkinteger(L, -1);
-            } else if (arg_type == LUA_TSTRING) {
-                const char* value = luaL_checkstring(L, -1);
-                emit->tag.ul = hash_string(value);
-#if DEBUG >= DEBUG_TRACE || defined(DEBUG_SCRIPT_C)
-                DBPRINTF("Hashed string \"%s\" to %llx", value, emit->tag.ul);
-#endif
-            }
+            parse_tag_arg(L, -1, &emit->tag);
         } else if (!strcmp(key, "friction_coeff") || !strcmp(key, "friction")) { /* friction coeff */
             emit->friction_coeff = luaL_checknumber(L, -1);
         } else if (!strcmp(key, "gravity_coeff") || !strcmp(key, "gravity")) { /* gravity coeff */
@@ -1387,9 +1400,9 @@ int viscmd_mutate_fn(lua_State* L) {
         fnid = (mutate_id)luaL_checkinteger(L, 3);
     }
 
-    if (fnid == VIS_NMUTATES) {
+    if (!(fnid >= VIS_MUTATE_PUSH && fnid < VIS_NMUTATES)) {
         DZFREE(method);
-        return luaL_error(L, "Mutate function ID not specified or invalid");
+        return luaL_error(L, "Mutate function ID not specified or invalid: %d", (int)fnid);
     }
 
     method->id = fnid;
@@ -1402,7 +1415,11 @@ int viscmd_mutate_fn(lua_State* L) {
         } else if (mutate_is_tag(fnid)) {
             /* case 2: tag modification */
             lua_getfield(L, 1, "newtag");
-            method->newtag.l = luaL_optinteger(L, -1, 0);
+            if (!lua_isnoneornil(L, -1)) {
+                parse_tag_arg(L, -1, &method->newtag);
+            } else {
+                method->newtag.ul = 0;
+            }
             lua_pop(L, 1);
         } else if (mutate_is_conditional(fnid)) {
             /* case 3: conditional mutate */
@@ -1415,12 +1432,12 @@ int viscmd_mutate_fn(lua_State* L) {
             }
             if (method->cond >= VIS_MUTATE_IF_TRUE && method->cond <= VIS_MUTATE_IF_GE) {
                 lua_getfield(L, 1, "tag");
-                method->tag.l = luaL_checkinteger(L, -1);
+                parse_tag_arg(L, -1, &method->tag);
                 lua_pop(L, 1);
             }
             if (fnid == VIS_MUTATE_TAG_SET_IF) {
                 lua_getfield(L, 1, "newtag");
-                method->newtag.l = luaL_checkinteger(L, -1);
+                parse_tag_arg(L, -1, &method->newtag);
                 lua_pop(L, 1);
             }
             get_table_double_array(L, 1, "factor", method->factor);
@@ -1442,7 +1459,11 @@ int viscmd_mutate_fn(lua_State* L) {
             method->target[1] = luaL_optnumber(L, 9, 0);
         } else if (mutate_is_tag(fnid)) {
             /* case 2: tag modification */
-            method->newtag.l = luaL_optinteger(L, 4, 0);
+            if (!lua_isnoneornil(L, 4)) {
+                parse_tag_arg(L, 4, &method->newtag);
+            } else {
+                method->newtag.ul = 0;
+            }
         } else if (mutate_is_conditional(fnid)) {
             /* case 3: conditional mutate */
             method->cond = (mutate_cond_id)luaL_checkinteger(L, 4);
@@ -1452,10 +1473,10 @@ int viscmd_mutate_fn(lua_State* L) {
             }
             int arg = 5;
             if (method->cond >= VIS_MUTATE_IF_TRUE && method->cond <= VIS_MUTATE_IF_GE) {
-                method->tag.l = luaL_checkinteger(L, arg++);
+                parse_tag_arg(L, arg++, &method->tag);
             }
             if (fnid == VIS_MUTATE_TAG_SET_IF) {
-                method->newtag.l = luaL_checkinteger(L, arg++);
+                parse_tag_arg(L, arg++, &method->newtag);
             }
             method->factor[0] = luaL_optnumber(L, arg++, 0);
             method->factor[1] = luaL_optnumber(L, arg++, 0);

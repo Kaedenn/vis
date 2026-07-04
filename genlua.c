@@ -102,8 +102,14 @@ const char* genlua_mutate(mutate_id fnid) {
         return "Vis.MUTATE_GROW";
     case VIS_MUTATE_AGE:
         return "Vis.MUTATE_AGE";
-    case VIS_MUTATE_OPACITY:
-        return "Vis.MUTATE_OPACITY";
+    case VIS_MUTATE_SET_RED:
+        return "Vis.MUTATE_SET_RED";
+    case VIS_MUTATE_SET_GREEN:
+        return "Vis.MUTATE_SET_GREEN";
+    case VIS_MUTATE_SET_BLUE:
+        return "Vis.MUTATE_SET_BLUE";
+    case VIS_MUTATE_SET_OPACITY:
+        return "Vis.MUTATE_SET_OPACITY";
     case VIS_MUTATE_SET_DX:
         return "Vis.MUTATE_SET_DX";
     case VIS_MUTATE_SET_DY:
@@ -152,8 +158,14 @@ const char* genlua_mutate(mutate_id fnid) {
         return "Vis.MUTATE_GROW_IF";
     case VIS_MUTATE_AGE_IF:
         return "Vis.MUTATE_AGE_IF";
-    case VIS_MUTATE_OPACITY_IF:
-        return "Vis.MUTATE_OPACITY_IF";
+    case VIS_MUTATE_SET_RED_IF:
+        return "Vis.MUTATE_SET_RED_IF";
+    case VIS_MUTATE_SET_GREEN_IF:
+        return "Vis.MUTATE_SET_GREEN_IF";
+    case VIS_MUTATE_SET_BLUE_IF:
+        return "Vis.MUTATE_SET_BLUE_IF";
+    case VIS_MUTATE_SET_OPACITY_IF:
+        return "Vis.MUTATE_SET_OPACITY_IF";
     case VIS_MUTATE_SET_DX_IF:
         return "Vis.MUTATE_SET_DX_IF";
     case VIS_MUTATE_SET_DY_IF:

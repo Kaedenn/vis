@@ -16,13 +16,13 @@ typedef void(*mutate_fn)(particle_t p, struct mutate_method* method);
 typedef struct mutate_method {
     mutate_id id;
     mutate_fn func;
-    double check_factor[2]; /* for conditional mutates */
-    double factor[2];       /* coefficient, amount, etc */
-    double offset[2];       /* location for conditional mutates */
-    double target[2];       /* location for forces */
+    double check_factor[2];     /* for conditional mutates */
+    double factor[2];           /* coefficient, amount, etc */
+    double offset[2];           /* location for conditional mutates */
+    double target[2];           /* location for forces */
     mutate_cond_id cond;
     union particle_tag tag;     /* for conditional mutates */
-    union particle_tag newtag;
+    union particle_tag newtag;  /* for tag set and tag set if */
 } mutate_method;
 
 BOOL mutate_cond_apply(particle_t p, mutate_method* method);
@@ -36,7 +36,10 @@ void mutate_slow(particle_t p, mutate_method* method);
 void mutate_shrink(particle_t p, mutate_method* method);
 void mutate_grow(particle_t p, mutate_method* method);
 void mutate_age(particle_t p, mutate_method* method);
-void mutate_opacity(particle_t p, mutate_method* method);
+void mutate_set_red(particle_t p, mutate_method* method);
+void mutate_set_green(particle_t p, mutate_method* method);
+void mutate_set_blue(particle_t p, mutate_method* method);
+void mutate_set_opacity(particle_t p, mutate_method* method);
 
 void mutate_set_dx(particle_t p, mutate_method* method);
 void mutate_set_dy(particle_t p, mutate_method* method);
@@ -65,7 +68,10 @@ void mutate_slow_if(particle_t p, mutate_method* method);
 void mutate_shrink_if(particle_t p, mutate_method* method);
 void mutate_grow_if(particle_t p, mutate_method* method);
 void mutate_age_if(particle_t p, mutate_method* method);
-void mutate_opacity_if(particle_t p, mutate_method* method);
+void mutate_set_red_if(particle_t p, mutate_method* method);
+void mutate_set_green_if(particle_t p, mutate_method* method);
+void mutate_set_blue_if(particle_t p, mutate_method* method);
+void mutate_set_opacity_if(particle_t p, mutate_method* method);
 
 void mutate_set_dx_if(particle_t p, mutate_method* method);
 void mutate_set_dy_if(particle_t p, mutate_method* method);
@@ -89,7 +95,10 @@ static const mutate_fn MUTATE_MAP[VIS_NMUTATES+1] = {
     [VIS_MUTATE_SHRINK] = mutate_shrink,
     [VIS_MUTATE_GROW] = mutate_grow,
     [VIS_MUTATE_AGE] = mutate_age,
-    [VIS_MUTATE_OPACITY] = mutate_opacity,
+    [VIS_MUTATE_SET_RED] = mutate_set_red,
+    [VIS_MUTATE_SET_GREEN] = mutate_set_green,
+    [VIS_MUTATE_SET_BLUE] = mutate_set_blue,
+    [VIS_MUTATE_SET_OPACITY] = mutate_set_opacity,
     [VIS_MUTATE_SET_DX] = mutate_set_dx,
     [VIS_MUTATE_SET_DY] = mutate_set_dy,
     [VIS_MUTATE_SET_DZ] = mutate_set_dz,
@@ -115,7 +124,10 @@ static const mutate_fn MUTATE_MAP[VIS_NMUTATES+1] = {
     [VIS_MUTATE_SHRINK_IF] = mutate_shrink_if,
     [VIS_MUTATE_GROW_IF] = mutate_grow_if,
     [VIS_MUTATE_AGE_IF] = mutate_age_if,
-    [VIS_MUTATE_OPACITY_IF] = mutate_opacity_if,
+    [VIS_MUTATE_SET_RED_IF] = mutate_set_red_if,
+    [VIS_MUTATE_SET_GREEN_IF] = mutate_set_green_if,
+    [VIS_MUTATE_SET_BLUE_IF] = mutate_set_blue_if,
+    [VIS_MUTATE_SET_OPACITY_IF] = mutate_set_opacity_if,
     [VIS_MUTATE_SET_DX_IF] = mutate_set_dx_if,
     [VIS_MUTATE_SET_DY_IF] = mutate_set_dy_if,
     [VIS_MUTATE_SET_DZ_IF] = mutate_set_dz_if,
@@ -139,7 +151,10 @@ static inline BOOL mutate_is_conditional(mutate_id id) {
     case VIS_MUTATE_SHRINK_IF:
     case VIS_MUTATE_GROW_IF:
     case VIS_MUTATE_AGE_IF:
-    case VIS_MUTATE_OPACITY_IF:
+    case VIS_MUTATE_SET_RED_IF:
+    case VIS_MUTATE_SET_GREEN_IF:
+    case VIS_MUTATE_SET_BLUE_IF:
+    case VIS_MUTATE_SET_OPACITY_IF:
     case VIS_MUTATE_SET_DX_IF:
     case VIS_MUTATE_SET_DY_IF:
     case VIS_MUTATE_SET_DZ_IF:
@@ -180,7 +195,10 @@ static inline BOOL mutate_is_unconditional(mutate_id id) {
     case VIS_MUTATE_SHRINK:
     case VIS_MUTATE_GROW:
     case VIS_MUTATE_AGE:
-    case VIS_MUTATE_OPACITY:
+    case VIS_MUTATE_SET_RED:
+    case VIS_MUTATE_SET_GREEN:
+    case VIS_MUTATE_SET_BLUE:
+    case VIS_MUTATE_SET_OPACITY:
     case VIS_MUTATE_SET_DX:
     case VIS_MUTATE_SET_DY:
     case VIS_MUTATE_SET_DZ:
