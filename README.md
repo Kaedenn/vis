@@ -576,6 +576,8 @@ to see how everything is implemented.  The emit table generated via the
 `VisUtil` functions has a large number of members, all of which are public
 and freely modifiable.
 
+`table VisUtil.Args`: Argument parsing and handling.
+
 `function VisUtil.make_emit_table()`: Returns a newly-constructed emit
 table with the position set to the center of the screen, radius set to 1,
 color set to white, and blend set to linear.
@@ -600,6 +602,28 @@ table given by `table`.
 `function VisUtil.set_trace_table(table)`: Invokes `Vis.settrace`,
 passing the table given. This is how you modify the click-and-drag emission
 parameters.
+
+`function VisUtil.rgb2hsl(r, g, b)`: Convert a color in the domain `[0,1]` to
+HSL, where hue is in degrees `[0,360]`.
+
+`function VisUtil.hsl2rgb(h, s, l)`: Convert HSL (where hue is in degrees) to
+RGB components, which are in the domain `[0,1]`.
+
+`function VisUtil.rgb2hsv(r, g, b)`: Like `rgb2hsl`, but with value instead of
+lightness.
+
+`function VisUtil.hsv2rgb(r, g, b)`: Like `hsl2rgb`, but with value instead of
+lightness.
+
+`function VisUtil.rgb2oklab(r, g, b)`: Convert a component color to the oklab
+colorspace.
+
+`function VisUtil.oklab2rgb(r, g, b)`: Convert an oklab color to the component
+colorspace.
+
+`function VisUtil.blend_rgb(rgb1, rgb2, threshold)`: Performs a perceptual
+colorspace blend between the two component colors. The blending is performed
+by interpreting their oklab values. The threshold is a value in `[0,1]`.
 
 ### The Emit Table
 
