@@ -9,45 +9,42 @@
 
 #include <math.h>
 
-void particle_init_full(particle_t p, double x, double y,
-                        double ux, double uy,
-                        double dx, double dy,
-                        double s, double us,
-                        double r, double ur,
-                        double ds, double uds,
-                        double theta, double utheta,
-                        float depth, int life, int ulife,
-                        force_id force, limit_id limit,
-                        float rgba[4], blend_id blender,
-                        int vertices, float angle,
-                        union particle_tag tag,
-                        double friction_coeff,
-                        double gravity_coeff)
-{
-    double spawn_angle = randdouble(theta-utheta, theta+utheta);
-    double offset = randdouble(s-us, s+us);
-    p->x = randdouble(x-ux, x+ux) + offset * cos(spawn_angle);
-    p->y = randdouble(y-uy, y+uy) + offset * sin(spawn_angle);
-    double speed = randdouble(ds-uds, ds+uds);
-    p->dx = dx + speed * cos(spawn_angle);
-    p->dy = dy + speed * sin(spawn_angle);
-    p->dz = 0.0;
-    p->radius = (int)randdouble(r-ur, r+ur);
-    p->depth = depth;
-    p->lifetime = randint(life-ulife, life+ulife);
+void particle_init_from(particle_t p, const emit_desc* frame) {
+    float rgba[4] = {frame->r, frame->g, frame->b, 1.0f};
+    if (frame->ur != 0.0f) {
+        rgba[0] = randfloat(frame->r - frame->ur, frame->r + frame->ur);
+    }
+    if (frame->ug != 0.0f) {
+        rgba[1] = randfloat(frame->g - frame->ug, frame->g + frame->ug);
+    }
+    if (frame->ub != 0.0f) {
+        rgba[2] = randfloat(frame->b - frame->ub, frame->b + frame->ub);
+    }
+
+    double spawn_angle = randdouble(frame->theta-frame->utheta, frame->theta+frame->utheta);
+    double offset = randdouble(frame->s-frame->us, frame->s+frame->us);
+    p->x = randdouble(frame->x-frame->ux, frame->x+frame->ux) + offset * cos(spawn_angle);
+    p->y = randdouble(frame->y-frame->uy, frame->y+frame->uy) + offset * sin(spawn_angle);
+    double speed = randdouble(frame->ds-frame->uds, frame->ds+frame->uds);
+    p->dx = frame->dx + speed * cos(spawn_angle);
+    p->dy = frame->dy + speed * sin(spawn_angle);
+    p->dz = frame->dz;
+    p->radius = (int)randdouble(frame->rad-frame->urad, frame->rad+frame->urad);
+    p->depth = frame->depth;
+    p->lifetime = randint(frame->life-frame->ulife, frame->life+frame->ulife);
     p->life = p->lifetime;
     p->r = rgba[0];
     p->g = rgba[1];
     p->b = rgba[2];
     p->a = rgba[3];
-    p->force = force;
-    p->limit = limit;
-    p->blender = blender;
-    p->vertices = vertices;
-    p->angle = angle;
-    p->tag = tag;
-    p->friction_coeff = friction_coeff;
-    p->gravity_coeff = gravity_coeff;
+    p->force = frame->force;
+    p->limit = frame->limit;
+    p->blender = frame->blender;
+    p->vertices = frame->vertices;
+    p->angle = frame->angle;
+    p->tag = frame->tag;
+    p->friction_coeff = frame->friction_coeff;
+    p->gravity_coeff = frame->gravity_coeff;
 }
 
 void particle_push(particle_t p, double dx, double dy) {

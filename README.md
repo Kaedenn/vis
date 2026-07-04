@@ -195,6 +195,12 @@ This is the core library. Its fields are:
 emits, the `vis` executable needs to know where the scheduling is stored.
 This is that location.
 
+- `Vis.flist.paused`: Whether the frame list is paused. This is both a
+  readable and a writable attribute.
+- `Vis.flist.curr`: The current frame number. This is a read-only attribute.
+- `Vis.flist.total`: The total number of frames. This is a read-only
+  attribute.
+
 `userdata Vis.script`: This field is present in order to perform advanced
 operations, such as scheduling callbacks, i.e. Lua code to be executed after a
 certain amount of time has passed.
@@ -211,12 +217,6 @@ other than strings may result in errors.
 performance is a massive concern. For alternatives, see
 `VisUtil.make_emit_table`, `VisUtil.emit_table`, the `Emit` class, as well as
 the documentation on emit tables.
-
-`function Vis.emitter_pause(Vis.flist)`: Pauses the particle emitter. This ends
-up stopping the `flist` traversal. The action is immediate.
-
-`function Vis.emitter_resume(Vis.flist)`: Resumes the particle emitter. This
-restarts the `flist` traversal from where it left off. The action is immediate.
 
 `function Vis.audio(path)`: Load the audio file given by `path`. Audio does not
 begin playing until `Vis.play()` is called.

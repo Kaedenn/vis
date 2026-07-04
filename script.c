@@ -125,14 +125,15 @@ static int get_configured_fps(lua_State* L);
 static int do_frames2msec(lua_State* L, fnum_t frame);
 static fnum_t do_msec2frames(lua_State* L, long msec);
 static kstr do_inspect_value(lua_State* L, int arg);
+static int flist_index(lua_State* L);
+static int flist_newindex(lua_State* L);
 
 /* Functions exposed to Lua */
 static int viscmd_debug_fn(lua_State* L);
 static int viscmd_debugp_fn(lua_State* L);
 static int viscmd_exit_fn(lua_State* L);
 static int viscmd_emit_fn(lua_State* L);
-static int viscmd_pause_emitter_fn(lua_State* L);
-static int viscmd_resume_emitter_fn(lua_State* L);
+
 static int viscmd_audio_fn(lua_State* L);
 static int viscmd_play_fn(lua_State* L);
 static int viscmd_pause_fn(lua_State* L);
@@ -220,6 +221,10 @@ script_t script_new(script_cfg_mask cfg, clargs_t args) {
     /* Create and assign Vis.flist */
     flist_t* flbox = lua_newuserdata(s->L, sizeof(flist_t));
     luaL_newmetatable(s->L, "flist_t*");
+    lua_pushcfunction(s->L, flist_index);
+    lua_setfield(s->L, -2, "__index");
+    lua_pushcfunction(s->L, flist_newindex);
+    lua_setfield(s->L, -2, "__newindex");
     lua_pop(s->L, 1); /* newmetatable */
     luaL_setmetatable(s->L, "flist_t*");
     *flbox = s->fl;
@@ -599,8 +604,7 @@ int initialize_vis_lib(lua_State* L) {
         {"debugp", viscmd_debugp_fn},
         {"exit", viscmd_exit_fn},
         {"emit", viscmd_emit_fn},
-        {"pause_emitter", viscmd_pause_emitter_fn},
-        {"resume_emitter", viscmd_resume_emitter_fn},
+
         {"audio", viscmd_audio_fn},
         {"play", viscmd_play_fn},
         {"pause", viscmd_pause_fn},
@@ -771,6 +775,38 @@ int initialize_vis_lib(lua_State* L) {
     table_assign_num(L, "AUDIO_LENGTH", 0, -1);
 
     return 1;
+}
+
+static int flist_index(lua_State* L) {
+    flist_t* flbox = luaL_checkudata(L, 1, "flist_t*");
+    flist_t fl = *flbox;
+    const char* key = luaL_checkstring(L, 2);
+    if (strcmp(key, "curr") == 0) {
+        lua_pushnumber(L, (lua_Number)fl->curr_frame);
+        return 1;
+    } else if (strcmp(key, "total") == 0) {
+        lua_pushnumber(L, (lua_Number)fl->total_frames);
+        return 1;
+    } else if (strcmp(key, "paused") == 0) {
+        lua_pushboolean(L, fl->paused);
+        return 1;
+    }
+    return 0;
+}
+
+static int flist_newindex(lua_State* L) {
+    flist_t* flbox = luaL_checkudata(L, 1, "flist_t*");
+    flist_t fl = *flbox;
+    const char* key = luaL_checkstring(L, 2);
+    if (strcmp(key, "paused") == 0) {
+        if (lua_toboolean(L, 3)) {
+            flist_pause(fl);
+        } else {
+            flist_resume(fl);
+        }
+        return 0;
+    }
+    return luaL_error(L, "Vis.flist property %s is read-only", key);
 }
 
 /* Read a numeric array (or scalar) from a table */
@@ -1183,22 +1219,6 @@ int viscmd_emit_fn(lua_State* L) {
         last_when = when;
     }
     flist_insert_emit(fl, when, frame);
-    return 0;
-}
-
-/* Vis.pause_emitter(Vis.flist)
- * Pauses emitters in the flist */
-int viscmd_pause_emitter_fn(lua_State* L) {
-    flist_t fl = *(flist_t*)luaL_checkudata(L, 1, "flist_t*");
-    flist_pause(fl);
-    return 0;
-}
-
-/* Vis.resume_emitter(Vis.flist)
- * Resumes emitters in the flist */
-int viscmd_resume_emitter_fn(lua_State* L) {
-    flist_t fl = *(flist_t*)luaL_checkudata(L, 1, "flist_t*");
-    flist_resume(fl);
     return 0;
 }
 

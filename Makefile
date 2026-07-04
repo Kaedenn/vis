@@ -190,7 +190,7 @@ $(OBJDIR)/3rdparty/%.o: CFLAGS += -msse2 $(CFLAGS_3RDPARTY)
 $(OBJDIR)/audio/%.o: | $(OBJDIR)/audio
 $(OBJDIR)/audio/%.o: CFLAGS += -msse2 $(CFLAGS_AUDIO)
 
-$(OBJDIR)/emitter.o: CFLAGS += -Wno-float-equal
+$(OBJDIR)/particle.o: CFLAGS += -Wno-float-equal
 
 $(OBJDIR)/%.o: %.c .cflags | $(OBJDIR) $(DEPDIR)
 	@mkdir -p $(dir $(DEPDIR)/$*.d)

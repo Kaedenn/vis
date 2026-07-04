@@ -4,6 +4,7 @@
 
 #include "defines.h"
 #include "types.h"
+#include "emit.h"
 
 struct particle;
 
@@ -30,28 +31,8 @@ struct particle {
 
 typedef struct particle* particle_t;
 
-/* initialize a particle with both X/Y position and circle offset */
-void particle_init_full(particle_t p,
-                        /* pos/vel/size/rot */
-                        double x, double y,
-                        double ux, double uy,
-                        double dx, double dy,
-                        double s, double us,
-                        double r, double ur,
-                        double ds, double uds,
-                        double theta, double utheta,
-                        /* misc */
-                        float depth,
-                        int life, int ulife,
-                        force_id force,
-                        limit_id limit,
-                        float rgba[4],
-                        blend_id blender,
-                        int vertices,
-                        float angle,
-                        union particle_tag tag,
-                        double friction_coeff,
-                        double gravity_coeff);
+/* initialize a particle from an emit_desc frame */
+void particle_init_from(particle_t p, const emit_desc* frame);
 
 /* specific mutation functions */
 void particle_push(particle_t p, double dx, double dy);

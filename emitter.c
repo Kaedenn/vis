@@ -216,30 +216,7 @@ void emitter_tick(void) {
 
 void emit_frame(emit_desc* frame) {
     for (int i = 0; i < frame->n; ++i) {
-        float rgba[4] = {frame->r, frame->g, frame->b, 1.0f};
-        if (frame->ur != 0.0f) {
-            rgba[0] = randfloat(frame->r - frame->ur, frame->r + frame->ur);
-        }
-        if (frame->ug != 0.0f) {
-            rgba[1] = randfloat(frame->g - frame->ug, frame->g + frame->ug);
-        }
-        if (frame->ub != 0.0f) {
-            rgba[2] = randfloat(frame->b - frame->ub, frame->b + frame->ub);
-        }
         particle_t p = plist_add(emitter.particles);
-        if (p) particle_init_full(p,
-                frame->x, frame->y, frame->ux, frame->uy,
-                frame->dx, frame->dy,
-                frame->s, frame->us,
-                frame->rad, frame->urad,
-                frame->ds, frame->uds,
-                frame->theta, frame->utheta,
-                frame->depth,
-                frame->life, frame->ulife,
-                frame->force, frame->limit,
-                rgba, frame->blender,
-                frame->vertices, frame->angle,
-                frame->tag,
-                frame->friction_coeff, frame->gravity_coeff);
+        if (p) particle_init_from(p, frame);
     }
 }
