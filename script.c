@@ -972,6 +972,8 @@ static void parse_tag_arg(lua_State* L, int idx, union particle_tag* tag) {
 #if DEBUG >= DEBUG_TRACE || defined(DEBUG_SCRIPT_C)
         DBPRINTF("Hashed string \"%s\" to %llx", value, tag->ul);
 #endif
+    } else if (arg_type == LUA_TNONE || arg_type == LUA_TNIL) {
+        tag->ul = 0;
     } else {
         luaL_error(L, "Tag must be a number or string, got %s", lua_typename(L, arg_type));
     }
@@ -1262,7 +1264,7 @@ int viscmd_play_fn(lua_State* L) {
 
 /* Vis.pause()
  * Vis.pause(Vis.flist, fnum) */
-int viscmd_pause_fn(UNUSED_PARAM(lua_State* L)) {
+int viscmd_pause_fn(lua_State* L) {
     if (lua_gettop(L) >= 2) {
         flist_t fl = *(flist_t*)luaL_checkudata(L, 1, "flist_t*");
         fnum_t when = do_msec2frames(L, (msec_t)luaL_checkinteger(L, 2));
@@ -1382,15 +1384,15 @@ int viscmd_bgcolor_fn(lua_State* L) {
 
 /* Vis.mutate{
  *  Vis.flist,
- *  when,                      -- When to apply the mutation event
- *  [func=]Vis.MUTATE_<func>,  -- Which mutation event to use
- *  cond=Vis.MUTATE_IF_<cond>, -- Only if func=Vis.MUTATE_<func>_IF
- *  tag=<check-tag>,           -- Only if cond=Vis.MUTATE_IF_<tag-cond>
- *  newtag=<new-tag>,          -- Only if cond=Vis.MUTATE_TAG_<event>
+ *  when,                                    -- When to apply the mutation event
+ *  [func=]Vis.MUTATE_<func>,                -- Which mutation event to use
+ *  cond=Vis.MUTATE_IF_<cond>,               -- Only required when func=Vis.MUTATE_<func>_IF
+ *  tag=<check-tag>,                         -- Only required when cond=Vis.MUTATE_IF_<tag-cond>
+ *  newtag=<new-tag>,                        -- Only required when func=Vis.MUTATE_TAG_<event>
  *  factor=<number-or-array-of-two-numbers>, -- Amount to mutate by
- *  check=<number-or-array-of-two-numbers>,  -- distance used by Vis.MUTATE_IF_{NEAR/FAR}
- *  offset=<number-or-array-of-two-numbers>, -- location used by Vis.MUTATE_IF_{ABOVE/BELOW/LEFT/RIGHT/NEAR/FAR}
- *  target=<number-or-array-of-two-numbers>  -- location used by Vis.MUTATE_ATTRACT
+ *  check=<number-or-array-of-two-numbers>,  -- distance used by cond Vis.MUTATE_IF_{NEAR/FAR}
+ *  offset=<number-or-array-of-two-numbers>, -- location used by cond Vis.MUTATE_IF_{ABOVE/BELOW/LEFT/RIGHT/NEAR/FAR}
+ *  target=<array-of-two-numbers>            -- location used by func Vis.MUTATE_ATTRACT
  * } */
 int viscmd_mutate_fn(lua_State* L) {
     mutate_method* method = DBMALLOC(sizeof(struct mutate_method));
@@ -1427,20 +1429,20 @@ int viscmd_mutate_fn(lua_State* L) {
 
     method->id = fnid;
     if (is_table) { /* new mutate API */
+        get_table_double_array(L, 1, "factor", method->factor);
+        get_table_double_array(L, 1, "check", method->check_factor);
+        get_table_double_array(L, 1, "offset", method->offset);
+        get_table_double_array(L, 1, "target", method->target);
+        lua_getfield(L, 1, "tag");
+        parse_tag_arg(L, -1, &method->tag);
+        lua_pop(L, 1);
+        lua_getfield(L, 1, "newtag");
+        parse_tag_arg(L, -1, &method->newtag);
+        lua_pop(L, 1);
         if (mutate_is_unconditional(fnid)) {
             /* case 1: normal mutate */
-            get_table_double_array(L, 1, "factor", method->factor);
-            get_table_double_array(L, 1, "offset", method->offset);
-            get_table_double_array(L, 1, "target", method->target);
         } else if (mutate_is_tag(fnid)) {
             /* case 2: tag modification */
-            lua_getfield(L, 1, "newtag");
-            if (!lua_isnoneornil(L, -1)) {
-                parse_tag_arg(L, -1, &method->newtag);
-            } else {
-                method->newtag.ul = 0;
-            }
-            lua_pop(L, 1);
         } else if (mutate_is_conditional(fnid)) {
             /* case 3: conditional mutate */
             lua_getfield(L, 1, "cond");
@@ -1450,20 +1452,6 @@ int viscmd_mutate_fn(lua_State* L) {
                 DZFREE(method);
                 return luaL_error(L, "Invalid mutate condition %d", method->cond);
             }
-            if (method->cond >= VIS_MUTATE_IF_TRUE && method->cond <= VIS_MUTATE_IF_GE) {
-                lua_getfield(L, 1, "tag");
-                parse_tag_arg(L, -1, &method->tag);
-                lua_pop(L, 1);
-            }
-            if (fnid == VIS_MUTATE_TAG_SET_IF) {
-                lua_getfield(L, 1, "newtag");
-                parse_tag_arg(L, -1, &method->newtag);
-                lua_pop(L, 1);
-            }
-            get_table_double_array(L, 1, "factor", method->factor);
-            get_table_double_array(L, 1, "check", method->check_factor);
-            get_table_double_array(L, 1, "offset", method->offset);
-            get_table_double_array(L, 1, "target", method->target);
         } else {
             DZFREE(method);
             return luaL_error(L, "Invalid mutate ID %d", fnid);
@@ -1479,11 +1467,7 @@ int viscmd_mutate_fn(lua_State* L) {
             method->target[1] = luaL_optnumber(L, 9, 0);
         } else if (mutate_is_tag(fnid)) {
             /* case 2: tag modification */
-            if (!lua_isnoneornil(L, 4)) {
-                parse_tag_arg(L, 4, &method->newtag);
-            } else {
-                method->newtag.ul = 0;
-            }
+            parse_tag_arg(L, 4, &method->newtag);
         } else if (mutate_is_conditional(fnid)) {
             /* case 3: conditional mutate */
             method->cond = (mutate_cond_id)luaL_checkinteger(L, 4);

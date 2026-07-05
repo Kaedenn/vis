@@ -11,11 +11,12 @@
 /* malloc+assert */
 void* chmalloc(size_t nbytes);
 void* chrealloc(void* ptr, size_t nbytes);
+/* malloc+assert+debug message*/
 void* dbmalloc(size_t nbytes, const char* label);
 void* dbrealloc(void* ptr, size_t nbytes, const char* label);
 void dbfree(void* ptr, const char* label);
 
-/* helper printfs for errors or debugging */
+/* print diagnostic messages */
 void eprintf(const char* fmt, ...);
 void eprintfn(const char* fmt, ...);
 void dbprintf(const char* fmt, ...);

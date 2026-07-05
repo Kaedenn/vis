@@ -597,9 +597,9 @@ are set to zero.
 table given by `table`.
 
 `function VisUtil.seek_to(milliseconds)`: Invokes both `Vis.seek()` and
-`Vis.seekms` with the value given.
+`Vis.seekms()` with the value given.
 
-`function VisUtil.set_trace_table(table)`: Invokes `Vis.settrace`,
+`function VisUtil.set_trace_table(table)`: Invokes `Vis.settrace()`,
 passing the table given. This is how you modify the click-and-drag emission
 parameters.
 
