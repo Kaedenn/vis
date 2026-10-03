@@ -78,27 +78,25 @@ export class EmitBuilder {
     }
 
     globalToLocal(offsetX, offsetY) {
-        const scale = Math.min(
-            this._canvas.clientWidth / (2 * this._canvasW),
-            this._canvas.clientHeight / (2 * this._canvasH));
-        const padX = (this._canvas.clientWidth - 2 * this._canvasW * scale) / 2;
-        const padY = (this._canvas.clientHeight - 2 * this._canvasH * scale) / 2;
+        const cx = this._canvas.clientWidth / 2;
+        const cy = this._canvas.clientHeight / 2;
+        const boxLeft = cx - this._canvasW / 2;
+        const boxTop = cy - this._canvasH / 2;
         return {
-            x: Math.round((offsetX - padX) / scale - this._canvasW),
-            y: Math.round((offsetY - padY) / scale - this._canvasH)
-        }
+            x: Math.round(offsetX - boxLeft),
+            y: Math.round(offsetY - boxTop)
+        };
     }
 
     localToGlobal(mapX, mapY) {
-        const scale = Math.min(
-            this._canvas.clientWidth / (2 * this._canvasW),
-            this._canvas.clientHeight / (2 * this._canvasH));
-        const padX = (this._canvas.clientWidth - 2 * this._canvasW * scale) / 2;
-        const padY = (this._canvas.clientHeight - 2 * this._canvasH * scale) / 2;
+        const cx = this._canvas.clientWidth / 2;
+        const cy = this._canvas.clientHeight / 2;
+        const boxLeft = cx - this._canvasW / 2;
+        const boxTop = cy - this._canvasH / 2;
         return {
-            x: Math.round((mapX + this._canvasW) * scale + padX),
-            y: Math.round((mapY + this._canvasH) * scale + padY)
-        }
+            x: Math.round(mapX + boxLeft),
+            y: Math.round(mapY + boxTop)
+        };
     }
 
     mouseMove(e) {
@@ -223,15 +221,15 @@ export class EmitBuilder {
 
         switch (p.limit) {
             case LimitFunc.LIMIT_BOX:
-                if (p.x < -this.canvasW) { p.x = -this.canvasW; p.dx = 0; }
+                if (p.x < 0) { p.x = 0; p.dx = 0; }
                 else if (p.x > this.canvasW) { p.x = this.canvasW; p.dx = 0; }
-                if (p.y < -this.canvasH) { p.y = -this.canvasH; p.dy = 0; }
+                if (p.y < 0) { p.y = 0; p.dy = 0; }
                 else if (p.y > this.canvasH) { p.y = this.canvasH; p.dy = 0; }
                 break;
             case LimitFunc.LIMIT_SPRINGBOX:
-                if (p.x < -this.canvasW) { p.x = -this.canvasW; p.dx = -p.dx; }
+                if (p.x < 0) { p.x = 0; p.dx = -p.dx; }
                 else if (p.x > this.canvasW) { p.x = this.canvasW; p.dx = -p.dx; }
-                if (p.y < -this.canvasH) { p.y = -this.canvasH; p.dy = -p.dy; }
+                if (p.y < 0) { p.y = 0; p.dy = -p.dy; }
                 else if (p.y > this.canvasH) { p.y = this.canvasH; p.dy = -p.dy; }
                 break;
         }

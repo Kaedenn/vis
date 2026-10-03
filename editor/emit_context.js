@@ -239,7 +239,7 @@ export class EmitContext {
         if (!isNativeMode) {
             lua += `    count = ${this._count},\n`;
         }
-        lua += `    x = Vis.WIDTH / 2 + ${this._x}, y = Vis.HEIGHT / 2 + ${this._y},\n`;
+        lua += `    x = ${this._x}, y = ${this._y},\n`;
         lua += `    ux = ${this._ux}, uy = ${this._uy},\n`;
         lua += `    s = ${this._s}, us = ${this._us},\n`;
         lua += `    ds = ${this._ds}, uds = ${this._uds},\n`;

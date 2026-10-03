@@ -30,8 +30,8 @@ local BASE = _G.BASE or 0 -- Update to the base offset to the first emit
 
 const LAYER_CONFIG = [
     { name: 'count', min: 0, step: 1 },
-    { name: 'x', step: 1, dynamicBounds: 'canvasWHalf' },
-    { name: 'y', step: 1, dynamicBounds: 'canvasHHalf' },
+    { name: 'x', step: 1, dynamicBounds: 'canvasW' },
+    { name: 'y', step: 1, dynamicBounds: 'canvasH' },
     { name: 'ux', min: 0, step: 1, dynamicBounds: 'canvasW' },
     { name: 'uy', min: 0, step: 1, dynamicBounds: 'canvasH' },
     { name: 's', min: 0, step: 1, dynamicBounds: 'canvasMax' },
@@ -774,7 +774,8 @@ document.addEventListener('DOMContentLoaded', () => {
             customScript,
             toggles: { showAxes, nativeMode, dragMode },
             frames: {},
-            names: {}
+            names: {},
+            origin: "top-left"
         };
 
         for (const [time, builders] of emitSequence) {
@@ -934,8 +935,10 @@ document.addEventListener('DOMContentLoaded', () => {
             isDraggingCanvas = true;
 
             lastDragPos = { x: 0, y: 0 };
-            lastDragPos.x = Math.round((e.offsetX / canvas.clientWidth) * (2 * canvasW) - canvasW);
-            lastDragPos.y = Math.round((e.offsetY / canvas.clientHeight) * (2 * canvasH) - canvasH);
+            const boxLeft = cx - canvasW / 2;
+            const boxTop = cy - canvasH / 2;
+            lastDragPos.x = Math.round(e.offsetX - boxLeft);
+            lastDragPos.y = Math.round(e.offsetY - boxTop);
         } else {
             const builder = window.currentEmits[currentEmitIndex];
             if (builder) {
@@ -956,8 +959,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         let mapPos = { x: 0, y: 0 };
-        mapPos.x = Math.round((e.offsetX / canvas.clientWidth) * (2 * canvasW) - canvasW);
-        mapPos.y = Math.round((e.offsetY / canvas.clientHeight) * (2 * canvasH) - canvasH);
+        const boxLeft = cx - canvasW / 2;
+        const boxTop = cy - canvasH / 2;
+        mapPos.x = Math.round(e.offsetX - boxLeft);
+        mapPos.y = Math.round(e.offsetY - boxTop);
 
         statusCursor.textContent = `${mapPos.x} , ${mapPos.y}`;
 
@@ -1060,17 +1065,29 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 emitSequence.clear();
                 if (data.frames) {
+                    const isLegacyCentered = data.origin !== "top-left";
+                    let numRecenter = 0;
                     for (const [timeStr, contexts] of Object.entries(data.frames)) {
                         const time = parseInt(timeStr, 10);
                         const builders = contexts.map(ctxData => {
                             const builder = new EmitBuilder(canvas, canvasW, canvasH, fps);
                             builder.ctx = EmitContext.FromJSON(ctxData);
+                            if (isLegacyCentered) {
+                                builder.ctx.updatePosition(
+                                    builder.ctx.x + canvasW / 2,
+                                    builder.ctx.y + canvasH / 2
+                                );
+                                numRecenter++;
+                            }
                             return builder;
                         });
                         emitSequence.setEmitsAt(time, builders);
                         if (data.names && data.names[timeStr]) {
                             emitSequence.setNameAt(time, data.names[timeStr]);
                         }
+                    }
+                    if (numRecenter > 0) {
+                        console.log(`Recentered ${numRecenter} emits`);
                     }
                 }
 
@@ -1163,7 +1180,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const mirrored = new EmitBuilder(canvas, canvasW, canvasH, fps);
             mirrored.ctx = EmitContext.FromJSON(original.ctx.toJSON());
 
-            mirrored.ctx.x = -mirrored.ctx.x;
+            mirrored.ctx.x = canvasW - mirrored.ctx.x;
             mirrored.ctx.theta = Math.PI - mirrored.ctx.theta;
 
             // Normalize theta to [0, 2pi) range
